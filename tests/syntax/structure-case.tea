@@ -1,0 +1,33 @@
+
+a = 0
+b = 1
+num = 1
+
+#outer_case
+case num {
+	a * 3:
+		case num {
+			b:
+				b = num * 5
+				echo b
+			1, 2, 3:
+				a = num * 2
+				break #outer_case
+		}
+		else {
+			echo 'not matched.'
+		}
+
+	10, 100:
+		echo num
+}
+elseif num > 10 {
+	echo 'num is greater than 10.'
+}
+catch ex {
+	//
+}
+finally {
+	echo 'finally!'
+}
+

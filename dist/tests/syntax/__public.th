@@ -1,0 +1,31 @@
+// the public declarations
+
+#unit tea/tests/syntax
+
+public __CLASS__ String
+
+public xrange(start Int, stop Int, step UInt = 1)
+
+#php range(start Int, end Int, step UInt = 1) Array
+
+#php var_dump(v Any)
+
+public get_class() Class
+
+public fn0(str Any)
+
+public DemoList: BaseView {
+	ABC String = '12'
+
+	tag String
+	title String
+	items Array
+
+	cells Array
+
+	construct(name String, title String = '', items Array = []) -> each(item String) Cell -> done()
+
+	render() String
+}
+
+// program end

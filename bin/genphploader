@@ -1,0 +1,58 @@
+#!/usr/bin/env php
+<?php
+/**
+ * This file is part of the Tea programming language project
+ *
+ * @author 		Benny <benny@meetdreams.com>
+ * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
+ */
+
+/// A script use to generate the loading file for PHP Unit
+
+namespace Tea;
+
+define('BASE_PATH', dirname(__DIR__) . DIRECTORY_SEPARATOR);
+define('LOG_PATH', BASE_PATH . 'log/');
+
+require BASE_PATH . 'compiler/__unit.php';
+
+// ----
+
+if (empty($argv[1]) ) {
+	echo_end("Please input the target dir path...");
+}
+
+$path = $argv[1];
+if (DS !== $path{0}) {
+	$path = getcwd() . DS . $path;
+}
+
+$path = realpath($path) . DS;
+
+if (!is_dir($path)) {
+	echo_end("Target dir not found.");
+}
+
+$loader_file = $path . PHPLoaderMaker::LOADER_FILE;
+if (!file_exists($loader_file)) {
+	echo_end('\'' . PHPLoaderMaker::LOADER_FILE . "' not found in '$path'.");
+}
+
+try {
+	$scanner = new PHPUnitScanner();
+	$class_map = $scanner->scan($path);
+
+	PHPLoaderMaker::generate_loader_file($path, $class_map);
+
+	$count = count($class_map);
+	echo_end("$count classes found.");
+}
+catch (Exception $e) {
+	echo_end("Error: {$e->getMessage()}");
+}
+
+function echo_end(string $text) {
+	echo "{$text}\n\n";
+	exit;
+}

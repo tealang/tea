@@ -1,0 +1,50 @@
+
+internal CollectorDemo: IView {
+	subnode CollectorDemo
+
+	text(value) {
+		return this
+	}
+}
+
+internal CollectorDemoFactory {
+	new_collector_demo() {
+		return CollectorDemo()
+	}
+}
+
+internal new_collector_demo() {
+	return CollectorDemo()
+}
+
+// 本特性目前有问题，待处理
+internal collector1() XView >> Array {
+
+	// would collect
+	<div>hei~</div>
+
+	// would collect
+	CollectorDemo()
+
+	// would collect
+	CollectorDemo().subnode.text('red').subnode = new_collector_demo()
+
+	// would not collect, because it assigned to a variable
+	abc = CollectorDemo()
+
+	factory = CollectorDemoFactory()
+
+	// would not collect, because it not class-new expression
+	new_collector_demo()
+	factory.new_collector_demo()
+
+	if 1 {
+		// would collect
+		CollectorDemo().text('red').subnode.text('hei~')
+	}
+
+	// would collect each one
+	for item in [1, 2, 3] {
+		CollectorDemo().subnode.text('hello')
+	}
+}

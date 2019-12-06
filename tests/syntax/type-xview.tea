@@ -1,0 +1,89 @@
+
+#main
+
+internal Cell: BaseView {
+	text String
+
+	construct(text String = '') {
+		this.text = text
+	}
+
+	render() String {
+		text = this.text.replace(NL, '<br>')
+		return <cell>$text</cell>
+	}
+}
+
+var xview XView = Cell('string')
+
+// 仅一个回调，且无需传参数时
+DemoList('demo-list', 'title') -> {
+	return Cell()
+}
+
+// 有回调需要传参时
+DemoList('demo-list', 'Demo List', ['A', 'B', 'C']) -> each(item String) Cell {
+	return Cell(item)
+}
+
+str = 'str'
+num = 2
+
+// 带标签、有多个回调
+abc = DemoList('', items: ['A', 'B', 'C'])
+	-> done() {
+		echo str, num
+	}
+	-> each(item) Cell {
+		return Cell(item as String)
+	}
+
+echo abc
+
+public DemoList: BaseView
+{
+	ABC = '12'
+
+	tag String
+	title String
+	items Array
+
+	cells Array = []
+
+	construct(name String, title = '', items Array = []) -> each(item String) Cell -> done() {
+		this.items = items
+
+		if each {
+			for item in items {
+				cell = each(item as String)
+				this.cells.push(cell)
+			}
+		}
+
+		done and done()
+	}
+
+	render() String {
+		cells = []
+		for key, value in this.items {
+			if 1 {
+				cells.push(<li index="0"> $key: $value </li>)
+			}
+			else {
+				cells.push(<li> $key: $value </li>)
+			}
+		}
+
+		return <vtag=$this.tag id="$this.name">
+			${this.title == "abc" ? <h1>#{$this.title concat 123}</h1> : none}
+			<i></i>
+			<cells>
+				${cells.join()}
+			</cells>
+			<views>
+				${this.subviews.join()}
+			</views>
+			<script> if (a < 1 || a >= 5) {} </script>
+		</vtag>
+	}
+}

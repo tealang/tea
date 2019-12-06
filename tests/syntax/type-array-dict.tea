@@ -1,0 +1,69 @@
+
+// dots style
+var str_dict_list String.Dict.Array = [['a': 'abc', 'b': '123.1']]
+var int_dict Int.Dict = [:]
+
+// [] [:] style
+var str_list String[] = []
+var float_dict_array Float[:][] = []
+
+
+str_list[] = 'str'  // okay
+// str_list[] = Exception('message')  // error
+
+// int_dict['k1'] = '123' // error
+int_dict['k2'] = -123   // okay
+
+float_dict_array[] = ['abc': 123.12]   // okay
+// float_dict_array[] = ['abc': 'ddd']   // error
+
+// auto style
+arr = [] // Any.Array
+arr.push([1, 2, 3])
+arr.push("hello")
+
+echo arr.pop()
+echo arr.join()
+
+arr1 = [1, 2, 3]
+arr2 = [4, 5, 6]
+arr3 = arr1 concat arr2
+
+var dict = [:]
+dict[1.1] = 1
+
+var key = 1
+var key1 Any = 1
+var key2 = 1.1
+var key3 = false
+
+dict1 = [
+	key: "abc", // abc
+	key1: "abc", // abc
+	key3: "abc", // abc
+	"k1": "v1", /* abc */
+]
+
+dict2 = [
+	key2: "abc", /* abc
+	 */
+	"k1": "v1", // abc
+]
+
+// 遍历数组
+for key, val in dict1 {
+	echo <span>$key: $val</span>
+}
+
+students = [
+	["name": "name1", "class": 1],
+	["name": "name2", "class": 2],
+	["name": "name3", "class": 3],
+]
+
+var students_by_class = [:]
+for student in students {
+	students_by_class[student['class'] as String] = student
+}
+
+

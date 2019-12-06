@@ -1,0 +1,34 @@
+
+var a = fn0
+var b = Test1
+var c = get_class()
+c()
+
+public get_class() {
+	return Test1
+}
+
+public fn0(str) {
+	echo str
+}
+
+internal fn1(callee Callable) {
+	var unknow_type_value Any = callee('hei')
+}
+
+fn1(fn0)
+fn1((str) => fn0(str))
+
+fn2(Test1)
+internal fn2(class Class) {
+	class()
+}
+
+// assignable feature
+internal fn3(ex Exception, var num String = none) {
+	num = 1
+	echo ex.getMessage()
+}
+
+fn3(Exception('message'), 'abc')
+

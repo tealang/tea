@@ -1,0 +1,514 @@
+---
+# Tea语言（T语言）
+---
+
+// 来自深圳的问候
+echo "世界你好！"
+
+---
+## 01. 简要介绍
+
+Tea语言目前有以下特点：
+- 是一个强规范的编程语言（规范即语法），拥有精炼简洁的语法，简约的类型系统和单元模块体系
+- 经过精心设计，力求让代码编写体验更轻松自然，让使用者可以更专注于创意实现
+- 基于单元模块（Unit）组织程序文件，任何程序文件都必须包含在某个Unit中，可引入使用外部Unit
+- 对字符串处理语法进行了特别设计，尤其方便用于WEB开发
+- 类型系统支持类型推断，并在类型兼容性方面有一些特别处理
+- 编译时将进行类型推断和语法检查，有助于提前发现相关问题
+- 通过编译生成PHP代码运行，并可调用PHP库
+
+Tea语言由创业者Benny设计开发，潘春孟（高级工程师/架构师）与刘景能（计算机博士）参与了早期设计与测试使用。
+
+（本文档同时也是一个Tea语言程序，可被Tea语言编译器编译通过）
+---
+
+---
+## 02. 基本语句
+- 语句是Tea语言的基本语法之一
+- Tea语言编译器基于语法的合理性识别语句
+- 一个语句的各部分可分布于连续的多行中
+- 在一行代码中有多个语句时需要分号间隔
+---
+
+// 带换行符结尾的字符串输出，支持输出多项
+echo 'Hey,', 'Who are you?' // 相当于print 'Hey,', 'Who are you?', "\n"
+
+// 不带换行符结尾的字符串输出，支持输出多项
+// 这里的NL是内置常量，被定义为 "\n"
+print 'string1', 'string2', NL
+
+// 返回，可带一个参数，或不带任何参数
+// 可用于函数/方法中返回数据，也可用于被#include的程序文件中返回数据
+// return 123
+
+// 退出进程，可带一个Int参数，或不带任何参数
+// exit 0
+
+---
+## 03. 类型
+- 简单类型 String、UInt、Int、Float、Bool
+- 复合类型 Array、Dict、Object
+- 特别类型 Any、XView、Regex、Iterable、Callable
+- XView是Tea语言特有的一种类型，这种类型量可接受采用HTML/XML标签定义的块作为值，也可接受IView接口的类实例作为值
+- Any类型量可接受任意类型的值
+- String类型量被设计为可接受Int、UInt、XView类型值
+- UInt在表达成PHP代码后其实是Int类型，其最大值与Int的一致，皆为PHP_INT_MAX
+	为什么需要有UInt类型？因为我们在实践中发现，正整数非常常用。
+	需要注意的是，UInt类型变量在发生减法运算后，值可能是负数，并不能严格保证为正整数，这需要在程序中做好处理。
+- Array为纯索引数组（称为数组），Dict为纯关联数组（称为字典），这与PHP中有所不同
+- Object为对象类型，目前只能通过创建类的实例获得
+- Regex为正则表达式类型，用于简化正则表达式写法
+- Iterable为可迭代类型，可接受Array、Dict、IteratorInterface的值或对象作为值
+- Callable为可调用类型，可接受普通函数和匿名函数作为值
+---
+
+// Any 可接受任何类型值
+var any Any
+any = 1
+any = []
+any = 'abc'
+
+// 将Any类型值转换成String类型
+var str_from_any = any as String
+
+// String
+var str String = 'Unescaped string\n' 	// 单引号字符串，\n\t\r等字符将当作字面字符
+str = "Escaped string\n"   				// 双引号字符串，将处理转义字符
+str_with_interpolation = 'Unescaped string with interpolation ${5 * 6}'	// 单双引号字符串均支持插值，带$插值的字符串，不转义HTML字符
+str_with_interpolation = "Escaped string with interpolation ${5 * 6}\n"
+
+xss = '<script>alert("XSS!")</script>'
+html_escaped_interpolation = "The html-escaped string: #{xss}" 	// 带#插值的字符串，将转义HTML字符
+text_labeled = #text "would not process interpolation ${5 * 6}" // 以#text标记的字符串，其中插值表达式将不被处理
+
+// 类似对象一样的调用String伪对象属性或方法
+str.length  // 字符串长度（表达成PHP代码后是iconv_strlen，使用PHP配置的字符集计算）
+str.slice(0, 3)  // 字符串截取（表达成PHP代码后是iconv_substr，使用PHP配置的字符集计算截取）
+
+var uint_num UInt = 123
+var int_num Int = -123
+var float_num Float = 123.01
+var bool Bool = true
+
+// XView在做Web视图开发时尤其方便
+var xview XView = <div>
+	<h1>XView是什么？</h1>
+	<p>XView类似字符串，但无需引号，可以直接按HTML标签方式编写</p>
+	<p>Interpolation with origin ${uint_num * 10}</p>
+	<p>Interpolation with html-escaped #{xss}</p>
+</div>
+
+// 正则表达式
+var regex Regex = /^[a-z0-9'_"]+$/i
+if preg_match(regex, 'Abc\'123"') {
+	echo 'matched!'
+}
+
+// 元素类型为Any的数组
+var any_array Array = [123, 'Hi', false, [1, 2, 3]]
+
+// 元素类型为Int的数组
+var int_array Int.Array = [] 	// 初始化为空数组
+int_array = [-1, 10, 200]
+int_array.length   		// 获取数组元素个数
+int_array.slice(0, 2)   // 截取数组片段
+
+// 字典类型的Key无需定义类型，支持String/Int
+// Value类型为String的字典
+var str_dict String.Dict = [:] 	// 初始化为空字典
+str_dict = [
+	'k1': 'value for string key "k1"',
+	123: 'value for int key "123"'
+]
+
+// 元素类型为String.Dict的数组
+var str_dict_array String.Dict.Array = [
+	['k0': 'v0', 'k1': 'v01'],
+	str_dict
+]
+
+---
+## 04. 修饰符
+- Tea语言中有public、internal、protected、private四种修饰符
+- 四种修饰符均可用于类成员的声明/定义
+- public、internal可用于类、接口、独立常量、独立函数的声明/定义
+- public修饰的可被外部Unit调用
+- internal修饰的只能被本Unit调用
+- protected修饰的类成员可被继承的类调用
+- private修饰的类成员只能被本类调用
+---
+
+---
+## 05. 常量
+- 常量声明/定义必须以internal/public修饰符开始
+- 常量作用域为Unit级别，声明为public的可以被其它Unit引入使用
+- 常量名必须为大写，以[A-Z_]开始，可包括[A-Z0-9_]
+---
+
+// internal修饰的常量，只能在本Unit中调用
+internal STRING_CONST = 'abcdefg'
+
+// public修饰的常量，可在其它Unit中调用
+public PI = 3.1415926
+
+// 可使用Array/Dict字面量作为常量的值
+public ARRAY_CONST = [1, 2]
+
+---
+## 06. 变量
+- Tea语言不支持自定义全局变量，变量均为局部作用域
+- 变量名必须为小写，可由 a-z0-9_ 字符组成
+- 使用var关键字声明/定义变量，可标注类型
+- 变量亦可无需定义直接赋值使用，此时变量类型将自动推断为所赋值的类型
+---
+
+// 声明一个变量并赋初始值
+var str1 = 'Hi!'  // 此用例将自动推断成String类型
+
+// 声明一个String类型的变量
+var str2 String
+
+// 直接赋值给一个未经声明的变量
+var_without_decared = 123  // 此用例将自动推断成UInt类型
+
+---
+## 07. 运算符
+- 运算符的优先级和结合方向在不同语言中有不同的规则，Tea语言试图简化这些规则，并尽可能让其在使用时显得更自然
+- 访问运算符优先级最高，除逻辑非（not）以外的一元运算符和类型转换符优先级排第二
+- 结合方向，前置一元运算符为右结合，二元运算符为左结合
+- 三元运算符嵌套使用时必须加括号，故无需考虑结合方向
+- Tea语言不支持赋值运算作为子表达式，故无需考虑其优先级和结合方向
+- Tea语言中不支持“--”、“++”等前置和后置运算符，因考虑其可在子表达式中改变值，易产生难以被发现的问题
+
+	优先级	运算符
+	1	.  ->  ()  []					访问符
+	2	~  -  as						一元运算、类型转换
+	3	**								幂运算
+	4	* / % << >> &					数学运算、按位左移、按位右移、按位与
+	5	+  -  |  ^  					数学运算、按位或、按位异或
+	6	concat  merge					String/Array连接、Array/Dict按index/key合并
+	7	<=> < <= > >= != !== == === is  比较运算
+	8	not 							逻辑非
+	9	and 							逻辑与
+	10	or 								逻辑或
+	11	??								none合并
+	12	condition ? exp1 : exp2 		三元条件表达式
+
+---
+
+// 值得注意的是，“**”运算符在一些语言中优先级比一元运算符高，且大多为右结合
+// 而在Tea语言中，为简化规则考虑，“**”运算符优先级比一元前置运算符“~”和“-”低，且为左结合
+var pow_result = -2 ** 3 ** 5  // 相当于 ((-2) ** 3) ** 5
+
+// 连接运算符，可用于字符串/数组
+// 很多语言使用“+”进行连接运算，但数值相加与字符串/数组连接的语义有所不同，我们认为这在一些场景下不太清晰
+// Tea语言使用concat关键字作为连接运算符，其优先级比数学运算符、按位运算符低
+// 为什么不使用类似PHP一样的“.”作为连接运算符？因为“.”已经用于访问运算符了
+// 字符串连接运算在Tea语言中可能会极少用到，因为Tea语言提供了非常便捷的字符串插值语法
+var string_concat = 'abc' concat 1 + 8 & 2 * 3  // 相当于 'abc' concat (1 + (8 & 2) * 3)
+var array_concat = ['A', 'B'] concat ['A1', 'C1'] // result: ['A', 'B', 'A1', 'C1']
+
+// 合并运算符，可用于数组/字典
+var array_merge = ['A', 'B'] merge ['A1', 'B1'] // result: ['A1', 'B1']
+var dict_merge = ['a': 'A', 'b': 'B'] merge ['a': 'A1', 'c': 'C1'] // result: ['a': 'A1', 'b': 'B', 'c': 'C1']
+
+// as运算符，当用于基础类型时，将进行类型转换
+var int_from_string = '123' as Int  // 相当于PHP中 (int)'123'
+var uint_from_string = '-123' as UInt  // 相当于PHP中 abs('-123')
+var str_from_uint = 123 as String
+var str_from_int = -123 as String
+var str_from_float = 123.123 as String
+
+// as运算符，当用于类时，将只被用于编译器类型系统检查处理，而不会进行任何转换
+var ex1 Any
+var ex2 = ex1 as Exception
+
+// is运算符，可用于检查变量是否为某个基础类型，或是否是某个类的实例
+1.1 is Int // false
+1 is Int   // true
+2 is UInt  // true
+ErrorException('Some') is Exception  // true
+
+// Tea语言中的逻辑非运算符优先级排在比较运算符之后，与其它语言不一致
+var not_result = not uint_num > 3  // 相当于 not (uint_num > 3)
+
+// PHP的三元运算符是左结合的，而其它大部分语言中为右结合
+// Tea语言中多个三元运算表达式嵌套使用时，必须加括号，无需考虑结合方向
+var ternary_result = uint_num == 1 ? 'one' : (uint_num == 2 ? 'two' : (uint_num == 3 ? 'three' : 'other'))
+
+---
+## 08. 流程控制和异常处理结构
+- Tea语言支持 if条件分支、case条件分支、for-in迭代遍历、for-to/downto区间循环、while条件循环、try异常处理 等结构
+- C风格 for (;;;) 风格循环语句很灵活，但没有被支持，因其易被写出预料之外的代码
+- 我们在尝试将else、elseif、catch、finally这些副语句块与上述主语句块混搭，这样是不是有点意思？至于好不好，待使用看看吧😄
+- 目前除了while语句之外的语句都支持elseif、else语句块
+- 目前所有结构都支持catch、finally异常处理语句块
+---
+
+a = 0
+b = 1
+
+if a {
+	//
+}
+elseif b {}
+else {}
+catch ex ErrorException {}
+catch ex {}
+finally {}
+
+// Iterable类型量都可以使用for-in遍历
+for k, v in str_dict {
+	// do sth.
+}
+else {
+	echo 'dict is empty'
+}
+
+// 顺序的区间循环
+for i = 0 to 9 {
+	//
+}
+else {}
+
+// 倒序的区间循环
+for i = 9 downto 0 step 2 {
+	//
+}
+
+// 带标签的两层嵌套while循环
+// 可在break/continue后面带上标签标明break/continue指令的目标
+i = 0
+#outer_loop while 1 {
+	#inner_loop while true {
+		i = i + 1
+		if i > 10 {
+			break #outer_loop
+		}
+		else {
+			continue #inner_loop
+		}
+	}
+}
+catch ex {}
+
+---
+## 09. 函数
+- 函数声明/定义必须以internal/public修饰符开始
+- 函数作用域为Unit级别，声明为public的可以被其它Unit引入使用
+- Tea语言函数名规范为小写，必须以[a-z_]开始，可包括[a-z0-9_]
+- 如果为PHP函数，可使用大写字母，但首字符仍必须为小写字母
+---
+
+// internal修饰的函数，只能在本Unit中调用
+internal demo_function1(message String) {
+	echo 'this function can only be called by local unit'
+}
+
+// public修饰的函数，可在其它Unit中调用
+public demo_function2(message String = 'with a default value') {
+	echo 'this function can be called by local or foriegn units'
+}
+
+// 带返回类型标注的函数
+public demo_function_with_a_return_type(some String) UInt {
+	return some.length
+}
+
+// 带回调的函数
+public demo_function_with_callbacks(some String) String -> success(message String) String -> failure(error) {
+	var success_callback_result
+	if success {
+		success_callback_result = success('Success!')
+	}
+
+	if failure {
+		failure('Some errors.')
+	}
+
+	return "the success callback result is: $success_callback_result"
+}
+
+// 调用一个普通函数
+var ret1 = demo_function_with_a_return_type('some data')
+
+// 调用带回调的函数
+var ret2 = demo_function_with_callbacks('some data') -> success(message) {
+	echo message
+	return 'some return data'
+} -> failure(error) {
+	echo error
+}
+
+---
+## 10. 类与接口
+- 类/接口定义必须以internal/public修饰符开始
+- 类/接口作用域为Unit级别，声明为public的可以被其它Unit引入使用
+- 类/接口名必须以大写字母开始，可包括[A-Za-z0-9_]
+- 类/接口成员的命名规范与常量、变量、函数一致
+- 接口名风格1：以字母I作为前缀，并且第二个字母必须为大写
+- 接口名风格2：以字母Interface作为后缀
+- 满足接口名风格的将被编译器认为是接口，否则被认为是普通类
+- Tea语言的接口相当于是PHP中Interface和Trait的结合，实际上在编译生成的目标代码中的确由这两部分组成
+- Tea语言的接口中可以有代码实现，甚至可以声明属性，和非public成员！（这和传统面向对象语言有所不同，这样的改变真的好吗？我暂时不太确定）
+---
+
+// 这是一个I前缀风格的接口
+public IDemo {
+	// 这是一个类常量，未标注修饰符，默认为public，可被外部Unit调用
+	CONST1 = 'This is a constant!'
+
+	// 这是一个静态属性
+	static a_static_prop = "a static property."
+
+	// 这是一个静态方法
+	static say_hello_with_static(name String = 'Benny') {
+		print "Hello, $name\n"
+	}
+}
+
+// 这是一个Interface后缀风格的接口
+internal DemoInterface {
+	// 这是一个实例属性
+	message String = 'hei~'
+
+	// 这是一个未带实现的实例方法声明
+	set_message(message String)
+
+	// 这是一个实例方法
+	get_message() String {
+		return this.message
+	}
+}
+
+internal DemoBaseClass {
+	// 构造函数
+	construct(name String) {
+		echo "Hey, $name, it is constructing..."
+	}
+
+	// 析构函数
+	destruct() {
+		echo "it is destructing..."
+	}
+
+	protected a_protected_method() {
+		//
+	}
+}
+
+// 本类继承了DemoBaseClass类，并实现了IDemo和DemoInterface接口
+// 本类使用public修饰，可被外部Unit调用
+public DemoPublicClass: DemoBaseClass, IDemo, DemoInterface {
+	// 实现DemoInterface中的方法
+	set_message(message String) {
+		this.message = message
+	}
+}
+
+// 创建一个对象
+var object = DemoPublicClass('Benny')
+
+// 调用实例方法
+object.set_message('some string')
+
+// 调用静态方法
+object.say_hello_with_static()
+DemoPublicClass.say_hello_with_static()
+
+---
+## 11. 标签（Label）
+- Tea语言使用#作为语法的一部分，称为“标签”，即“Label”
+- 预定义的标签有：#tea #php #unit #use #main #expect #include #text 等，其中#tea标签用于内部用途，其它分别有不同用途
+---
+
+---
+## 12. 单元模块
+- 使用#unit标签声明单元模块（Unit）
+- 每个Unit拥有一个独立的名称空间，Unit内部不支持定义名称空间
+- Unit用于将程序内容作用域与外部隔离，声明为public的常量、函数、类和接口可被外部Unit调用，声明为internal的只能在Unit内部调用
+- 在指定目录中创建“__unit.tea”文件，并在文件的开始写上类似 "#unit tealang.org/demo" 即定义了一个Tea Unit，#unit后边的URI即为这个Unit的名称空间
+- 该单元模块的目录名称，须与#unit所声明的名称空间完全匹配，编译器将根据名称空间查找所在目录（可参考tests/xview）
+- 使用#use标签引入外部Unit中的类，以供当前程序调用，如："#use tealang.org/libs { DemoClass1, DemoClass2 }"
+- #use标签目前仅限于在声明文件中使用（包括__unit.th和__public.th），后续可能会开放给*.tea程序文件使用
+---
+
+---
+## 13. 将程序文件设置为入口
+- 在目标Tea语言程序文件的开头加上#main标签，即可声明该程序文件为“入口程序”
+- 当前程序文件的编译结果中将自动加上依赖项加载语句
+- 当前Unit的编译结果中将自动加上内置库加载语句
+---
+
+#main  // set current file as a main program
+
+---
+## 14. 使用无名称空间的PHP库
+- 使用#php标签声明无名称空间的PHP常量、函数、类、接口和超全局变量，以供Tea语言程序调用
+- 支持包括PHP内置的，也包括用户自定义的
+- 对于用户自定义的，需要自行添加相关的加载语句
+---
+
+// 声明一个PHP内置超全局变量
+#php $_ENV Dict
+
+// 声明一个PHP内置常量
+#php __CLASS__ String
+
+// 声明一个PHP内置函数
+#php phpinfo() Void
+
+// 声明一个PHP内置类
+#php BadFunctionCallException: Exception {
+	public getCode() Int
+	public getMessage() String
+}
+
+---
+## 15. 使用有名称空间的PHP库
+- 在所在库的目录中创建“__public.th”文件，并在文件的开始写上类似 "#unit NS1/NS2/NS3"，即定义了一个可被Tea语言调用的Unit
+- 代码库所在目录名称，须与#unit所声明的名称空间完全匹配，编译器将根据名称空间查找所在目录（可参考tests/PHPDemoUnit）
+---
+
+---
+## 16. 标识符强规范
+- Tea语言特点之一是标识符强命名规范，标识符包括变量名、常量名、函数名、类名、接口名等，区分大小写
+- Tea语言中没有class、interface、function、const等关键字，编译器根据标识符风格来识别常量、函数、类和接口、属性、方法等
+- 标识符前缀为下划线时，约定只能使用一个下划线作为前缀，双下划线前缀被编译器保留使用
+- 标识符强编码规范有助于保持一致的代码风格，有助于更快速、更清晰的阅读理解代码
+---
+
+---
+## 17. 运算符强规范
+- 空格（包括“ ”、换行、制表符）是Tea语言语法的一部分，被用于分割语法元素
+- 一元前置运算符前面须至少有一个空格
+- 非访问运算的二元运算符（如+、-、*、/等）两端须至少各有一个空格
+- 函数括号“(”、数组元素访问中括号“[”前面不能有空格
+- 运算符强编码规范有助于保持一致的代码风格，也有助于更快速、更清晰的阅读理解代码
+---
+
+---
+## 18. 代码注释语法
+Tea语言支持三种注释语法，分别用于不同场景
+- 文档专用注释，由三个连字符开启和结束，左边空字符须一致，如本节说明内容即使用了文档专用注释
+- 单行注释 	// inline comment
+- 多行注释 	/* multi-lines comments */
+---
+
+---
+## 19. 安装和使用
+- 安装PHP7.3运行环境
+- 安装好PHP后，将PHP执行文件所在目录添加到操作系统环境变量中
+- 在命令终端将当前目录切换到tea目录中，运行命令“php bin/tea documents”即可编译本文档程序
+- 如使用Mac或Linux系统，可执行“chmod +x bin/*”将bin目录中程序设置为可执行，然后运行命令“bin/tea documents”即可进行编译
+- 在dist/documents目录中可看到编译生成的目标文件
+---
+
+---
+## 20. 致谢
+Tea语言从众多优秀的编程语言中获取到设计灵感，主要包括（排名不分先后）：
+	PHP、Hack、JavaScript、TypeScript、Python、Swift、Kotlin、Go、Rust、Ruby、Java、C#、Pascal、C、Julia等。
+在此向设计和维护这些编程语言的大师们致敬。
+---
+
+// document end

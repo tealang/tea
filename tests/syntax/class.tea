@@ -1,0 +1,224 @@
+
+#main
+
+#php __CLASS__ String
+
+internal IDemo: BaseInterface {
+	CONST1 = 'const value'
+
+	prop String
+
+	construct(some String) {
+		this.prop = some
+	}
+
+	get_class_name(caller String = 'caller1') String {
+		return __CLASS__
+	}
+}
+
+internal BaseClass {
+	set_value(num Int) {
+		//
+	}
+}
+
+// inherts a class, and implements an interface
+internal Test1: BaseClass, IDemo {
+	construct(some String) {
+		//
+	}
+
+	static static_method() {
+		echo this.CONST1
+	}
+}
+
+var t1 = Test1('some')
+echo t1.get_class_name('Unknow')
+
+internal Test2 {
+	// 自定义类作为属性
+	t1 BaseInterface
+
+	// 参数类型为自定义类
+	---
+	Some text
+	@t1  some parameter comment
+	---
+	set_t1(t1 BaseInterface) {
+		this.t1 = t1
+	}
+
+	call_t1_fn() String {
+		return this.t1.get_class_name('class.tea')
+	}
+}
+
+var t2 = Test2()
+t2.set_t1(t1)
+echo t2.call_t1_fn()
+
+internal ITest {
+	f1() String
+}
+
+internal Test3: ITest {
+	f1() String {
+		return "hi"
+	}
+}
+
+internal Test4 {
+	static fx(it ITest) {
+		echo it.f1()
+	}
+}
+
+var a ITest
+a = Test3()
+
+Test4.fx(Test3())
+
+internal Test5 {
+	// const
+	C_1 = '123'
+
+	// attribute
+	a_10 = [:]
+	a_11 = ["f_1": 123, "f_2": "string"]
+	a_20 Int
+	//a_21 Int = none
+	a_22 Int = 123
+	a_30 String
+	//a_31 String = none
+	a_32 String = "hi"
+	a_40 Bool
+	a_41 Bool = true
+	a_42 Bool = false
+	a_50 Array
+	a_51 Array = []
+	a_52 Array = [1, 2, "str"]
+	a_53 Array = [1, 2, [4, 5, 6]]
+
+
+	// static attribute
+	static sa_10 = [:]
+	static sa_11 = ["f_1": 123, "f_2": "string"]
+	static sa_20 Int
+	static sa_22 Int = 123
+	static sa_30 String
+	static sa_32 String = "hi"
+	static sa_41 Bool = true
+	static sa_51 Array = []
+	static sa_53 Array = [1, 2, [4, 5, 6]]
+
+	static sm3() {
+		// none
+	}
+
+	static sm_30(arg) String {
+		return ""
+	}
+
+	static sm_31(arg_1, arg_2) String {
+		str = "sth."
+
+		return str
+	}
+
+	static sm_33(arg = [:]) Int {
+		return 1
+	}
+
+	static sm_34(arg = [1, 2, 3]) Float {
+		return 1.23
+	}
+
+	static sm_35(arg_1 Dict, arg_2) Bool {
+		return true
+	}
+
+	static sm_360(arg_1 Dict, arg_2 = "str") Array {
+		return []
+	}
+
+	static sm_361(arg_1 Dict, arg_2 = "str") Array {
+		return [1, 2, 3]
+	}
+
+	static sm_362(arg_1 Array, arg_2 = "str") Array {
+		return arg_1
+	}
+
+	static sm_370(arg_1 Dict, arg_2 = "str") Dict {
+		return [:]
+	}
+
+	static sm_371(arg_1 Dict, arg_2 = "str") Dict {
+		return arg_1
+	}
+
+	static sm_372(arg_1 Array, arg_2 = "str") Dict {
+		return ["a": 123]
+	}
+
+	m3() {
+		// none
+	}
+
+	m_30(arg) String {
+		return ""
+	}
+
+	m_31(arg_1, arg_2) String {
+		str = "sth."
+
+		return str
+	}
+
+	m_33(arg = [:]) Int {
+		return 1
+	}
+
+	m_34(arg = [1, 2, 3]) Float {
+		return 1.23
+	}
+
+	m_35(arg_1 Dict, arg_2) Bool {
+		return true
+	}
+
+	m_360(arg_1 Dict, arg_2 = "str") Array {
+		return []
+	}
+
+	m_361(arg_1 Dict, arg_2 = "str") Array {
+		return [1, 2, 3]
+	}
+
+	m_362(arg_1 Array, arg_2 = "str") Array {
+		return arg_1
+	}
+
+	m_363(arg_1 Array, arg_2 = "str") Array {
+		return this.a_53
+	}
+
+	m_370(arg_1 Dict, arg_2 = "str") {
+		return []
+	}
+
+	m_371(arg_1 Dict, arg_2 = "str") Dict {
+		return arg_1
+	}
+
+	m_372(arg_1 Array, arg_2 = "str") Dict {
+		return ["a": 123]
+	}
+
+	m_373(arg_1 Array, arg_2 = "str") Dict {
+		return this.a_10
+	}
+}
+

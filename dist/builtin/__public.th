@@ -1,0 +1,218 @@
+// the public declarations
+
+#unit tea/builtin
+
+public NL String = "\n"
+public __DIR__ String
+public __LINE__ UInt
+public JSON_UNESCAPED_UNICODE Int
+
+#php Exception {
+	public construct(message String, code Int = 0)
+	public getCode() Int
+	public getMessage() String
+}
+
+#php ErrorException: Exception {
+	// no any
+}
+
+#php strval(val Any) String
+
+#php intval(val Any) Int
+
+#php floatval(val Any) Float
+
+#php boolval(val Any) Bool
+
+#php abs(val Any) Float
+
+#php round(val Any, precision UInt = 0) Float
+
+#php ceil(val Any) Float
+
+#php floor(val Any) Float
+
+#php is_int(val Any) Bool
+
+public is_uint(val Any) Bool
+
+#php trim(str Any, char_mask String = #default) String
+
+#php rtrim(str Any, char_mask String = #default) String
+
+#php ltrim(str Any, char_mask String = #default) String
+
+#php iconv_strlen(str String) UInt
+
+#php iconv_substr(str String, start Int, length UInt = #default) String
+
+#php iconv_strpos(str String, search String, offset Int = 0) Int
+
+public _iconv_strpos(str String, search String, offset Int = 0) Int
+
+#php iconv_strrpos(str String, search String, offset Int = 0) Int
+
+public _iconv_strrpos(str String, search String, offset Int = 0) Int
+
+#php mb_strtoupper(str String) String
+
+#php mb_strtolower(str String) String
+
+#php strlen(str String) UInt
+
+#php substr(str String, start Int, length UInt = #default) String
+
+#php strpos(master String, search String, offset Int = 0) Int
+
+public _strpos(master String, search String, offset Int = 0) Int
+
+#php strrpos(master String, search String, offset Int = 0) Int
+
+public _strrpos(master String, search String, offset Int = 0) Int
+
+#php strtr(master String, changes Dict) String
+
+#php str_replace(search Any, replacement Any, master String) String
+
+public _str_replace(master String, search String, replacement String) String
+
+#php implode(pieces Any, delimiter String = #default) String
+
+#php explode(delimiter String, master String) Array
+
+#php count(array Any) UInt
+
+#php in_array(needle Any, haystack Any, strict Bool = false) Bool
+
+#php array_reverse(array Any)
+
+#php array_slice(master Array, offset Int, length UInt = none) Array
+
+#php array_unshift(master Array, item Any) UInt
+
+#php array_shift(master Array) Any
+
+#php array_push(master Array, item Any) UInt
+
+#php array_pop(master Array) Any
+
+#php array_search(search Any, master Any) Int
+
+public _array_search(master Any, search Any) Int
+
+#php array_key_exists(key Any, arr Dict) Bool
+
+#php unset(target Any)
+
+#php array_keys(array Dict) Array
+
+#php array_values(array Dict) Array
+
+#php json_encode(data Any, flags Int = 0, depth UInt = 512) String
+
+#php json_decode(data Any, assoc Bool = false, depth UInt = 512, flags Int = 0) Dict
+
+#php date(format String, timestamp Int = #default) String
+
+#php preg_match(regex Regex, subject String, matches Array = #default, flags Int = #default, offset Int = #default) Bool
+
+#php preg_match_all(regex Regex, subject String, matches Array = #default, flags Int = #default, offset Int = #default) Bool
+
+#tea Any {
+	// no any
+}
+
+#tea None {
+	// no any
+}
+
+#tea Scalar {
+	masked string String
+	masked float Float
+	masked int Int
+	masked bool Bool
+}
+
+#tea String: Scalar {
+	masked byte_length UInt
+	masked length UInt
+	masked find(str String, offset Int = 0) Int
+	masked find_last(search String, offset Int = 0) Int
+	masked slice(start Int, length UInt = #default) String
+	masked lower() String
+	masked upper() String
+	masked explode(delimiter String) Array
+	masked replace(search String, replacement String) String
+	masked json_decode() Dict
+}
+
+#tea Float: Scalar {
+	masked abs() Float
+	masked ceil() Float
+	masked floor() Float
+	masked round(precision UInt = 0) Float
+}
+
+#tea Int: Scalar {
+	masked abs() UInt
+}
+
+#tea UInt: Int {
+	// no any
+}
+
+#tea Bool: Scalar {
+	masked int UInt
+}
+
+#tea Dict {
+	masked length UInt
+	masked keys Array
+	masked values Array
+	masked has_key(key Any) Bool
+	masked has_value(val Any) Bool
+	masked find(val Any) Int
+	masked join(delimiter String = NL) String
+	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) String
+}
+
+#tea Array {
+	masked length UInt
+	masked has_value(val Any) Bool
+	masked find(val Any) Int
+	masked unshift(item Any) UInt
+	masked shift() Any
+	masked push(item Any) UInt
+	masked pop() Any
+	masked slice(start Int, length UInt = #default) Array
+	masked reverse() Array
+	masked join(delimiter String = NL) String
+	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) String
+}
+
+#tea Regex {
+	// no any
+}
+
+#tea XView {
+	// no any
+}
+
+#tea Iterable {
+	// no any
+}
+
+#tea Callable {
+	// no any
+}
+
+public IView {
+	// no any
+}
+
+#php IteratorInterface {
+	// no any
+}
+
+// program end

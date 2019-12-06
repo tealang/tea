@@ -1,0 +1,53 @@
+
+---
+// for 未支持类型标注
+for key Int, val Int in vt1 {
+	//
+}
+---
+
+#php range(start Int, end Int, step = 1) Array
+
+arr = [
+	"k1": "hi",
+	"k2": "hello",
+]
+
+// for-in
+for val in range(0, 9) {
+	echo val
+}
+
+// for-in-else
+for k, v in arr {
+	// do sth.
+}
+elseif true {
+	//
+}
+else {
+	//
+}
+
+// for-to
+for i = 0 to 9 {
+	i + 3
+	echo i
+}
+else {
+	echo 'no loops'
+}
+
+// for-downto
+for i = 9 * 2 downto 0 + 5 step 2 {
+	echo i
+}
+elseif (arr) {
+	print 'oh!'
+}
+catch ex {
+	//
+}
+finally {
+	//
+}

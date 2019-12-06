@@ -1,0 +1,15 @@
+
+// expect variables defined in the including programs
+#expect title String, items Array
+
+list = []
+for k, v in items {
+	list.push(<li>$k: $v</li>)
+}
+
+return <section>
+	<h1>$title</h1>
+	<ul>
+		${list.join()}
+	</ul>
+</section>

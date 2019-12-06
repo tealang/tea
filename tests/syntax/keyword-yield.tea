@@ -1,0 +1,26 @@
+
+// a int range generator use yield
+public xrange(start Int, stop Int, step = 1) {
+	// increment
+	if step > 0 {
+		i = start
+		while i < stop {
+			yield i
+			i += step
+		}
+
+		return
+	}
+
+	// invalid
+	if step == 0 {
+		throw Exception('Step should not be 0.');
+	}
+
+	// step less than 0, decrement
+	i = start
+	while i > stop {
+		yield i
+		i += step
+	}
+}

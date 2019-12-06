@@ -1,0 +1,34 @@
+// the public declarations
+
+#unit tea/docs
+
+public PI Float = 3.1415926
+public ARRAY_CONST UInt.Array = [1, 2]
+public __CLASS__ String
+
+public demo_function2(message String = 'with a default value')
+
+public demo_function_with_a_return_type(some String) UInt
+
+public demo_function_with_callbacks(some String) String -> success(message String) String -> failure(error Any)
+
+public IDemo {
+	CONST1 String = 'This is a constant!'
+
+	static a_static_prop String
+
+	static say_hello_with_static(name String = 'Benny')
+}
+
+public DemoPublicClass: DemoBaseClass, IDemo, DemoInterface {
+	set_message(message String)
+}
+
+#php phpinfo()
+
+#php BadFunctionCallException: Exception {
+	public getCode() Int
+	public getMessage() String
+}
+
+// program end

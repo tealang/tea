@@ -1,0 +1,224 @@
+---
+The builtin libs for Tea
+
+created: 2019/02 by Benny Lin
+copyright: YJ Technology Ltd. All rights reserved.
+---
+
+public NL = "\n"
+
+#php __DIR__ String
+#php __LINE__ UInt
+
+#php $_GET Dict
+#php $_POST Dict
+#php $_COOKIE Dict
+#php $_SERVER Dict
+
+#php Exception {
+	public construct(message String, code Int = 0)
+	public getCode() Int
+	public getMessage() String
+}
+
+#php ErrorException: Exception {}
+
+// types
+#php strval(val) String
+#php intval(val) Int
+#php floatval(val) Float
+#php boolval(val) Bool
+
+// math
+#php abs(val) Float
+#php round(val, precision = 0) Float
+#php ceil(val) Float
+#php floor(val) Float
+
+#php is_int(val) Bool
+public is_uint(val) Bool {
+	return is_int(val) and val >= 0
+}
+
+// string
+#php trim(str, char_mask String = #default) String
+#php rtrim(str, char_mask String = #default) String
+#php ltrim(str, char_mask String = #default) String
+
+// with default charset
+#php iconv_strlen(str String) UInt
+#php iconv_substr(str String, start Int, length UInt = #default) String
+
+// first pos in default charset
+#php iconv_strpos(str String, search String, offset Int = 0) Int  // would return false on not found
+public _iconv_strpos(str String, search String, offset Int = 0) Int {
+	pos = iconv_strpos(str, search, offset);
+	return pos === false ? -1 : pos  // return -1 on not found
+}
+
+// last pos in default charset
+#php iconv_strrpos(str String, search String, offset Int = 0) Int  // would return false on not found
+public _iconv_strrpos(str String, search String, offset Int = 0) Int {
+	pos = iconv_strrpos(str, search, offset);
+	return pos === false ? -1 : pos  // return -1 on not found
+}
+
+#php mb_strtoupper(str String) String
+#php mb_strtolower(str String) String
+
+// bytes mode functions
+#php strlen(str String) UInt
+#php substr(str String, start Int, length UInt = #default) String
+#php strpos(master String, search String, offset Int = 0) Int  // would return false on not found
+public _strpos(master String, search String, offset Int = 0) Int {
+	pos = strpos(master, search, offset);
+	return pos === false ? -1 : pos  // return -1 on not found
+}
+#php strrpos(master String, search String, offset Int = 0) Int  // would return false on not found
+public _strrpos(master String, search String, offset Int = 0) Int {
+	pos = strrpos(master, search, offset);
+	return pos === false ? -1 : pos  // return -1 on not found
+}
+
+// replace in binary mode
+#php strtr(master String, changes Dict) String
+#php str_replace(search, replacement, master String) String
+public _str_replace(master String, search String, replacement String) {
+	return str_replace(search, replacement, master);
+}
+
+#php implode(pieces, delimiter String = #default) String  // 故意使用跟文档不一样的参数顺序，以跟masked参数顺序一致
+#php explode(delimiter String, master String) Array
+
+// array
+#php count(array) UInt
+#php in_array(needle, haystack, strict Bool = false) Bool
+#php array_reverse(array)
+
+// index array
+#php array_slice(master Array, offset Int, length UInt = none) Array
+#php array_unshift(master Array, item Any) UInt
+#php array_shift(master Array) Any
+#php array_push(master Array, item Any) UInt
+#php array_pop(master Array) Any
+#php array_search(search, master) Int
+public _array_search(master, search) Int {
+	index = array_search(search, master);
+	return index === false ? -1 : index  // return -1 on not found
+}
+#php array_key_exists(key, arr Dict) Bool
+
+// assoc array
+#php unset(target) Void
+#php array_keys(array Dict) Array
+#php array_values(array Dict) Array
+
+#php JSON_UNESCAPED_UNICODE Int
+#php json_encode(data, flags Int = 0, depth UInt = 512) String
+#php json_decode(data, assoc Bool = false, depth UInt = 512, flags Int = 0) Dict
+#php date(format String, timestamp Int = #default) String
+
+// regex
+#php preg_match(regex Regex, subject String, matches Array = #default, flags Int = #default, offset Int = #default) Bool
+#php preg_match_all(regex Regex, subject String, matches Array = #default, flags Int = #default, offset Int = #default) Bool
+
+// public IShareAble {
+// 	vshare() Object
+// }
+
+// public ICloneAble {
+// 	vclone() Object
+// }
+
+#tea Any {}
+#tea None {}
+
+#tea Scalar {
+	masked string => strval(this)
+	masked float => floatval(this)
+	masked int => intval(this)
+	masked bool => boolval(this)
+}
+
+// 所有 masked function 在定义时都需要考虑参数的顺序，参数的运行时序不一致可能会导致问题
+// 考虑禁止在调用函数的参数中改变数据（需要推断出可能改变数据的函数，或直接禁止参数带函数调用），安全表达式?
+
+#tea String: Scalar {
+	masked byte_length => strlen(this)
+
+	// handle with default charset
+	masked length => iconv_strlen(this)
+	masked find(str String, offset Int = 0) => _iconv_strpos(this, str, offset)
+	masked find_last(search String, offset Int = 0) => _iconv_strrpos(this, search, offset)
+	masked slice(start Int, length UInt = #default) => iconv_substr(this, start, length)
+	// masked slice(start Int, end Int) => substr_by_position(start, end)
+
+	masked lower() => mb_strtolower(this)
+	masked upper() => mb_strtoupper(this)
+
+	masked explode(delimiter String) => explode(delimiter, this) // 编译后参数顺序有变化，使用时应避免当前字符串被delimiter表达式所改变
+	masked replace(search String, replacement String) => _str_replace(this, search, replacement)
+
+	masked json_decode() => json_decode(this, true)
+}
+
+#tea Float: Scalar {
+	masked abs() => abs(this)
+	masked ceil() => ceil(this)
+	masked floor() => floor(this)
+	masked round(precision = 0) => round(this, precision)
+}
+
+#tea Int: Scalar {
+	masked abs() UInt => abs(this)
+}
+
+#tea UInt: Int {}
+
+#tea Bool: Scalar {
+	masked int UInt => intval(this)  // to UInt
+}
+
+#tea Dict {
+	masked length => count(this)
+
+	masked keys => array_keys(this)
+	masked values => array_values(this)
+
+	masked has_key(key) => array_key_exists(key, this)
+	masked has_value(val) => in_array(val, this)
+	masked find(val) => _array_search(this, val) // find the key with supported value
+
+	// masked remove(key String) => unset(this[key])
+
+	masked join(delimiter String = NL) => implode(this, delimiter)
+	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) => json_encode(this, flags)
+}
+
+#tea Array {
+	masked length => count(this)
+
+	masked has_value(val) => in_array(val, this)
+	masked find(val) => _array_search(this, val) // find the key with supported value
+
+	masked unshift(item) => array_unshift(this, item)
+	masked shift() => array_shift(this)
+	masked push(item) => array_push(this, item)
+	masked pop() => array_pop(this)
+
+	masked slice(start Int, length UInt = #default) Array => array_slice(this, start, length)
+	masked reverse() Array => array_reverse(this)
+
+	masked join(delimiter String = NL) => implode(this, delimiter)
+	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) => json_encode(this, flags)
+}
+
+#tea Regex {}
+#tea XView {}   // accept IView
+#tea Iterable {} // accept IteratorInterface
+#tea Callable {}
+
+public IView {}
+#php Iterator as IteratorInterface {}
+
+// end of program

@@ -1,0 +1,30 @@
+
+// normal while
+i = 0
+while i < 10 {
+	i += 1
+	continue
+}
+catch ex {
+	//
+}
+
+// do-while
+while is first or i > 5 {
+	i -= 1
+	break
+}
+
+// labeled loops
+i = 0
+#outer_loop while 1 {
+	#inner_loop while true {
+		i = i + 1
+		if i > 10 {
+			break #outer_loop
+		}
+		else {
+			continue #inner_loop
+		}
+	}
+}

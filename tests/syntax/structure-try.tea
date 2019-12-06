@@ -1,0 +1,30 @@
+
+// normal try-catch-finally
+try {
+	//
+}
+catch ex {
+	//
+}
+finally {
+	//
+}
+
+// if with catch-finally
+if 1 {
+	//
+}
+else {
+	//
+}
+catch ex {}
+finally {}
+
+// for with catch-finally
+for v in [] {
+	throw ErrorException('some message')
+}
+catch ex ErrorException {}
+finally {}
+
+// also supported in while

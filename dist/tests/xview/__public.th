@@ -1,0 +1,31 @@
+// the public declarations
+
+#unit tea/tests/xview
+
+public IViewDemo: IView {
+	name String
+	css_class String
+
+	set_css_class(names String) IViewDemo
+}
+
+public BaseView: IView {
+	name String
+
+	protected props Dict
+	protected subviews Array
+
+	construct(props Dict = none)
+
+	prop(key String, value Any) BaseView
+
+	subview(view XView) BaseView
+
+	protected build_props() String
+
+	render() String
+
+	to_string() String
+}
+
+// program end

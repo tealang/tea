@@ -1,0 +1,41 @@
+
+#main
+
+#php var_dump(v)
+
+internal TeaDemoClass {
+	static static_prop1 = 'static prop value'
+
+	prop1 = 'prop1 value'
+
+	static static_method() {
+		return this.static_prop1
+	}
+
+	method1(param1 String) {
+		return this.prop1
+	}
+
+	method2() String {
+		return 'some'
+	}
+}
+
+echo "\n***Test for class call:"
+var php_class_demo_object = PHPClassDemo()
+echo php_class_demo_object.get_class_name('main1')
+var methods = php_class_demo_object.get_target_class_methods(TeaDemoClass)
+var_dump(methods)
+
+php_function_demo('hei~')
+var_dump(PHP_CONST_DEMO)
+
+echo "\n***Test for range:"
+var items = range(0, 9, 2)
+var_dump(items)
+
+echo "\n***Test for include:"
+var title = 'include from main1.tea' // use in included file
+var result = #include(label-expect)
+echo result
+

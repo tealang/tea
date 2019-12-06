@@ -1,0 +1,49 @@
+#!/usr/bin/env php
+<?php
+/**
+ * This file is part of the Tea programming language project
+ *
+ * @author 		Benny <benny@meetdreams.com>
+ * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
+ */
+
+/// The complier script for the Tea programming language
+
+namespace Tea;
+
+define('BASE_PATH', dirname(__DIR__) . DIRECTORY_SEPARATOR);
+define('LOG_PATH', BASE_PATH . 'log/');
+
+const DEBUG = 0;
+
+const NL = "\n";
+
+require BASE_PATH . 'compiler/__unit.php';
+
+if (!isset($argv[1])) {
+	echo "Missed compile target path.\n";
+	exit;
+}
+
+$dir = $argv[1];
+if ($dir[0] !== DS && $dir[0] !== '.') {
+	$dir = getcwd() . DS . $dir;
+}
+
+$realpath = realpath($dir);
+if ($realpath === false) {
+	echo "Target dir '{$dir}' not found.\n";
+	exit;
+}
+
+try {
+	echo NL;
+	$compiler = new Compiler($realpath . DS);
+	$count = $compiler->make();
+	echo "\n$count programs compiled.\n\n";
+}
+catch (\Exception $e) {
+	echo NL, $e->getMessage(), NL;
+	// echo $e->getTraceAsString(), NL, NL;
+}

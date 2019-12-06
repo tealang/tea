@@ -1,0 +1,40 @@
+
+public BaseView: IView {
+	name String
+
+	protected props = [:]
+	protected subviews = []
+
+	construct(props Dict = none) {
+		if props {
+			this.props = props
+		}
+	}
+
+	prop(key String, value Any) BaseView {
+		this.props[key] = value
+		return this
+	}
+
+	subview(view XView) BaseView {
+		this.subviews[] = view
+		return this
+	}
+
+	protected build_props() {
+		props = ''
+		for key, value in this.props {
+			props .= ' #{key}="#{value}"'
+		}
+
+		return props
+	}
+
+	render() String {
+		return <xview${this.build_props()}>${this.subviews.join()}</xview>
+	}
+
+	to_string() String {
+		return this.render()
+	}
+}
