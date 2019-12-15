@@ -21,6 +21,8 @@ trait DeclarationTrait {
 	 */
 	public $docs;
 
+	public $label;
+
 	/**
 	 * @var string
 	 */
@@ -36,11 +38,11 @@ trait DeclarationTrait {
 	 * @var Symbol
 	 */
 	public $symbol;
+
+	public $checked; // set true when checked by ASTChecker
 }
 
 class RootDeclaration extends Node implements IRootDeclaration, IStatement
 {
 	use DeclarationTrait;
-
-	public $label;
 }

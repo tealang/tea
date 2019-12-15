@@ -26,8 +26,6 @@ trait FunctionLikeTrait
 
 	public $checking; // set true when on checking by ASTChecker
 
-	public $checked; // set true when checked by ASTChecker
-
 	function set_body_with_expression(IExpression $expression)
 	{
 		$this->body = $expression;

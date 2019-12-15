@@ -65,10 +65,10 @@ class DemoList extends BaseView
 	' . ($this->title == "abc" ? '<h1>' . htmlspecialchars($this->title . 123, ENT_QUOTES) . '</h1>' : null) . '
 	<i></i>
 	<cells>
-		' . implode($cells, NL) . '
+		' . implode(NL, $cells) . '
 	</cells>
 	<views>
-		' . implode($this->subviews, NL) . '
+		' . implode(NL, $this->subviews) . '
 	</views>
 	<script> if (a < 1 || a >= 5) {} </script>
 </' . $this->tag . '>';

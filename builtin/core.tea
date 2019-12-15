@@ -1,8 +1,8 @@
 ---
 The builtin libs for Tea
 
-created: 2019/02 by Benny Lin
-copyright: YJ Technology Ltd. All rights reserved.
+@created 2019/02 by Benny Lin
+@copyright YJ Technology Ltd. All rights reserved.
 ---
 
 public NL = "\n"
@@ -77,7 +77,7 @@ public _strpos(master String, search String, offset Int = 0) Int {
 #php strrpos(master String, search String, offset Int = 0) Int  // would return false on not found
 public _strrpos(master String, search String, offset Int = 0) Int {
 	pos = strrpos(master, search, offset);
-	return pos === false ? -1 : pos  // return -1 on not found
+	return pos === false ? -1 : pos  // would return -1 on not found
 }
 
 // replace in binary mode
@@ -87,7 +87,7 @@ public _str_replace(master String, search String, replacement String) {
 	return str_replace(search, replacement, master);
 }
 
-#php implode(pieces, delimiter String = #default) String  // 故意使用跟文档不一样的参数顺序，以跟masked参数顺序一致
+#php implode(glue String, pieces) String
 #php explode(delimiter String, master String) Array
 
 // array
@@ -102,9 +102,13 @@ public _str_replace(master String, search String, replacement String) {
 #php array_push(master Array, item Any) UInt
 #php array_pop(master Array) Any
 #php array_search(search, master) Int
-public _array_search(master, search) Int {
-	index = array_search(search, master);
-	return index === false ? -1 : index  // return -1 on not found
+public _array_search(master Array, search) Int {
+	index = array_search(search, master)
+	return index === false ? -1 : index  // would return -1 on not found
+}
+public _dict_search(master Dict, search) String {
+	key = array_search(search, master)
+	return key === false ? none : key  // would return none on not found
 }
 #php array_key_exists(key, arr Dict) Bool
 
@@ -187,11 +191,11 @@ public _array_search(master, search) Int {
 
 	masked has_key(key) => array_key_exists(key, this)
 	masked has_value(val) => in_array(val, this)
-	masked find(val) => _array_search(this, val) // find the key with supported value
+	masked find(val) => _dict_search(this, val) // find the key with supported value
 
 	// masked remove(key String) => unset(this[key])
 
-	masked join(delimiter String = NL) => implode(this, delimiter)
+	masked join(glue String = NL) => implode(glue, this)
 	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) => json_encode(this, flags)
 }
 
@@ -199,7 +203,7 @@ public _array_search(master, search) Int {
 	masked length => count(this)
 
 	masked has_value(val) => in_array(val, this)
-	masked find(val) => _array_search(this, val) // find the key with supported value
+	masked find(val) => _array_search(this, val) // find the index with supported value
 
 	masked unshift(item) => array_unshift(this, item)
 	masked shift() => array_shift(this)
@@ -209,7 +213,7 @@ public _array_search(master, search) Int {
 	masked slice(start Int, length UInt = #default) Array => array_slice(this, start, length)
 	masked reverse() Array => array_reverse(this)
 
-	masked join(delimiter String = NL) => implode(this, delimiter)
+	masked join(glue String = NL) => implode(glue, this)
 	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) => json_encode(this, flags)
 }
 

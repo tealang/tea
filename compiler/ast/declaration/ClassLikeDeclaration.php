@@ -57,8 +57,6 @@ class ClassLikeDeclaration extends RootDeclaration implements IMemberDeclaration
 	 */
 	public $program;
 
-	public $checked; // set true when checked by ASTChecker
-
 	public function __construct(?string $modifier, $name)
 	{
 		$this->modifier = $modifier;

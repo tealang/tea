@@ -77,7 +77,7 @@ public _strrpos(master String, search String, offset Int = 0) Int
 
 public _str_replace(master String, search String, replacement String) String
 
-#php implode(pieces Any, delimiter String = #default) String
+#php implode(glue String, pieces Any) String
 
 #php explode(delimiter String, master String) Array
 
@@ -99,7 +99,9 @@ public _str_replace(master String, search String, replacement String) String
 
 #php array_search(search Any, master Any) Int
 
-public _array_search(master Any, search Any) Int
+public _array_search(master Array, search Any) Int
+
+public _dict_search(master Dict, search Any) String
 
 #php array_key_exists(key Any, arr Dict) Bool
 
@@ -172,8 +174,8 @@ public _array_search(master Any, search Any) Int
 	masked values Array
 	masked has_key(key Any) Bool
 	masked has_value(val Any) Bool
-	masked find(val Any) Int
-	masked join(delimiter String = NL) String
+	masked find(val Any) String
+	masked join(glue String = NL) String
 	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) String
 }
 
@@ -187,7 +189,7 @@ public _array_search(master Any, search Any) Int
 	masked pop() Any
 	masked slice(start Int, length UInt = #default) Array
 	masked reverse() Array
-	masked join(delimiter String = NL) String
+	masked join(glue String = NL) String
 	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) String
 }
 

@@ -128,6 +128,7 @@ class ASTChecker
 
 	private function check_constant_declaration(ConstantDeclaration $node)
 	{
+		$node->checked = true;
 		$value = $node->value;
 
 		// no value, it should be declare mode
@@ -197,6 +198,8 @@ class ASTChecker
 
 	private function check_variable_declaration(VariableDeclaration $node)
 	{
+		$node->checked = true;
+
 		$infered_type = $node->value ? $this->infer_expression($node->value) : null;
 
 		if ($node->type) {
@@ -222,6 +225,7 @@ class ASTChecker
 	private function check_parameters_for_node($node)
 	{
 		foreach ($node->parameters as $parameter) {
+			$parameter->checked = true;
 			$infered_type = $parameter->value ? $this->infer_expression($parameter->value) : null;
 
 			if ($parameter->type) {
@@ -236,6 +240,8 @@ class ASTChecker
 
 	private function check_callback_protocol(CallbackProtocol $callback)
 	{
+		$callback->checked = true;
+
 		if ($callback->type) {
 			if ($callback->type instanceof ClassLikeIdentifier) {
 				$this->infer_classlike_identifier($callback->type, $callback);
@@ -385,6 +391,9 @@ class ASTChecker
 
 	private function check_function_declaration(FunctionDeclaration $node)
 	{
+		if ($node->checked) return;
+		$node->checked = true;
+
 		$this->check_parameters_for_callable_declaration($node);
 
 		if ($node->type) {
@@ -1821,8 +1830,14 @@ class ASTChecker
 			}
 		}
 
-		if ($symbol && $symbol->declaration instanceof UseDeclaration) {
-			$symbol->declaration = $this->require_declaration_for_use($symbol->declaration);
+		if ($symbol) {
+			if ($symbol->declaration instanceof UseDeclaration) {
+				$symbol->declaration = $this->require_declaration_for_use($symbol->declaration);
+			}
+
+			if (!$symbol->declaration->checked) {
+				$this->check_declaration($symbol->declaration);
+			}
 		}
 
 		// find in unit level symbols

@@ -19,7 +19,7 @@ array_push($arr, [1, 2, 3]);
 array_push($arr, "hello");
 
 echo array_pop($arr), NL;
-echo implode($arr, NL), NL;
+echo implode(NL, $arr), NL;
 
 $arr1 = [1, 2, 3];
 $arr2 = [4, 5, 6];

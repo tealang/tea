@@ -40,7 +40,7 @@ class BaseView implements \IView
 
 	public function render(): string
 	{
-		return '<xview' . $this->build_props() . '>' . implode($this->subviews, NL) . '</xview>';
+		return '<xview' . $this->build_props() . '>' . implode(NL, $this->subviews) . '</xview>';
 	}
 
 	public function __toString(): string

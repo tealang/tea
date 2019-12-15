@@ -40,10 +40,16 @@ function _str_replace(string $master, string $search, string $replacement): stri
 	return str_replace($search, $replacement, $master);
 }
 
-function _array_search($master, $search): int
+function _array_search(array $master, $search): int
 {
 	$index = array_search($search, $master);
 	return $index === false ? -1 : $index;
+}
+
+function _dict_search(array $master, $search): string
+{
+	$key = array_search($search, $master);
+	return $key === false ? null : $key;
 }
 
 
