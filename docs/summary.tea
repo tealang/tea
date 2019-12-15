@@ -114,7 +114,12 @@ if preg_match(regex, 'Abc\'123"') {
 }
 
 // 元素类型为Any的数组
-var any_array Array = [123, 'Hi', false, [1, 2, 3]]
+var any_array Array = [
+	123,  		// UInt
+	'Hi', 		// String
+	false,  	// Bool
+	[1, 2, 3], 	// Array
+]
 
 // 元素类型为Int的数组
 var int_array Int.Array = [] 	// 初始化为空数组

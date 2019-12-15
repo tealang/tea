@@ -112,7 +112,12 @@ if (preg_match($regex, 'Abc\'123"')) {
 	echo 'matched!', NL;
 }
 
-$any_array = [123, 'Hi', false, [1, 2, 3]];
+$any_array = [
+	123,
+	'Hi',
+	false,
+	[1, 2, 3]
+];
 
 $int_array = [];
 $int_array = [-1, 10, 200];
