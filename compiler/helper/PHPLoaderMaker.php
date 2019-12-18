@@ -29,7 +29,7 @@ class PHPLoaderMaker
 		// write file
 		$contents = file_get_contents($loader_file);
 		if (strpos($contents, self::GENERATES_TAG)) {
-			$contents = preg_replace('/' . self::GENERATES_TAG . '[\w\W]+/', $autoloads, $contents);
+			$contents = preg_replace('/\n' . self::GENERATES_TAG . '[\w\W]+/', $autoloads, $contents);
 			if (!$contents) {
 				throw new \Exception("Unexpected error on replaceing generated contents.");
 			}

@@ -37,12 +37,6 @@ function dump(...$args) {
 }
 
 // Please do not modify the following contents
-
-
-
-
-
-
 # --- generates ---
 const __AUTOLOADS = [
 	'Tea\Compiler' => 'Compiler.php',

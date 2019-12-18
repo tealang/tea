@@ -24,7 +24,7 @@ if (empty($argv[1]) ) {
 }
 
 $path = $argv[1];
-if (DS !== $path{0}) {
+if (DS !== $path[0]) {
 	$path = getcwd() . DS . $path;
 }
 

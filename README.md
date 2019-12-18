@@ -32,9 +32,9 @@ Tea语言由创业者Benny设计开发，潘春孟（高级工程师/架构师�
 
 - 安装PHP 7.2+运行环境
 - 安装好PHP后，将PHP执行文件所在目录添加到操作系统环境变量中
-- 使用“git clone https://github.com/tealang/tea.git”将Tea语言项目克隆到本地（或其它方式下载，但需保证项目目录名称为tea）
-- 在命令终端将当前目录切换到tea目录中，运行命令“php bin/tea docs”即可编译本文档程序
-- 如使用Mac或Linux系统，可执行“chmod +x bin/*”将bin目录中程序设置为可执行，然后运行命令“bin/tea docs”即可进行编译
+- 执行 git clone https://github.com/tealang/tea.git 将Tea语言项目克隆到本地（或其它方式下载，但需保证项目目录名称为tea）
+- 将当前目录切换到tea目录中，运行命令“php bin/tea docs”即可编译本文档程序
+- 如使用Mac或Linux系统，可执行 chmod +x bin/* 将bin目录中程序设置为可执行，然后运行命令“bin/tea docs”即可进行编译
 - 在dist/docs目录中可看到编译生成的目标文件
 
 ## 致谢
