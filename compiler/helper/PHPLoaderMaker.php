@@ -46,18 +46,16 @@ class PHPLoaderMaker
 		$tag = self::GENERATES_TAG;
 		$autoloads = static::stringfy_autoloads($autoloads);
 
-		return <<<EOF
+		return "
+{$tag}
+const __AUTOLOADS = {$autoloads};
 
-			{$tag}
-			const __AUTOLOADS = {$autoloads};
+spl_autoload_register(function (\$class) {
+	isset(__AUTOLOADS[\$class]) && require $unit_path . __AUTOLOADS[\$class];
+});
 
-			spl_autoload_register(function (\$class) {
-				isset(__AUTOLOADS[\$class]) && require $unit_path . __AUTOLOADS[\$class];
-			});
-
-			// end
-
-			EOF;
+// end
+";
 	}
 
 	protected static function init_loader_file(string $loader_file, ?string $namespace, string $warring, string $tag)
@@ -68,15 +66,13 @@ class PHPLoaderMaker
 			$namespace = "namespace $namespace;\n";
 		}
 
-		file_put_contents($loader_file, <<<EOF
-			<?php
-			{$namespace}
-			const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
+		file_put_contents($loader_file, "<?php
+{$namespace}
+const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
-			{$warring}
-			{$tag}
-
-			EOF);
+{$warring}
+{$tag}
+");
 	}
 
 	protected static function stringfy_autoloads(array $autoloads)
@@ -88,10 +84,8 @@ class PHPLoaderMaker
 
 		$items = join(",\n\t", $items);
 
-		return <<<EOF
-			[
-				$items
-			]
-			EOF;
+		return "[
+	$items
+]";
 	}
 }

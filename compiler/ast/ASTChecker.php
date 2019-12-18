@@ -921,7 +921,7 @@ class ASTChecker
 
 	private function check_exit_statement(ExitStatement $node)
 	{
-		$node->status && $this->expect_infered_type($node->status, TypeFactory::$_int);
+		$node->status && $this->expect_infered_type($node->status, TypeFactory::$_uint, TypeFactory::$_int);
 	}
 
 	private function check_echo_statement(EchoStatement $node)
@@ -1539,7 +1539,9 @@ class ASTChecker
 
 		// fill the default value when needed
 		if ($used_arg_names) {
-			$last_idx = array_key_last($normalizeds);
+			// $last_idx = array_key_last($normalizeds); // array_key_last do not support in PHP 7.2
+			$idx_list = array_keys($normalizeds);
+			$last_idx = end($idx_list);
 
 			$i = 0;
 			foreach ($parameters as $parameter) {
