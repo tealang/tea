@@ -11,18 +11,14 @@ namespace Tea;
 
 class FileHelper
 {
-	public static function get_normalized_path(string $dir)
+	// use the Unix style to normalize the path
+	public static function normalize_path(string $path)
 	{
-		// normalize the name style
-		if (strpos($dir, _BACK_SLASH) !== false) {
-			$dir = strtr($dir, _BACK_SLASH, DS);
+		if (strpos($path, _BACK_SLASH) !== false) {
+			$path = strtr($path, _BACK_SLASH, DS);
 		}
 
-		if ($dir[0] !== DS && $dir[0] !== '.') {
-			$dir = getcwd() . DS . $dir;
-		}
-
-		return realpath($dir);
+		return $path;
 	}
 
 	public static function mkdir(string $dir)

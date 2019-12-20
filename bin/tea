@@ -32,15 +32,15 @@ try {
 		halt(USAGE);
 	}
 
-	$realpath = FileHelper::get_normalized_path($dir);
+	$realpath = realpath($dir);
 	if ($realpath === false) {
 		error("Target dir '{$dir}' not found.");
 		halt(USAGE);
 	}
 
-	echo NL;
+	$realpath = FileHelper::normalize_path($realpath . DS);
 
-	$realpath .= DS;
+	echo NL;
 	$compiler = new Compiler($realpath);
 	$count = $compiler->make();
 

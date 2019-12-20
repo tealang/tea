@@ -3,7 +3,7 @@
 ---
 
 // 来自深圳的问候
-echo "世界你好！"dd
+echo "世界你好！"
 
 ---
 ## 01. 简要介绍
@@ -515,12 +515,24 @@ Tea语言支持三种注释语法，分别用于不同场景
 
 ---
 ## 19. 安装和使用
-- 安装PHP 7.2运行环境
+- 安装PHP 7.2+运行环境
 - 安装好PHP后，将PHP执行文件所在目录添加到操作系统环境变量中
-- 使用“git clone https://github.com/tealang/tea.git”将Tea语言项目克隆到本地（或其它方式下载，但需保证项目目录名称为tea）
-- 在命令终端将当前目录切换到tea目录中，运行命令“php bin/tea docs”即可编译本文档程序
-- 如使用Mac或Linux系统，可执行“chmod +x bin/*”将bin目录中程序设置为可执行，然后运行命令“bin/tea docs”即可进行编译
-- 在dist/docs目录中可看到编译生成的目标文件
+- 将Tea语言项目克隆到本地（或其它方式下载，但需保证项目目录名称为tea）
+	```sh
+	# clone by git
+	git clone https://github.com/tealang/tea.git
+	```
+- 将当前目录切换到tea的上级目录中，执行如下命令即可编译本文档程序：
+	```sh
+	# use the normal method
+	php tea/bin/tea tea/docs
+	```
+- 如使用Mac或Linux系统，可使用Shebang方式，如：
+	```sh
+	# use the Shebang method
+	tea/bin/tea tea/docs
+	```
+- 在dist目录中可看到编译生成的目标文件
 ---
 
 ---

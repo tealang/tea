@@ -58,9 +58,11 @@ function process_cli_options(array $argv, array $allow_list = []) {
 		$item = $argv[$i];
 		if ($item[0] === '-' && strlen($item) > 1) {
 			if ($item[1] === '-') {
+				// the '--key' style
 				$key = substr($item, 2);
 			}
 			elseif (strlen($item) === 2) {
+				// the '-k' style
 				$key = substr($item, 1);
 			}
 			else {

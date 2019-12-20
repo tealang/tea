@@ -31,16 +31,16 @@ try {
 		halt(USAGE);
 	}
 
-	$realpath = FileHelper::get_normalized_path($dir);
+	$realpath = realpath($dir);
 	if ($realpath === false) {
 		error("Target dir '{$dir}' not found.");
 		halt(USAGE);
 	}
 
-	$realpath .= DS;
+	$realpath = FileHelper::normalize_path($realpath . DS);
 	$loader_file = $realpath . PHPLoaderMaker::LOADER_FILE;
 	if (!file_exists($loader_file)) {
-		halt('\'' . PHPLoaderMaker::LOADER_FILE . "' not found in '$realpath'.");
+		halt(sprintf("The '%s' not found in '%s'.", PHPLoaderMaker::LOADER_FILE, $realpath));
 	}
 
 	$scanner = new PHPUnitScanner();
