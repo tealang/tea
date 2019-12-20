@@ -47,6 +47,10 @@ Tea语言由创业者Benny设计开发，潘春孟（高级工程师/架构师�
 	# use the Shebang method
 	tea/bin/tea tea/docs
 	```
+- 新初始化一个Unit，如：
+	```sh
+	php tea/bin/tea --init myproject.com/hello
+	```
 - 在dist目录中可看到编译生成的目标文件
 
 ## 致谢
