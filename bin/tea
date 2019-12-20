@@ -16,7 +16,10 @@ define('BASE_PATH', dirname(__DIR__) . '/');
 define('LOG_PATH', BASE_PATH . 'log/');
 
 const DEBUG = 0;
-const OPTION_KEYS = ['init'];
+
+const KEY_INIT = 'init';
+const OPTION_KEYS = [KEY_INIT];
+
 const USAGE = 'usage:
 	tea tea/tests/syntax
 	tea --init myproject/hello';
@@ -26,21 +29,28 @@ require BASE_PATH . 'compiler/__unit.php';
 try {
 	$opts = process_cli_options($argv, OPTION_KEYS);
 
-	$dir = $opts[0] ?? null;
-	if ($dir === null) {
-		error("Missed target dir for compile.");
+	$target = $opts[0] ?? null;
+	if ($target === null) {
+		error("Missed target for compile.");
 		halt(USAGE);
 	}
 
-	$realpath = realpath($dir);
+	// init
+	if (isset($opts[KEY_INIT])) {
+		$init = new TeaInitinizer($target);
+		$init->process();
+		halt("Init '$target' success.");
+	}
+
+	// compile
+	$realpath = realpath($target);
 	if ($realpath === false) {
-		error("Target dir '{$dir}' not found.");
+		error("Target '{$target}' not found.");
 		halt(USAGE);
 	}
-
-	$realpath = FileHelper::normalize_path($realpath . DS);
 
 	echo NL;
+	$realpath = FileHelper::normalize_path($realpath . DS);
 	$compiler = new Compiler($realpath);
 	$count = $compiler->make();
 

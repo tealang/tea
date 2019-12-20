@@ -248,6 +248,7 @@ const __AUTOLOADS = [
 	'Tea\FileHelper' => 'helper/FileHelper.php',
 	'Tea\PHPLoaderMaker' => 'helper/PHPLoaderMaker.php',
 	'Tea\PHPUnitScanner' => 'helper/PHPUnitScanner.php',
+	'Tea\TeaInitinizer' => 'helper/TeaInitinizer.php',
 	'Tea\HeaderParser' => 'parser/HeaderParser.php',
 	'Tea\TeaDocsTrait' => 'parser/TeaDocsTrait.php',
 	'Tea\TeaHelper' => 'parser/TeaHelper.php',

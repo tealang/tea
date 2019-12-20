@@ -44,6 +44,11 @@ class TeaParser
 	{
 		$this->program = $program = $this->factory->create_program($this->file, $this);
 
+		// default to main for main.tea
+		if ($program->name === _MAIN) {
+			$this->factory->set_as_main_program();
+		}
+
 		$root_statements = [];
 		while ($this->pos < $this->tokens_count) {
 			$item = $this->read_root_statement();
