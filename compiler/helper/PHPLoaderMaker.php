@@ -58,7 +58,7 @@ spl_autoload_register(function (\$class) {
 ";
 	}
 
-	protected static function init_loader_file(string $loader_file, ?string $namespace, string $warring, string $tag)
+	protected static function init_loader_file(string $loader_file, ?string $namespace, string $warring)
 	{
 		$tag = self::GENERATES_TAG;
 

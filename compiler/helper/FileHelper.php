@@ -11,6 +11,20 @@ namespace Tea;
 
 class FileHelper
 {
+	public static function get_normalized_path(string $dir)
+	{
+		// normalize the name style
+		if (strpos($dir, _BACK_SLASH) !== false) {
+			$dir = strtr($dir, _BACK_SLASH, DS);
+		}
+
+		if ($dir[0] !== DS && $dir[0] !== '.') {
+			$dir = getcwd() . DS . $dir;
+		}
+
+		return realpath($dir);
+	}
+
 	public static function mkdir(string $dir)
 	{
 		$result = mkdir($dir, 0777, true);

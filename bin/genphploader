@@ -12,47 +12,47 @@
 
 namespace Tea;
 
-define('BASE_PATH', dirname(__DIR__) . DIRECTORY_SEPARATOR);
+define('BASE_PATH', dirname(__DIR__) . '/');
 define('LOG_PATH', BASE_PATH . 'log/');
+
+const DEBUG = 0;
+const OPTION_KEYS = ['init'];
+const USAGE = 'usage:
+	genphploader tea/tests/PHPDemoUnit';
 
 require BASE_PATH . 'compiler/__unit.php';
 
-// ----
-
-if (empty($argv[1]) ) {
-	echo_end("Please input the target dir path...");
-}
-
-$path = $argv[1];
-if (DS !== $path[0]) {
-	$path = getcwd() . DS . $path;
-}
-
-$path = realpath($path) . DS;
-
-if (!is_dir($path)) {
-	echo_end("Target dir not found.");
-}
-
-$loader_file = $path . PHPLoaderMaker::LOADER_FILE;
-if (!file_exists($loader_file)) {
-	echo_end('\'' . PHPLoaderMaker::LOADER_FILE . "' not found in '$path'.");
-}
-
 try {
-	$scanner = new PHPUnitScanner();
-	$class_map = $scanner->scan($path);
+	$opts = process_cli_options($argv, OPTION_KEYS);
 
-	PHPLoaderMaker::generate_loader_file($path, $class_map);
+	$dir = $opts[0] ?? null;
+	if ($dir === null) {
+		error("Missed target dir.");
+		halt(USAGE);
+	}
+
+	$realpath = FileHelper::get_normalized_path($dir);
+	if ($realpath === false) {
+		error("Target dir '{$dir}' not found.");
+		halt(USAGE);
+	}
+
+	$realpath .= DS;
+	$loader_file = $realpath . PHPLoaderMaker::LOADER_FILE;
+	if (!file_exists($loader_file)) {
+		halt('\'' . PHPLoaderMaker::LOADER_FILE . "' not found in '$realpath'.");
+	}
+
+	$scanner = new PHPUnitScanner();
+	$class_map = $scanner->scan($realpath);
+
+	PHPLoaderMaker::generate_loader_file($realpath, $class_map);
 
 	$count = count($class_map);
-	echo_end("$count classes found.");
+	halt("$count classes found.");
 }
 catch (Exception $e) {
-	echo_end("Error: {$e->getMessage()}");
+	halt("Error: {$e->getMessage()}");
 }
 
-function echo_end(string $text) {
-	echo "{$text}\n\n";
-	exit;
-}
+// end

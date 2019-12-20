@@ -13,17 +13,23 @@ require __DIR__ . '/constants.php';
 
 const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
-function strip_unit_path(string $file) {
-	static $prefix_len;
-	if ($prefix_len === null) {
-		$prefix_len = strlen(UNIT_PATH);
-	}
+const NL = "\n";
 
-	return substr($file, $prefix_len);
+function halt(string $msg) {
+	echo NL, $msg, NL, NL;
+	exit;
 }
 
-function join_path(string ...$components) {
-	return join(DS, $components);
+function error(string $msg) {
+	echo "\nError: $msg\n";
+}
+
+function println(string ...$contents) {
+	foreach ($contents as $content) {
+		echo $content;
+	}
+
+	echo NL;
 }
 
 function dump(...$args) {
@@ -34,6 +40,45 @@ function dump(...$args) {
 		$str = str_replace('Tea\\', '', $str);
 		echo $str, NL;
 	}
+}
+
+function strip_unit_path(string $file) {
+	static $prefix_len;
+	if ($prefix_len === null) {
+		$prefix_len = strlen(UNIT_PATH);
+	}
+
+	return substr($file, $prefix_len);
+}
+
+// process the options of command-line interface
+function process_cli_options(array $argv, array $allow_list = []) {
+	$opts = [];
+	for ($i = 1; $i < count($argv); $i++) {
+		$item = $argv[$i];
+		if ($item[0] === '-' && strlen($item) > 1) {
+			if ($item[1] === '-') {
+				$key = substr($item, 2);
+			}
+			elseif (strlen($item) === 2) {
+				$key = substr($item, 1);
+			}
+			else {
+				throw new \Exception("Invalid command-line option '{$item}'");
+			}
+
+			if (!in_array($key, $allow_list, true)) {
+				throw new \Exception("Invalid command-line option key '{$key}'");
+			}
+
+			$opts[$key] = true;
+		}
+		else {
+			$opts[] = $item;
+		}
+	}
+
+	return $opts;
 }
 
 // Please do not modify the following contents

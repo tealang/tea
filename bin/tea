@@ -12,38 +12,41 @@
 
 namespace Tea;
 
-define('BASE_PATH', dirname(__DIR__) . DIRECTORY_SEPARATOR);
+define('BASE_PATH', dirname(__DIR__) . '/');
 define('LOG_PATH', BASE_PATH . 'log/');
 
 const DEBUG = 0;
-
-const NL = "\n";
+const OPTION_KEYS = ['init'];
+const USAGE = 'usage:
+	tea tea/tests/syntax
+	tea --init tea/tests/hello';
 
 require BASE_PATH . 'compiler/__unit.php';
 
-if (!isset($argv[1])) {
-	echo "Missed compile target path.\n";
-	exit;
-}
-
-$dir = $argv[1];
-if ($dir[0] !== DS && $dir[0] !== '.') {
-	$dir = getcwd() . DS . $dir;
-}
-
-$realpath = realpath($dir);
-if ($realpath === false) {
-	echo "Target dir '{$dir}' not found.\n";
-	exit;
-}
-
 try {
+	$opts = process_cli_options($argv, OPTION_KEYS);
+
+	$dir = $opts[0] ?? null;
+	if ($dir === null) {
+		error("Missed target dir for compile.");
+		halt(USAGE);
+	}
+
+	$realpath = FileHelper::get_normalized_path($dir);
+	if ($realpath === false) {
+		error("Target dir '{$dir}' not found.");
+		halt(USAGE);
+	}
+
 	echo NL;
-	$compiler = new Compiler($realpath . DS);
+
+	$realpath .= DS;
+	$compiler = new Compiler($realpath);
 	$count = $compiler->make();
-	echo "\n$count programs compiled.\n\n";
+
+	halt("$count programs compiled.");
 }
 catch (\Exception $e) {
-	echo NL, $e->getMessage(), NL;
+	halt($e->getMessage());
 	// echo $e->getTraceAsString(), NL, NL;
 }

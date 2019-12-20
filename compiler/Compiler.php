@@ -97,7 +97,7 @@ class Compiler
 	{
 		$this->header_file_path = $unit_path . self::UNIT_HEADER_NAME;
 		if (!file_exists($this->header_file_path)) {
-			throw new Exception(self::UNIT_HEADER_NAME . " not found in dir: $unit_path");
+			throw new Exception(self::UNIT_HEADER_NAME . " not found in path: $unit_path");
 		}
 
 		// init unit
@@ -114,7 +114,20 @@ class Compiler
 
 		$this->set_paths($this->unit, $unit_path);
 
-		$this->target_is_builtin = static::BUILTIN_PATH === $unit_path;
+		$this->target_is_builtin = self::check_is_builtin_unit($unit_path);
+	}
+
+	private static function check_is_builtin_unit(string $unit_path)
+	{
+		// 部分系统的目录名不区分大小写
+		if (in_array(PHP_OS, ['Darwin', 'Windows', 'WINNT', 'WIN32'])) {
+			$result = strtolower(static::BUILTIN_PATH) === strtolower($unit_path);
+		}
+		else {
+			$result = static::BUILTIN_PATH === $unit_path;
+		}
+
+		return $result;
 	}
 
 	private function set_paths(Unit $unit, string $unit_path)
@@ -318,7 +331,7 @@ class Compiler
 		}
 
 		$unit_dir = $this->find_unit_public_dir($ns);
-		$unit_path = $this->super_path . $unit_dir . DIRECTORY_SEPARATOR;
+		$unit_path = $this->super_path . $unit_dir . DS;
 		$public_file_path = $unit_path . self::PUBLIC_HEADER_NAME;
 
 		$unit = new Unit($unit_path);

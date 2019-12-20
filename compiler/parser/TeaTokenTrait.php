@@ -583,7 +583,7 @@ trait TeaTokenTrait
 			}
 
 			$traces .= sprintf("%s:%d \t%s(%s)\n",
-				strip_unit_path($item['file']),
+				$item['file'],
 				$item['line'],
 				$item['function'],
 				join(', ', $args)

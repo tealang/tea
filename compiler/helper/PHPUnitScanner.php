@@ -17,9 +17,9 @@ class PHPUnitScanner
 
 	public function scan(string $path)
 	{
-		$this->path = realpath($path) . DS;
-		$this->scan_files($this->path);
-		$this->scan_sub_directories($this->path);
+		$this->path = $path;
+		$this->scan_files($path);
+		$this->scan_sub_directories($path);
 
 		return $this->class_map;
 	}
