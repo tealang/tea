@@ -19,7 +19,7 @@ const DEBUG = 0;
 const OPTION_KEYS = ['init'];
 const USAGE = 'usage:
 	tea tea/tests/syntax
-	tea --init tea/tests/hello';
+	tea --init myproject/hello';
 
 require BASE_PATH . 'compiler/__unit.php';
 
