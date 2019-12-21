@@ -37,7 +37,7 @@ try {
 
 	// init
 	if (isset($opts[KEY_INIT])) {
-		$init = new TeaInitinizer($target);
+		$init = new TeaInitializer($target);
 		$init->process();
 		halt("Init '$target' success.");
 	}

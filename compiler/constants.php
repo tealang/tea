@@ -13,9 +13,11 @@ const
 	// do not use the DIRECTORY_SEPARATOR to render targets code
 	DS = '/',
 
+	// some basic settings
+	_MAX_NS_LEVELS = 3,
 	_MAX_STRUCT_DIMENSIONS = 12,
-
 	_BUILTIN_NS = 'tea/builtin',
+	_UNIT_OPTIONAL_KEYS = ['type', 'loader'],
 
 	// system labels
 	_TEA = 'tea', _PHP  = 'php',
@@ -66,8 +68,9 @@ const
 	_BLOCK_BEGIN = _BRACE_OPEN, _BLOCK_END = _BRACE_CLOSE,
 	_DOCS_MARK = '---', _INLINE_COMMENT_MARK = '//', _COMMENTS_OPEN = '/*', _COMMENTS_CLOSE = '*/',
 
-	// keywords
-	_VAL_NONE = 'none', _VAL_TRUE = 'true', _VAL_FALSE = 'false', _UNIT_PATH = 'UNIT_PATH',
+	// reserved words
+	_UNIT_PATH = 'UNIT_PATH',
+	_VAL_NONE = 'none', _VAL_TRUE = 'true', _VAL_FALSE = 'false',
 	_VAR = 'var', _YIELD = 'yield',
 	_IF = 'if', _ELSE = 'else', _ELSEIF = 'elseif', _CASE = 'case',
 	_FOR = 'for', _WHILE = 'while', _LOOP = 'loop',

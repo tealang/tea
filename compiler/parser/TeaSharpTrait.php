@@ -9,8 +9,6 @@
 
 namespace Tea;
 
-const _UNIT_OPTIONAL_KEYS = ['type', 'loader'];
-
 trait TeaSharpTrait
 {
 	protected function read_label_statement()
@@ -243,8 +241,8 @@ trait TeaSharpTrait
 		}
 
 		array_unshift($names, $domain);
-		if (count($names) > 3) {
-			throw $this->new_exception("It's too many namespace levels, the max levels is 3.");
+		if (count($names) > _MAX_NS_LEVELS) {
+			throw $this->new_exception(sprintf("It's too many namespace levels, the max levels is %d.", _MAX_NS_LEVELS));
 		}
 
 		return $this->factory->create_namespace_identifier($names);
