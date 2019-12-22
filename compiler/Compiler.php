@@ -204,7 +204,7 @@ class Compiler
 		self::echo_start('Parsing programs...');
 
 		// parse all program files
-		$program_files = $this->glob_program_files();
+		$program_files = $this->get_program_files();
 		foreach ($program_files as $file) {
 			$this->normal_programs[] = $this->parse_file($file);
 		}
@@ -464,7 +464,7 @@ class Compiler
 		}
 	}
 
-	private function glob_program_files()
+	private function get_program_files()
 	{
 		$file_iterator = FileHelper::get_iterator($this->unit_path);
 

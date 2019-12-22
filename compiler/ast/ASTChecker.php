@@ -293,22 +293,30 @@ class ASTChecker
 
 		$masked = $node->body;
 		foreach ($masked->arguments as $dest_idx => $item) {
+			if ($item instanceof PlainIdentifier) {
+				if (!isset($parameters_map[$item->name])) {
+					$this->infer_plain_identifier($item);
+					if ($item->symbol->declaration instanceof ConstantDeclaration) {
+	 					$node->arguments_map[$dest_idx] = $item;
+	 					continue;
+					}
+
+					throw $this->new_syntax_error("Identifier '{$item->name}' not defined in MaskedDeclaration.", $item);
+				}
+
+				// the argument from masking call
+	 			$node->arguments_map[$dest_idx] = $parameters_map[$item->name];
+	 			continue;
+			}
+
 			// the literal value for argument
-			if ($item instanceof ILiteral) {
+			if ($item instanceof ILiteral || ($item instanceof PrefixOperation && $item->expression instanceof ILiteral)) {
 				$node->arguments_map[$dest_idx] = $item;
 				continue;
 			}
-
-			if (!isset($parameters_map[$item->name])) {
-				if ($item instanceof ConstantIdentifier) {
-					continue;
-				}
-
-				throw $this->new_syntax_error("Identifier '{$item->name}' not defined in MaskedDeclaration.", $node);
+			else {
+				throw $this->new_syntax_error("Unexpect expression in MaskedDeclaration.", $item);
 			}
-
-			// the argument from masking call
- 			$node->arguments_map[$dest_idx] = $parameters_map[$item->name];
 		}
 	}
 

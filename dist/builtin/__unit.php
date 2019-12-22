@@ -6,6 +6,7 @@ const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
 
 
+
 function is_uint($val): bool
 {
 	return is_int($val) && $val >= 0;
@@ -50,6 +51,20 @@ function _dict_search(array $master, $search): string
 {
 	$key = array_search($search, $master);
 	return $key === false ? null : $key;
+}
+
+function regex_match(string $regex, string $subject): array
+{
+	$matches = null;
+	$count = preg_match($regex, $subject, $matches);
+	return $count === 0 ? null : $matches;
+}
+
+function regex_matches(string $regex, string $subject): array
+{
+	$matches = null;
+	$count = preg_match_all($regex, $subject, $matches);
+	return $count === 0 ? null : $matches;
 }
 
 

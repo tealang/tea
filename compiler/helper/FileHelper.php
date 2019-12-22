@@ -29,14 +29,14 @@ class FileHelper
 		}
 	}
 
-	public static function get_iterator(string $dir_path, string $regex = null, int $flags = 0): \Iterator
+	public static function get_iterator(string $dir_path, string $pattern = null, int $flags = 0): \Iterator
 	{
 		$dir_iter = new \RecursiveDirectoryIterator($dir_path, \FilesystemIterator::SKIP_DOTS | $flags);
 		$recursive_iter = new \RecursiveIteratorIterator($dir_iter);
-		if ($regex === null) {
+		if ($pattern === null) {
 			return $recursive_iter;
 		}
 
-		return new \RegexIterator($recursive_iter, $regex);
+		return new \RegexIterator($recursive_iter, $pattern);
 	}
 }

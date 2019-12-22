@@ -6,6 +6,7 @@ public NL String = "\n"
 public __DIR__ String
 public __LINE__ UInt
 public JSON_UNESCAPED_UNICODE Int
+public PREG_SPLIT_DELIM_CAPTURE Int
 
 #php Exception {
 	public construct(message String, code Int = 0)
@@ -121,6 +122,12 @@ public _dict_search(master Dict, search Any) String
 
 #php preg_match_all(regex Regex, subject String, matches Array = #default, flags Int = #default, offset Int = #default) Bool
 
+#php preg_split(regex Regex, subject String, limit Int = #default, flags Int = #default) Array
+
+public regex_match(regex Regex, subject String) String.Array
+
+public regex_matches(regex Regex, subject String) String.Array.Array
+
 #tea Any {
 	// no any
 }
@@ -194,7 +201,10 @@ public _dict_search(master Dict, search Any) String
 }
 
 #tea Regex {
-	// no any
+	masked match(text String) String.Array
+	masked matches(text String) String.Array.Array
+	masked split(text String) String.Array
+	masked separate(text String) String.Array
 }
 
 #tea XView {

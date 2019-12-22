@@ -929,11 +929,7 @@ class PHPCoder extends TeaCoder
 				// the 'this'
 				$real_arguments[] = $node->callee->master;
 			}
-			elseif ($src instanceof ILiteral) {
-				// just a static literal value
-				$real_arguments[] = $src;
-			}
-			else {
+			elseif (is_int($src)) {
 				// because offset 0 in arguments_map is 'this'
 				$real_src_index = $src - 1;
 				if (isset($masking_arguments[$src - 1])) {
@@ -955,6 +951,9 @@ class PHPCoder extends TeaCoder
 				else {
 					$real_arguments[] = $arg_value;
 				}
+			}
+			else {
+				$real_arguments[] = $src;
 			}
 		}
 
