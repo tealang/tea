@@ -7,9 +7,9 @@ const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
 # --- generates ---
 const __AUTOLOADS = [
+	'tea\tests\xview\BaseView' => 'BaseView.php',
 	'tea\tests\xview\IViewDemo' => 'IViewDemo.php',
-	'tea\tests\xview\IViewDemoTrait' => 'IViewDemo.php',
-	'tea\tests\xview\BaseView' => 'BaseView.php'
+	'tea\tests\xview\IViewDemoTrait' => 'IViewDemo.php'
 ];
 
 spl_autoload_register(function ($class) {

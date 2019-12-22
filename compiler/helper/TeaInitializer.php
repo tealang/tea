@@ -19,15 +19,11 @@ class TeaInitializer
 		$unit_dir = $this->uri;
 
 		// create the unit dir
-		if (!is_dir($unit_dir)) {
-			FileHelper::mkdir($unit_dir);
-		}
+		is_dir($unit_dir) or FileHelper::mkdir($unit_dir);
 
 		// create the dist dir
 		$dist_dir = $this->domain . '/dist';
-		if (!is_dir($dist_dir)) {
-			FileHelper::mkdir($dist_dir);
-		}
+		is_dir($dist_dir) or FileHelper::mkdir($dist_dir);
 
 		// the __unit.th
 		$header_file = $unit_dir . '/__unit.th';

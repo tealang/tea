@@ -11,8 +11,59 @@ require_once $super_path . 'tea/dist/builtin/__unit.php'; // the builtins
 require_once $super_path . 'tea/dist/tests/xview/__unit.php';
 require_once $super_path . 'tea/tests/PHPDemoUnit/__unit.php';
 
+
 /*internal*/	const PI = 3.1415926;
 
+function get_class(): string
+{
+	return Test1::class;
+}
+
+function fn0($str)
+{
+	echo $str, NL;
+}
+
+function fn1(callable $callee)
+{
+	$unknow_type_value = $callee('hei');
+}
+
+function fn2(string $class)
+{
+	$class();
+}
+
+function fn3(\Exception $ex, string $num = null)
+{
+	$num = 1;
+	echo $ex->getMessage(), NL;
+}
+
+function xrange(int $start, int $stop, int $step = 1)
+{
+	$i = null;
+
+	if ($step > 0) {
+		$i = $start;
+		while ($i < $stop) {
+			yield $i;
+			$i += $step;
+		}
+
+		return;
+	}
+
+	if ($step == 0) {
+		throw new Exception('Step should not be 0.');
+	}
+
+	$i = $start;
+	while ($i > $stop) {
+		yield $i;
+		$i += $step;
+	}
+}
 
 function new_collector_demo(): CollectorDemo
 {
@@ -46,67 +97,11 @@ function collector1(): array
 	return $__collects;
 }
 
-function xrange(int $start, int $stop, int $step = 1)
-{
-	$i = null;
-
-	if ($step > 0) {
-		$i = $start;
-		while ($i < $stop) {
-			yield $i;
-			$i += $step;
-		}
-
-		return;
-	}
-
-	if ($step == 0) {
-		throw new Exception('Step should not be 0.');
-	}
-
-	$i = $start;
-	while ($i > $stop) {
-		yield $i;
-		$i += $step;
-	}
-}
-
-function get_class(): string
-{
-	return Test1::class;
-}
-
-function fn0($str)
-{
-	echo $str, NL;
-}
-
-function fn1(callable $callee)
-{
-	$unknow_type_value = $callee('hei');
-}
-
-function fn2(string $class)
-{
-	$class();
-}
-
-function fn3(\Exception $ex, string $num = null)
-{
-	$num = 1;
-	echo $ex->getMessage(), NL;
-}
-
 
 // program end
 
 # --- generates ---
 const __AUTOLOADS = [
-	'tea\tests\syntax\CollectorDemo' => 'type-collector.php',
-	'tea\tests\syntax\CollectorDemoFactory' => 'type-collector.php',
-	'tea\tests\syntax\TeaDemoClass' => 'main1.php',
-	'tea\tests\syntax\Cell' => 'type-xview.php',
-	'tea\tests\syntax\DemoList' => 'type-xview.php',
 	'tea\tests\syntax\IDemo' => 'class.php',
 	'tea\tests\syntax\IDemoTrait' => 'class.php',
 	'tea\tests\syntax\BaseClass' => 'class.php',
@@ -115,7 +110,12 @@ const __AUTOLOADS = [
 	'tea\tests\syntax\ITest' => 'class.php',
 	'tea\tests\syntax\Test3' => 'class.php',
 	'tea\tests\syntax\Test4' => 'class.php',
-	'tea\tests\syntax\Test5' => 'class.php'
+	'tea\tests\syntax\Test5' => 'class.php',
+	'tea\tests\syntax\TeaDemoClass' => 'main1.php',
+	'tea\tests\syntax\CollectorDemo' => 'type-collector.php',
+	'tea\tests\syntax\CollectorDemoFactory' => 'type-collector.php',
+	'tea\tests\syntax\Cell' => 'type-xview.php',
+	'tea\tests\syntax\DemoList' => 'type-xview.php'
 ];
 
 spl_autoload_register(function ($class) {

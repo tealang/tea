@@ -2,13 +2,6 @@
 
 #unit tea/tests/xview
 
-public IViewDemo: IView {
-	name String
-	css_class String
-
-	set_css_class(names String) IViewDemo
-}
-
 public BaseView: IView {
 	name String
 
@@ -26,6 +19,13 @@ public BaseView: IView {
 	render() String
 
 	to_string() String
+}
+
+public IViewDemo: IView {
+	name String
+	css_class String
+
+	set_css_class(names String) IViewDemo
 }
 
 // program end

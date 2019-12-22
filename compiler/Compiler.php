@@ -148,8 +148,6 @@ class Compiler
 			array_unshift($dir_names, $dir_name);
 		}
 
-		$this->unit_path = $unit_path;
-
 		if (self::is_framework_internal_namespaces($unit->ns)) {
 			// 框架内部名称空间，其base_path应为往上一级
 			$this->base_path = $checking_path . DS;
@@ -161,8 +159,10 @@ class Compiler
 			$this->super_path = $checking_path . DS;
 		}
 
+		$this->unit_path = $unit_path;
+
 		$unit_dir = join(DS, $dir_names);
-		$this->unit_dist_path = $this->get_unit_dist_path($unit_dir, $this->base_path);
+		$this->unit_dist_path = $this->get_unit_dist_path($unit_dir);
 		$this->unit_dist_path_len = strlen($this->unit_dist_path);
 	}
 
@@ -476,6 +476,9 @@ class Compiler
 			$files[] = $path;
 		}
 
+		// 排序以保障在所有情况下顺序一致
+		sort($files);
+
 		return $files;
 	}
 
@@ -534,9 +537,9 @@ class Compiler
 		return $program;
 	}
 
-	private function get_unit_dist_path(string $unit_dir_name, string $base_path)
+	private function get_unit_dist_path(string $unit_dir_name)
 	{
-		$dist_path = $base_path . 'dist';
+		$dist_path = $this->base_path . 'dist';
 		if (!is_dir($dist_path)) {
 			throw new Exception("The dist dir '{$dist_path}' not found.");
 		}
