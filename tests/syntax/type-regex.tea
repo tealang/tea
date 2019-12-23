@@ -12,9 +12,10 @@ var_dump(result0)
 result1 = regex.matches('ab cd|e,f') // the result is [' ', '|', ',']
 var_dump(result1)
 
+// disincludes the separates
 result2 = regex.split('ab cd|e,f') // the result is ['ab', 'cd', 'e', 'f']
 var_dump(result2)
 
-regex = /([\s\|,])/
-result3 = regex.separate('ab cd|e,f') // the result is ['ab', ' ', 'cd', '|', 'e', ',', 'f']
+// includes the separates
+result3 = /([\s\|,])/.separate('ab cd|e,f') // the result is ['ab', ' ', 'cd', '|', 'e', ',', 'f']
 var_dump(result3)

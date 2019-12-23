@@ -829,12 +829,6 @@ class TeaParser
 				}
 				break;
 
-			case _SLASH: // maybe a regex
-				$expression = $this->try_read_regular_expression();
-				if ($expression) {
-					return $expression;
-				}
-
 			case _YIELD:
 				$argument = $this->read_expression();
 				if ($argument === null) {
@@ -844,6 +838,14 @@ class TeaParser
 				return new YieldExpression($argument);
 
 			default:
+				// maybe a regex
+				if ($token === _SLASH) {
+					$expression = $this->try_read_regular_expression();
+					if ($expression !== null) {
+						break;
+					}
+				}
+
 				// check is prefix operator
 				$check_operator = OperatorFactory::get_prefix_operator_symbol($token);
 				if ($check_operator !== null) {

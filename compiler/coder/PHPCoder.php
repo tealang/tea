@@ -888,17 +888,17 @@ class PHPCoder extends TeaCoder
 		$masked = $declaration->body;
 
 		if ($masked instanceof CallExpression) {
-			$real_arguments = [];
+			$actual_arguments = [];
 			foreach ($declaration->arguments_map as $idx) {
 				assert($idx === 0);
-				$real_arguments[] = $node->master;
+				$actual_arguments[] = $node->master;
 			}
 
-			$real_call = clone $masked;
-			$real_call->arguments = $real_arguments;
-			$real_call->callee->pos = $node->pos; // just for debug
+			$actual_call = clone $masked;
+			$actual_call->arguments = $actual_arguments;
+			$actual_call->callee->pos = $node->pos; // just for debug
 
-			return $this->render_call_expression($real_call);
+			return $this->render_call_expression($actual_call);
 		}
 		elseif ($masked instanceof PlainIdentifier) {
 			if ($masked->name === _THIS) {
@@ -923,45 +923,48 @@ class PHPCoder extends TeaCoder
 
 		$masking_arguments = $node->normalized_arguments ?? $node->arguments;
 
-		$real_arguments = [];
+		$actual_arguments = [];
 		foreach ($declaration->arguments_map as $dest_idx => $src) {
-			if ($src === 0) {
-				// the 'this'
-				$real_arguments[] = $node->callee->master;
+			// an expression, but not an argument
+			if (!is_int($src)) {
+				$actual_arguments[] = $src;
+				continue;
 			}
-			elseif (is_int($src)) {
-				// because offset 0 in arguments_map is 'this'
-				$real_src_index = $src - 1;
-				if (isset($masking_arguments[$src - 1])) {
-					$arg_value = $masking_arguments[$src - 1];
-				}
-				elseif (isset($declaration->parameters[$src - 1]->value)) {
-					$arg_value = $declaration->parameters[$src - 1]->value;
-				}
-				else {
-					throw new Exception("Unexpected render error for masked call '{$node->callee->name}'.");
-				}
 
-				if ($arg_value === ASTFactory::$default_value_marker) {
-					// is should be the last real argument, so we check it is correct
-					if (count($declaration->arguments_map) !== count($real_arguments) + 1) {
-						throw new Exception("Unexpected arguments error for masked call '{$node->callee->name}'.");
-					}
-				}
-				else {
-					$real_arguments[] = $arg_value;
+			// the 'this'
+			if ($src === 0) {
+				$actual_arguments[] = $node->callee->master;
+				continue;
+			}
+
+			// because offset 0 in arguments_map is 'this'
+			$actual_index = $src - 1;
+			if (isset($masking_arguments[$actual_index])) {
+				$arg_value = $masking_arguments[$actual_index];
+			}
+			elseif (isset($declaration->parameters[$actual_index]->value)) {
+				$arg_value = $declaration->parameters[$actual_index]->value;
+			}
+			else {
+				throw new Exception("Unexpected render error for masked call '{$node->callee->name}'.");
+			}
+
+			if ($arg_value === ASTFactory::$default_value_marker) {
+				// is should be the last real argument, so we check it is correct
+				if (count($declaration->arguments_map) !== count($actual_arguments) + 1) {
+					throw new Exception("Unexpected arguments error for masked call '{$node->callee->name}'.");
 				}
 			}
 			else {
-				$real_arguments[] = $src;
+				$actual_arguments[] = $arg_value;
 			}
 		}
 
-		$real_call = clone $masked;
-		$real_call->arguments = $real_arguments;
-		$real_call->callee->pos = $node->callee->pos; // just for debug
+		$actual_call = clone $masked;
+		$actual_call->arguments = $actual_arguments;
+		$actual_call->callee->pos = $node->callee->pos; // just for debug
 
-		return $this->render_call_expression($real_call);
+		return $this->render_call_expression($actual_call);
 	}
 
 	public function render_call_expression(CallExpression $node)

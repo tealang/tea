@@ -21,7 +21,7 @@ TeaHelper::$NORMAL_RESERVEDS = array_merge(
 
 class TeaHelper
 {
-	const PATTERN_MODIFIER_REGEX = '/[imug]+/';
+	const PATTERN_MODIFIER_REGEX = '/[imu]+/';
 
 	const STRUCTURE_KEYS = [
 		_VAR,
