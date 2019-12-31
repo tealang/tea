@@ -10,7 +10,7 @@ $str = trim($str);
 
 echo $str, NL;
 
-iconv_substr($str, 2);
+substr($str, 2);
 iconv_substr($str, 0, 3);
 
 $arr = [

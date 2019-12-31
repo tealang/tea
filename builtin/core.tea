@@ -157,16 +157,20 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 }
 
 // 所有 masked function 在定义时都需要考虑参数的顺序，参数的运行时序不一致可能会导致问题
-// 考虑禁止在调用函数的参数中改变数据（需要推断出可能改变数据的函数，或直接禁止参数带函数调用），安全表达式?
+// 考虑禁止在调用函数的参数中改变数据（需要推断出可能改变数据的函数，或直接禁止参数带函数调用），纯表达式?
 
 #tea String: Scalar {
-	masked byte_length => strlen(this)
+	masked length => iconv_strlen(this)   		// count with the default/native character encoding
+	masked rune_length => iconv_strlen(this)	// count with the default correct character encoding
+	masked byte_length => strlen(this)	 		// count with bytes
 
-	// handle with default charset
-	masked length => iconv_strlen(this)
-	masked find(str String, offset Int = 0) => _iconv_strpos(this, str, offset)
-	masked find_last(search String, offset Int = 0) => _iconv_strrpos(this, search, offset)
-	masked copy(start Int, length UInt = #default) => iconv_substr(this, start, length)
+	masked copy_runes(start Int, length UInt = #default) => iconv_substr(this, start, length)
+	masked copy_bytes(start Int, length UInt = #default) => substr(this, start, length)
+
+	masked find_runes(str String, offset Int = 0) => _iconv_strpos(this, str, offset)
+	masked find_bytes(str String, offset Int = 0) => _strpos(this, str, offset)
+	masked find_last_runes(str String, offset Int = 0) => _iconv_strrpos(this, str, offset)
+	masked find_last_bytes(str String, offset Int = 0) => _strrpos(this, str, offset)
 
 	masked lower() => mb_strtolower(this)
 	masked upper() => mb_strtoupper(this)

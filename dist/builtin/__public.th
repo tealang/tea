@@ -144,11 +144,15 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 }
 
 #tea String: Scalar {
-	masked byte_length UInt
 	masked length UInt
-	masked find(str String, offset Int = 0) Int
-	masked find_last(search String, offset Int = 0) Int
-	masked slice(start Int, length UInt = #default) String
+	masked rune_length UInt
+	masked byte_length UInt
+	masked copy_runes(start Int, length UInt = #default) String
+	masked copy_bytes(start Int, length UInt = #default) String
+	masked find_runes(str String, offset Int = 0) Int
+	masked find_bytes(str String, offset Int = 0) Int
+	masked find_last_runes(str String, offset Int = 0) Int
+	masked find_last_bytes(str String, offset Int = 0) Int
 	masked lower() String
 	masked upper() String
 	masked explode(delimiter String) Array
@@ -194,7 +198,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	masked shift() Any
 	masked push(item Any) UInt
 	masked pop() Any
-	masked slice(start Int, length UInt = #default) Array
+	masked copy(start Int, length UInt = #default) Array
 	masked reverse() Array
 	masked join(glue String = NL) String
 	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) String

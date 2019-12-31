@@ -94,6 +94,7 @@ $text_labeled = "would not process interpolation \${5 * 6}";
 
 iconv_strlen($str);
 iconv_substr($str, 0, 3);
+substr($str, 0, 3);
 
 $uint_num = 123;
 $int_num = -123;
