@@ -96,7 +96,7 @@ text_labeled = #text "would not process interpolation ${5 * 6}" // 以#text标�
 
 // 类似对象一样的调用String伪对象属性或方法
 str.length  // 字符串长度（表达成PHP代码后是iconv_strlen，使用PHP配置的字符集计算）
-str.slice(0, 3)  // 字符串截取（表达成PHP代码后是iconv_substr，使用PHP配置的字符集计算截取）
+str.copy(0, 3)  // 拷贝从0开始长度为3的字符串片段（表达成PHP代码后是iconv_substr，使用PHP配置的字符集计算截取）
 
 var uint_num UInt = 123
 var int_num Int = -123
@@ -129,7 +129,7 @@ var any_array Array = [
 var int_array Int.Array = [] 	// 初始化为空数组
 int_array = [-1, 10, 200]
 int_array.length   		// 获取数组元素个数
-int_array.slice(0, 2)   // 截取数组片段
+int_array.copy(0, 2)   	// 拷贝从0开始长度为2的数组片段
 
 // 字典类型的Key无需定义类型，支持String/Int
 // Value类型为String的字典

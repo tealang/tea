@@ -166,8 +166,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 	masked length => iconv_strlen(this)
 	masked find(str String, offset Int = 0) => _iconv_strpos(this, str, offset)
 	masked find_last(search String, offset Int = 0) => _iconv_strrpos(this, search, offset)
-	masked slice(start Int, length UInt = #default) => iconv_substr(this, start, length)
-	// masked slice(start Int, end Int) => substr_by_position(start, end)
+	masked copy(start Int, length UInt = #default) => iconv_substr(this, start, length)
 
 	masked lower() => mb_strtolower(this)
 	masked upper() => mb_strtoupper(this)
@@ -222,7 +221,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 	masked push(item) => array_push(this, item)
 	masked pop() => array_pop(this)
 
-	masked slice(start Int, length UInt = #default) Array => array_slice(this, start, length)
+	masked copy(start Int, length UInt = #default) Array => array_slice(this, start, length)
 	masked reverse() Array => array_reverse(this)
 
 	masked join(glue String = NL) => implode(glue, this)

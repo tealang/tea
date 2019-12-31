@@ -17,8 +17,7 @@ define('LOG_PATH', BASE_PATH . 'log/');
 
 const DEBUG = 0;
 const OPTION_KEYS = ['init'];
-const USAGE = 'usage:
-	genphploader tea/tests/PHPDemoUnit';
+const USAGE = 'usage: genphploader tea/tests/PHPDemoUnit';
 
 require BASE_PATH . 'compiler/__unit.php';
 
