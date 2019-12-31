@@ -79,6 +79,8 @@ public _strrpos(master String, search String, offset Int = 0) Int {
 	pos = strrpos(master, search, offset);
 	return pos === false ? -1 : pos  // would return -1 on not found
 }
+#php strtoupper(str String) String
+#php strtolower(str String) String
 
 // replace in binary mode
 #php strtr(master String, changes Dict) String
@@ -160,24 +162,25 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 // 考虑禁止在调用函数的参数中改变数据（需要推断出可能改变数据的函数，或直接禁止参数带函数调用），纯表达式?
 
 #tea String: Scalar {
-	masked length => iconv_strlen(this)   		// count with the default/native character encoding
-	masked rune_length => iconv_strlen(this)	// count with the default correct character encoding
-	masked byte_length => strlen(this)	 		// count with bytes
+	// process in bytes mode
+	masked byte_length => strlen(this)
+	masked byte_find(str String, offset Int = 0) => _strpos(this, str, offset)
+	masked byte_find_last(str String, offset Int = 0) => _strrpos(this, str, offset)
+	masked byte_copy(start Int, length UInt = #default) => substr(this, start, length)
+	masked byte_lower() => strtolower(this)
+	masked byte_upper() => strtoupper(this)
 
-	masked copy_runes(start Int, length UInt = #default) => iconv_substr(this, start, length)
-	masked copy_bytes(start Int, length UInt = #default) => substr(this, start, length)
-
-	masked find_runes(str String, offset Int = 0) => _iconv_strpos(this, str, offset)
-	masked find_bytes(str String, offset Int = 0) => _strpos(this, str, offset)
-	masked find_last_runes(str String, offset Int = 0) => _iconv_strrpos(this, str, offset)
-	masked find_last_bytes(str String, offset Int = 0) => _strrpos(this, str, offset)
-
+	// process in runes mode
+	masked length => iconv_strlen(this)
+	masked find(str String, offset Int = 0) => _iconv_strpos(this, str, offset)
+	masked find_last(str String, offset Int = 0) => _iconv_strrpos(this, str, offset)
+	masked copy(start Int, length UInt = #default) => iconv_substr(this, start, length)
 	masked lower() => mb_strtolower(this)
 	masked upper() => mb_strtoupper(this)
 
+	// other
 	masked explode(delimiter String) => explode(delimiter, this) // 编译后参数顺序有变化，使用时应避免当前字符串被delimiter表达式所改变
 	masked replace(search String, replacement String) => _str_replace(this, search, replacement)
-
 	masked json_decode() => json_decode(this, true)
 }
 

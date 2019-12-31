@@ -72,6 +72,10 @@ public _strpos(master String, search String, offset Int = 0) Int
 
 public _strrpos(master String, search String, offset Int = 0) Int
 
+#php strtoupper(str String) String
+
+#php strtolower(str String) String
+
 #php strtr(master String, changes Dict) String
 
 #php str_replace(search Any, replacement Any, master String) String
@@ -144,15 +148,16 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 }
 
 #tea String: Scalar {
-	masked length UInt
-	masked rune_length UInt
 	masked byte_length UInt
-	masked copy_runes(start Int, length UInt = #default) String
-	masked copy_bytes(start Int, length UInt = #default) String
-	masked find_runes(str String, offset Int = 0) Int
-	masked find_bytes(str String, offset Int = 0) Int
-	masked find_last_runes(str String, offset Int = 0) Int
-	masked find_last_bytes(str String, offset Int = 0) Int
+	masked byte_find(str String, offset Int = 0) Int
+	masked byte_find_last(str String, offset Int = 0) Int
+	masked byte_copy(start Int, length UInt = #default) String
+	masked byte_lower() String
+	masked byte_upper() String
+	masked length UInt
+	masked find(str String, offset Int = 0) Int
+	masked find_last(str String, offset Int = 0) Int
+	masked copy(start Int, length UInt = #default) String
 	masked lower() String
 	masked upper() String
 	masked explode(delimiter String) Array
