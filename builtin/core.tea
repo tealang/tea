@@ -96,6 +96,9 @@ public _str_replace(master String, search String, replacement String) {
 #php count(array) UInt
 #php in_array(needle, haystack, strict Bool = false) Bool
 #php array_reverse(array)
+#php array_map(callback Callable, items Array) Array
+#php array_filter(items Array, callback Callable, flag Int = #default) Array
+#php array_reduce(items Array, callback Callable, initial Any = #default)
 
 // index array
 #php array_slice(master Array, offset Int, length UInt = none) Array
@@ -160,6 +163,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 
 // 所有 masked function 在定义时都需要考虑参数的顺序，参数的运行时序不一致可能会导致问题
 // 考虑禁止在调用函数的参数中改变数据（需要推断出可能改变数据的函数，或直接禁止参数带函数调用），纯表达式?
+// 部分实现中，参数编译后顺序有变化，使用时应避免当前字符串被delimiter表达式所改变
 
 #tea String: Scalar {
 	// process in bytes mode
@@ -179,7 +183,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 	masked upper() => mb_strtoupper(this)
 
 	// other
-	masked explode(delimiter String) => explode(delimiter, this) // 编译后参数顺序有变化，使用时应避免当前字符串被delimiter表达式所改变
+	masked explode(delimiter String) => explode(delimiter, this)
 	masked replace(search String, replacement String) => _str_replace(this, search, replacement)
 	masked json_decode() => json_decode(this, true)
 }
@@ -201,6 +205,32 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 	masked int UInt => intval(this)  // to UInt
 }
 
+#tea Array {
+	masked length => count(this)
+
+	masked has_value(val) => in_array(val, this)
+	masked find(val) => _array_search(this, val) // find the index with supported value
+	masked copy(start Int, length UInt = #default) Array => array_slice(this, start, length)
+	masked reverse() Array => array_reverse(this)
+
+	masked unshift(item) => array_unshift(this, item)
+	masked shift() => array_shift(this)
+	masked push(item) => array_push(this, item)
+	masked pop() => array_pop(this)
+
+	// callback(item)
+	masked map(callback Callable) => array_map(callback, this)
+
+	// callback(carry, item)
+	masked reduce(callback Callable, initial Any = #default) => array_reduce(this, callback, initial)
+
+	// callback(item) Bool
+	masked filter(callback Callable) => array_filter(this, callback)
+
+	masked join(glue String = NL) => implode(glue, this)
+	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) => json_encode(this, flags)
+}
+
 #tea Dict {
 	masked length => count(this)
 
@@ -213,25 +243,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 
 	// masked remove(key String) => unset(this[key])
 
-	masked join(glue String = NL) => implode(glue, this)
-	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) => json_encode(this, flags)
-}
-
-#tea Array {
-	masked length => count(this)
-
-	masked has_value(val) => in_array(val, this)
-	masked find(val) => _array_search(this, val) // find the index with supported value
-
-	masked unshift(item) => array_unshift(this, item)
-	masked shift() => array_shift(this)
-	masked push(item) => array_push(this, item)
-	masked pop() => array_pop(this)
-
-	masked copy(start Int, length UInt = #default) Array => array_slice(this, start, length)
-	masked reverse() Array => array_reverse(this)
-
-	masked join(glue String = NL) => implode(glue, this)
+	// masked join(glue String = NL) => implode(glue, this)
 	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) => json_encode(this, flags)
 }
 

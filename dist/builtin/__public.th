@@ -92,6 +92,12 @@ public _str_replace(master String, search String, replacement String) String
 
 #php array_reverse(array Any)
 
+#php array_map(callback Callable, items Array) Array
+
+#php array_filter(items Array, callback Callable, flag Int = #default) Array
+
+#php array_reduce(items Array, callback Callable, initial Any = #default)
+
 #php array_slice(master Array, offset Int, length UInt = none) Array
 
 #php array_unshift(master Array, item Any) UInt
@@ -184,6 +190,23 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	masked int UInt
 }
 
+#tea Array {
+	masked length UInt
+	masked has_value(val Any) Bool
+	masked find(val Any) Int
+	masked copy(start Int, length UInt = #default) Array
+	masked reverse() Array
+	masked unshift(item Any) UInt
+	masked shift() Any
+	masked push(item Any) UInt
+	masked pop() Any
+	masked map(callback Callable) Array
+	masked reduce(callback Callable, initial Any = #default)
+	masked filter(callback Callable) Array
+	masked join(glue String = NL) String
+	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) String
+}
+
 #tea Dict {
 	masked length UInt
 	masked keys Array
@@ -191,21 +214,6 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	masked has_key(key Any) Bool
 	masked has_value(val Any) Bool
 	masked find(val Any) String
-	masked join(glue String = NL) String
-	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) String
-}
-
-#tea Array {
-	masked length UInt
-	masked has_value(val Any) Bool
-	masked find(val Any) Int
-	masked unshift(item Any) UInt
-	masked shift() Any
-	masked push(item Any) UInt
-	masked pop() Any
-	masked copy(start Int, length UInt = #default) Array
-	masked reverse() Array
-	masked join(glue String = NL) String
 	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) String
 }
 

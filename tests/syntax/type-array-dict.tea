@@ -1,4 +1,6 @@
 
+#main
+
 // dots style
 var str_dict_list String.Dict.Array = [['a': 'abc', 'b': '123.1']]
 var int_dict Int.Dict = [:]
@@ -23,7 +25,6 @@ arr.push([1, 2, 3])
 arr.push("hello")
 
 echo arr.pop()
-echo arr.join()
 
 arr1 = [1, 2, 3]
 arr2 = [4, 5, 6]
@@ -38,32 +39,49 @@ var key2 = 1.1
 var key3 = false
 
 dict1 = [
-	key: "abc", // abc
-	key1: "abc", // abc
-	key3: "abc", // abc
-	"k1": "v1", /* abc */
+	key: "abc", // some comments
+	key1: "abc", // some comments
+	key3: "abc", // some comments
+	"k1": "v1", /* some comments */
 ]
 
 dict2 = [
-	key2: "abc", /* abc
+	key2: "abc", /* some comments
 	 */
-	"k1": "v1", // abc
+	"k1": "v1", // some comments
 ]
 
-// 遍历数组
 for key, val in dict1 {
 	echo <span>$key: $val</span>
 }
 
-students = [
-	["name": "name1", "class": 1],
-	["name": "name2", "class": 2],
-	["name": "name3", "class": 3],
+var users = [
+	["id": 1, "name": "name1"],
+	["id": 2, "name": "name2"],
+	["id": 3, "name": "name3"],
 ]
 
-var students_by_class = [:]
-for student in students {
-	students_by_class[student['class'] as String] = student
+var id2name = [:]
+for user in users {
+	id2name[user['id'] as String] = user['name']
 }
 
+// array map
+var mapped = users.map((item) => {
+	return '${item['id']} - ${item['name']}'
+})
+var_dump(mapped)
 
+// array reduce
+var reduced = [1, 2, 3].reduce((carry, item) => {
+	return carry as Int + item as Int
+}, 10)
+var_dump(reduced)
+
+// array filter
+var filtered = [0, 1, 2, 3, 4, 5].filter((item) => {
+	if item as Int % 2 == 0 {
+		return true
+	}
+})
+var_dump(filtered)
