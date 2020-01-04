@@ -6,24 +6,20 @@ use tea\tests\PHPDemoUnit\{ NS1\Demo as PHPClassDemo, function php_function_demo
 require_once __DIR__ . '/__unit.php';
 
 #internal
-class TeaDemoClass
-{
+class TeaDemoClass {
 	public static $static_prop1 = 'static prop value';
 
 	public $prop1 = 'prop1 value';
 
-	public static function static_method(): string
-	{
+	public static function static_method(): string {
 		return TeaDemoClass::$static_prop1;
 	}
 
-	public function method1(string $param1): string
-	{
+	public function method1(string $param1): string {
 		return $this->prop1;
 	}
 
-	public function method2(): string
-	{
+	public function method2(): string {
 		return 'some';
 	}
 }

@@ -6,95 +6,78 @@ use tea\tests\PHPDemoUnit\{ BaseInterface };
 require_once __DIR__ . '/__unit.php';
 
 #internal
-interface IDemo extends BaseInterface
-{
+interface IDemo extends BaseInterface {
+	const CONST1 = 'const value';
 	public function __construct(string $some);
 	public function get_class_name(string $caller = 'caller1'): string;
 }
 
-trait IDemoTrait
-{
+trait IDemoTrait {
 	public $prop;
 
-	public function __construct(string $some)
-	{
+	public function __construct(string $some) {
 		$this->prop = $some;
 	}
 
-	public function get_class_name(string $caller = 'caller1'): string
-	{
+	public function get_class_name(string $caller = 'caller1'): string {
 		return __CLASS__;
 	}
 }
 
 #internal
-class BaseClass
-{
-	public function set_value(int $num)
-	{
+class BaseClass {
+	public function set_value(int $num) {
 		// no any
 	}
 }
 
 #internal
-class Test1 extends BaseClass implements IDemo
-{
+class Test1 extends BaseClass implements IDemo {
 	use IDemoTrait;
 
-	public function __construct(string $some)
-	{
+	public function __construct(string $some) {
 		// no any
 	}
 
-	public static function static_method()
-	{
+	public static function static_method() {
 		echo Test1::CONST1, NL;
 	}
 }
 
 #internal
-class Test2
-{
+class Test2 {
 	public $t1;
 
-	public function set_t1(BaseInterface $t1)
-	{
+	public function set_t1(BaseInterface $t1) {
 		$this->t1 = $t1;
 	}
 
-	public function call_t1_fn(): string
-	{
+	public function call_t1_fn(): string {
 		return $this->t1->get_class_name('class.tea');
 	}
 }
 
 #internal
-interface ITest
-{
+interface ITest {
 	public function f1(): string;
 }
 
 #internal
-class Test3 implements ITest
-{
-	public function f1(): string
-	{
+class Test3 implements ITest {
+	public function f1(): string {
 		return "hi";
 	}
 }
 
 #internal
-class Test4
-{
-	public static function fx(ITest $it)
-	{
+class Test4 {
+	public static function fx(ITest $it) {
 		echo $it->f1(), NL;
 	}
 }
 
 #internal
-class Test5
-{
+class Test5 {
 	const C_1 = '123';
 
 	public $a_10 = [];
@@ -121,137 +104,111 @@ class Test5
 	public static $sa_51 = [];
 	public static $sa_53 = [1, 2, [4, 5, 6]];
 
-	public static function sm3()
-	{
+	public static function sm3() {
 		// no any
 	}
 
-	public static function sm_30($arg): string
-	{
+	public static function sm_30($arg): string {
 		return '';
 	}
 
-	public static function sm_31($arg_1, $arg_2): string
-	{
+	public static function sm_31($arg_1, $arg_2): string {
 		$str = "sth.";
 
 		return $str;
 	}
 
-	public static function sm_33(array $arg = []): int
-	{
+	public static function sm_33(array $arg = []): int {
 		return 1;
 	}
 
-	public static function sm_34(array $arg = [1, 2, 3]): float
-	{
+	public static function sm_34(array $arg = [1, 2, 3]): float {
 		return 1.23;
 	}
 
-	public static function sm_35(array $arg_1, $arg_2): bool
-	{
+	public static function sm_35(array $arg_1, $arg_2): bool {
 		return true;
 	}
 
-	public static function sm_360(array $arg_1, string $arg_2 = "str"): array
-	{
+	public static function sm_360(array $arg_1, string $arg_2 = "str"): array {
 		return [];
 	}
 
-	public static function sm_361(array $arg_1, string $arg_2 = "str"): array
-	{
+	public static function sm_361(array $arg_1, string $arg_2 = "str"): array {
 		return [1, 2, 3];
 	}
 
-	public static function sm_362(array $arg_1, string $arg_2 = "str"): array
-	{
+	public static function sm_362(array $arg_1, string $arg_2 = "str"): array {
 		return $arg_1;
 	}
 
-	public static function sm_370(array $arg_1, string $arg_2 = "str"): array
-	{
+	public static function sm_370(array $arg_1, string $arg_2 = "str"): array {
 		return [];
 	}
 
-	public static function sm_371(array $arg_1, string $arg_2 = "str"): array
-	{
+	public static function sm_371(array $arg_1, string $arg_2 = "str"): array {
 		return $arg_1;
 	}
 
-	public static function sm_372(array $arg_1, string $arg_2 = "str"): array
-	{
+	public static function sm_372(array $arg_1, string $arg_2 = "str"): array {
 		return ["a" => 123];
 	}
 
-	public function m3()
-	{
+	public function m3() {
 		// no any
 	}
 
-	public function m_30($arg): string
-	{
+	public function m_30($arg): string {
 		return '';
 	}
 
-	public function m_31($arg_1, $arg_2): string
-	{
+	public function m_31($arg_1, $arg_2): string {
 		$str = "sth.";
 
 		return $str;
 	}
 
-	public function m_33(array $arg = []): int
-	{
+	public function m_33(array $arg = []): int {
 		return 1;
 	}
 
-	public function m_34(array $arg = [1, 2, 3]): float
-	{
+	public function m_34(array $arg = [1, 2, 3]): float {
 		return 1.23;
 	}
 
-	public function m_35(array $arg_1, $arg_2): bool
-	{
+	public function m_35(array $arg_1, $arg_2): bool {
 		return true;
 	}
 
-	public function m_360(array $arg_1, string $arg_2 = "str"): array
-	{
+	public function m_360(array $arg_1, string $arg_2 = "str"): array {
 		return [];
 	}
 
-	public function m_361(array $arg_1, string $arg_2 = "str"): array
-	{
+	public function m_361(array $arg_1, string $arg_2 = "str"): array {
 		return [1, 2, 3];
 	}
 
-	public function m_362(array $arg_1, string $arg_2 = "str"): array
-	{
+	public function m_362(array $arg_1, string $arg_2 = "str"): array {
 		return $arg_1;
 	}
 
-	public function m_363(array $arg_1, string $arg_2 = "str"): array
-	{
+	public function m_363(array $arg_1, string $arg_2 = "str"): array {
 		return $this->a_53;
 	}
 
-	public function m_370(array $arg_1, string $arg_2 = "str"): array
-	{
+	public function m_370(array $arg_1, string $arg_2 = "str"): array {
 		return [];
 	}
 
-	public function m_371(array $arg_1, string $arg_2 = "str"): array
-	{
+	public function m_371(array $arg_1, string $arg_2 = "str"): array {
 		return $arg_1;
 	}
 
-	public function m_372(array $arg_1, string $arg_2 = "str"): array
-	{
+	public function m_372(array $arg_1, string $arg_2 = "str"): array {
 		return ["a" => 123];
 	}
 
-	public function m_373(array $arg_1, string $arg_2 = "str"): array
-	{
+	public function m_373(array $arg_1, string $arg_2 = "str"): array {
 		return $this->a_10;
 	}
 }

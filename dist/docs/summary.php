@@ -7,64 +7,53 @@ use ErrorException;
 require_once __DIR__ . '/__unit.php';
 
 #public
-interface IDemo
-{
+interface IDemo {
+	const CONST1 = 'This is a constant!';
 	public static function say_hello_with_static(string $name = 'Benny');
 }
 
-trait IDemoTrait
-{
+trait IDemoTrait {
 	public static $a_static_prop = "a static property.";
 
-	public static function say_hello_with_static(string $name = 'Benny')
-	{
+	public static function say_hello_with_static(string $name = 'Benny') {
 		echo "Hello, {$name}\n";
 	}
 }
 
 #internal
-interface DemoInterface
-{
+interface DemoInterface {
 	public function set_message(string $message);
 	public function get_message(): string;
 }
 
-trait DemoInterfaceTrait
-{
+trait DemoInterfaceTrait {
 	public $message = 'hei~';
 
-	public function get_message(): string
-	{
+	public function get_message(): string {
 		return $this->message;
 	}
 }
 
 #internal
-class DemoBaseClass
-{
-	public function __construct(string $name)
-	{
+class DemoBaseClass {
+	public function __construct(string $name) {
 		echo "Hey, {$name}, it is constructing...", NL;
 	}
 
-	public function __destruct()
-	{
+	public function __destruct() {
 		echo "it is destructing...", NL;
 	}
 
-	protected function a_protected_method()
-	{
+	protected function a_protected_method() {
 		// no any
 	}
 }
 
 #public
-class DemoPublicClass extends DemoBaseClass implements IDemo, DemoInterface
-{
+class DemoPublicClass extends DemoBaseClass implements IDemo, DemoInterface {
 	use IDemoTrait, DemoInterfaceTrait;
 
-	public function set_message(string $message)
-	{
+	public function set_message(string $message) {
 		$this->message = $message;
 	}
 }

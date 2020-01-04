@@ -1,0 +1,59 @@
+
+#main
+
+// an interface with some default implementations
+internal IFib {
+	TITLE = 'Fibonacci sequence'
+
+	protected previous = 0
+	protected current = 1
+
+	protected current_index = 0
+	protected max UInt
+
+	construct(max UInt) {
+		this.max = max
+	}
+
+	has_next() Bool {
+		return this.current_index <= this.max
+	}
+
+	get_next() UInt
+}
+
+// the implementation
+internal Fib: IFib {
+	get_next() UInt {
+		if this.current_index > this.max {
+			throw Exception("Out of range")
+		}
+
+		var temp = this.current
+		this.current = this.previous + this.current
+		this.previous = temp
+		this.current_index += 1
+
+		return this.previous
+	}
+}
+
+var fib = Fib(9)
+var list XView.Array = []
+while fib.has_next() {
+	list[] = <li>${fib.get_next()}</li>
+}
+catch ex {
+	echo ex.getMessage()
+	exit
+}
+
+echo <section>
+	<h1>#{Fib.TITLE}</h1>
+	<ul>
+		${list.join("\n\t\t")}
+	</ul>
+</section>
+
+// end
+

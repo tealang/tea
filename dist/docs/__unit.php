@@ -11,23 +11,19 @@ require_once $super_path . 'tea/dist/builtin/__unit.php'; // the builtins
 /*public*/	const ARRAY_CONST = [1, 2];
 
 
-function demo_function1(string $message)
-{
+function demo_function1(string $message) {
 	echo 'this function can only be called by local unit', NL;
 }
 
-function demo_function2(string $message = 'with a default value')
-{
+function demo_function2(string $message = 'with a default value') {
 	echo 'this function can be called by local or foriegn units', NL;
 }
 
-function demo_function_with_a_return_type(string $some): int
-{
+function demo_function_with_a_return_type(string $some): int {
 	return iconv_strlen($some);
 }
 
-function demo_function_with_callbacks(string $some, callable $success = null, callable $failure = null): string
-{
+function demo_function_with_callbacks(string $some, callable $success = null, callable $failure = null): string {
 	$success_callback_result = null;
 	if ($success) {
 		$success_callback_result = $success('Success!');

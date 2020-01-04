@@ -377,12 +377,11 @@ class PHPCoder extends TeaCoder
 		$body = $this->render_enclosing_block($node);
 
 		if ($node->type === null || $node->type === TypeFactory::$_any || $node->type === TypeFactory::$_void) {
-			return "$header($parameters)\n$body";
+			return "$header($parameters) $body";
 		}
 		else {
 			$return_type = $node->type->render($this);
-
-			return "$header($parameters): $return_type\n$body";
+			return "$header($parameters): $return_type $body";
 		}
 	}
 
@@ -481,7 +480,7 @@ class PHPCoder extends TeaCoder
 			array_unshift($items, 'use ' . join(', ', $traits) . ";\n\n");
 		}
 
-		$code = sprintf("%s%s\n%s",
+		$code = sprintf("%s%s %s",
 			$this->generate_class_header($node),
 			$this->generate_class_baseds($node),
 			$this->wrap_block_code($items)
@@ -508,7 +507,7 @@ class PHPCoder extends TeaCoder
 		if ($node->label === _PHP) return null;
 
 		// interface declare
-		$code = sprintf("%s%s\n%s",
+		$code = sprintf("%s%s %s",
 			$this->generate_class_header($node),
 			$this->generate_class_baseds($node),
 			$this->wrap_block_code($this->render_interface_members($node))
@@ -524,7 +523,7 @@ class PHPCoder extends TeaCoder
 			}
 
 			$name = $this->get_normal_name($node);
-			$code .= sprintf("\n\ntrait %s\n%s",
+			$code .= sprintf("\n\ntrait %s %s",
 				$this->get_interface_trait_name($name),
 				$this->wrap_block_code($this->render_block_nodes($members))
 			);
@@ -542,21 +541,24 @@ class PHPCoder extends TeaCoder
 	{
 		$members = [];
 		foreach ($declaration->members as $member) {
-			$item = $this->render_interface_member($member);
-			if ($item !== null) {
-				$members[] = $item === NL ? $item : $item . NL;
+			if ($member instanceof FunctionDeclaration) {
+				$item = $this->render_interface_method($member);
 			}
+			elseif ($member instanceof ClassConstantDeclaration) {
+				$item = $this->render_class_constant_declaration($member);
+			}
+			else {
+				continue;
+			}
+
+			$members[] = $item === NL ? $item : $item . NL;
 		}
 
 		return $members;
 	}
 
-	protected function render_interface_member(IClassMemberDeclaration $node)
+	protected function render_interface_method(FunctionDeclaration $node)
 	{
-		if (!$node instanceof FunctionDeclaration) {
-			return null;
-		}
-
 		$header = $this->generate_function_header($node);
 		$parameters = $this->render_function_parameters($node);
 

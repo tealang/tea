@@ -14,34 +14,28 @@ require_once $super_path . 'tea/tests/PHPDemoUnit/__unit.php';
 
 /*internal*/	const PI = 3.1415926;
 
-function get_class(): string
-{
+function get_class(): string {
 	return Test1::class;
 }
 
-function fn0($str)
-{
+function fn0($str) {
 	echo $str, NL;
 }
 
-function fn1(callable $callee)
-{
+function fn1(callable $callee) {
 	$unknow_type_value = $callee('hei');
 }
 
-function fn2(string $class)
-{
+function fn2(string $class) {
 	$class();
 }
 
-function fn3(\Exception $ex, string $num = null)
-{
+function fn3(\Exception $ex, string $num = null) {
 	$num = 1;
 	echo $ex->getMessage(), NL;
 }
 
-function xrange(int $start, int $stop, int $step = 1): \Generator
-{
+function xrange(int $start, int $stop, int $step = 1): \Generator {
 	$i = null;
 
 	if ($step > 0) {
@@ -65,13 +59,11 @@ function xrange(int $start, int $stop, int $step = 1): \Generator
 	}
 }
 
-function new_collector_demo(): CollectorDemo
-{
+function new_collector_demo(): CollectorDemo {
 	return new CollectorDemo();
 }
 
-function collector1(): array
-{
+function collector1(): array {
 	$__collects = [];
 	$__collects[] = '<div>hei~</div>';
 

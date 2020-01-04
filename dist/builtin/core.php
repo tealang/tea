@@ -1,7 +1,6 @@
 <?php
 #public
-interface IView
-{
+interface IView {
 	// no any
 }
 

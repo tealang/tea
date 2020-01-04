@@ -6,8 +6,7 @@ const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 $super_path = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR; // the workspace/vendor path
 require_once $super_path . 'tea/dist/builtin/__unit.php'; // the builtins
 
-function fib_with_closure(): callable
-{
+function fib_with_closure(): callable {
 	$a = 0;
 	$b = 1;
 	return function () use(&$b, &$a) {
@@ -18,8 +17,7 @@ function fib_with_closure(): callable
 	};
 }
 
-function fib_with_generator(int $num = 9): \Generator
-{
+function fib_with_generator(int $num = 9): \Generator {
 	$c = null;
 
 	$a = 0;
@@ -37,7 +35,9 @@ function fib_with_generator(int $num = 9): \Generator
 
 # --- generates ---
 const __AUTOLOADS = [
-	
+	'tea\samples\IFib' => 'fib_with_class.php',
+	'tea\samples\IFibTrait' => 'fib_with_class.php',
+	'tea\samples\Fib' => 'fib_with_class.php'
 ];
 
 spl_autoload_register(function ($class) {

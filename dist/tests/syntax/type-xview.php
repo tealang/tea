@@ -6,25 +6,21 @@ use tea\tests\xview\{ BaseView };
 require_once __DIR__ . '/__unit.php';
 
 #internal
-class Cell extends BaseView
-{
+class Cell extends BaseView {
 	public $text;
 
-	public function __construct(string $text = '')
-	{
+	public function __construct(string $text = '') {
 		$this->text = $text;
 	}
 
-	public function render(): string
-	{
+	public function render(): string {
 		$text = _str_replace($this->text, NL, '<br>');
 		return '<cell>' . $text . '</cell>';
 	}
 }
 
 #public
-class DemoList extends BaseView
-{
+class DemoList extends BaseView {
 	const ABC = '12';
 
 	public $tag;
@@ -33,8 +29,7 @@ class DemoList extends BaseView
 
 	public $cells = [];
 
-	public function __construct(string $name, string $title = '', array $items = [], callable $each = null, callable $done = null)
-	{
+	public function __construct(string $name, string $title = '', array $items = [], callable $each = null, callable $done = null) {
 		$cell = null;
 
 		$this->items = $items;
@@ -49,8 +44,7 @@ class DemoList extends BaseView
 		$done && $done();
 	}
 
-	public function render(): string
-	{
+	public function render(): string {
 		$cells = [];
 		foreach ($this->items as $key => $value) {
 			if (1) {
