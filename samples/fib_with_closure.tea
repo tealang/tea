@@ -1,0 +1,19 @@
+
+#main
+
+public fib_with_closure() {
+	a = 0
+	b = 1
+	return () => {
+		c = b
+		b = a + b
+		a = c
+		return a
+	}
+}
+
+var f = fib_with_closure()
+for i = 0 to 9 {
+	echo "$i ==> ${f()}"
+}
+

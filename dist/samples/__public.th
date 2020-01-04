@@ -1,0 +1,9 @@
+// the public declarations
+
+#unit tea/samples
+
+public fib_with_closure() Callable
+
+public fib_with_generator(num UInt = 9) GeneratorInterface
+
+// program end
