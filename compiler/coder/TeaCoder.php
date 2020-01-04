@@ -278,6 +278,14 @@ class TeaCoder
 		return "{$declaration} $body";
 	}
 
+	public function render_lambda_block(IExpression $node)
+	{
+		$parameters = $this->render_parameters($node->parameters);
+		$body = $this->render_enclosing_block($node);
+
+		return sprintf('(%s) => ', $parameters) . $body;
+	}
+
 	public function render_class_declaration(ClassDeclaration $node)
 	{
 		$body = $this->render_block_nodes($node->members);
@@ -636,19 +644,6 @@ class TeaCoder
 		$key = $node->right->render($this);
 
 		return "{$master}[{$key}]";
-	}
-
-	public function render_lambda_block(IExpression $node)
-	{
-		$parameters = $this->render_parameters($node->parameters);
-		$body = $this->render_enclosing_block($node);
-
-		if ($node->use_variables) {
-			$uses = $this->render_arguments($node->use_variables);
-			return sprintf('function (%s) use(%s) ', $parameters, $uses) . $body;
-		}
-
-		return sprintf('function (%s) ', $parameters) . $body;
 	}
 
 	public function render_none_literal(NoneLiteral $node)

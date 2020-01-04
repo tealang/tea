@@ -378,7 +378,7 @@ class ASTChecker
 				$builder = new ReturnBuilder($node, $node->type->value_type);
 				$node->fixed_body = $builder->build_return_statements();
 			}
-			elseif ($node->type !== TypeFactory::$_void) {
+			elseif ($node->type !== TypeFactory::$_void && empty($node->has_yield)) {
 				throw $this->new_syntax_error("Function required return type '{$node->type->name}'.");
 			}
 		}

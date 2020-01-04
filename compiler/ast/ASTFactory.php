@@ -156,6 +156,15 @@ class ASTFactory
 		return $identifier;
 	}
 
+	public function create_yield_expression(IExpression $argument)
+	{
+		// force set type GeneratorInterface to current function
+		$this->function->type = new ClassLikeIdentifier('GeneratorInterface');
+		$this->function->has_yield = true;
+
+		return new YieldExpression($argument);
+	}
+
 	protected function set_to_defer_check(Identifiable $identifier)
 	{
 		if (!$this->seek_symbol_in_function($identifier)) {

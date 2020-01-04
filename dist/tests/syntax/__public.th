@@ -8,7 +8,7 @@ public get_class() Class
 
 public fn0(str Any)
 
-public xrange(start Int, stop Int, step UInt = 1)
+public xrange(start Int, stop Int, step UInt = 1) GeneratorInterface
 
 #php var_dump(v Any)
 

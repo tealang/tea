@@ -1,5 +1,5 @@
 
-// a int range generator use yield
+// a int range generator that implementeds with yield
 public xrange(start Int, stop Int, step = 1) {
 	// increment
 	if step > 0 {
@@ -23,4 +23,8 @@ public xrange(start Int, stop Int, step = 1) {
 		yield i
 		i += step
 	}
+}
+
+for v in xrange(0, 10) {
+	echo v
 }

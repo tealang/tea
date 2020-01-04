@@ -153,6 +153,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 
 #tea Any {}
 #tea None {}
+#tea Void {}
 
 #tea Scalar {
 	masked string => strval(this)
@@ -266,6 +267,18 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 #tea Callable {}
 
 public IView {}
-#php Iterator as IteratorInterface {}
+
+#php Iterator as IteratorInterface {
+	current() Any
+	key() String
+	next()
+	rewind()
+	valid() Bool
+}
+
+#php Generator as GeneratorInterface: IteratorInterface {
+	send(value Any) Any
+	throw(exception Exception)
+}
 
 // end of program

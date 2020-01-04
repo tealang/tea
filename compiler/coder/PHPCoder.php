@@ -386,6 +386,29 @@ class PHPCoder extends TeaCoder
 		}
 	}
 
+	public function render_lambda_block(IExpression $node)
+	{
+		$parameters = $this->render_parameters($node->parameters);
+		$body = $this->render_enclosing_block($node);
+
+		if ($node->use_variables) {
+			$uses = $this->render_lambda_use_arguments($node->use_variables);
+			return sprintf('function (%s) use(%s) ', $parameters, $uses) . $body;
+		}
+
+		return sprintf('function (%s) ', $parameters) . $body;
+	}
+
+	protected function render_lambda_use_arguments(array $nodes)
+	{
+		foreach ($nodes as $arg) {
+			$item = $arg->render($this);
+			$items[] = '&' . $item;
+		}
+
+		return join(', ', $items);
+	}
+
 	public function render_enclosing_block(IEnclosingBlock $node)
 	{
 		$body = $node->fixed_body ?? $node->body;
@@ -1076,8 +1099,13 @@ class PHPCoder extends TeaCoder
 		if ($node->ns) {
 			return $this->render_plain_identifier($node->ns) . static::NS_SEPARATOR . $name;
 		}
-		elseif ($node->symbol->declaration->program->unit === null) {
-			// is the builtin declaration identifier
+
+		if ($node->symbol->declaration->origin_name !== null) {
+			$name = $node->symbol->declaration->origin_name;
+		}
+
+		if ($node->symbol->declaration->program->unit === null) {
+			// the builtin declaration identifier
 			return static::NS_SEPARATOR . $name;
 		}
 

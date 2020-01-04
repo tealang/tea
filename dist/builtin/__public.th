@@ -146,6 +146,10 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	// no any
 }
 
+#tea Void {
+	// no any
+}
+
 #tea Scalar {
 	masked string String
 	masked float Float
@@ -241,7 +245,16 @@ public IView {
 }
 
 #php IteratorInterface {
-	// no any
+	current() Any
+	key() String
+	next()
+	rewind()
+	valid() Bool
+}
+
+#php GeneratorInterface: IteratorInterface {
+	send(value Any) Any
+	throw(exception Exception)
 }
 
 // program end

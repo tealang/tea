@@ -40,7 +40,7 @@ function fn3(\Exception $ex, string $num = null)
 	echo $ex->getMessage(), NL;
 }
 
-function xrange(int $start, int $stop, int $step = 1)
+function xrange(int $start, int $stop, int $step = 1): \Generator
 {
 	$i = null;
 

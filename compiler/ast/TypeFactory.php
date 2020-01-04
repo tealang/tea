@@ -48,6 +48,7 @@ class TypeFactory
 
 	// for check Iterable type accepts
 	static $_iterator_interface_symbol;
+	static $_generator_interface_symbol;
 
 	private static $type_map = [];
 
@@ -83,6 +84,10 @@ class TypeFactory
 	static function is_iterable_type(IType $type) {
 		if ($type === TypeFactory::$_any || $type instanceof IterableType) {
 			return true;
+		}
+
+		if ($type->symbol === null) {
+			dump($type);exit;
 		}
 
 		return $type->symbol->declaration->is_same_or_based_with_symbol(self::$_iterator_interface_symbol);
@@ -131,6 +136,7 @@ class TypeFactory
 
 		static::$_iview_symbol = $unit->symbols['IView'];
 		static::$_iterator_interface_symbol = $unit->symbols['IteratorInterface'];
+		static::$_generator_interface_symbol = $unit->symbols['GeneratorInterface'];
 	}
 
 	static function exists_type(string $name): bool

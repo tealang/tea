@@ -91,7 +91,7 @@ $num = 2;
 
 $abc = new DemoList('', '', ['A', 'B', 'C'], function ($item) {
 	return new Cell((string)$item);
-}, function () use($str, $num) {
+}, function () use(&$str, &$num) {
 	echo $str, $num, NL;
 });
 

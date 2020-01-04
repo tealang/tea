@@ -109,7 +109,7 @@ $xview = '<div>
 </div>';
 
 $regex = '/^[a-z0-9\'_"]+$/i';
-if (preg_match($regex, 'Abc\'123"')) {
+if (regex_match($regex, 'Abc\'123"') !== null) {
 	echo 'matched!', NL;
 }
 

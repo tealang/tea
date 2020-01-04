@@ -835,7 +835,7 @@ class TeaParser
 					throw $this->new_unexpect_exception();
 				}
 
-				return new YieldExpression($argument);
+				return $this->factory->create_yield_expression($argument);
 
 			default:
 				// maybe a regex
