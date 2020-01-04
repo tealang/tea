@@ -244,7 +244,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 
 	// masked remove(key String) => unset(this[key])
 
-	// masked join(glue String = NL) => implode(glue, this)
+	masked join(glue String = NL) => implode(glue, this)
 	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) => json_encode(this, flags)
 }
 

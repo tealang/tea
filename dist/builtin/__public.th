@@ -218,6 +218,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	masked has_key(key Any) Bool
 	masked has_value(val Any) Bool
 	masked find(val Any) String
+	masked join(glue String = NL) String
 	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) String
 }
 
