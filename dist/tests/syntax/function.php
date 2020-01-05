@@ -1,22 +1,29 @@
 <?php
 namespace tea\tests\syntax;
 
-use Exception;
+require_once __DIR__ . '/__unit.php';
+
+#internal
+class ClassForFunctionDemo {
+	// no any
+}
 
 // ---------
-$a = 'fn0';
-$b = Test1::class;
+$a = 'tea\tests\syntax\fn0';
+$b = ClassForFunctionDemo::class;
 $c = get_class();
-$c();
+new $c();
 
-fn1('fn0');
+fn1('tea\tests\syntax\fn0');
 fn1(function ($str) {
 	return fn0($str);
 });
 
-fn2(Test1::class);
+fn2(ClassForFunctionDemo::class);
 
-fn3(new Exception('message'), 'abc');
+echo fn3('any...', function (string $caller) {
+	return "{$caller} has called!";
+}), NL;
 // ---------
 
 // program end

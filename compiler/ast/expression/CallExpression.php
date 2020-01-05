@@ -36,6 +36,17 @@ class CallExpression extends Node implements IExpression
 
 	public function is_class_new()
 	{
-		return $this->callee->symbol && $this->callee->symbol->declaration instanceof ClassDeclaration;
+		$symbol = $this->callee->symbol;
+		if ($symbol === null) {
+			return false;
+		}
+		elseif ($symbol->declaration instanceof ClassDeclaration) {
+			return true;
+		}
+		elseif ($symbol->declaration instanceof IVariableDeclaration && $symbol->declaration->type === TypeFactory::$_class) {
+			return true;
+		}
+
+		return false;
 	}
 }

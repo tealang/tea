@@ -1,11 +1,17 @@
 
+#main
+
+internal ClassForFunctionDemo {
+	//
+}
+
 var a = fn0
-var b = Test1
+var b = ClassForFunctionDemo
 var c = get_class()
 c()
 
 public get_class() {
-	return Test1
+	return ClassForFunctionDemo
 }
 
 public fn0(str) {
@@ -19,16 +25,24 @@ internal fn1(callee Callable) {
 fn1(fn0)
 fn1((str) => fn0(str))
 
-fn2(Test1)
+fn2(ClassForFunctionDemo)
 internal fn2(class Class) {
 	class()
 }
 
-// assignable feature
-internal fn3(ex Exception, var num String = none) {
-	num = 1
-	echo ex.getMessage()
+internal fn3(arg0) String -> callback0(caller String) String -> callback1(message) Void {
+	if callback0 {
+		return callback0('A cool man')
+	}
+	elseif callback1 {
+		callback1('Error!')
+	}
+	else {
+		return 'No any callbacks implemented.'
+	}
 }
 
-fn3(Exception('message'), 'abc')
+echo fn3('any...') -> callback0(caller String) {
+	return "$caller has called!"
+}
 

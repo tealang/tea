@@ -1079,7 +1079,7 @@ class PHPCoder extends TeaCoder
 
 		if (!$node->with_call_or_accessing) {
 			if ($declaration instanceof FunctionBlock) {
-				$name = "'$name'";
+				$name = sprintf("'%s%s%s'", $declaration->program->unit->dist_ns_uri, static::NS_SEPARATOR, $name);
 			}
 			elseif ($declaration instanceof ClassLikeDeclaration) {
 				$name = $name . '::class';
