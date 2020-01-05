@@ -2,8 +2,12 @@
 
 #unit tea/samples
 
+public M_PI Float
+
 public fib_with_closure() Callable
 
 public fib_with_generator(num UInt = 9) GeneratorInterface
+
+#php pi() Float
 
 // program end

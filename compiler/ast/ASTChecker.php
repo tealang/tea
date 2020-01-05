@@ -1878,7 +1878,18 @@ class ASTChecker
 				// for Class type parameters
 			}
 			else {
-				throw $this->new_syntax_error("Callee '$node->name' not a callable type.", $node);
+				if ($declar instanceof VariableDeclaration) {
+					$type = self::get_type_name($declar->type);
+					$item = "$type variable '$node->name'";
+				}
+				elseif ($declar instanceof ConstantDeclaration) {
+					$item = "constant '$node->name'";
+				}
+				else {
+					$item = "'$node->name'";
+				}
+
+				throw $this->new_syntax_error("Cannot use $item as a callable.", $node);
 			}
 		}
 		elseif ($node instanceof ClassIdentifier) {

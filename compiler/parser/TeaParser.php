@@ -886,6 +886,7 @@ class TeaParser
 				throw $this->new_unexpect_exception($token);
 		}
 
+		$expression->pos = $this->pos;
 		$expression = $this->read_expression_combination($expression, $prev_operator);
 
 		return $expression;

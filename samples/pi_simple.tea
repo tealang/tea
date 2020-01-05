@@ -1,0 +1,25 @@
+
+#main
+
+#php M_PI Float
+#php pi() Float
+
+// PI/2 = 1 + 1/3 + 1/3*2/5 + 1/3*2/5*3/7 + ...
+
+internal MIN_FLOAT = 1.11e-16
+
+var computed_pi Float = 2.0
+var tmp Float = 2.0
+var a = 1
+var b = 3
+
+while tmp > MIN_FLOAT {
+    tmp *= a / b
+    computed_pi += tmp
+    a += 1
+    b += 2
+}
+
+echo "Computed PI value: $computed_pi"
+echo "PHP constant M_PI value: $M_PI"
+echo "PHP function pi() value: ${pi()}"

@@ -1,9 +1,8 @@
-
 #main
 
 // an interface with some default implementations
 internal IFib {
-	TITLE = 'Fibonacci sequence'
+	public TITLE = 'Fibonacci sequence'
 
 	protected previous = 0
 	protected current = 1
@@ -11,20 +10,20 @@ internal IFib {
 	protected current_index = 0
 	protected max UInt
 
-	construct(max UInt) {
+	public construct(max UInt) {
 		this.max = max
 	}
 
-	has_next() Bool {
+	public has_next() Bool {
 		return this.current_index <= this.max
 	}
 
-	get_next() UInt
+	public get_next() UInt  // without default implementation
 }
 
 // the implementation
 internal Fib: IFib {
-	get_next() UInt {
+	public get_next() UInt {
 		if this.current_index > this.max {
 			throw Exception("Out of range")
 		}
@@ -56,4 +55,3 @@ echo <section>
 </section>
 
 // end
-
