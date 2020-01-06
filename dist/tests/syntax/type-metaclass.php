@@ -13,12 +13,18 @@ class TestForMetaClass0 {
 }
 
 #internal
-class TestForMetaClass1 {
+class TestForMetaClass1 extends TestForMetaClass0 {
+	// no any
+}
+
+#internal
+class TestForMetaClass2 {
 	// no any
 }
 
 // ---------
 TestForMetaClass0::test_class_argument(TestForMetaClass0::class);
+TestForMetaClass0::test_class_argument(TestForMetaClass1::class);
 // ---------
 
 // program end

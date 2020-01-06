@@ -8,10 +8,15 @@ internal TestForMetaClass0 {
 	}
 }
 
-internal TestForMetaClass1 {
+internal TestForMetaClass1: TestForMetaClass0 {
 	//
 }
 
-TestForMetaClass0.test_class_argument(TestForMetaClass0)
-// TestForMetaClass0.test_class_argument(TestForMetaClass1) // error
+internal TestForMetaClass2 {
+	//
+}
+
+TestForMetaClass0.test_class_argument(TestForMetaClass0)  // OK
+TestForMetaClass0.test_class_argument(TestForMetaClass1)  // OK
+// TestForMetaClass0.test_class_argument(TestForMetaClass2) // error
 

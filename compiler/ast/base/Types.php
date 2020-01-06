@@ -173,7 +173,7 @@ class MetaClassType extends BaseType {
 			return true;
 		}
 
-		return false;
+		return $type->value_type->is_based_with($this->value_type);
 	}
 }
 
