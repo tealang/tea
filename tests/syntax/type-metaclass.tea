@@ -1,0 +1,17 @@
+#main
+
+internal TestForMetaClass0 {
+	prop = 'some'
+
+	static test_class_argument(class TestForMetaClass0.Type) {
+		var_dump(class)
+	}
+}
+
+internal TestForMetaClass1 {
+	//
+}
+
+TestForMetaClass0.test_class_argument(TestForMetaClass0)
+// TestForMetaClass0.test_class_argument(TestForMetaClass1) // error
+

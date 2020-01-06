@@ -241,6 +241,10 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	// no any
 }
 
+#tea MetaClass {
+	// no any
+}
+
 public IView {
 	// no any
 }

@@ -26,9 +26,8 @@ class BaseType extends Node implements IType {
 
 	public $symbol;
 
-	public function __construct(string $name, int $pos = null) {
+	public function __construct(string $name) {
 		$this->name = $name;
-		$this->pos = $pos;
 	}
 
 	// to support class
@@ -37,6 +36,9 @@ class BaseType extends Node implements IType {
 	}
 
 	public function is_accept_type(IType $type) {
+		if ($this->symbol === null) {
+			dump($this);exit;
+		}
 		return $type === $this
 			|| $type === TypeFactory::$_none
 			|| in_array($type->name, static::ACCEPT_TYPES, true)
@@ -162,6 +164,16 @@ class XViewType extends BaseType {
 		}
 
 		return $type->symbol->declaration->is_same_or_based_with_symbol(TypeFactory::$_iview_symbol);
+	}
+}
+
+class MetaClassType extends BaseType {
+	public function is_accept_type(IType $type) {
+		if ($type === $this || $type === TypeFactory::$_none || $this->value_type->symbol === $type->value_type->symbol) {
+			return true;
+		}
+
+		return false;
 	}
 }
 

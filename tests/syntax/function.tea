@@ -1,22 +1,12 @@
 
 #main
 
-internal ClassForFunctionDemo {
-	//
-}
-
-var a = fn0
-var b = ClassForFunctionDemo
-var c = get_class()
-c()
-
-public get_class() {
-	return ClassForFunctionDemo
-}
-
 public fn0(str) {
 	echo str
 }
+
+var a_function = fn0
+a_function('some')
 
 internal fn1(callee Callable) {
 	var unknow_type_value Any = callee('hei')
@@ -25,12 +15,7 @@ internal fn1(callee Callable) {
 fn1(fn0)
 fn1((str) => fn0(str))
 
-fn2(ClassForFunctionDemo)
-internal fn2(class Class) {
-	class()
-}
-
-internal fn3(arg0) String -> callback0(caller String) String -> callback1(message) Void {
+internal fn2(arg0) String -> callback0(caller String) String -> callback1(message) Void {
 	if callback0 {
 		return callback0('A cool man')
 	}
@@ -42,7 +27,7 @@ internal fn3(arg0) String -> callback0(caller String) String -> callback1(messag
 	}
 }
 
-echo fn3('any...') -> callback0(caller String) {
+echo fn2('any...') -> callback0(caller String) {
 	return "$caller has called!"
 }
 

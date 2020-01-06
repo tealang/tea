@@ -14,10 +14,6 @@ require_once $super_path . 'tea/tests/PHPDemoUnit/__unit.php';
 
 /*internal*/	const PI = 3.1415926;
 
-function get_class(): string {
-	return ClassForFunctionDemo::class;
-}
-
 function fn0($str) {
 	echo $str, NL;
 }
@@ -26,11 +22,7 @@ function fn1(callable $callee) {
 	$unknow_type_value = $callee('hei');
 }
 
-function fn2(string $class) {
-	new $class();
-}
-
-function fn3($arg0, callable $callback0 = null, callable $callback1 = null): string {
+function fn2($arg0, callable $callback0 = null, callable $callback1 = null): string {
 	if ($callback0) {
 		return $callback0('A cool man');
 	}
@@ -110,11 +102,11 @@ const __AUTOLOADS = [
 	'tea\tests\syntax\Test3' => 'class.php',
 	'tea\tests\syntax\Test4' => 'class.php',
 	'tea\tests\syntax\Test5' => 'class.php',
-	'tea\tests\syntax\ClassForFunctionDemo' => 'function.php',
 	'tea\tests\syntax\TeaDemoClass' => 'main1.php',
-	'tea\tests\syntax\TestForClassType' => 'type-class.php',
 	'tea\tests\syntax\CollectorDemo' => 'type-collector.php',
 	'tea\tests\syntax\CollectorDemoFactory' => 'type-collector.php',
+	'tea\tests\syntax\TestForMetaClass0' => 'type-metaclass.php',
+	'tea\tests\syntax\TestForMetaClass1' => 'type-metaclass.php',
 	'tea\tests\syntax\Cell' => 'type-xview.php',
 	'tea\tests\syntax\DemoList' => 'type-xview.php'
 ];

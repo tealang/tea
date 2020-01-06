@@ -1053,8 +1053,7 @@ class ASTChecker
 				return $this->infer_variable($node);
 
 			case ClassLikeIdentifier::KIND:
-				$this->check_class_identifier($node);
-				return TypeFactory::$_class;
+				return $this->infer_classlike_identifier($node);
 
 			case ConstantIdentifier::KIND:
 				return $this->infer_constant($node);
@@ -1372,7 +1371,9 @@ class ASTChecker
 	private function check_type_identifier(IType $type, IDeclaration $related_declaration = null)
 	{
 		if ($type instanceof BaseType) {
-			if ($type instanceof IterableType && $type->value_type !== null) {
+			// for IterableType and MetaClassType
+			if (isset($type->value_type)) {
+			// if ($type instanceof IterableType && $type->value_type !== null) {
 				// check value type
 				$this->check_type_identifier($type->value_type, $related_declaration);
 			}
@@ -1387,17 +1388,10 @@ class ASTChecker
 		}
 	}
 
-	private function check_class_identifier(ClassLikeIdentifier $node)
+	private function infer_classlike_identifier(ClassLikeIdentifier $node, IDeclaration $related_declaration = null): IType
 	{
-		$declaration = $this->require_classlike_declaration($node);
-		if (!$declaration instanceof ClassDeclaration) {
-			throw $this->new_syntax_error("Declaration of '{$node->name}' should be a Class.", $node);
-		}
-	}
-
-	private function infer_classlike_identifier(PlainIdentifier $node, IDeclaration $related_declaration)
-	{
-		$this->require_classlike_declaration($node, $related_declaration);
+		$declaration = $this->require_classlike_declaration($node, $related_declaration);
+		return $declaration->type;
 	}
 
 	private function infer_constant(ConstantIdentifier $node): IType
@@ -1531,7 +1525,7 @@ class ASTChecker
 					$key = "'$key'";
 				}
 
-				throw $this->new_syntax_error("Type of argument $key not matched the parameter, it's required '{$required_type_name}' for call '{$callee_name}', type '{$infered_type_name}' supplied.", $argument);
+				throw $this->new_syntax_error("Type of argument $key does not matched the parameter for callee '{$callee_name}', required '{$required_type_name}', but '{$infered_type_name}' supplied.", $argument);
 			}
 
 			$normalizeds[$idx] = $argument;
@@ -1679,7 +1673,7 @@ class ASTChecker
 
 		$declaration = $node->symbol->declaration;
 
-		if ($declaration instanceof VariableDeclaration || $declaration instanceof ConstantDeclaration || $declaration instanceof ParameterDeclaration) {
+		if ($declaration instanceof VariableDeclaration || $declaration instanceof ConstantDeclaration || $declaration instanceof ParameterDeclaration || $declaration instanceof ClassLikeDeclaration) {
 			if (!$declaration->type) {
 				// 这类声明跟顺序相关，前面声明的用到后面的则当作未定义
 				// 不过在不同程序文件中的常量是个问题，需要后续优化
@@ -1689,12 +1683,12 @@ class ASTChecker
 			$type = $declaration->type;
 		}
 		elseif ($declaration instanceof ICallableDeclaration) {
-			if ($declaration instanceof ClassDeclaration) {
-				$type = TypeFactory::$_class;
-			}
-			else {
+			// if ($declaration instanceof ClassDeclaration) {
+			// 	$type = $declaration->type;
+			// }
+			// else {
 				$type = TypeFactory::$_callable;
-			}
+			// }
 		}
 		elseif ($declaration instanceof NamespaceDeclaration) {
 			$type = TypeFactory::$_namespace;
@@ -1716,10 +1710,11 @@ class ASTChecker
 			case PropertyDeclaration::KIND:
 			case ClassConstantDeclaration::KIND:
 			case MaskedDeclaration::KIND:
+			case ClassDeclaration::KIND:
 				return $member->type;
 
-			case ClassDeclaration::KIND:
-				return TypeFactory::$_class;
+			// case ClassDeclaration::KIND:
+			// 	return TypeFactory::$_class;
 
 			case NamespaceDeclaration::KIND:
 				return TypeFactory::$_namespace;
@@ -1874,8 +1869,11 @@ class ASTChecker
 			elseif ($declar->type === TypeFactory::$_callable) {
 				// for Callable type parameters
 			}
-			elseif ($declar->type === TypeFactory::$_class) {
-				// for Class type parameters
+			// elseif ($declar->type === TypeFactory::$_class) {
+			// 	// for Class type parameters
+			// }
+			elseif ($declar->type instanceof MetaClassType) {
+				dump($declar);exit;
 			}
 			else {
 				if ($declar instanceof VariableDeclaration) {
@@ -1961,7 +1959,8 @@ class ASTChecker
 			elseif ($infered_type === TypeFactory::$_namespace) {
 				$this->attach_namespace_member_symbol($master->symbol->declaration, $node);
 			}
-			elseif ($infered_type === TypeFactory::$_class) {
+			// elseif ($infered_type === TypeFactory::$_class) {
+			elseif ($infered_type instanceof MetaClassType) {
 				$node->symbol = $this->require_class_member_symbol($master->symbol->declaration, $node);
 				if (!$node->symbol->declaration->is_static) {
 					$name = $this->get_declaration_name($node->symbol->declaration);
@@ -2245,6 +2244,10 @@ class ASTChecker
 			}
 
 			$name = "{$value_type_name}.{$type->name}";
+		}
+		elseif ($type instanceof MetaClassType) {
+			$value_type_name = self::get_type_name($type->value_type);
+			$name = "{$value_type_name}." . _DOT_SIGN_METATYPE;
 		}
 		else {
 			$name = $type->name;

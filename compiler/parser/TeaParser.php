@@ -1750,11 +1750,14 @@ class TeaParser
 			}
 
 			$kind = $this->scan_token();
-			if ($kind === _ARRAY) {
+			if ($kind === _DOT_SIGN_ARRAY) {
 				$type = TypeFactory::create_array_type($type);
 			}
-			elseif ($kind === _DICT) {
+			elseif ($kind === _DOT_SIGN_DICT) {
 				$type = TypeFactory::create_dict_type($type);
+			}
+			elseif ($kind === _DOT_SIGN_METATYPE) {
+				$type = TypeFactory::create_metaclass_type($type);
 			}
 			else {
 				throw $this->new_unexpect_exception();

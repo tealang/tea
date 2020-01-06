@@ -15,7 +15,7 @@ public BaseInterface {
 // need use 'as' to add a suffix 'Interface'
 public Interface1 as DemoInterface: BaseInterface {
 	public LINE UInt
-	public static get_target_class_methods(class Class)
+	public static get_target_class_methods(class)
 }
 
 // a php class with a sub-namespace

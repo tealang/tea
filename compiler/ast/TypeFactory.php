@@ -16,7 +16,7 @@ class TypeFactory
 		_STRING, _INT, _UINT, _FLOAT, _BOOL, // maybe support Bytes?
 		_ITERABLE, _DICT, _ARRAY, // maybe support Matrix, Tensor?
 		_OBJECT, _XVIEW, _REGEX,
-		_CALLABLE, _CLASS, _NAMESPACE,
+		_CALLABLE, _METACLASS, _NAMESPACE,
 	];
 
 	static $_void;
@@ -39,8 +39,9 @@ class TypeFactory
 	static $_regex;
 
 	static $_callable;
-	static $_class;
+	// static $_class;
 	static $_namespace;
+	static $_metaclass;
 
 	// for check XView accepts
 	static $_iview_symbol;
@@ -75,11 +76,13 @@ class TypeFactory
 
 		self::$_callable = self::create_type(_CALLABLE, CallableType::class);
 
-		self::$_class = self::create_type(_CLASS);
+		// self::$_class = self::create_type(_CLASS);
 		self::$_namespace = self::create_type(_NAMESPACE);
+		self::$_metaclass = self::create_type(_METACLASS, MetaClassType::class);
 	}
 
-	static function is_iterable_type(IType $type) {
+	static function is_iterable_type(IType $type)
+	{
 		if ($type === TypeFactory::$_any || $type instanceof IterableType) {
 			return true;
 		}
@@ -179,6 +182,15 @@ class TypeFactory
 		$type->value_type = $value_type;
 		$type->symbol = static::$_array->symbol;
 		$type->is_collect_mode = true;
+
+		return $type;
+	}
+
+	static function create_metaclass_type(IType $value_type)
+	{
+		$type = new MetaClassType(_METACLASS);
+		$type->value_type = $value_type;
+		$type->symbol = static::$_metaclass->symbol;
 
 		return $type;
 	}

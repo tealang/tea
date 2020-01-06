@@ -29,13 +29,17 @@ const
 	_VOID = 'Void', _NONE = 'None', _ANY = 'Any',
 	_SCALAR = 'Scalar',
 	// _BYTES = 'Bytes',
+	// _RUNES = 'Runes',
 	_STRING = 'String',
 	_INT = 'Int', _UINT = 'UInt', _FLOAT = 'Float', _BOOL = 'Bool',
 	_ITERABLE = 'Iterable', _DICT = 'Dict', _ARRAY = 'Array', // 'Pair', 'Matrix', 'Tensor'
 	_OBJECT = 'Object', _XVIEW = 'XView', _REGEX = 'Regex',
-	_CALLABLE = 'Callable', _CLASS = 'Class', _NAMESPACE = 'Namespace',
+	_CALLABLE = 'Callable', _NAMESPACE = 'Namespace', _METACLASS = 'MetaClass', // _CLASS = 'Class',
 
-	// the number system
+	// dot signs of complex types
+	_DOT_SIGN_ARRAY = 'Array', _DOT_SIGN_DICT = 'Dict', _DOT_SIGN_METATYPE = 'Type',
+
+	// number system
 	_BASE_BINARY = '0b', _BASE_OCTAL = '0', _BASE_DECIMAL = '', _BASE_HEX = '0x',
 	_SCIENTIFIC_NOTATION = 'e',
 

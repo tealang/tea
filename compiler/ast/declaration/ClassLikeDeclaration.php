@@ -61,7 +61,7 @@ class ClassLikeDeclaration extends RootDeclaration implements IMemberDeclaration
 	{
 		$this->modifier = $modifier;
 		$this->name = $name;
-		$this->type = TypeFactory::$_class;
+		// $this->type = TypeFactory::$_class;
 	}
 
 	public function set_baseds(ClassLikeIdentifier ...$baseds)

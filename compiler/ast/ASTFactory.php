@@ -368,9 +368,12 @@ class ASTFactory
 		$symbol = $this->create_global_symbol($declaration);
 
 		// create 'this' symbol
-		$object_type = new ClassIdentifier($declaration->name); // as a Type
-		$object_type->symbol = $symbol;
-		$declaration->symbols[_THIS] = ASTHelper::create_symbol_this($object_type);
+		$class_identifier = new ClassIdentifier($declaration->name); // as a Type for this
+		$class_identifier->symbol = $symbol;
+		$declaration->symbols[_THIS] = ASTHelper::create_symbol_this($class_identifier);
+
+		// create metaclass type
+		$declaration->type = TypeFactory::create_metaclass_type($class_identifier);
 
 		return $symbol;
 	}
