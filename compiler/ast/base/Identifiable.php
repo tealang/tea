@@ -82,8 +82,8 @@ class PlainIdentifier extends Identifiable
 	public function is_accept_type(IType $type)
 	{
 		return $type->symbol === $this->symbol || $type === TypeFactory::$_none
-			// for check MetaClassDeclaration like String
-			// can not use symbol to compare MetaClassDeclaration, because of the symbol maybe 'this'
+			// for check BuiltinTypeClassDeclaration like String
+			// can not use symbol to compare BuiltinTypeClassDeclaration, because of the symbol maybe 'this'
 			|| $this->symbol->declaration === $type->symbol->declaration
 			|| $type->is_based_with($this)
 		;

@@ -11,6 +11,8 @@ namespace Tea;
 
 trait TeaSharpTrait
 {
+	protected $is_in_tea_declaration = false;
+
 	protected function read_label_statement()
 	{
 		$token = $this->scan_token();
@@ -44,22 +46,21 @@ trait TeaSharpTrait
 		return $node;
 	}
 
-	protected $is_in_meta_class = false;
 	protected function read_tea_declaration()
 	{
 		$name = $this->scan_token_ignore_space();
 
-		// use to allow extends with meta type class
-		$this->is_in_meta_class = true;
+		// use to allow extends with a builtin type class
+		$this->is_in_tea_declaration = true;
 
-		$declaration = $this->factory->create_meta_class_declaration($name);
+		$declaration = $this->factory->create_builtin_type_class_declaration($name);
 		if ($declaration === null) {
-			throw $this->new_exception("'$name' not a metatype, cannot use the #tea label.");
+			throw $this->new_exception("'$name' not a builtin type, cannot use the #tea label.");
 		}
 
 		$this->read_rest_for_classlike_declaration($declaration);
 
-		$this->is_in_meta_class = false;
+		$this->is_in_tea_declaration = false;
 
 		return $declaration;
 	}

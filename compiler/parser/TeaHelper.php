@@ -154,10 +154,10 @@ class TeaHelper
 
 	static function is_type_name(?string $token)
 	{
-		return self::is_meta_type_name($token) || self::is_classlike_name($token);
+		return self::is_builtin_type_name($token) || self::is_classlike_name($token);
 	}
 
-	static function is_meta_type_name(?string $token)
+	static function is_builtin_type_name(?string $token)
 	{
 		return in_array($token, TypeFactory::META_TYPES, true);
 	}

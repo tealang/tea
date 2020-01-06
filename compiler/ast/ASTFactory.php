@@ -318,14 +318,14 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_meta_class_declaration(string $name)
+	public function create_builtin_type_class_declaration(string $name)
 	{
 		$type_identifier = TypeFactory::get_type($name);
 		if ($type_identifier === null) {
 			return null;
 		}
 
-		$declaration = new MetaClassDeclaration(_PUBLIC, $name);
+		$declaration = new BuiltinTypeClassDeclaration(_PUBLIC, $name);
 		$symbol = $this->process_classlike_declaration_and_create_symbol($declaration);
 
 		// bind to type

@@ -112,6 +112,7 @@ const __AUTOLOADS = [
 	'tea\tests\syntax\Test5' => 'class.php',
 	'tea\tests\syntax\ClassForFunctionDemo' => 'function.php',
 	'tea\tests\syntax\TeaDemoClass' => 'main1.php',
+	'tea\tests\syntax\TestForClassType' => 'type-class.php',
 	'tea\tests\syntax\CollectorDemo' => 'type-collector.php',
 	'tea\tests\syntax\CollectorDemoFactory' => 'type-collector.php',
 	'tea\tests\syntax\Cell' => 'type-xview.php',

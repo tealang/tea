@@ -469,7 +469,7 @@ class PHPCoder extends TeaCoder
 
 	public function render_class_declaration(ClassDeclaration $node)
 	{
-		if ($node instanceof MetaClassDeclaration || $node->label === _PHP) {
+		if ($node instanceof BuiltinTypeClassDeclaration || $node->label === _PHP) {
 			return null;
 		}
 
@@ -493,7 +493,7 @@ class PHPCoder extends TeaCoder
 	{
 		$traits = [];
 		foreach ($identifiers as $identifier) {
-			if ($identifier->symbol->declaration->has_default_implementation) {
+			if ($identifier->symbol->declaration->has_default_implementations) {
 				$interface_name = $identifier->render($this);
 				$traits[] = $this->get_interface_trait_name($interface_name);
 			}
@@ -514,7 +514,7 @@ class PHPCoder extends TeaCoder
 		);
 
 		// use trait to code the implements
-		if ($node->has_default_implementation) {
+		if ($node->has_default_implementations) {
 			$members = [];
 			foreach ($node->members as $member) {
 				if ($member instanceof FunctionBlock || $member instanceof PropertyDeclaration) {

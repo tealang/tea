@@ -129,7 +129,7 @@ class ClassDeclaration extends ClassLikeDeclaration implements ICallableDeclarat
 	}
 }
 
-class MetaClassDeclaration extends ClassDeclaration
+class BuiltinTypeClassDeclaration extends ClassDeclaration
 {
 	const KIND = 'class_declaration';
 }
@@ -142,12 +142,12 @@ class InterfaceDeclaration extends ClassLikeDeclaration
 	 * 是否有默认实现的成员
 	 * @var bool
 	 */
-	public $has_default_implementation;
+	public $has_default_implementations;
 
 	public function append_member(IClassMemberDeclaration $member)
 	{
 		if ($member instanceof PropertyDeclaration || $member instanceof FunctionBlock) {
-			$this->has_default_implementation = true;
+			$this->has_default_implementations = true;
 		}
 
 		return parent::append_member($member);

@@ -35,7 +35,6 @@ class TypeFactory
 	static $_array;
 	static $_dict;
 
-	static $_object;
 	static $_xview;
 	static $_regex;
 
@@ -54,7 +53,7 @@ class TypeFactory
 
 	static function init()
 	{
-		// init all meta types
+		// init all builtin types
 
 		self::$_void = self::create_type(_VOID);
 		self::$_none = self::create_type(_NONE, NoneType::class);
@@ -76,7 +75,6 @@ class TypeFactory
 
 		self::$_callable = self::create_type(_CALLABLE, CallableType::class);
 
-		self::$_object = self::create_type(_OBJECT);
 		self::$_class = self::create_type(_CLASS);
 		self::$_namespace = self::create_type(_NAMESPACE);
 	}

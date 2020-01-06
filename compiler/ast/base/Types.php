@@ -116,7 +116,7 @@ class IterableType extends BaseType {
 			return true;
 		}
 
-		// for builtin meta class
+		// for the builtin classes
 		if ($type instanceof ClassLikeIdentifier && $this->symbol === $type->symbol) {
 			return true;
 		}

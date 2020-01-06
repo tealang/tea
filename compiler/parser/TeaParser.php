@@ -1677,7 +1677,7 @@ class TeaParser
 
 		$this->scan_token_ignore_empty();
 
-		if (!$this->is_in_meta_class && TypeFactory::exists_type($token)) {
+		if (!$this->is_in_tea_declaration && TypeFactory::exists_type($token)) {
 			throw $this->new_exception("Cannot use type '$token' as a class/interface.");
 		}
 
@@ -1736,6 +1736,7 @@ class TeaParser
 			$type = $this->read_dots_style_complex_type($type);
 		}
 
+		$type->pos = $this->pos;
 		return $type;
 	}
 

@@ -25,7 +25,7 @@ const
 	_MAIN = 'main', _EXPECT = 'expect', _INCLUDE = 'include',
 	_TEXT = 'text', _DEFAULT = 'default',
 
-	// meta types
+	// builtin types
 	_VOID = 'Void', _NONE = 'None', _ANY = 'Any',
 	_SCALAR = 'Scalar',
 	// _BYTES = 'Bytes',

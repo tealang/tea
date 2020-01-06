@@ -122,7 +122,7 @@ class TeaCoder
 
 	protected function generate_class_header(ClassLikeDeclaration $node, string $kind = null)
 	{
-		if ($node instanceof MetaClassDeclaration) {
+		if ($node instanceof BuiltinTypeClassDeclaration) {
 			$prefix = _SHARP . 'tea';
 		}
 		elseif ($node->label) {

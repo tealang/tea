@@ -170,7 +170,7 @@ class Compiler
 	{
 		$this->parse_programs();
 
-		// bind the metatype symbols
+		// bind the builtin type symbols
 		TypeFactory::set_symbols($this->unit);
 
 		$this->load_dependences($this->unit);
@@ -451,12 +451,12 @@ class Compiler
 		$dist_file_path = substr($dist_file_path, $this->unit_dist_path_len);
 
 		foreach ($program->declarations as $node) {
-			if ($node instanceof ClassLikeDeclaration && !$node instanceof MetaClassDeclaration && $node->label !== _PHP) {
+			if ($node instanceof ClassLikeDeclaration && !$node instanceof BuiltinTypeClassDeclaration && $node->label !== _PHP) {
 				$classlike_name = $this->unit_dist_ns_prefix . $node->name;
 				$this->autoloads_map[$classlike_name] = $dist_file_path;
 
 				// 接口的伴生Trait
-				if ($node instanceof InterfaceDeclaration && $node->has_default_implementation) {
+				if ($node instanceof InterfaceDeclaration && $node->has_default_implementations) {
 					$trait_name = $classlike_name . 'Trait';
 					$this->autoloads_map[$trait_name] = $dist_file_path;
 				}

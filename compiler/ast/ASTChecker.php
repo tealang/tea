@@ -2058,7 +2058,7 @@ class ASTChecker
 		return $node->symbol;
 	}
 
-	// includes meta types, and classes, and namespace
+	// includes builtin types, and classes, and namespace
 	private function require_object_declaration(IExpression $node): ClassLikeDeclaration
 	{
 		$infered_type = $this->infer_expression($node);
