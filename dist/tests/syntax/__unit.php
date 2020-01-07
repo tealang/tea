@@ -12,7 +12,8 @@ require_once $super_path . 'tea/dist/tests/xview/__unit.php';
 require_once $super_path . 'tea/tests/PHPDemoUnit/__unit.php';
 
 
-/*internal*/	const PI = 3.1415926;
+#internal
+const PI = 3.1415926;
 
 function fn0($str) {
 	echo $str, NL;
@@ -105,9 +106,9 @@ const __AUTOLOADS = [
 	'tea\tests\syntax\TeaDemoClass' => 'main1.php',
 	'tea\tests\syntax\CollectorDemo' => 'type-collector.php',
 	'tea\tests\syntax\CollectorDemoFactory' => 'type-collector.php',
-	'tea\tests\syntax\TestForMetaType0' => 'type-metaclass.php',
-	'tea\tests\syntax\TestForMetaType1' => 'type-metaclass.php',
-	'tea\tests\syntax\TestForMetaType2' => 'type-metaclass.php',
+	'tea\tests\syntax\TestForMetaType0' => 'type-metatype.php',
+	'tea\tests\syntax\TestForMetaType1' => 'type-metatype.php',
+	'tea\tests\syntax\TestForMetaType2' => 'type-metatype.php',
 	'tea\tests\syntax\Cell' => 'type-xview.php',
 	'tea\tests\syntax\DemoList' => 'type-xview.php'
 ];

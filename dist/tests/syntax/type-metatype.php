@@ -6,6 +6,7 @@ require_once __DIR__ . '/__unit.php';
 #internal
 class TestForMetaType0 {
 	public $prop = 'some';
+	const TRUE = 1;
 
 	public static function test_class_argument(string $class) {
 		var_dump($class);
@@ -27,13 +28,14 @@ class TestForMetaType2 {
 }
 
 // ---------
-TestForMetaType0::test_class_argument(TestForMetaType0::class);
+$string_type = 'String';
+echo $string_type, NL;
+
+$class_type = TestForMetaType0::class;
+TestForMetaType0::test_class_argument($class_type);
 TestForMetaType0::test_class_argument(TestForMetaType1::class);
 
 TestForMetaType0::test_array_argument([]);
-
-$type = TestForMetaType0::class;
-var_dump($type);
 // ---------
 
 // program end

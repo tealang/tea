@@ -256,7 +256,7 @@ class PHPCoder extends TeaCoder
 	protected function generate_class_header(ClassLikeDeclaration $node, string $kind = null)
 	{
 		$modifier = $node->modifier ?? _INTERNAL;
-		$name = $this->get_normal_name($node);
+		$name = $this->get_normalized_name($node);
 		$type = $node instanceof InterfaceDeclaration ? 'interface' : 'class';
 
 		return "#$modifier\n{$type} {$name}";
@@ -302,7 +302,14 @@ class PHPCoder extends TeaCoder
 			// $modifier = "#$modifier\n";
 		// }
 
-		$name = $this->get_declaration_name($node);
+		// thats method
+		if ($node->super_block) {
+			$name = $this->get_normalized_class_member_name($node);
+		}
+		else {
+			$name = $this->get_normalized_name($node);
+		}
+
 		return "{$modifier}function $name";
 	}
 
@@ -324,7 +331,8 @@ class PHPCoder extends TeaCoder
 
 	protected function generate_class_constant_header(ClassConstantDeclaration $node)
 	{
-		$code = "const $node->name";
+		$code = "const {$node->name}";
+
 		if ($node->modifier === _INTERNAL) {
 			$code = "#internal\n$code";
 		}
@@ -344,9 +352,9 @@ class PHPCoder extends TeaCoder
 			$modifier = $node->modifier;
 		}
 
-		$name = $this->get_normal_name($node);
+		$name = $this->get_normalized_name($node);
 
-		return "/*{$modifier}*/\tconst $name";
+		return "#{$modifier}\nconst $name";
 	}
 
 // ---
@@ -522,7 +530,7 @@ class PHPCoder extends TeaCoder
 				}
 			}
 
-			$name = $this->get_normal_name($node);
+			$name = $this->get_normalized_name($node);
 			$code .= sprintf("\n\ntrait %s %s",
 				$this->get_interface_trait_name($name),
 				$this->wrap_block_code($this->render_block_nodes($members))
@@ -837,13 +845,17 @@ class PHPCoder extends TeaCoder
 		return "'/{$pattern}/{$node->flags}'";
 	}
 
-	protected function get_class_member_name(IClassMemberDeclaration $declaration)
+	protected function get_normalized_class_member_name(IClassMemberDeclaration $declaration)
 	{
 		$name = $declaration->name;
-		return static::CLASS_MEMBER_NAMES_MAP[$name] ?? $name;
+		if (isset(static::CLASS_MEMBER_NAMES_MAP[$name]) && $declaration instanceof FunctionDeclaration) {
+			$name = static::CLASS_MEMBER_NAMES_MAP[$name];
+		}
+
+		return $name;
 	}
 
-	protected function get_normal_name(IDeclaration $declaration)
+	protected function get_normalized_name(IDeclaration $declaration)
 	{
 		$name = $declaration->name;
 		if (in_array(strtolower($name), static::EXTRA_RESERVEDS, true)) {
@@ -851,13 +863,6 @@ class PHPCoder extends TeaCoder
 		}
 
 		return $name;
-	}
-
-	protected function get_declaration_name(IDeclaration $declaration)
-	{
-		return $declaration instanceof IClassMemberDeclaration
-			? $this->get_class_member_name($declaration)
-			: $this->get_normal_name($declaration);
 	}
 
 	public function render_accessing_identifier(AccessingIdentifier $node)
@@ -871,7 +876,7 @@ class PHPCoder extends TeaCoder
 
 		$name = $declaration === ASTFactory::$virtual_property_for_any
 			? $node->name
-			: $this->get_class_member_name($declaration);
+			: $this->get_normalized_class_member_name($declaration);
 
 		if ($node->master instanceof CallExpression && $node->master->is_class_new()) {
 			// with class new expression
@@ -1052,7 +1057,7 @@ class PHPCoder extends TeaCoder
 
 	public function render_constant_identifier(ConstantIdentifier $node)
 	{
-		return $this->get_normal_name($node->symbol->declaration);
+		return $this->get_normalized_name($node->symbol->declaration);
 	}
 
 	protected function add_variable_prefix(string $name)
@@ -1075,18 +1080,25 @@ class PHPCoder extends TeaCoder
 		}
 
 		// class/function/constant
-		$name = $this->get_normal_name($declaration);
+		$name = $this->get_normalized_name($declaration);
 
 		if (!$node->with_call_or_accessing) {
 			if ($declaration instanceof FunctionBlock) {
 				$name = sprintf("'%s%s%s'", $declaration->program->unit->dist_ns_uri, static::NS_SEPARATOR, $name);
 			}
 			elseif ($declaration instanceof ClassLikeDeclaration) {
-				$name = $name . '::class';
+				$name = TeaHelper::is_builtin_type_name($declaration->name)
+					? "'{$declaration->name}'"
+					: $name . '::class';
 			}
 		}
 
 		return $name;
+	}
+
+	protected function render_plain_identifier_name(PlainIdentifier $node)
+	{
+		//
 	}
 
 	public function render_type_identifier(BaseType $node)
@@ -1096,7 +1108,7 @@ class PHPCoder extends TeaCoder
 
 	public function render_classlike_identifier(ClassLikeIdentifier $node)
 	{
-		$name = $this->get_normal_name($node->symbol->declaration);
+		$name = $this->get_normalized_name($node->symbol->declaration);
 
 		if ($node->ns) {
 			return $this->render_plain_identifier($node->ns) . static::NS_SEPARATOR . $name;

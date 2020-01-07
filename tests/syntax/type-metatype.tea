@@ -2,6 +2,7 @@
 
 internal TestForMetaType0 {
 	prop = 'some'
+	TRUE = 1
 
 	static test_class_argument(class TestForMetaType0.Type) {
 		var_dump(class)
@@ -20,12 +21,13 @@ internal TestForMetaType2 {
 	//
 }
 
-TestForMetaType0.test_class_argument(TestForMetaType0)  // OK
+var string_type = String
+echo string_type
+
+var class_type = TestForMetaType0
+TestForMetaType0.test_class_argument(class_type) 		// OK
 TestForMetaType0.test_class_argument(TestForMetaType1)  // OK
 // TestForMetaType0.test_class_argument(TestForMetaType2) // error
 
 TestForMetaType0.test_array_argument([])
-
-var type MetaType = TestForMetaType0
-var_dump(type)
 

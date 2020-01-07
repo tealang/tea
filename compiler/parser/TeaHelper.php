@@ -10,7 +10,7 @@
 namespace Tea;
 
 TeaHelper::$NORMAL_RESERVEDS = array_merge(
-	TypeFactory::META_TYPES,
+	TypeFactory::BUILTIN_TYPE_NAMES,
 	TeaHelper::STRUCTURE_KEYS,
 	TeaHelper::MODIFIERS,
 	TeaHelper::PREDEFINED_CONSTS,
@@ -159,7 +159,7 @@ class TeaHelper
 
 	static function is_builtin_type_name(?string $token)
 	{
-		return in_array($token, TypeFactory::META_TYPES, true);
+		return in_array($token, TypeFactory::BUILTIN_TYPE_NAMES, true);
 	}
 
 	static function is_domain_component(?string $token)

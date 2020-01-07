@@ -1,7 +1,8 @@
 <?php
 const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
-/*public*/	const NL = "\n";
+#public
+const NL = "\n";
 
 
 

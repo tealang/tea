@@ -7,7 +7,8 @@ $super_path = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR; // the workspace/vendor
 require_once $super_path . 'tea/dist/builtin/__unit.php'; // the builtins
 
 
-/*internal*/	const MIN_FLOAT = 1.11e-16;
+#internal
+const MIN_FLOAT = 1.11e-16;
 
 function fib_with_closure(): callable {
 	$a = 0;

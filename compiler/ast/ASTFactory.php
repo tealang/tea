@@ -372,8 +372,8 @@ class ASTFactory
 		$class_identifier->symbol = $symbol;
 		$declaration->symbols[_THIS] = ASTHelper::create_symbol_this($class_identifier);
 
-		// create metaclass type
-		$declaration->type = TypeFactory::create_metaclass_type($class_identifier);
+		// create the MetaType
+		$declaration->type = TypeFactory::create_meta_type($class_identifier);
 
 		return $symbol;
 	}
@@ -385,6 +385,7 @@ class ASTFactory
 
 		$callbacks && $declaration->set_callbacks(...$callbacks);
 
+		$this->super_block = $this->block;
 		$this->function = $declaration;
 
 		return $declaration;
@@ -432,6 +433,7 @@ class ASTFactory
 		// do not need enter_block() here
 
 		$this->create_global_symbol($declaration);
+		if ($declaration->super_block) {dump($declaration->super_block);exit;}
 		return $declaration;
 	}
 

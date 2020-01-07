@@ -11,12 +11,13 @@ namespace Tea;
 
 class TypeFactory
 {
-	const META_TYPES = [
+	const BUILTIN_TYPE_NAMES = [
 		_ANY, _VOID, _NONE, // _NONE just a internal type
 		_STRING, _INT, _UINT, _FLOAT, _BOOL, // maybe support Bytes?
 		_ITERABLE, _DICT, _ARRAY, // maybe support Matrix, Tensor?
 		_OBJECT, _XVIEW, _REGEX,
-		_CALLABLE, _METATYPE, _NAMESPACE,
+		_CALLABLE, _NAMESPACE,
+		_METATYPE,
 	];
 
 	static $_void;
@@ -41,7 +42,7 @@ class TypeFactory
 	static $_callable;
 	// static $_class;
 	static $_namespace;
-	static $_metaclass;
+	static $_metatype;
 
 	// for check XView accepts
 	static $_iview_symbol;
@@ -56,29 +57,28 @@ class TypeFactory
 	{
 		// init all builtin types
 
-		self::$_void = self::create_type(_VOID);
-		self::$_none = self::create_type(_NONE, NoneType::class);
-		self::$_any = self::create_type(_ANY, AnyType::class);
+		self::$_metatype = self::create_type(MetaType::class);
 
-		self::$_scalar = self::create_type(_SCALAR, ScalarType::class);
-		self::$_string = self::create_type(_STRING, StringType::class);
-		self::$_float = self::create_type(_FLOAT, FloatType::class);
-		self::$_int = self::create_type(_INT, IntType::class);
-		self::$_uint = self::create_type(_UINT, UIntType::class);
-		self::$_bool = self::create_type(_BOOL, BoolType::class);
+		self::$_void = self::create_type(VoidType::class);
+		self::$_none = self::create_type(NoneType::class);
+		self::$_any = self::create_type(AnyType::class);
 
-		self::$_iterable = self::create_type(_ITERABLE, IterableType::class);
-		self::$_array = self::create_type(_ARRAY, ArrayType::class);
-		self::$_dict = self::create_type(_DICT, DictType::class);
+		self::$_scalar = self::create_type(ScalarType::class);
+		self::$_string = self::create_type(StringType::class);
+		self::$_float = self::create_type(FloatType::class);
+		self::$_int = self::create_type(IntType::class);
+		self::$_uint = self::create_type(UIntType::class);
+		self::$_bool = self::create_type(BoolType::class);
 
-		self::$_xview = self::create_type(_XVIEW, XViewType::class);
-		self::$_regex = self::create_type(_REGEX, RegexType::class);
+		self::$_iterable = self::create_type(IterableType::class);
+		self::$_array = self::create_type(ArrayType::class);
+		self::$_dict = self::create_type(DictType::class);
 
-		self::$_callable = self::create_type(_CALLABLE, CallableType::class);
+		self::$_xview = self::create_type(XViewType::class);
+		self::$_regex = self::create_type(RegexType::class);
 
-		// self::$_class = self::create_type(_CLASS);
-		self::$_namespace = self::create_type(_NAMESPACE);
-		self::$_metaclass = self::create_type(_METATYPE, MetaType::class);
+		self::$_callable = self::create_type(CallableType::class);
+		self::$_namespace = self::create_type(NamespaceType::class);
 	}
 
 	static function is_iterable_type(IType $type)
@@ -150,35 +150,17 @@ class TypeFactory
 		return static::$type_map[$name] ?? null;
 	}
 
-	static function create_type(string $name, string $class = BaseType::class)
+	static function create_type(string $class = BaseType::class)
 	{
-		$type_object = new $class($name);
-		static::$type_map[$name] = $type_object;
+		$type_object = new $class();
+		static::$type_map[$type_object->name] = $type_object;
 
 		return $type_object;
 	}
 
-	static function create_dict_type(IType $value_type)
-	{
-		$type = new DictType(_DICT);
-		$type->value_type = $value_type;
-		$type->symbol = static::$_dict->symbol;
-
-		return $type;
-	}
-
-	static function create_array_type(IType $value_type)
-	{
-		$type = new ArrayType(_ARRAY);
-		$type->value_type = $value_type;
-		$type->symbol = static::$_array->symbol;
-
-		return $type;
-	}
-
 	static function create_collector_type(IType $value_type)
 	{
-		$type = new ArrayType(_ARRAY);
+		$type = new ArrayType();
 		$type->value_type = $value_type;
 		$type->symbol = static::$_array->symbol;
 		$type->is_collect_mode = true;
@@ -186,11 +168,29 @@ class TypeFactory
 		return $type;
 	}
 
-	static function create_metaclass_type(IType $value_type)
+	static function create_array_type(IType $value_type)
 	{
-		$type = new MetaType(_METATYPE);
+		$type = new ArrayType();
 		$type->value_type = $value_type;
-		$type->symbol = static::$_metaclass->symbol;
+		$type->symbol = static::$_array->symbol;
+
+		return $type;
+	}
+
+	static function create_dict_type(IType $value_type)
+	{
+		$type = new DictType();
+		$type->value_type = $value_type;
+		$type->symbol = static::$_dict->symbol;
+
+		return $type;
+	}
+
+	static function create_meta_type(IType $value_type)
+	{
+		$type = new MetaType();
+		$type->value_type = $value_type;
+		$type->symbol = static::$_metatype->symbol;
 
 		return $type;
 	}

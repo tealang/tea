@@ -1757,7 +1757,7 @@ class TeaParser
 				$type = TypeFactory::create_dict_type($type);
 			}
 			elseif ($kind === _DOT_SIGN_METATYPE) {
-				$type = TypeFactory::create_metaclass_type($type);
+				$type = TypeFactory::create_meta_type($type);
 			}
 			else {
 				throw $this->new_unexpect_exception();

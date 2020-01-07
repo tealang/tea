@@ -138,6 +138,10 @@ public regex_match(regex Regex, subject String) String.Array
 
 public regex_matches(regex Regex, subject String) String.Array.Array
 
+#tea MetaType {
+	// no any
+}
+
 #tea Any {
 	// no any
 }
@@ -238,10 +242,6 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 }
 
 #tea Callable {
-	// no any
-}
-
-#tea MetaType {
 	// no any
 }
 
