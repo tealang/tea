@@ -2041,32 +2041,47 @@ class TeaParser
 
 		$type = null;
 		$value = null;
-		$reassignable = null;
+		// $reassignable = null;
 
-		if ($name === _VAR) {
-			$reassignable = true;
-			$name = $this->scan_token_ignore_space();
-		}
+		// if ($name === _VAR) {
+		// 	$reassignable = true;
+		// 	$name = $this->scan_token_ignore_space();
+		// }
 
 		if (!TeaHelper::is_declarable_variable_name($name)) {
 			throw $this->new_unexpect_exception();
 		}
 
-		$next = $this->get_token_ignore_empty();
+		$next = $this->get_token_ignore_space();
 		if (TeaHelper::is_type_name($next)) {
 			$type = $this->try_read_type_identifier();
-			$next = $this->get_token_ignore_empty();
+			$next = $this->get_token_ignore_space();
+		}
+		elseif ($next === _PAREN_OPEN) { // the Callable protocol
+			$type = $this->read_callable_protocol();
+			$next = $this->get_token_ignore_space();
 		}
 
 		if ($next === _ASSIGN) {
-			$this->scan_token_ignore_empty();
+			$this->scan_token_ignore_space();
 			$value = $this->read_literal_expression();
 		}
 
-		$parameter = new ParameterDeclaration($name, $type, $value, $reassignable);
+		$parameter = new ParameterDeclaration($name, $type, $value, false);
 		$parameter->pos = $this->pos;
 
 		return $parameter;
+	}
+
+	protected function read_callable_protocol(bool $is_assync = true)
+	{
+		$parameters = $this->read_parameters_with_parentheses();
+		$return_type = $this->try_read_return_type_identifier();
+
+		$node = new CallableProtocol($is_assync, $return_type, ...$parameters);
+		$node->pos = $this->pos;
+
+		return $node;
 	}
 }
 

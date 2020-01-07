@@ -35,6 +35,10 @@ function fn2($arg0, callable $callback0 = null, callable $callback1 = null): str
 	}
 }
 
+function fn3($arg0, callable $callback0) {
+	echo $callback0('A cool man', 0), NL;
+}
+
 function xrange(int $start, int $stop, int $step = 1): \Generator {
 	$i = null;
 

@@ -138,7 +138,7 @@ class ASTChecker
 		// no value, it should be declare mode
 		if ($value === null) {
 			if ($node->type) {
-				$this->check_type_identifier($node->type, $node);
+				$this->check_type($node->type, $node);
 			}
 			else {
 				throw $this->new_syntax_error("The type for declaration of constant '{$node->name}' required.", $node);
@@ -171,7 +171,7 @@ class ASTChecker
 		}
 
 		if ($node->type) {
-			$this->check_type_identifier($node->type, $node);
+			$this->check_type($node->type, $node);
 			$infered_type && $this->assert_type_compatible($node->type, $infered_type, $node->value);
 		}
 		else {
@@ -207,7 +207,7 @@ class ASTChecker
 		$infered_type = $node->value ? $this->infer_expression($node->value) : null;
 
 		if ($node->type) {
-			$this->check_type_identifier($node->type, $node);
+			$this->check_type($node->type, $node);
 			$infered_type && $this->assert_type_compatible($node->type, $infered_type, $node->value);
 		}
 		else {
@@ -233,7 +233,7 @@ class ASTChecker
 			$infered_type = $parameter->value ? $this->infer_expression($parameter->value) : null;
 
 			if ($parameter->type) {
-				$this->check_type_identifier($parameter->type, $node);
+				$this->check_type($parameter->type, $node);
 				$infered_type && $this->assert_type_compatible($parameter->type, $infered_type, $parameter->value);
 			}
 			else {
@@ -242,20 +242,18 @@ class ASTChecker
 		}
 	}
 
-	private function check_callback_protocol(CallbackProtocol $callback)
+	private function check_callback_protocol(CallbackProtocol $node)
 	{
-		$callback->checked = true;
+		$node->checked = true;
 
-		if ($callback->type) {
-			if ($callback->type instanceof ClassLikeIdentifier) {
-				$this->infer_classlike_identifier($callback->type);
-			}
+		if ($node->type) {
+			$this->check_type($node->type);
 		}
 		else {
-			$callback->type = TypeFactory::$_void;
+			$node->type = TypeFactory::$_void;
 		}
 
-		$this->check_parameters_for_callable_declaration($callback);
+		$this->check_parameters_for_callable_declaration($node);
 	}
 
 	private function check_masked_declaration(MaskedDeclaration $node)
@@ -371,7 +369,7 @@ class ASTChecker
 		}
 
 		if ($node->type) {
-			$this->check_type_identifier($node->type, $node);
+			$this->check_type($node->type, $node);
 
 			if ($infered_type !== null) {
 				if (!$node->type->is_accept_type($infered_type)) {
@@ -410,7 +408,7 @@ class ASTChecker
 		$this->check_parameters_for_callable_declaration($node);
 
 		if ($node->type) {
-			$this->check_type_identifier($node->type, $node);
+			$this->check_type($node->type, $node);
 		}
 		else {
 			$node->type = TypeFactory::$_void;
@@ -432,7 +430,7 @@ class ASTChecker
 		$infered_type = $node->value ? $this->infer_expression($node->value) : null;
 
 		if ($node->type) {
-			$this->check_type_identifier($node->type, $node);
+			$this->check_type($node->type, $node);
 			$infered_type && $this->assert_type_compatible($node->type, $infered_type, $node->value);
 		}
 		elseif ($infered_type) {
@@ -448,7 +446,7 @@ class ASTChecker
 		$infered_type = isset($node->value) ? $this->infer_expression($node->value) : null;
 
 		if ($node->type) {
-			$this->check_type_identifier($node->type, $node);
+			$this->check_type($node->type, $node);
 			$infered_type && $this->assert_type_compatible($node->type, $infered_type, $node->value);
 		}
 		elseif ($infered_type) {
@@ -1230,7 +1228,7 @@ class ASTChecker
 	private function infer_as_operation(AsOperation $node): IType
 	{
 		$this->infer_expression($node->left);
-		$this->check_type_identifier($node->right, null);
+		$this->check_type($node->right, null);
 
 		$cast_type = $node->right;
 
@@ -1373,13 +1371,13 @@ class ASTChecker
 		}
 	}
 
-	private function check_type_identifier(IType $type)
+	private function check_type(IType $type)
 	{
 		if ($type instanceof BaseType) {
 			// for IterableType and MetaType
 			if (isset($type->value_type)) {
 				// check the value type
-				$this->check_type_identifier($type->value_type);
+				$this->check_type($type->value_type);
 			}
 
 			// no any other need to check
@@ -1391,9 +1389,27 @@ class ASTChecker
 				throw $this->new_syntax_error("Cannot use '$declare_name' as a Type.", $type);
 			}
 		}
-		else {
-			throw $this->new_syntax_error("Unknow type identifier '{$type->name}'.");
+		elseif ($type instanceof CallableProtocol) {
+			$this->check_callable_protocol($type);
 		}
+		else {
+			$kind = $type::KIND;
+			throw $this->new_syntax_error("Unknow type kind '$kind'.", $type);
+		}
+	}
+
+	private function check_callable_protocol(CallableProtocol $node)
+	{
+		$node->checked = true;
+
+		if ($node->type) {
+			$this->check_type($node->type);
+		}
+		else {
+			$node->type = TypeFactory::$_void;
+		}
+
+		$this->check_parameters_for_callable_declaration($node);
 	}
 
 	private function infer_classlike_identifier(ClassLikeIdentifier $node): IType
@@ -1489,6 +1505,11 @@ class ASTChecker
 	{
 		$callee_declar = $src_callee_declar = $node->callee->symbol->declaration;
 
+		// for ParameterDeclaration
+		if ($callee_declar instanceof ParameterDeclaration) {
+			$callee_declar = $callee_declar->type;
+		}
+
 		if ($callee_declar instanceof ClassDeclaration) {
 			$callee_declar = $this->require_construct_declaration_for_class($callee_declar, $node);
 		}
@@ -1513,6 +1534,7 @@ class ASTChecker
 			if (is_numeric($key)) {
 				$parameter = $parameters[$key] ?? null;
 				if (!$parameter) {
+					dump($callee_declar);exit;
 					throw $this->new_syntax_error("Argument $key not matched to any parameter in declaration of '{$src_callee_declar->name}'.", $argument);
 				}
 
@@ -1534,6 +1556,7 @@ class ASTChecker
 				if (!is_int($key)) {
 					$key = "'$key'";
 				}
+
 
 				throw $this->new_syntax_error("Type of argument $key does not matched the parameter for '{$callee_name}', expected '{$expected_type_name}', supplied '{$infered_type_name}'.", $argument);
 			}
@@ -1875,14 +1898,11 @@ class ASTChecker
 			if ($declar instanceof ICallableDeclaration) {
 				$declar->type === null && $this->check_callable_declaration($declar);
 			}
+			elseif ($declar->type instanceof ICallableDeclaration) {
+				$declar = $declar->type;
+			}
 			elseif ($declar->type === TypeFactory::$_callable) {
 				// for Callable type parameters
-			}
-			// elseif ($declar->type === TypeFactory::$_class) {
-			// 	// for Class type parameters
-			// }
-			elseif ($declar->type instanceof MetaType) {
-				dump($declar);exit;
 			}
 			else {
 				if ($declar instanceof VariableDeclaration) {
@@ -2255,6 +2275,14 @@ class ASTChecker
 		elseif ($type instanceof MetaType) {
 			$value_type_name = self::get_type_name($type->value_type);
 			$name = "{$value_type_name}." . _DOT_SIGN_METATYPE;
+		}
+		elseif ($type instanceof ICallableDeclaration) {
+			$args = [];
+			foreach ($type->parameters as $param) {
+				$args[] = static::get_type_name($param->type);
+			}
+
+			$name = '(' . join(', ', $args) . ') ' . static::get_type_name($type->type);
 		}
 		else {
 			$name = $type->name;

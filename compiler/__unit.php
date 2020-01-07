@@ -161,6 +161,7 @@ const __AUTOLOADS = [
 	'Tea\IClassMemberDeclaration' => 'ast/declaration/BaseDeclaration.php',
 	'Tea\DeclarationTrait' => 'ast/declaration/BaseDeclaration.php',
 	'Tea\RootDeclaration' => 'ast/declaration/BaseDeclaration.php',
+	'Tea\CallableProtocol' => 'ast/declaration/CallableProtocol.php',
 	'Tea\CallbackProtocol' => 'ast/declaration/CallbackProtocol.php',
 	'Tea\ClassLikeDeclaration' => 'ast/declaration/ClassLikeDeclaration.php',
 	'Tea\ClassDeclaration' => 'ast/declaration/ClassLikeDeclaration.php',

@@ -233,6 +233,15 @@ class TeaCoder
 		return "{$async}{$node->name}($parameters){$type}";
 	}
 
+	public function render_callable_protocol(CallableProtocol $node)
+	{
+		$async = $node->async ? 'async ' : '';
+		$parameters = $this->render_parameters($node->parameters);
+		$type = $this->generate_type($node);
+
+		return "{$async}($parameters){$type}";
+	}
+
 	public function render_expect_declaration(ExpectDeclaration $node)
 	{
 		$parameters = $this->render_parameters($node->parameters);

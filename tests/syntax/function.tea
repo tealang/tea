@@ -31,3 +31,10 @@ echo fn2('any...') -> callback0(caller String) {
 	return "$caller has called!"
 }
 
+internal fn3(arg0, callback0 (a String, b Int) String) {
+	echo callback0('A cool man', 0)
+}
+
+fn3(123, (a, b) => {
+	return a concat b
+})
