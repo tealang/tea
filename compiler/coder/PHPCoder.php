@@ -1096,11 +1096,6 @@ class PHPCoder extends TeaCoder
 		return $name;
 	}
 
-	protected function render_plain_identifier_name(PlainIdentifier $node)
-	{
-		//
-	}
-
 	public function render_type_identifier(BaseType $node)
 	{
 		return static::TYPE_MAP[$node->name] ?? $node->name;
@@ -1172,12 +1167,22 @@ class PHPCoder extends TeaCoder
 
 	public function render_int_literal(IntegerLiteral $node)
 	{
-		return strpos($node->value, '_') ? str_replace('_', '', $node->value) : $node->value;
+		$num = $this->remove_number_underline($node->value);
+		if (strpos($num, 'o')) {
+			$num = str_replace('o', '', $num);
+		}
+
+		return $num;
 	}
 
 	public function render_float_literal(FloatLiteral $node)
 	{
-		return strpos($node->value, '_') ? str_replace('_', '', $node->value) : $node->value;
+		return $this->remove_number_underline($node->value);
+	}
+
+	protected function remove_number_underline(string $num)
+	{
+		return strpos($num, _UNDERSCORE) ? str_replace(_UNDERSCORE, _NOTHING, $num) : $num;
 	}
 
 	public function render_unescaped_string_literal(UnescapedStringLiteral $node)

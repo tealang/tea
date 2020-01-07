@@ -4,7 +4,7 @@ num2 = -123_456
 
 dec = 123_456_789 // infer to UInt by default
 hex = 0xff_ff_ff
-oct = 01234567
+oct = 0o1234567
 bin = 0b01010101
 
 num1 is UInt  // true
@@ -15,7 +15,10 @@ dec is Int 	  // true
 var float_num0 Float  = 123
 float_num1  = 123.123
 float_num2 = 123e3
-float_num3 = 123.1e-6
+float_num2 = 123e+3
+float_num3 = 123e-6
+float_num3 = 123.1e+6
+float_num3 = 0.1231e-10
 
 // convert float to string
 num_str = dec.string

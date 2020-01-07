@@ -54,23 +54,23 @@ class TeaHelper
 	 * Check token is a number
 	 * and return the number base type when is a number format
 	 *
-	 * @return string 	the number base type ('', '0x', '0b', '0')
+	 * @return string 	the number base type (_BASE_DECIMAL, _BASE_HEX, _BASE_OCTAL, _BASE_BINARY)
 	 */
 	static function check_number($token)
 	{
-		if ($token === '0' || preg_match('/^[1-9][0-9_]*(e[0-9]*)?$/', $token)) {
+		if ($token === _ZERO || preg_match('/^[1-9][0-9_]*(e\+?[0-9]*)?$/i', $token)) {
 			return _BASE_DECIMAL;
 		}
 
-		if ($token[0] === '0') {
-			if ($token[1] === 'x') {
+		if ($token[0] === _ZERO) {
+			if ($token[1] === _BASE_HEX) {
 				return preg_match('/^0x[0-9a-f][0-9a-f_]*$/i', $token) ? _BASE_HEX : null;
 			}
-			elseif ($token[1] === 'b') {
-				return preg_match('/^0b[01][01_]*$/', $token) ? _BASE_OCTAL : null;
+			elseif ($token[1] === _BASE_BINARY) {
+				return preg_match('/^0b[01][01_]*$/', $token) ? _BASE_BINARY : null;
 			}
-			else {
-				return preg_match('/^0[0-7][0-7_]*$/', $token) ? _BASE_OCTAL : null;
+			elseif ($token[1] === _BASE_OCTAL) {
+				return preg_match('/^0o[0-7][0-7_]*$/', $token) ? _BASE_OCTAL : null;
 			}
 		}
 

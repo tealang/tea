@@ -40,8 +40,8 @@ const
 	_DOT_SIGN_ARRAY = 'Array', _DOT_SIGN_DICT = 'Dict', _DOT_SIGN_METATYPE = 'Type',
 
 	// number system
-	_BASE_BINARY = '0b', _BASE_OCTAL = '0', _BASE_DECIMAL = '', _BASE_HEX = '0x',
-	_SCIENTIFIC_NOTATION = 'e',
+	_BASE_BINARY = 'b', _BASE_OCTAL = 'o', _BASE_DECIMAL = '', _BASE_HEX = 'x',
+	_LOW_CASE_E = 'e', _UP_CASE_E = 'E', _ZERO = '0',
 
 	// blank chars
 	// some blank chars did not supported now, eg. \f, \v, [0x2000 - 0x200B], line separator \u2028, paragraph separator \u2029

@@ -18,7 +18,10 @@ is_int($dec);
 $float_num0 = 123;
 $float_num1 = 123.123;
 $float_num2 = 123e3;
-$float_num3 = 123.1e-6;
+$float_num2 = 123e+3;
+$float_num3 = 123e-6;
+$float_num3 = 123.1e+6;
+$float_num3 = 0.1231e-10;
 
 $num_str = strval($dec);
 $num_str = (string)123.1;

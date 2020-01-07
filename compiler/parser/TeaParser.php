@@ -999,25 +999,25 @@ class TeaParser
 		}
 
 		if ($base_type === _BASE_DECIMAL) {
-			// eg. 123e6
-			if ($token[-1] === _SCIENTIFIC_NOTATION) {
-				return $this->read_scientific_notation_number_with($token);
-			}
-
+			// has dot
 			if ($this->skip_token(_DOT)) {
 				$fractional_part = $this->scan_token();
-				if (!preg_match('/^[0-9_]+e?$/', $fractional_part)) {
+				if (!preg_match('/^[0-9_]+(e\+?[0-9_]*)?$/i', $fractional_part)) {
 					throw $this->new_unexpect_exception($fractional_part);
 				}
 
 				$token .= _DOT . $fractional_part; // the real type number
 
-				// eg. 0.123e6
-				if ($token[-1] === _SCIENTIFIC_NOTATION) {
+				if ($token[-1] === _LOW_CASE_E || $token[-1] === _UP_CASE_E) {
+					// eg. 0.123e-6 or 0.123E-6
 					return $this->read_scientific_notation_number_with($token);
 				}
 
 				return new FloatLiteral($token);
+			}
+			elseif ($token[-1] === _LOW_CASE_E || $token[-1] === _UP_CASE_E) {
+				// eg. 123e-6 or 123E-6
+				return $this->read_scientific_notation_number_with($token);
 			}
 		}
 
@@ -1026,13 +1026,13 @@ class TeaParser
 
 	protected function read_scientific_notation_number_with(string $prefix)
 	{
-		// eg. 123e-6 or 123e6
-		$modifier = $this->get_token();
+		// eg. 123e-6 or 123e+6
 
-		// can not use the identity-sign '+'
-		if ($modifier === _NEGATION) {
+		// '+' or '-'
+		$modifier = $this->get_token();
+		if ($modifier === _NEGATION || $modifier === _ADDITION) {
 			$this->scan_token();
-			$prefix .= $modifier; // '-' is useful
+			$prefix .= $modifier;
 		}
 
 		$exp = $this->scan_token();
