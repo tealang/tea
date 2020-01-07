@@ -1,0 +1,31 @@
+#main
+
+internal TestForMetaType0 {
+	prop = 'some'
+
+	static test_class_argument(class TestForMetaType0.Type) {
+		var_dump(class)
+	}
+
+	static test_array_argument(array111 Array = [1]) {
+		var_dump(array111)
+	}
+}
+
+internal TestForMetaType1: TestForMetaType0 {
+	//
+}
+
+internal TestForMetaType2 {
+	//
+}
+
+TestForMetaType0.test_class_argument(TestForMetaType0)  // OK
+TestForMetaType0.test_class_argument(TestForMetaType1)  // OK
+// TestForMetaType0.test_class_argument(TestForMetaType2) // error
+
+TestForMetaType0.test_array_argument([])
+
+var type MetaType = TestForMetaType0
+var_dump(type)
+

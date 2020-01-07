@@ -94,14 +94,7 @@ class BoolType extends ScalarType {
 	//
 }
 
-class IterableType extends BaseType {
-	/**
-	 * the key type
-	 * UInt for Array, and String/Int for Dict or classes based on Iterable
-	 * @var UIntType/IntType/StringType
-	 */
-	public $key_type;
-
+trait SubValueTypeTrait {
 	/**
 	 * the value type
 	 * default to Any when null
@@ -127,17 +120,28 @@ class IterableType extends BaseType {
 			return false;
 		}
 
-		if ($type->value_type === null) {
-			return false;
-		}
-
 		// if current value type is Any, then accept any types
 		if ($this->value_type === null || $this->value_type === TypeFactory::$_any) {
 			return true;
 		}
 
+		if ($type->value_type === null) {
+			return false;
+		}
+
 		return $this->value_type->is_accept_type($type->value_type);
 	}
+}
+
+class IterableType extends BaseType {
+	use SubValueTypeTrait;
+
+	/**
+	 * the key type
+	 * UInt for Array, and String/Int for Dict or classes based on Iterable
+	 * @var UIntType/IntType/StringType
+	 */
+	public $key_type;
 }
 
 class ArrayType extends IterableType {
@@ -167,14 +171,28 @@ class XViewType extends BaseType {
 	}
 }
 
-class MetaClassType extends BaseType {
-	public function is_accept_type(IType $type) {
-		if ($type === $this || $type === TypeFactory::$_none || $this->value_type->symbol === $type->value_type->symbol) {
-			return true;
-		}
+class MetaType extends BaseType {
+	use SubValueTypeTrait;
 
-		return $type->value_type->is_based_with($this->value_type);
-	}
+	// public function is_accept_type(IType $type) {
+	// 	if ($type === $this || $type === TypeFactory::$_none) {
+	// 		return true;
+	// 	}
+
+	// 	if (!$type instanceof static) {
+	// 		return false;
+	// 	}
+
+	// 	if ($this->value_type === null || $this->value_type === TypeFactory::$_any) {
+	// 		return true;
+	// 	}
+
+	// 	if ($type->value_type === null) {
+	// 		return false;
+	// 	}
+
+	// 	return $type->value_type->is_based_with($this->value_type);
+	// }
 }
 
 // document end

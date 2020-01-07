@@ -291,7 +291,7 @@ class Compiler
 
 	private function check_ast_for_unit(Unit $unit)
 	{
-		$checker = new ASTChecker($unit);
+		$checker = $unit->get_checker();
 		foreach ($unit->programs as $program) {
 			self::echo_start(" - {$program->file}", NL);
 			$checker->check_program($program);

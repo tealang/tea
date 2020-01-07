@@ -42,9 +42,23 @@ class Unit
 	 */
 	public $use_units = []; // units that used in programs
 
+	/**
+	 * @var ASTChecker
+	 */
+	private $checker;
+
 	public function __construct(string $path)
 	{
 		$this->path = $path;
+	}
+
+	public function get_checker(): ASTChecker
+	{
+		if ($this->checker === null) {
+			$this->checker = new ASTChecker($this);
+		}
+
+		return $this->checker;
 	}
 
 	public function append_program(Program $program)

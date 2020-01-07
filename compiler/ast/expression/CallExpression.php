@@ -43,7 +43,7 @@ class CallExpression extends Node implements IExpression
 		elseif ($symbol->declaration instanceof ClassDeclaration) {
 			return true;
 		}
-		elseif ($symbol->declaration instanceof IVariableDeclaration && $symbol->declaration->type instanceof MetaClassType) {
+		elseif ($symbol->declaration instanceof IVariableDeclaration && $symbol->declaration->type instanceof MetaType) {
 			return true;
 		}
 

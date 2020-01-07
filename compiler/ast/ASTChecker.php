@@ -61,6 +61,10 @@ class ASTChecker
 
 	private function check_declaration(IDeclaration $node)
 	{
+		if ($node->checked) {
+			return $node;
+		}
+
 		switch ($node::KIND) {
 			case ConstantDeclaration::KIND:
 				$this->check_constant_declaration($node);
@@ -244,7 +248,7 @@ class ASTChecker
 
 		if ($callback->type) {
 			if ($callback->type instanceof ClassLikeIdentifier) {
-				$this->infer_classlike_identifier($callback->type, $callback);
+				$this->infer_classlike_identifier($callback->type);
 			}
 		}
 		else {
@@ -322,6 +326,7 @@ class ASTChecker
 
 	private function check_expect_declaration(ExpectDeclaration $node)
 	{
+		$this->checked = true;
 		$this->check_parameters_for_node($node);
 	}
 
@@ -1368,29 +1373,32 @@ class ASTChecker
 		}
 	}
 
-	private function check_type_identifier(IType $type, IDeclaration $related_declaration = null)
+	private function check_type_identifier(IType $type)
 	{
 		if ($type instanceof BaseType) {
-			// for IterableType and MetaClassType
+			// for IterableType and MetaType
 			if (isset($type->value_type)) {
-			// if ($type instanceof IterableType && $type->value_type !== null) {
-				// check value type
-				$this->check_type_identifier($type->value_type, $related_declaration);
+				// check the value type
+				$this->check_type_identifier($type->value_type);
 			}
 
 			// no any other need to check
 		}
 		elseif ($type instanceof PlainIdentifier) {
-			$this->require_classlike_declaration($type, $related_declaration);
+			$infered_type = $this->infer_plain_identifier($type);
+			if (!$type->symbol->declaration instanceof ClassLikeDeclaration) {
+				$declare_name = $this->get_declaration_name($type->symbol->declaration);
+				throw $this->new_syntax_error("Cannot use '$declare_name' as a Type.", $type);
+			}
 		}
 		else {
 			throw $this->new_syntax_error("Unknow type identifier '{$type->name}'.");
 		}
 	}
 
-	private function infer_classlike_identifier(ClassLikeIdentifier $node, IDeclaration $related_declaration = null): IType
+	private function infer_classlike_identifier(ClassLikeIdentifier $node): IType
 	{
-		$declaration = $this->require_classlike_declaration($node, $related_declaration);
+		$declaration = $this->require_classlike_declaration($node);
 		return $declaration->type;
 	}
 
@@ -1436,9 +1444,10 @@ class ASTChecker
 			throw $this->new_syntax_error("'{$node->target}' not found.", $ref_node);
 		}
 
-		// cache program
+		// cache current program
 		$temp_program = $this->program;
 
+		// would switch to target program
 		$this->check_program($program);
 
 		// switch back
@@ -1517,15 +1526,16 @@ class ASTChecker
 			// check type is match
 			$infered_type = $this->infer_expression($argument);
 			if (!$parameter->type->is_accept_type($infered_type)) {
-				$required_type_name = $parameter->type ? self::get_type_name($parameter->type) : _ANY;
-				$infered_type_name = self::get_type_name($infered_type);
 				$callee_name = self::get_declaration_name($callee_declar);
+
+				$expected_type_name = self::get_type_name($parameter->type);
+				$infered_type_name = self::get_type_name($infered_type);
 
 				if (!is_int($key)) {
 					$key = "'$key'";
 				}
 
-				throw $this->new_syntax_error("Type of argument $key does not matched the parameter for callee '{$callee_name}', required '{$required_type_name}', but '{$infered_type_name}' supplied.", $argument);
+				throw $this->new_syntax_error("Type of argument $key does not matched the parameter for '{$callee_name}', expected '{$expected_type_name}', supplied '{$infered_type_name}'.", $argument);
 			}
 
 			$normalizeds[$idx] = $argument;
@@ -1839,8 +1849,7 @@ class ASTChecker
 			if ($symbol->declaration instanceof UseDeclaration) {
 				$symbol->declaration = $this->require_declaration_for_use($symbol->declaration);
 			}
-
-			if (!$symbol->declaration->checked) {
+			elseif (!$symbol->declaration->checked) {
 				$this->check_declaration($symbol->declaration);
 			}
 		}
@@ -1872,7 +1881,7 @@ class ASTChecker
 			// elseif ($declar->type === TypeFactory::$_class) {
 			// 	// for Class type parameters
 			// }
-			elseif ($declar->type instanceof MetaClassType) {
+			elseif ($declar->type instanceof MetaType) {
 				dump($declar);exit;
 			}
 			else {
@@ -1960,7 +1969,7 @@ class ASTChecker
 				$this->attach_namespace_member_symbol($master->symbol->declaration, $node);
 			}
 			// elseif ($infered_type === TypeFactory::$_class) {
-			elseif ($infered_type instanceof MetaClassType) {
+			elseif ($infered_type instanceof MetaType) {
 				$node->symbol = $this->require_class_member_symbol($master->symbol->declaration, $node);
 				if (!$node->symbol->declaration->is_static) {
 					$name = $this->get_declaration_name($node->symbol->declaration);
@@ -1998,13 +2007,13 @@ class ASTChecker
 		$declaration = $classlike->members[$member_name] ?? null;
 		if ($declaration) {
 			if (!$declaration->checked) {
-				// 切换到待检查的program
+				// switch to target program
 				$temp_program = $this->program;
 				$this->program = $classlike->program;
 
 				$this->check_class_member_declaration($declaration);
 
-				// 切换回来
+				// switch back
 				$this->program = $temp_program;
 			}
 
@@ -2024,7 +2033,7 @@ class ASTChecker
 		if ($classlike->baseds) {
 			foreach ($classlike->baseds as $interface) {
 				if (!$interface->symbol) {
-					$this->require_classlike_declaration($interface, $classlike);
+					$this->require_classlike_declaration($interface);
 				}
 
 				$symbol = $this->find_member_symbol_in_class($interface->symbol->declaration, $member_name);
@@ -2072,17 +2081,17 @@ class ASTChecker
 		return $infered_type->symbol->declaration;
 	}
 
-	private function require_classlike_declaration(PlainIdentifier $identifier, IDeclaration $related_declaration = null)
+	private function require_classlike_declaration(PlainIdentifier $identifier)
 	{
 		$symbol = $identifier->symbol;
 
 		if (!$symbol) {
 			if ($identifier->ns) {
-				$ns_symbol = $this->require_global_symbol_for_identifier($identifier->ns, $related_declaration);
+				$ns_symbol = $this->require_global_symbol_for_identifier($identifier->ns);
 				$symbol = $this->require_symbol_for_namespace($ns_symbol->declaration->ns, $identifier->name);
 			}
 			else {
-				$symbol = $this->require_global_symbol_for_identifier($identifier, $related_declaration);
+				$symbol = $this->require_global_symbol_for_identifier($identifier);
 				if ($symbol->declaration instanceof UseDeclaration) {
 					$symbol->declaration = $this->require_declaration_for_use($symbol->declaration);
 				}
@@ -2100,16 +2109,9 @@ class ASTChecker
 		return $symbol->declaration;
 	}
 
-	private function require_global_symbol_for_identifier(Identifiable $identifier, ?IDeclaration $related_declaration)
+	private function require_global_symbol_for_identifier(Identifiable $identifier)
 	{
-		if ($related_declaration) {
-			$program = $this->require_program_of_declaration($related_declaration);
-		}
-		else {
-			$program = $this->program;
-		}
-
-		$symbol = $program->symbols[$identifier->name] ?? $program->unit->symbols[$identifier->name] ?? null;
+		$symbol = $this->program->symbols[$identifier->name] ?? $this->program->unit->symbols[$identifier->name] ?? null;
 		if ($symbol === null) {
 			throw $this->new_syntax_error("Symbol '{$identifier->name}' not found.", $identifier);
 		}
@@ -2144,14 +2146,19 @@ class ASTChecker
 	private function require_declaration_for_use(UseDeclaration $use): IRootDeclaration
 	{
 		if ($use->source_declaration === null) {
-			// find from target unit
+			// find from the target Unit
 			$name = $use->source_name ?? $use->name;
 			$symbol = $this->require_unit($use->ns)->symbols[$name] ?? null;
 			if ($symbol === null) {
 				throw $this->new_syntax_error("Target '{$name}' for use not found in unit '{$use->ns->uri}'.", $use);
 			}
 
-			$use->source_declaration = $symbol->declaration;
+			$target = $symbol->declaration;
+			if (!$target->checked) {
+				$target->program->unit->get_checker()->check_declaration($target);
+			}
+
+			$use->source_declaration = $target;
 		}
 
 		return $use->source_declaration;
@@ -2245,7 +2252,7 @@ class ASTChecker
 
 			$name = "{$value_type_name}.{$type->name}";
 		}
-		elseif ($type instanceof MetaClassType) {
+		elseif ($type instanceof MetaType) {
 			$value_type_name = self::get_type_name($type->value_type);
 			$name = "{$value_type_name}." . _DOT_SIGN_METATYPE;
 		}

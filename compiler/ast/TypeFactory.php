@@ -16,7 +16,7 @@ class TypeFactory
 		_STRING, _INT, _UINT, _FLOAT, _BOOL, // maybe support Bytes?
 		_ITERABLE, _DICT, _ARRAY, // maybe support Matrix, Tensor?
 		_OBJECT, _XVIEW, _REGEX,
-		_CALLABLE, _METACLASS, _NAMESPACE,
+		_CALLABLE, _METATYPE, _NAMESPACE,
 	];
 
 	static $_void;
@@ -78,7 +78,7 @@ class TypeFactory
 
 		// self::$_class = self::create_type(_CLASS);
 		self::$_namespace = self::create_type(_NAMESPACE);
-		self::$_metaclass = self::create_type(_METACLASS, MetaClassType::class);
+		self::$_metaclass = self::create_type(_METATYPE, MetaType::class);
 	}
 
 	static function is_iterable_type(IType $type)
@@ -188,7 +188,7 @@ class TypeFactory
 
 	static function create_metaclass_type(IType $value_type)
 	{
-		$type = new MetaClassType(_METACLASS);
+		$type = new MetaType(_METATYPE);
 		$type->value_type = $value_type;
 		$type->symbol = static::$_metaclass->symbol;
 

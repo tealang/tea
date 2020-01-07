@@ -40,7 +40,7 @@ class PHPCoder extends TeaCoder
 		_STRING => 'string', _INT => 'int', _UINT => 'int', _FLOAT => 'float', _BOOL => 'bool',
 		_ARRAY => 'array', _DICT => 'array',
 		_CALLABLE => 'callable', _ITERABLE => 'iterable', _OBJECT => 'object',
-		_REGEX => 'string', _XVIEW => 'string', _METACLASS => 'string',
+		_REGEX => 'string', _XVIEW => 'string', _METATYPE => 'string',
 	];
 
 	const EXTRA_RESERVEDS = [

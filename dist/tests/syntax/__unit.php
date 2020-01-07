@@ -105,9 +105,9 @@ const __AUTOLOADS = [
 	'tea\tests\syntax\TeaDemoClass' => 'main1.php',
 	'tea\tests\syntax\CollectorDemo' => 'type-collector.php',
 	'tea\tests\syntax\CollectorDemoFactory' => 'type-collector.php',
-	'tea\tests\syntax\TestForMetaClass0' => 'type-metaclass.php',
-	'tea\tests\syntax\TestForMetaClass1' => 'type-metaclass.php',
-	'tea\tests\syntax\TestForMetaClass2' => 'type-metaclass.php',
+	'tea\tests\syntax\TestForMetaType0' => 'type-metaclass.php',
+	'tea\tests\syntax\TestForMetaType1' => 'type-metaclass.php',
+	'tea\tests\syntax\TestForMetaType2' => 'type-metaclass.php',
 	'tea\tests\syntax\Cell' => 'type-xview.php',
 	'tea\tests\syntax\DemoList' => 'type-xview.php'
 ];

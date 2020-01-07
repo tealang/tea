@@ -51,9 +51,7 @@ class TeaCoder
 
 	public function render_program(Program $program)
 	{
-		// $this->program = $program;
 		$items = $this->render_program_statements($program);
-
 		return $this->join_code($items);
 	}
 
