@@ -92,7 +92,7 @@ class MetaType extends BaseType {
 class VoidType extends BaseType {
 	public $name = _VOID;
 	public function is_accept_type(IType $type) {
-		return false;
+		return $this === $type;
 	}
 }
 
