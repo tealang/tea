@@ -23,18 +23,6 @@ function fn1(callable $callee) {
 	$unknow_type_value = $callee('hei');
 }
 
-function fn2($some, callable $done = null, callable $error = null): string {
-	if ($done) {
-		return $done('A cool man');
-	}
-	elseif ($error) {
-		$error('Error!');
-	}
-	else {
-		return 'No any callbacks implemented.';
-	}
-}
-
 function fn3($some, callable $done, callable $error = null): string {
 	return $done('A cool man') . ' with ' . $some;
 }

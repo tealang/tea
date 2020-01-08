@@ -26,7 +26,7 @@ function demo_function_with_a_return_type(string $some): int {
 	return iconv_strlen($some);
 }
 
-function demo_function_with_callbacks(string $some, callable $success = null, callable $failure = null): string {
+function demo_function_with_callbacks(string $some, callable $success, callable $failure): string {
 	$success_callback_result = null;
 	if ($success) {
 		$success_callback_result = $success('Success!');

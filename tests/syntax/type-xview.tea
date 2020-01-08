@@ -22,8 +22,8 @@ DemoList('demo-list', 'title') -> {
 }
 
 // 有回调需要传参时
-DemoList('demo-list', 'Demo List', ['A', 'B', 'C']) -> each(item String) Cell {
-	return Cell(item)
+DemoList('demo-list', 'Demo List', ['A', 'B', 'C']) -> error(message String) {
+	echo message
 }
 
 str = 'str'
@@ -31,14 +31,14 @@ num = 2
 
 // 带标签、有多个回调
 abc = DemoList('', items: ['A', 'B', 'C'])
-	-> done() {
+	-> error(message) {
 		echo str, num
 	}
-	-> each(item) Cell {
-		return Cell(item as String)
+	-> each() Cell {
+		return Cell()
 	}
 
-echo abc
+// echo abc
 
 public DemoList: BaseView
 {
@@ -50,17 +50,17 @@ public DemoList: BaseView
 
 	cells Array = []
 
-	construct(name String, title = '', items Array = []) -> each(item String) Cell -> done() {
+	construct(name String, title = '', items Array = [], each () Cell = none, error (message) Void = none) {
 		this.items = items
 
 		if each {
 			for item in items {
-				cell = each(item as String)
+				cell = each()
 				this.cells.push(cell)
 			}
 		}
 
-		done and done()
+		error and error('some error')
 	}
 
 	render() String {

@@ -10,7 +10,7 @@ public demo_function2(message String = 'with a default value')
 
 public demo_function_with_a_return_type(some String) UInt
 
-public demo_function_with_callbacks(some String) String -> success(message String) String -> failure(error Any)
+public demo_function_with_callbacks(some String, success (message String) String, failure (error Any) Void) String
 
 public IDemo {
 	CONST1 String = 'This is a constant!'

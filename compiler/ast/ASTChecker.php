@@ -65,6 +65,9 @@ class ASTChecker
 			return $node;
 		}
 
+		$temp_program = $this->program;
+		$this->program = $node->program;
+
 		switch ($node::KIND) {
 			case ConstantDeclaration::KIND:
 				$this->check_constant_declaration($node);
@@ -99,6 +102,8 @@ class ASTChecker
 				$kind = $node::KIND;
 				throw $this->new_syntax_error("Unexpect declaration kind: '{$kind}'.", $node);
 		}
+
+		$this->program = $temp_program;
 	}
 
 	private function check_class_member_declaration(IClassMemberDeclaration $node)
@@ -219,11 +224,11 @@ class ASTChecker
 	{
 		$this->check_parameters_for_node($callable);
 
-		if (!empty($callable->callbacks)) {
-			foreach ($callable->callbacks as $callback) {
-				$this->check_callback_protocol($callback);
-			}
-		}
+		// if ($callable->callbacks) {
+		// 	foreach ($callable->callbacks as $callback) {
+		// 		$this->check_callback_protocol($callback);
+		// 	}
+		// }
 	}
 
 	private function check_parameters_for_node($node)
@@ -328,7 +333,7 @@ class ASTChecker
 		$this->check_parameters_for_node($node);
 	}
 
-	private function check_lambda_expression(LambdaExpression $node)
+	private function infer_lambda_expression(LambdaExpression $node)
 	{
 		// check for use variables
 		foreach ($node->defer_check_identifiers as $identifier) {
@@ -346,7 +351,9 @@ class ASTChecker
 			}
 		}
 
-		return $this->check_function_block($node);
+		$this->check_function_block($node);
+
+		return TypeFactory::create_callable_type($node->type, $node->parameters);
 	}
 
 	private function check_function_block(IEnclosingBlock $node)
@@ -382,7 +389,7 @@ class ASTChecker
 				$node->fixed_body = $builder->build_return_statements();
 			}
 			elseif ($node->type !== TypeFactory::$_void && empty($node->has_yield)) {
-				throw $this->new_syntax_error("Function required return type '{$node->type->name}'.");
+				throw $this->new_syntax_error("Function required return type '{$node->type->name}'.", $node->type);
 			}
 		}
 		else {
@@ -1007,116 +1014,121 @@ class ASTChecker
 	{
 		switch ($node::KIND) {
 			case PlainIdentifier::KIND:
-				return $this->infer_plain_identifier($node);
-
+				$infered_type = $this->infer_plain_identifier($node);
+				break;
 			case BaseType::KIND:
-				return $node;
-
+				$infered_type = $node;
+				break;
 			case NoneLiteral::KIND:
-				return TypeFactory::$_none;
-
+				$infered_type = TypeFactory::$_none;
+				break;
 			case FloatLiteral::KIND:
-				return TypeFactory::$_float;
-
+				$infered_type = TypeFactory::$_float;
+				break;
 			case IntegerLiteral::KIND:
-				return TypeFactory::$_int;
-
+				$infered_type = TypeFactory::$_int;
+				break;
 			case UnsignedIntegerLiteral::KIND:
-				return TypeFactory::$_uint;
-
+				$infered_type = TypeFactory::$_uint;
+				break;
 			case BooleanLiteral::KIND:
-				return TypeFactory::$_bool;
-
+				$infered_type = TypeFactory::$_bool;
+				break;
 			case ArrayLiteral::KIND:
-				return $this->infer_array_expression($node);
-
+				$infered_type = $this->infer_array_expression($node);
+				break;
 			case DictLiteral::KIND:
-				return $this->infer_dict_expression($node);
-
+				$infered_type = $this->infer_dict_expression($node);
+				break;
 			case KeyAccessing::KIND:
-				return $this->infer_key_accessing($node);
-
+				$infered_type = $this->infer_key_accessing($node);
+				break;
 			case UnescapedStringLiteral::KIND:
 			case EscapedStringLiteral::KIND:
-				return TypeFactory::$_string;
-
+				$infered_type = TypeFactory::$_string;
+				break;
 			case EscapedStringInterpolation::KIND:
 			case UnescapedStringInterpolation::KIND:
-				return $this->infer_escaped_string_interpolation($node);
-
+				$infered_type = $this->infer_escaped_string_interpolation($node);
+				break;
 			case XBlock::KIND:
-				return $this->infer_xblock($node);
+				$infered_type = $this->infer_xblock($node);
+				break;
 
 			// -------
-
 			case AccessingIdentifier::KIND:
-				return $this->infer_accessing_identifier($node);
-
+				$infered_type = $this->infer_accessing_identifier($node);
+				break;
 			case VariableIdentifier::KIND:
-				return $this->infer_variable($node);
-
+				$infered_type = $this->infer_variable($node);
+				break;
 			case ClassLikeIdentifier::KIND:
-				return $this->infer_classlike_identifier($node);
-
+				$infered_type = $this->infer_classlike_identifier($node);
+				break;
 			case ConstantIdentifier::KIND:
-				return $this->infer_constant($node);
-
+				$infered_type = $this->infer_constant($node);
+				break;
 			case CallExpression::KIND:
-				return $this->infer_call_expression($node);
-
+				$infered_type = $this->infer_call_expression($node);
+				break;
 			case BinaryOperation::KIND:
-				return $this->infer_binary_operation($node);
-
+				$infered_type = $this->infer_binary_operation($node);
+				break;
 			case PrefixOperation::KIND:
-				return $this->infer_prefix_operation($node);
-
+				$infered_type = $this->infer_prefix_operation($node);
+				break;
 			case Parentheses::KIND:
-				return $this->infer_expression($node->expression);
-
+				$infered_type = $this->infer_expression($node->expression);
+				break;
 			case AsOperation::KIND:
-				return $this->infer_as_operation($node);
-
+				$infered_type = $this->infer_as_operation($node);
+				break;
 			case IsOperation::KIND:
-				return $this->infer_is_operation($node);
-
+				$infered_type = $this->infer_is_operation($node);
+				break;
 			case HTMLEscapeExpression::KIND:
-				return $this->infer_expression($node->expression);
-
+				$infered_type = $this->infer_expression($node->expression);
+				break;
 			case ConditionalExpression::KIND:
-				return $this->infer_conditional_expression($node);
-
+				$infered_type = $this->infer_conditional_expression($node);
+				break;
 			// case FunctionalOperation::KIND:
-			// 	return $this->infer_functional_operation($node);
-
+			// 	$infered_type = $this->infer_functional_operation($node);
+			// 	break;
 			case DictExpression::KIND:
-				return $this->infer_dict_expression($node);
-
+				$infered_type = $this->infer_dict_expression($node);
+				break;
 			case ArrayExpression::KIND:
-				return $this->infer_array_expression($node);
-
+				$infered_type = $this->infer_array_expression($node);
+				break;
 			case LambdaExpression::KIND:
-				$this->check_lambda_expression($node);
-				return TypeFactory::$_callable;
-
+				$infered_type = $this->infer_lambda_expression($node);
+				break;
 			// case NamespaceIdentifier::KIND:
-			// 	return $this->infer_namespace_identifier($node);
-
+			// 	$infered_type = $this->infer_namespace_identifier($node);
+			//	break;
 			case IncludeExpression::KIND:
-				return $this->infer_include_expression($node);
-
+				$infered_type = $this->infer_include_expression($node);
+				break;
 			case YieldExpression::KIND:
-				return $this->infer_yield_expression($node);
-
+				$infered_type = $this->infer_yield_expression($node);
+				break;
 			case RegularExpression::KIND:
-				return $this->infer_regular_expression($node);
-
+				$infered_type = $this->infer_regular_expression($node);
+				break;
 			// case RelayExpression::KIND:
-			// 	return $this->infer_relay_expression($node);
-
+			// 	$infered_type = $this->infer_relay_expression($node);
+			// 	break;
 			default:
 				$kind = $node::KIND;
 				throw $this->new_syntax_error("Unknow expression kind: '{$kind}'.", $node);
 		}
+
+		if (isset($node->name) && $node->name === 'a_function') {
+			dump($node);exit;
+		}
+
+		return $infered_type;
 	}
 
 	private function infer_key_accessing(KeyAccessing $node): IType
@@ -1362,7 +1374,7 @@ class ASTChecker
 	private function infer_callback_argument(CallbackArgument $node): ?IType
 	{
 		if ($node->value instanceof LambdaExpression) {
-			$this->check_lambda_expression($node->value);
+			$this->infer_lambda_expression($node->value);
 			return $node->value->type;
 		}
 		else {
@@ -1379,6 +1391,9 @@ class ASTChecker
 				// check the value type
 				$this->check_type($type->value_type);
 			}
+			elseif ($type instanceof CallableType) {
+				$this->check_callable_type($type);
+			}
 
 			// no any other need to check
 		}
@@ -1389,16 +1404,13 @@ class ASTChecker
 				throw $this->new_syntax_error("Cannot use '$declare_name' as a Type.", $type);
 			}
 		}
-		elseif ($type instanceof CallableProtocol) {
-			$this->check_callable_protocol($type);
-		}
 		else {
 			$kind = $type::KIND;
 			throw $this->new_syntax_error("Unknow type kind '$kind'.", $type);
 		}
 	}
 
-	private function check_callable_protocol(CallableProtocol $node)
+	private function check_callable_type(CallableType $node)
 	{
 		$node->checked = true;
 
@@ -1409,7 +1421,7 @@ class ASTChecker
 			$node->type = TypeFactory::$_void;
 		}
 
-		$this->check_parameters_for_callable_declaration($node);
+		$node->parameters and $this->check_parameters_for_callable_declaration($node);
 	}
 
 	private function infer_classlike_identifier(ClassLikeIdentifier $node): IType
@@ -1460,14 +1472,7 @@ class ASTChecker
 			throw $this->new_syntax_error("'{$node->target}' not found.", $ref_node);
 		}
 
-		// cache current program
-		$temp_program = $this->program;
-
-		// would switch to target program
-		$this->check_program($program);
-
-		// switch back
-		$this->program = $temp_program;
+		$program->unit->get_checker()->check_program($program);
 
 		return $program;
 	}
@@ -1501,12 +1506,38 @@ class ASTChecker
 		return $declar->type;
 	}
 
+	private function merge_callbacks_to_arguments(array &$arguments, array $callbacks, array $parameters)
+	{
+		if (count($callbacks) === 1 && $callbacks[0]->name === null) {
+			$first_callback_parameter_on_tail = null;
+			for ($i = count($parameters) - 1; $i >=0; $i--) {
+				$parameter = $parameters[$i];
+				if ($parameter->type instanceof CallableType) {
+					$first_callback_parameter_on_tail = $parameter;
+				}
+				else {
+					break;
+				}
+			}
+
+			if (!$first_callback_parameter_on_tail) {
+				throw $this->new_syntax_error("Unknow which parameter for callback.", $callbacks[0]);
+			}
+
+			$callbacks[0]->name = $first_callback_parameter_on_tail->name;
+		}
+
+		foreach ($callbacks as $cb) {
+			$arguments[$cb->name] = $cb->value;
+		}
+	}
+
 	private function check_call_arguments(CallExpression $node)
 	{
 		$callee_declar = $src_callee_declar = $node->callee->symbol->declaration;
 
 		// for ParameterDeclaration
-		if ($callee_declar instanceof ParameterDeclaration) {
+		if ($callee_declar instanceof IVariableDeclaration) {
 			$callee_declar = $callee_declar->type;
 		}
 
@@ -1514,28 +1545,38 @@ class ASTChecker
 			$callee_declar = $this->require_construct_declaration_for_class($callee_declar, $node);
 		}
 
-		if (isset($callee_declar->parameters)) {
-			$parameters = $callee_declar->parameters;
+		if ($callee_declar === null) {
+			$parameters = [];
 		}
-		elseif ($callee_declar === ASTFactory::$virtual_property_for_any) {
+		elseif ($callee_declar === ASTFactory::$virtual_property_for_any || $callee_declar === TypeFactory::$_callable) {
 			foreach ($node->arguments as $argument) {
 				$this->infer_expression($argument);
 			}
 
-			return; // ignore check parameters for type any
+			return; // ignore check parameters for type Any
+		}
+		elseif (isset($callee_declar->parameters)) {
+			$parameters = $callee_declar->parameters;
 		}
 		else {
+			dump($callee_declar);exit;
 			$parameters = [];
+		}
+
+		$arguments = $node->arguments;
+
+		// the -> style callbacks
+		if ($node->callbacks) {
+			$this->merge_callbacks_to_arguments($arguments, $node->callbacks, $parameters);
 		}
 
 		$used_arg_names = false;
 		$normalizeds = [];
-		foreach ($node->arguments as $key => $argument) {
+		foreach ($arguments as $key => $argument) {
 			if (is_numeric($key)) {
 				$parameter = $parameters[$key] ?? null;
 				if (!$parameter) {
-					dump($callee_declar);exit;
-					throw $this->new_syntax_error("Argument $key not matched to any parameter in declaration of '{$src_callee_declar->name}'.", $argument);
+					throw $this->new_syntax_error("Argument $key does not matched parameter in declaration of '{$src_callee_declar->name}'.", $argument);
 				}
 
 				$idx = $key;
@@ -1556,7 +1597,6 @@ class ASTChecker
 				if (!is_int($key)) {
 					$key = "'$key'";
 				}
-
 
 				throw $this->new_syntax_error("Type of argument $key does not matched the parameter for '{$callee_name}', expected '{$expected_type_name}', supplied '{$infered_type_name}'.", $argument);
 			}
@@ -1588,10 +1628,10 @@ class ASTChecker
 			}
 		}
 
-		if ($node->callbacks) {
-			$used_arg_names = true;
-			$this->check_call_callbacks($node, $callee_declar, $parameters, $normalizeds);
-		}
+		// if ($node->callbacks) {
+		// 	$used_arg_names = true;
+		// 	$this->check_call_callbacks($node, $callee_declar, $parameters, $normalizeds);
+		// }
 
 		if ($used_arg_names) {
 			ksort($normalizeds); // let to the normal order
@@ -1944,7 +1984,7 @@ class ASTChecker
 				break;
 
 			case LambdaExpression::KIND:
-				$this->check_lambda_expression($node);
+				$this->infer_lambda_expression($node);
 				break;
 
 			case FunctionDeclaration::KIND:

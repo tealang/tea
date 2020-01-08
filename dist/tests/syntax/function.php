@@ -12,12 +12,14 @@ fn1(function ($str) {
 	return fn0($str);
 });
 
-echo fn2('any...', function (string $caller) {
-	return "{$caller} has called!";
+echo fn3(123, function ($a) {
+	return $a . ' has called';
+}, function ($error) {
+	// no any
 }), NL;
 
-echo fn3(123, function ($caller) {
-	return $caller . ' has called';
+echo fn3('any...', function (string $caller) {
+	return "{$caller} has called!";
 }), NL;
 // ---------
 

@@ -233,14 +233,14 @@ class TeaCoder
 		return "{$async}{$node->name}($parameters){$type}";
 	}
 
-	public function render_callable_protocol(CallableProtocol $node)
-	{
-		$async = $node->async ? 'async ' : '';
-		$parameters = $this->render_parameters($node->parameters);
-		$type = $this->generate_type($node);
+	// public function render_callable_protocol(CallableProtocol $node)
+	// {
+	// 	$async = $node->async ? 'async ' : '';
+	// 	$parameters = $this->render_parameters($node->parameters);
+	// 	$type = $this->generate_type($node);
 
-		return "{$async}($parameters){$type}";
-	}
+	// 	return "{$async}($parameters){$type}";
+	// }
 
 	public function render_expect_declaration(ExpectDeclaration $node)
 	{
@@ -559,16 +559,31 @@ class TeaCoder
 
 	public function render_type_identifier(BaseType $node)
 	{
-		if ($node instanceof IterableType) {
+		if ($node === TypeFactory::$_none) {
+			return null;
+		}
+		elseif ($node instanceof IterableType) {
 			if ($node->value_type) {
 				return $node->value_type->render($this) . '.' . $node->name;
 			}
 		}
-		elseif ($node === TypeFactory::$_none) {
-			return null;
+		elseif ($node instanceof CallableType) {
+			return $this->render_callable_type($node);
 		}
 
 		return $node->name;
+	}
+
+	protected function render_callable_type(CallableType $node)
+	{
+		if ($node === TypeFactory::$_callable) {
+			return $node->name;
+		}
+
+		$parameters = $this->render_parameters($node->parameters);
+		$type = $node->type->render($this);
+
+		return sprintf('(%s) %s', $parameters, $type);
 	}
 
 	public function render_classlike_identifier(ClassLikeIdentifier $node)

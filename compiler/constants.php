@@ -24,6 +24,7 @@ const
 	_UNIT = 'unit', _USE = 'use',
 	_MAIN = 'main', _EXPECT = 'expect', _INCLUDE = 'include',
 	_TEXT = 'text', _DEFAULT = 'default',
+	_ASYNC = 'async', _AWAIT = 'await',
 
 	// builtin types
 	_VOID = 'Void', _NONE = 'None', _ANY = 'Any',
@@ -49,7 +50,7 @@ const
 
 	// syntax chars, operators
 	_SLASH = '/', _BACK_SLASH = '\\',
-	_EXCLAMATION = '!', _DOLLAR = '$', _SHARP = '#', _AT = '@', _UNDERSCORE = '_', _STRIKETHROUGH = '-',
+	_SHARP = '#', _DOLLAR = '$', _AT = '@', _EXCLAMATION = '!', _UNDERSCORE = '_', _STRIKETHROUGH = '-',
 	_COLON = ':', _COMMA = ',', _SEMICOLON = ';',
 	_AS = 'as', _IS = 'is',
 	_IN = 'in', _TO = 'to', _DOWNTO = 'downto', _STEP = 'step', // just use in the 'for' block
@@ -81,8 +82,7 @@ const
 	_TRY = 'try', _CATCH = 'catch', _FINALLY = 'finally',
 	_ECHO = 'echo', _PRINT = 'print', _RETURN = 'return', _EXIT = 'exit', _BREAK = 'break', _CONTINUE = 'continue', _THROW = 'throw',
 	_STATIC = 'static', _MASKED = 'masked', _PUBLIC = 'public', _INTERNAL = 'internal', _PROTECTED = 'protected', _PRIVATE = 'private',
-	_THIS = 'this', _SUPER = 'super', _CONSTRUCT = 'construct', _DESTRUCT = 'destruct',
-	_ASYNC = 'async', _AWAIT = 'await';
+	_THIS = 'this', _SUPER = 'super', _CONSTRUCT = 'construct', _DESTRUCT = 'destruct';
 
 
 // program end

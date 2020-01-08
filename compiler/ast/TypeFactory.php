@@ -194,4 +194,14 @@ class TypeFactory
 
 		return $type;
 	}
+
+	static function create_callable_type(?IType $return_type, ?array $parameters)
+	{
+		$type = new CallableType();
+		$type->type = $return_type;
+		$type->parameters = $parameters;
+		$type->symbol = static::$_callable->symbol;
+
+		return $type;
+	}
 }

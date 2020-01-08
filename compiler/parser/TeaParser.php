@@ -924,9 +924,9 @@ class TeaParser
 
 		$expression = $this->read_expression();
 
-		$next = $this->get_token_ignore_empty();
+		$next = $this->get_token_ignore_space();
 		if ($next === _PAREN_CLOSE) {
-			$this->scan_token_ignore_empty(); // skip )
+			$this->scan_token_ignore_space(); // skip )
 		}
 		elseif ($expression instanceof PlainIdentifier) {
 			// lambda, (parameter Type) or (parameter, ...)
@@ -937,22 +937,23 @@ class TeaParser
 		}
 
 		// lambda, (0 or 1 parameter) => { ... }
-		if ($this->get_token_ignore_empty() === _ARROW) {
+		if ($this->get_token_ignore_space() === _ARROW) {
 			$parameters = [];
 			if ($expression) {
 				if (!isset($expression->name)) {
 					throw $this->new_unexpect_exception();
 				}
 
-				$parameter = new ParameterDeclaration($expression->name);
-				$parameter->pos = $this->pos;
-				$parameters[] = $parameter;
+				$parameters[] = $this->create_parameter($expression->name);
 			}
 
 			return $this->read_lambda_combination($parameters);
 		}
 
-		// normal Parentheses expression
+		if ($expression === null) {
+			throw $this->new_unexpect_exception();
+		}
+
 		return new Parentheses($expression);
 	}
 
@@ -978,7 +979,9 @@ class TeaParser
 
 		if ($parameter) {
 			$items[] = $parameter;
-			$this->expect_token_ignore_empty(_COMMA);
+			if (!$this->skip_comma()) {
+				return $items;
+			}
 		}
 
 		while ($parameter = $this->try_read_parameter_declaration()) {
@@ -1266,6 +1269,7 @@ class TeaParser
 		}
 
 		$block = $this->factory->create_lambda_expression($return_type, $parameters);
+		$block->pos = $this->pos;
 
 		if ($this->get_token_ignore_empty() === _BLOCK_BEGIN) {
 			$this->read_statements_for_block($block);
@@ -1471,6 +1475,7 @@ class TeaParser
 		// normal mode
 		$parameters = $this->read_parameters_with_parentheses();
 		$lambda = $this->read_lambda_combination($parameters, true);
+
 		return $this->create_callback_argument($name, $lambda);
 	}
 
@@ -1964,6 +1969,8 @@ class TeaParser
 
 	protected function try_read_callback_protocols()
 	{
+		return null;
+
 		if (!$this->skip_token_ignore_empty(_NOTIFY)) {
 			return null;
 		}
@@ -2058,7 +2065,7 @@ class TeaParser
 			$next = $this->get_token_ignore_space();
 		}
 		elseif ($next === _PAREN_OPEN) { // the Callable protocol
-			$type = $this->read_callable_protocol();
+			$type = $this->read_callable_type();
 			$next = $this->get_token_ignore_space();
 		}
 
@@ -2067,18 +2074,22 @@ class TeaParser
 			$value = $this->read_literal_expression();
 		}
 
-		$parameter = new ParameterDeclaration($name, $type, $value, false);
-		$parameter->pos = $this->pos;
+		return $this->create_parameter($name, $type, $value);
+	}
 
+	protected function create_parameter(string $name, IType $type = null, IExpression $value = null)
+	{
+		$parameter = new ParameterDeclaration($name, $type, $value);
+		$parameter->pos = $this->pos;
 		return $parameter;
 	}
 
-	protected function read_callable_protocol(bool $is_async = false)
+	protected function read_callable_type()
 	{
 		$parameters = $this->read_parameters_with_parentheses();
 		$return_type = $this->try_read_return_type_identifier();
 
-		$node = new CallableProtocol($is_async, $return_type, ...$parameters);
+		$node = TypeFactory::create_callable_type($return_type, $parameters);
 		$node->pos = $this->pos;
 
 		return $node;

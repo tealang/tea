@@ -29,7 +29,7 @@ trait DeclarationTrait {
 	public $name;
 
 	/**
-	 * @var BaseType
+	 * @var IType
 	 */
 	public $type;
 

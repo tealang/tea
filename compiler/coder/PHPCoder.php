@@ -368,10 +368,10 @@ class PHPCoder extends TeaCoder
 		return parent::render_constant_declaration($node);
 	}
 
-	public function render_callable_protocol(CallableProtocol $node)
-	{
-		return "callable";
-	}
+	// public function render_callable_protocol(CallableProtocol $node)
+	// {
+	// 	return "callable";
+	// }
 
 	public function render_masked_declaration(MaskedDeclaration $node)
 	{

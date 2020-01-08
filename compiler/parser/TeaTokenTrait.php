@@ -498,7 +498,7 @@ trait TeaTokenTrait
 
 		$tmp = '';
 		for ($pos; $pos >= 0; $pos--) {
-			if ($this->tokens[$pos] === NL) {
+			if (!isset($this->tokens[$pos]) || $this->tokens[$pos] === NL) {
 				break;
 			}
 

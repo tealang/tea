@@ -11,19 +11,17 @@ namespace Tea;
 
 class CallableProtocol extends Node implements ICallableDeclaration, IType
 {
-	use DeclarationTrait;
-
 	const KIND = 'callable_protocol';
 
-	public $async;
+	/**
+	 * @var BaseType
+	 */
+	public $type;
 
 	public $parameters;
 
-	public $checking;
-
-	public function __construct(bool $async, ?IType $type, ParameterDeclaration ...$parameters)
+	public function __construct(?IType $type, ParameterDeclaration ...$parameters)
 	{
-		$this->async = $async;
 		$this->type = $type;
 		$this->parameters = $parameters;
 	}

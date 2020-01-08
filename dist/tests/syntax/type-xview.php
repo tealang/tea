@@ -29,19 +29,19 @@ class DemoList extends BaseView {
 
 	public $cells = [];
 
-	public function __construct(string $name, string $title = '', array $items = [], callable $each = null, callable $done = null) {
+	public function __construct(string $name, string $title = '', array $items = [], callable $each = null, callable $error = null) {
 		$cell = null;
 
 		$this->items = $items;
 
 		if ($each) {
 			foreach ($items as $item) {
-				$cell = $each((string)$item);
+				$cell = $each();
 				array_push($this->cells, $cell);
 			}
 		}
 
-		$done && $done();
+		$error && $error('some error');
 	}
 
 	public function render(): string {
@@ -76,20 +76,18 @@ new DemoList('demo-list', 'title', [], function () {
 	return new Cell();
 });
 
-new DemoList('demo-list', 'Demo List', ['A', 'B', 'C'], function (string $item) {
-	return new Cell($item);
+new DemoList('demo-list', 'Demo List', ['A', 'B', 'C'], null, function (string $message) {
+	echo $message, NL;
 });
 
 $str = 'str';
 $num = 2;
 
-$abc = new DemoList('', '', ['A', 'B', 'C'], function ($item) {
-	return new Cell((string)$item);
-}, function () use(&$str, &$num) {
+$abc = new DemoList('', '', ['A', 'B', 'C'], function () {
+	return new Cell();
+}, function ($message) use(&$str, &$num) {
 	echo $str, $num, NL;
 });
-
-echo $abc, NL;
 // ---------
 
 // program end

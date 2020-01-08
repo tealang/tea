@@ -171,8 +171,51 @@ class DictType extends IterableType {
 	// public $key_type; // just support String for Dict keys now
 }
 
-class CallableType extends BaseType {
+class CallableType extends BaseType implements ICallableDeclaration {
 	public $name = _CALLABLE;
+
+	/**
+	 * @var BaseType
+	 */
+	public $type;
+
+	public $parameters = [];
+
+	public function is_accept_type(IType $type)
+	{
+		if ($type === TypeFactory::$_none || $this === TypeFactory::$_callable) {
+			return true;
+		}
+
+		if (!$type instanceof static) {
+			return false;
+		}
+
+		if ($this->type === null) {
+			return true;
+		}
+
+		if (!$this->type->is_accept_type($type->type)) {
+			return false;
+		}
+
+		if (count($type->parameters) > count($this->parameters)) {
+			return false;
+		}
+
+		foreach ($this->parameters as $key => $protocol_param) {
+			$implement_param = $type->parameters[$key] ?? null;
+			if ($implement_param === null && $protocol_param->value === null) {
+				return false;
+			}
+
+			if (!$this->type->is_accept_type($type->type)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 }
 
 class RegexType extends BaseType {

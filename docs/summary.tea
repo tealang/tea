@@ -335,7 +335,7 @@ public demo_function_with_a_return_type(some String) UInt {
 }
 
 // 带回调的函数
-public demo_function_with_callbacks(some String) String -> success(message String) String -> failure(error) {
+public demo_function_with_callbacks(some String, success (message String) String, failure (error) Void) String {
 	var success_callback_result
 	if success {
 		success_callback_result = success('Success!')
