@@ -398,7 +398,7 @@ class PHPCoder extends TeaCoder
 		}
 	}
 
-	public function render_lambda_block(IExpression $node)
+	public function render_lambda_expression(IExpression $node)
 	{
 		$parameters = $this->render_parameters($node->parameters);
 		$body = $this->render_enclosing_block($node);

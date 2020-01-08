@@ -328,7 +328,7 @@ class ASTChecker
 		$this->check_parameters_for_node($node);
 	}
 
-	private function check_lambda_block(LambdaBlock $node)
+	private function check_lambda_expression(LambdaExpression $node)
 	{
 		// check for use variables
 		foreach ($node->defer_check_identifiers as $identifier) {
@@ -1094,8 +1094,8 @@ class ASTChecker
 			case ArrayExpression::KIND:
 				return $this->infer_array_expression($node);
 
-			case LambdaBlock::KIND:
-				$this->check_lambda_block($node);
+			case LambdaExpression::KIND:
+				$this->check_lambda_expression($node);
 				return TypeFactory::$_callable;
 
 			// case NamespaceIdentifier::KIND:
@@ -1361,8 +1361,8 @@ class ASTChecker
 
 	private function infer_callback_argument(CallbackArgument $node): ?IType
 	{
-		if ($node->value instanceof LambdaBlock) {
-			$this->check_lambda_block($node->value);
+		if ($node->value instanceof LambdaExpression) {
+			$this->check_lambda_expression($node->value);
 			return $node->value->type;
 		}
 		else {
@@ -1568,7 +1568,7 @@ class ASTChecker
 		foreach ($parameters as $idx => $parameter) {
 			if ($parameter->value === null && !isset($normalizeds[$idx])) {
 				$callee_name = self::get_declaration_name($callee_declar);
-				throw $this->new_syntax_error("Missed argument for parameter '{$parameter->name}' to call '{$callee_name}'.", $node);
+				throw $this->new_syntax_error("Missed argument $idx to call '{$callee_name}'.", $node);
 			}
 		}
 
@@ -1943,8 +1943,8 @@ class ASTChecker
 				$this->check_function_block($node);
 				break;
 
-			case LambdaBlock::KIND:
-				$this->check_lambda_block($node);
+			case LambdaExpression::KIND:
+				$this->check_lambda_expression($node);
 				break;
 
 			case FunctionDeclaration::KIND:

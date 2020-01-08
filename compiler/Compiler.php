@@ -490,7 +490,7 @@ class Compiler
 		$dist_code = $coder->render_unit_header_program($this->header_program, $this->normal_programs);
 
 		// the autoloads for classes
-		$dist_code .= PHPLoaderMaker::render_autoloads_code($this->autoloads_map, 'UNIT_PATH');
+		$dist_code .= PHPLoaderMaker::render_autoloads_code($this->autoloads_map, _UNIT_PATH);
 
 		file_put_contents($dist_file_path, $dist_code);
 		return $dist_file_path;

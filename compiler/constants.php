@@ -36,7 +36,7 @@ const
 	_OBJECT = 'Object', _XVIEW = 'XView', _REGEX = 'Regex',
 	_CALLABLE = 'Callable', _NAMESPACE = 'Namespace', _METATYPE = 'MetaType', // _CLASS = 'Class',
 
-	// dot signs of complex types
+	// dot signs of compound types
 	_DOT_SIGN_ARRAY = 'Array', _DOT_SIGN_DICT = 'Dict', _DOT_SIGN_METATYPE = 'Type',
 
 	// number system
@@ -81,7 +81,8 @@ const
 	_TRY = 'try', _CATCH = 'catch', _FINALLY = 'finally',
 	_ECHO = 'echo', _PRINT = 'print', _RETURN = 'return', _EXIT = 'exit', _BREAK = 'break', _CONTINUE = 'continue', _THROW = 'throw',
 	_STATIC = 'static', _MASKED = 'masked', _PUBLIC = 'public', _INTERNAL = 'internal', _PROTECTED = 'protected', _PRIVATE = 'private',
-	_THIS = 'this', _SUPER = 'super', _CONSTRUCT = 'construct', _DESTRUCT = 'destruct';
+	_THIS = 'this', _SUPER = 'super', _CONSTRUCT = 'construct', _DESTRUCT = 'destruct',
+	_ASYNC = 'async', _AWAIT = 'await';
 
 
 // program end

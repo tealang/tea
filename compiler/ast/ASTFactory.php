@@ -451,9 +451,9 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_lambda_block(?IType $type, array $parameters)
+	public function create_lambda_expression(?IType $type, array $parameters)
 	{
-		$block = new LambdaBlock($type, ...$parameters);
+		$block = new LambdaExpression($type, ...$parameters);
 
 		$this->init_enclosing($block);
 		$this->enter_block($block);
@@ -613,7 +613,7 @@ class ASTFactory
 
 		if ($block->super_block) {
 			$this->block = $block->super_block;
-			if ($block instanceof LambdaBlock) {
+			if ($block instanceof LambdaExpression) {
 				$this->enclosing = $this->get_enclosing($block);
 			}
 		}
@@ -681,7 +681,7 @@ class ASTFactory
 
 		if (!$symbol && $seek_block) {
 			// add to lambda check list
-			if ($seek_block instanceof LambdaBlock) {
+			if ($seek_block instanceof LambdaExpression) {
 				$seek_block->set_defer_check_identifier($identifier);
 			}
 

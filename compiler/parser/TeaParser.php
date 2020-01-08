@@ -1083,7 +1083,7 @@ class TeaParser
 			$this->expect_space("Missed space char after '?'.");
 			$then = $this->read_expression();
 			if ($then instanceof ConditionalExpression) {
-				throw $this->new_exception("Required () for complex conditional expressions");
+				throw $this->new_exception("Required () for compound conditional expressions");
 			}
 
 			$this->expect_token_ignore_empty(_COLON);
@@ -1091,7 +1091,7 @@ class TeaParser
 
 		$else = $this->read_expression();
 		if ($else instanceof ConditionalExpression) {
-			throw $this->new_exception("Required () for complex conditional expressions");
+			throw $this->new_exception("Required () for compound conditional expressions");
 		}
 
 		return new ConditionalExpression($test, $then, $else);
@@ -1265,7 +1265,7 @@ class TeaParser
 			throw $this->new_exception("Unexpected token '$next', or missed token '=>'.");
 		}
 
-		$block = $this->factory->create_lambda_block($return_type, $parameters);
+		$block = $this->factory->create_lambda_expression($return_type, $parameters);
 
 		if ($this->get_token_ignore_empty() === _BLOCK_BEGIN) {
 			$this->read_statements_for_block($block);
@@ -1728,19 +1728,19 @@ class TeaParser
 		// try read Dict or Array
 		$next = $this->get_token();
 		if ($next === _BRACKET_OPEN) {
-			// the String[][:] style complex type
-			$type = $this->read_bracket_style_complex_type($type);
+			// the String[][:] style compound type
+			$type = $this->read_bracket_style_compound_type($type);
 		}
 		elseif ($next === _DOT) {
-			// the String.Array.Dict style complex type
-			$type = $this->read_dots_style_complex_type($type);
+			// the String.Array.Dict style compound type
+			$type = $this->read_dots_style_compound_type($type);
 		}
 
 		$type->pos = $this->pos;
 		return $type;
 	}
 
-	protected function read_dots_style_complex_type(IType $value_type): IType
+	protected function read_dots_style_compound_type(IType $value_type): IType
 	{
 		$type = $value_type;
 		$i = 0;
@@ -1769,7 +1769,7 @@ class TeaParser
 		return $type;
 	}
 
-	protected function read_bracket_style_complex_type(IType $value_type): IType
+	protected function read_bracket_style_compound_type(IType $value_type): IType
 	{
 		$type = $value_type;
 		$i = 0;
@@ -1981,10 +1981,10 @@ class TeaParser
 
 	protected function read_callback_protocol()
 	{
-		$is_assync = false;
+		$is_async = false;
 		$name = $this->scan_token_ignore_empty();
-		if ($name === 'async') {
-			$is_assync = true;
+		if ($name === _ASYNC) {
+			$is_async = true;
 			$name = $this->scan_token_ignore_empty();
 		}
 
@@ -1995,7 +1995,7 @@ class TeaParser
 		$parameters = $this->read_parameters_with_parentheses();
 		$return_type = $this->try_read_return_type_identifier();
 
-		$node = new CallbackProtocol($is_assync, $name, $return_type, ...$parameters);
+		$node = new CallbackProtocol($is_async, $name, $return_type, ...$parameters);
 		$node->pos = $this->pos;
 
 		return $node;
@@ -2073,12 +2073,12 @@ class TeaParser
 		return $parameter;
 	}
 
-	protected function read_callable_protocol(bool $is_assync = true)
+	protected function read_callable_protocol(bool $is_async = false)
 	{
 		$parameters = $this->read_parameters_with_parentheses();
 		$return_type = $this->try_read_return_type_identifier();
 
-		$node = new CallableProtocol($is_assync, $return_type, ...$parameters);
+		$node = new CallableProtocol($is_async, $return_type, ...$parameters);
 		$node->pos = $this->pos;
 
 		return $node;

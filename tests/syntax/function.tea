@@ -15,26 +15,26 @@ internal fn1(callee Callable) {
 fn1(fn0)
 fn1((str) => fn0(str))
 
-internal fn2(arg0) String -> callback0(caller String) String -> callback1(message) Void {
-	if callback0 {
-		return callback0('A cool man')
+internal fn2(some Any) String -> done(caller String) String -> error(message) Void {
+	if done {
+		return done('A cool man')
 	}
-	elseif callback1 {
-		callback1('Error!')
+	elseif error {
+		error('Error!')
 	}
 	else {
 		return 'No any callbacks implemented.'
 	}
 }
 
-echo fn2('any...') -> callback0(caller String) {
+echo fn2('any...') -> done(caller String) {
 	return "$caller has called!"
 }
 
-internal fn3(arg0, callback0 (a String, b Int) String) {
-	echo callback0('A cool man', 0)
+internal fn3(some Any, done (caller String) String, error (message) = none) String {
+	return done('A cool man') concat ' with $some'
 }
 
-fn3(123, (a, b) => {
-	return a concat b
-})
+echo fn3(123, (caller) => {
+		return caller concat ' has called'
+	})

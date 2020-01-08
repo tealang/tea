@@ -9,11 +9,11 @@
 
 namespace Tea;
 
-class LambdaBlock extends BaseBlock implements IEnclosingBlock, ICallableDeclaration, ICallee, IExpression
+class LambdaExpression extends BaseBlock implements IEnclosingBlock, ICallableDeclaration, ICallee, IExpression
 {
 	use FunctionLikeTrait;
 
-	const KIND = 'lambda_block';
+	const KIND = 'lambda_expression';
 
 	/**
 	 * @var PlainIdentifier[]

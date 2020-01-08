@@ -30,6 +30,6 @@ class CallableProtocol extends Node implements ICallableDeclaration, IType
 
 	public function is_accept_type(IType $type)
 	{
-		return $type === TypeFactory::$_callable;
+		return $type === TypeFactory::$_callable || $type === TypeFactory::$_none;
 	}
 }

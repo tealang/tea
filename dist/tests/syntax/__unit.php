@@ -23,20 +23,20 @@ function fn1(callable $callee) {
 	$unknow_type_value = $callee('hei');
 }
 
-function fn2($arg0, callable $callback0 = null, callable $callback1 = null): string {
-	if ($callback0) {
-		return $callback0('A cool man');
+function fn2($some, callable $done = null, callable $error = null): string {
+	if ($done) {
+		return $done('A cool man');
 	}
-	elseif ($callback1) {
-		$callback1('Error!');
+	elseif ($error) {
+		$error('Error!');
 	}
 	else {
 		return 'No any callbacks implemented.';
 	}
 }
 
-function fn3($arg0, callable $callback0) {
-	echo $callback0('A cool man', 0), NL;
+function fn3($some, callable $done, callable $error = null): string {
+	return $done('A cool man') . ' with ' . $some;
 }
 
 function xrange(int $start, int $stop, int $step = 1): \Generator {

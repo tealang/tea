@@ -16,9 +16,9 @@ echo fn2('any...', function (string $caller) {
 	return "{$caller} has called!";
 }), NL;
 
-fn3(123, function ($a, $b) {
-	return $a . $b;
-});
+echo fn3(123, function ($caller) {
+	return $caller . ' has called';
+}), NL;
 // ---------
 
 // program end

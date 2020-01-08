@@ -17,8 +17,6 @@ TeaHelper::$NORMAL_RESERVEDS = array_merge(
 	TeaHelper::OTHER_RESERVEDS
 );
 
-// TeaHelper::$CLASS_MEMBER_RESERVEDS = array_merge(TeaHelper::MODIFIERS, [_STATIC]);
-
 class TeaHelper
 {
 	const PATTERN_MODIFIER_REGEX = '/[imu]+/';
@@ -37,18 +35,16 @@ class TeaHelper
 		_PRIVATE
 	];
 
-	const PREDEFINED_CONSTS = [_VAL_NONE, _VAL_TRUE, _VAL_FALSE, 'UNIT_PATH'];
+	const PREDEFINED_CONSTS = [_VAL_NONE, _VAL_TRUE, _VAL_FALSE, _UNIT_PATH];
 
 	const OTHER_RESERVEDS = [
 		_THIS, _SUPER, _CONSTRUCT, _DESTRUCT, _STATIC,
 		_ELSEIF, _ELSE, _CATCH, _FINALLY,
-		// 'class', 'interface', 'abstract', 'trait', 'enum', 'new', 'async', 'await'
 	];
 
 	const ASSIGN_OPERATORS = [_ASSIGN, '.=', '**=', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^=', '<<=', '>>=']; // '??='
 
 	static $NORMAL_RESERVEDS;
-	// static $CLASS_MEMBER_RESERVEDS;
 
 	/**
 	 * Check token is a number
