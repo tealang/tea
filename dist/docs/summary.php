@@ -81,9 +81,10 @@ $xss = '<script>alert("XSS!")</script>';
 $html_escaped_interpolation = "The html-escaped string: " . htmlspecialchars($xss, ENT_QUOTES);
 $text_labeled = "would not process interpolation \${5 * 6}";
 
+strlen($str);
 iconv_strlen($str);
-iconv_substr($str, 0, 3);
 substr($str, 0, 3);
+iconv_substr($str, 0, 3);
 
 $uint_num = 123;
 $int_num = -123;

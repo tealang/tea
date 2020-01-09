@@ -1257,7 +1257,7 @@ class PHPCoder extends TeaCoder
 			if (is_string($item)) {
 				$items[] = $item;
 			}
-			elseif (($item instanceof Identifiable && !$item->symbol->declaration instanceof ConstantDeclaration) || $item instanceof KeyAccessing) {
+			elseif (($item instanceof Identifiable && !$item->symbol->declaration instanceof IConstantDeclaration) || $item instanceof KeyAccessing) {
 				$item = $item->render($this);
 				$items[] = "{{$item}}";
 			}

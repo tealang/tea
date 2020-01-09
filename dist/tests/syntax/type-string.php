@@ -11,7 +11,7 @@ $str = trim($str);
 echo $str, NL;
 
 substr($str, 2);
-iconv_substr($str, 0, 3);
+substr($str, 0, 3);
 
 $arr = [
 	'f1' => 123,

@@ -9,6 +9,8 @@
 
 namespace Tea;
 
+interface IConstantDeclaration {}
+
 trait IConstantDeclarationTrait
 {
 	use DeclarationTrait;
@@ -26,7 +28,7 @@ trait IConstantDeclarationTrait
 	}
 }
 
-class ConstantDeclaration extends RootDeclaration
+class ConstantDeclaration extends RootDeclaration implements IConstantDeclaration
 {
 	use IConstantDeclarationTrait;
 
@@ -38,7 +40,7 @@ class ConstantDeclaration extends RootDeclaration
 	public $program;
 }
 
-class ClassConstantDeclaration extends Node implements IClassMemberDeclaration
+class ClassConstantDeclaration extends Node implements IConstantDeclaration, IClassMemberDeclaration
 {
 	use IConstantDeclarationTrait;
 

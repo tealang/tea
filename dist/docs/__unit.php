@@ -23,7 +23,7 @@ function demo_function2(string $message = 'with a default value') {
 }
 
 function demo_function_with_a_return_type(string $some): int {
-	return iconv_strlen($some);
+	return strlen($some);
 }
 
 function demo_function_with_callbacks(string $some, callable $success, callable $failure): string {

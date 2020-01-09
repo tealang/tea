@@ -95,9 +95,10 @@ html_escaped_interpolation = "The html-escaped string: #{xss}" 	// 带#插值的
 text_labeled = #text "would not process interpolation ${5 * 6}" // 以#text标记的字符串，其中插值表达式将不被处理
 
 // 类似对象一样的调用String伪对象属性或方法
-str.length  // 字符串长度（表达称PHP后是iconv_strlen）
-str.copy(0, 3)  // 按字符单元从0开始拷贝长度为3的字符串片段（表达成PHP代码后是iconv_substr）
-str.byte_copy(0, 3)  // 按字节从0开始拷贝长度为3的字符串片段（表达成PHP代码后是substr）
+str.length  // 按原生实现统计的长度（表达称PHP后是strlen）
+str.rune_length  // 按默认字符集统计的字符串长度（表达称PHP后是iconv_strlen）
+str.copy(0, 3)  // 按原生实现从0开始拷贝长度为3的字符串片段（表达成PHP代码后是substr）
+str.rune_copy(0, 3)  // 按默认字符集从0开始拷贝长度为3的字符串片段（表达成PHP代码后是iconv_substr）
 
 var uint_num UInt = 123
 var int_num Int = -123
