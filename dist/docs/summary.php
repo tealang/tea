@@ -141,7 +141,7 @@ $array_merge = array_replace(['A', 'B'], ['A1', 'B1']);
 $dict_merge = array_replace(['a' => 'A', 'b' => 'B'], ['a' => 'A1', 'c' => 'C1']);
 
 $int_from_string = (int)'123';
-$uint_from_string = abs('-123');
+$uint_from_string = uintval('-123');
 $str_from_uint = (string)123;
 $str_from_int = (string)-123;
 $str_from_float = (string)123.123;
@@ -152,7 +152,7 @@ $ex2 = $ex1;
 is_int(1.1);
 is_int(1);
 is_uint(2);
-new ErrorException('Some') instanceof Exception;
+new \ErrorException('Some') instanceof Exception;
 
 $not_result = !($uint_num > 3);
 

@@ -11,7 +11,7 @@ $uint_num = 123;
 $int_num = 123;
 
 $int_from_string = (int)'123';
-$uint_from_string = abs('-123');
+$uint_from_string = abs((int)'-123');
 
 $str_from_uint = (string)123;
 $str_from_int = (string)-123;
@@ -35,7 +35,7 @@ $l1 = !($num < 0) && $num != 3;
 
 is_int(1);
 is_uint(2);
-new ErrorException('demo') instanceof Exception;
+new \ErrorException('demo') instanceof Exception;
 
 $a = 1;
 

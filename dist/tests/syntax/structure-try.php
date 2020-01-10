@@ -31,7 +31,7 @@ finally {
 
 try {
 	foreach ([] as $v) {
-		throw new ErrorException('some message');
+		throw new \ErrorException('some message');
 	}
 }
 catch (\ErrorException $ex) {

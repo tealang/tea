@@ -23,7 +23,7 @@ $float_num3 = 123e-6;
 $float_num3 = 123.1e+6;
 $float_num3 = 0.1231e-10;
 
-$num_str = strval($dec);
+$num_str = (string)$dec;
 $num_str = (string)123.1;
 // ---------
 

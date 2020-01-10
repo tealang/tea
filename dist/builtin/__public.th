@@ -4,9 +4,16 @@
 
 public NL String = "\n"
 public __DIR__ String
+public __FILE__ String
 public __LINE__ UInt
+public __CLASS__ UInt
+public __FUNCTION__ UInt
+public FILE_APPEND Int
+public LOCK_EX Int
 public JSON_UNESCAPED_UNICODE Int
 public PREG_SPLIT_DELIM_CAPTURE Int
+
+#php var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default)
 
 #php Exception {
 	public construct(message String, code Int = 0)
@@ -18,6 +25,16 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 	// no any
 }
 
+#php dirname(path String, levels UInt = #default) String
+
+#php basename(path String, suffix String = #default) String
+
+#php realpath(path String) String
+
+#php file_get_contents(file String) String
+
+#php file_set_contents(file String, data String, flags Int = #default) UInt
+
 #php strval(val Any) String
 
 #php intval(val Any) Int
@@ -25,6 +42,8 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 #php floatval(val Any) Float
 
 #php boolval(val Any) Bool
+
+public uintval(val Any) UInt
 
 #php abs(val Any) Float
 
@@ -142,10 +161,6 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	// no any
 }
 
-#tea Any {
-	// no any
-}
-
 #tea None {
 	// no any
 }
@@ -154,14 +169,11 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	// no any
 }
 
-#tea Scalar {
-	masked string String
-	masked float Float
-	masked int Int
-	masked bool Bool
+#tea Any {
+	// no any
 }
 
-#tea String: Scalar {
+#tea String: IBaseType {
 	masked length UInt
 	masked find(str String, offset Int = 0) Int
 	masked find_last(str String, offset Int = 0) Int
@@ -185,23 +197,25 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	masked json_decode() Dict
 }
 
-#tea Float: Scalar {
+#tea Float: IBaseType {
 	masked abs() Float
 	masked ceil() Float
 	masked floor() Float
 	masked round(precision UInt = 0) Float
 }
 
-#tea Int: Scalar {
+#tea Int: IBaseType {
+	masked uint() UInt
 	masked abs() UInt
 }
 
-#tea UInt: Int {
+#tea UInt: IBaseType {
 	// no any
 }
 
-#tea Bool: Scalar {
-	masked int UInt
+#tea Bool {
+	masked int() Int
+	masked uint() UInt
 }
 
 #tea Array {
@@ -223,8 +237,8 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 
 #tea Dict {
 	masked length UInt
-	masked keys Array
-	masked values Array
+	masked keys() Array
+	masked values() Array
 	masked has_key(key Any) Bool
 	masked has_value(val Any) Bool
 	masked find(val Any) String
@@ -243,7 +257,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	// no any
 }
 
-#tea Iterable {
+public IView {
 	// no any
 }
 
@@ -251,7 +265,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	// no any
 }
 
-public IView {
+#tea Iterable {
 	// no any
 }
 

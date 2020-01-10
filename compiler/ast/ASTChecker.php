@@ -1780,9 +1780,13 @@ class ASTChecker
 			case FunctionBlock::KIND:
 				return TypeFactory::$_callable;
 
+			case MaskedDeclaration::KIND:
+				if ($member->parameters !== null) {
+					throw $this->new_syntax_error("Cannot use the masked function '$member->name' without '()'", $node);
+				}
+				// unbreak
 			case PropertyDeclaration::KIND:
 			case ClassConstantDeclaration::KIND:
-			case MaskedDeclaration::KIND:
 			case ClassDeclaration::KIND:
 				return $member->type;
 

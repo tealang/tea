@@ -20,12 +20,13 @@ class TypeFactory
 		_METATYPE,
 	];
 
-	static $_void;
+	static $_metatype;
 
 	static $_any;
 	static $_none;
+	static $_void;
 
-	static $_scalar;
+	// static $_scalar;
 	static $_string;
 	static $_float;
 	static $_int;
@@ -42,7 +43,6 @@ class TypeFactory
 	static $_callable;
 	// static $_class;
 	static $_namespace;
-	static $_metatype;
 
 	// for check XView accepts
 	static $_iview_symbol;
@@ -63,7 +63,7 @@ class TypeFactory
 		self::$_none = self::create_type(NoneType::class);
 		self::$_any = self::create_type(AnyType::class);
 
-		self::$_scalar = self::create_type(ScalarType::class);
+		// self::$_scalar = self::create_type(ScalarType::class);
 		self::$_string = self::create_type(StringType::class);
 		self::$_float = self::create_type(FloatType::class);
 		self::$_int = self::create_type(IntType::class);

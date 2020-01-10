@@ -110,16 +110,16 @@ class AnyType extends BaseType {
 	}
 }
 
-class ScalarType extends BaseType {
-	const ACCEPT_TYPES = [_STRING, _INT, _UINT, _BOOL, _XVIEW];
-	public $name = _SCALAR;
-}
+// class ScalarType extends BaseType {
+// 	const ACCEPT_TYPES = [_STRING, _INT, _UINT, _BOOL, _XVIEW];
+// 	public $name = _SCALAR;
+// }
 
-// class BytesType extends ScalarType {
+// class BytesType {
 // 	const ACCEPT_TYPES = [_STRING, _INT, _UINT, _XVIEW];
 // }
 
-class StringType extends ScalarType {
+class StringType extends BaseType {
 	// PHP中Array下标可为Int和String，并且会将数字内容的String自动转为Int
 	// 故在使用PHP Array的下标时，实际上可能有Int和String两种数据类型，这给严格的类型系统实现带来困难
 	// 由于此处规则为可接受Int值，导致在生成PHP代码时，不能用strict_types模式
@@ -128,22 +128,22 @@ class StringType extends ScalarType {
 	public $name = _STRING;
 }
 
-class FloatType extends ScalarType {
+class FloatType extends BaseType {
 	const ACCEPT_TYPES = [_INT, _UINT];  // Int/UInt作为Float时可能会丢失精度
 	public $name = _FLOAT;
 }
 
-class IntType extends ScalarType {
+class IntType extends BaseType {
 	const ACCEPT_TYPES = [_UINT];
 	public $name = _INT;
 }
 
-class UIntType extends ScalarType {
+class UIntType extends BaseType {
 	// would output int for php
 	public $name = _UINT;
 }
 
-class BoolType extends ScalarType {
+class BoolType extends BaseType {
 	public $name = _BOOL;
 }
 

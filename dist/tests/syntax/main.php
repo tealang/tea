@@ -25,6 +25,10 @@ class TeaDemoClass {
 }
 
 // ---------
+echo intval('-123abc'), NL;
+echo uintval('-123abc'), NL;
+echo strlen('-123abc'), NL;
+
 echo "\n***Test for class call:", NL;
 $php_class_demo_object = new PHPClassDemo();
 echo $php_class_demo_object->get_class_name('main1'), NL;

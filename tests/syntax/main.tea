@@ -1,8 +1,4 @@
 
-#main
-
-#php var_dump(v)
-
 internal TeaDemoClass {
 	static static_prop1 = 'static prop value'
 
@@ -20,6 +16,10 @@ internal TeaDemoClass {
 		return 'some'
 	}
 }
+
+echo '-123abc'.int() // -123
+echo '-123abc'.uint()  // 123
+echo '-123abc'.length  // 7
 
 echo "\n***Test for class call:"
 var php_class_demo_object = PHPClassDemo()

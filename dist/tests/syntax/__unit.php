@@ -11,7 +11,6 @@ require_once $super_path . 'tea/dist/builtin/__unit.php'; // the builtins
 require_once $super_path . 'tea/dist/tests/xview/__unit.php';
 require_once $super_path . 'tea/tests/PHPDemoUnit/__unit.php';
 
-
 #internal
 const PI = 3.1415926;
 
@@ -41,7 +40,7 @@ function xrange(int $start, int $stop, int $step = 1): \Generator {
 	}
 
 	if ($step == 0) {
-		throw new Exception('Step should not be 0.');
+		throw new \Exception('Step should not be 0.');
 	}
 
 	$i = $start;

@@ -134,7 +134,10 @@ class PHPCoder extends TeaCoder
 			// 将所有常量和函数生成到头文件中
 			foreach ($program->declarations as $declaration) {
 				if ($declaration instanceof ConstantDeclaration) {
-					$constants[] = $declaration->render($this);
+					$item = $declaration->render($this);
+					if ($item !== null) {
+						$constants[] = $item;
+					}
 				}
 				elseif ($declaration instanceof FunctionBlock) {
 					$item = $declaration->render($this);
@@ -367,11 +370,6 @@ class PHPCoder extends TeaCoder
 
 		return parent::render_constant_declaration($node);
 	}
-
-	// public function render_callable_protocol(CallableProtocol $node)
-	// {
-	// 	return "callable";
-	// }
 
 	public function render_masked_declaration(MaskedDeclaration $node)
 	{
@@ -1004,18 +1002,19 @@ class PHPCoder extends TeaCoder
 
 	public function render_call_expression(CallExpression $node)
 	{
-		$callee = $node->callee;
-
-		if ($callee->symbol && $callee->symbol->declaration instanceof MaskedDeclaration) {
+		if ($node->callee->symbol && $node->callee->symbol->declaration instanceof MaskedDeclaration) {
 			return $this->render_masked_call($node);
 		}
 
-		$callee = $callee->render($this);
+		$callee = $node->callee->render($this);
 
 		$arguments = $node->normalized_arguments ?? $node->arguments;
 		$arguments = $this->render_arguments($arguments);
 
 		if ($node->is_class_new()) {
+			if (is_array($callee)) {
+				dump($node->callee);exit;
+			}
 			return "new {$callee}($arguments)";
 		}
 		else {
@@ -1084,8 +1083,13 @@ class PHPCoder extends TeaCoder
 			return $this->add_variable_prefix($node->name);
 		}
 
-		// class/function/constant
-		$name = $this->get_normalized_name($declaration);
+		if ($declaration instanceof ClassLikeDeclaration) {
+			$name = $this->get_classlike_declaration_name($declaration);
+		}
+		else {
+			// function/constant
+			$name = $this->get_normalized_name($declaration);
+		}
 
 		if (!$node->with_call_or_accessing) {
 			if ($declaration instanceof FunctionBlock) {
@@ -1108,19 +1112,25 @@ class PHPCoder extends TeaCoder
 
 	public function render_classlike_identifier(ClassLikeIdentifier $node)
 	{
-		$name = $this->get_normalized_name($node->symbol->declaration);
-
 		if ($node->ns) {
+			$name = $this->get_normalized_name($declaration);
 			return $this->render_plain_identifier($node->ns) . static::NS_SEPARATOR . $name;
 		}
 
-		if ($node->symbol->declaration->origin_name !== null) {
-			$name = $node->symbol->declaration->origin_name;
-		}
+		return $this->get_classlike_declaration_name($node->symbol->declaration);
+	}
 
-		if ($node->symbol->declaration->program->unit === null) {
-			// the builtin declaration identifier
-			return static::NS_SEPARATOR . $name;
+	private function get_classlike_declaration_name(ClassLikeDeclaration $declaration)
+	{
+		$name = $this->get_normalized_name($declaration);
+
+		if ($declaration->program->unit === null || $declaration->label === _PHP) {
+			if ($declaration->origin_name !== null) {
+				$name = $declaration->origin_name;
+			}
+
+			// for the builtin declaration
+			$name = static::NS_SEPARATOR . $name;
 		}
 
 		return $name;
@@ -1325,7 +1335,7 @@ class PHPCoder extends TeaCoder
 		$left = $this->render_expression($node->left);
 
 		if ($node->right->name === _UINT) {
-			return "abs($left)";
+			return "abs((int)$left)";
 		}
 
 		$type_name = static::TYPE_MAP[$node->right->name] ?? null;

@@ -28,7 +28,7 @@ const
 
 	// builtin types
 	_VOID = 'Void', _NONE = 'None', _ANY = 'Any',
-	_SCALAR = 'Scalar',
+	// _SCALAR = 'Scalar',
 	// _BYTES = 'Bytes',
 	// _RUNES = 'Runes',
 	_STRING = 'String',

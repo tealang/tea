@@ -41,7 +41,8 @@ function fib_with_generator(int $num = 9): \Generator {
 const __AUTOLOADS = [
 	'tea\samples\IFib' => 'fib_with_class.php',
 	'tea\samples\IFibTrait' => 'fib_with_class.php',
-	'tea\samples\Fib' => 'fib_with_class.php'
+	'tea\samples\Fib' => 'fib_with_class.php',
+	'tea\samples\SQLitePDO' => 'pdo_sqlite.php'
 ];
 
 spl_autoload_register(function ($class) {

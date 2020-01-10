@@ -4,9 +4,9 @@ const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 #public
 const NL = "\n";
 
-
-
-
+function uintval($val): int {
+	return abs((int)$val);
+}
 
 function is_uint($val): bool {
 	return is_int($val) && $val >= 0;
@@ -63,6 +63,8 @@ function regex_matches(string $regex, string $subject): array {
 
 # --- generates ---
 const __AUTOLOADS = [
+	'IBaseType' => 'core.php',
+	'IBaseTypeTrait' => 'core.php',
 	'IView' => 'core.php'
 ];
 

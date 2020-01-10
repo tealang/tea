@@ -7,27 +7,46 @@ The builtin libs for Tea
 
 public NL = "\n"
 
-#php __DIR__ String
-#php __LINE__ UInt
+#php var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default)
 
+// php builtin constants
+#php __DIR__ String
+#php __FILE__ String
+#php __LINE__ UInt
+#php __CLASS__ UInt
+#php __FUNCTION__ UInt
+
+// php super variables
 #php $_GET Dict
 #php $_POST Dict
 #php $_COOKIE Dict
 #php $_SERVER Dict
 
+// exception
 #php Exception {
 	public construct(message String, code Int = 0)
 	public getCode() Int
 	public getMessage() String
 }
-
 #php ErrorException: Exception {}
 
-// types
+// file
+#php dirname(path String, levels UInt = #default) String
+#php basename(path String, suffix String = #default) String
+#php realpath(path String) String
+#php file_get_contents(file String) String
+#php file_set_contents(file String, data String, flags Int = #default) UInt
+#php FILE_APPEND Int
+#php LOCK_EX Int
+
+// type
 #php strval(val) String
 #php intval(val) Int
 #php floatval(val) Float
 #php boolval(val) Bool
+public uintval(val) UInt {
+	return val as UInt
+}
 
 // math
 #php abs(val) Float
@@ -143,6 +162,10 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 	return count === 0 ? none : matches
 }
 
+// 所有 masked function 在定义时都需要考虑参数的顺序，参数的运行时序不一致可能会导致问题
+// 考虑禁止在调用函数的参数中改变数据（需要推断出可能改变数据的函数，或直接禁止参数带函数调用），纯表达式?
+// 部分实现中，参数编译后顺序有变化，使用时应避免当前字符串被delimiter表达式所改变
+
 // public IShareAble {
 // 	vshare() Object
 // }
@@ -151,25 +174,19 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 // 	vclone() Object
 // }
 
-// MetaType: the type of all types
-#tea MetaType {}
-
-#tea Any {}
-#tea None {}
-#tea Void {}
-
-#tea Scalar {
-	masked string => strval(this)
-	masked float => floatval(this)
-	masked int => intval(this)
-	masked bool => boolval(this)
+internal IBaseType {
+	masked string() => strval(this)
+	masked int() => intval(this)
+	masked uint() => uintval(this)
+	masked float() => floatval(this)
 }
 
-// 所有 masked function 在定义时都需要考虑参数的顺序，参数的运行时序不一致可能会导致问题
-// 考虑禁止在调用函数的参数中改变数据（需要推断出可能改变数据的函数，或直接禁止参数带函数调用），纯表达式?
-// 部分实现中，参数编译后顺序有变化，使用时应避免当前字符串被delimiter表达式所改变
+#tea MetaType {}
+#tea None {}
+#tea Void {}
+#tea Any {}
 
-#tea String: Scalar {
+#tea String: IBaseType {
 	// process in dist native mode
 	masked length => strlen(this)
 	masked find(str String, offset Int = 0) => _strpos(this, str, offset)
@@ -200,21 +217,23 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 	masked json_decode() => json_decode(this, true)
 }
 
-#tea Float: Scalar {
+#tea Float: IBaseType {
 	masked abs() => abs(this)
 	masked ceil() => ceil(this)
 	masked floor() => floor(this)
 	masked round(precision = 0) => round(this, precision)
 }
 
-#tea Int: Scalar {
+#tea Int: IBaseType {
+	masked uint() UInt => abs(this)
 	masked abs() UInt => abs(this)
 }
 
-#tea UInt: Int {}
+#tea UInt: IBaseType {}
 
-#tea Bool: Scalar {
-	masked int UInt => intval(this)  // to UInt
+#tea Bool {
+	masked int() Int => intval(this)
+	masked uint() UInt => intval(this)
 }
 
 #tea Array {
@@ -246,8 +265,8 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 #tea Dict {
 	masked length => count(this)
 
-	masked keys => array_keys(this)
-	masked values => array_values(this)
+	masked keys() => array_keys(this)
+	masked values() => array_values(this)
 
 	masked has_key(key) => array_key_exists(key, this)
 	masked has_value(val) => in_array(val, this)
@@ -260,10 +279,10 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 }
 
 #tea Regex {
-	// match, returns the first item
+	// match, returns the first matched item
 	masked match(text String) String.Array => regex_match(this, text)
 
-	// match, returns the all items
+	// match, returns the all matched items
 	masked matches(text String) String.Array.Array => regex_matches(this, text)
 
 	// split text, returns the splited items
@@ -274,11 +293,11 @@ public regex_matches(regex Regex, subject String) String.Array.Array {
 }
 
 #tea XView {}   // accept IView
-#tea Iterable {} // accept IteratorInterface
-#tea Callable {}
-
 public IView {}
 
+#tea Callable {}
+
+#tea Iterable {} // accept IteratorInterface
 #php Iterator as IteratorInterface {
 	current() Any
 	key() String

@@ -35,7 +35,7 @@ class Fib implements IFib {
 
 	public function get_next(): int {
 		if ($this->current_index > $this->max) {
-			throw new Exception("Out of range");
+			throw new \Exception("Out of range");
 		}
 
 		$temp = $this->current;
