@@ -1,5 +1,5 @@
 <?php
-namespace tea\samples;
+namespace tea\examples;
 
 require_once __DIR__ . '/__unit.php';
 

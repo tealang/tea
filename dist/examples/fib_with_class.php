@@ -1,5 +1,5 @@
 <?php
-namespace tea\samples;
+namespace tea\examples;
 
 use Exception;
 

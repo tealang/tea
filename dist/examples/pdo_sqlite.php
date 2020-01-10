@@ -1,5 +1,5 @@
 <?php
-namespace tea\samples;
+namespace tea\examples;
 
 require_once __DIR__ . '/__unit.php';
 
@@ -18,7 +18,6 @@ $rows = $rs->fetchAll(\PDO::FETCH_ASSOC);
 
 if (!$rows) {
 	$sqlite->exec('CREATE TABLE demo (id int,name string)');
-	$sqlite->exec('COMMIT');
 	echo 'The demo table created', NL;
 }
 else {
