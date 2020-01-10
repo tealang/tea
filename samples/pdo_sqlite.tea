@@ -31,7 +31,6 @@ rows = rs.fetchAll(PDO.FETCH_ASSOC)
 
 if not rows {
 	sqlite.exec('CREATE TABLE demo (id int,name string)')
-	sqlite.exec('COMMIT')
 	echo 'The demo table created'
 }
 else {
