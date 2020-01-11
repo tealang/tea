@@ -135,7 +135,6 @@ trait TeaSharpTrait
 
 		$type = null;
 		$value = null;
-		$reassignable = null;
 
 		if (!TeaHelper::is_declarable_variable_name($name) && $name !== _THIS) {
 			throw $this->new_unexpect_exception();
@@ -146,7 +145,7 @@ trait TeaSharpTrait
 			$type = $this->try_read_type_identifier();
 		}
 
-		$parameter = new ParameterDeclaration($name, $type, $value, $reassignable);
+		$parameter = new ParameterDeclaration($name, $type, $value);
 		$parameter->pos = $this->pos;
 
 		return $parameter;

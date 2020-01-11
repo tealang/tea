@@ -6,8 +6,7 @@ require_once __DIR__ . '/__unit.php';
 #public
 class SQLitePDO extends \PDO {
 	public function __construct(string $filename) {
-		$abs_filename = realpath($filename);
-		parent::__construct('sqlite:' . $abs_filename);
+		parent::__construct('sqlite:' . realpath($filename));
 	}
 }
 

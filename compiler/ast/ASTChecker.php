@@ -242,7 +242,9 @@ class ASTChecker
 				$infered_type && $this->assert_type_compatible($parameter->type, $infered_type, $parameter->value);
 			}
 			else {
-				$parameter->type = $infered_type ?? TypeFactory::$_any;
+				$parameter->type = $infered_type === null || $infered_type === TypeFactory::$_none
+					? TypeFactory::$_any
+					: $infered_type;
 			}
 		}
 	}

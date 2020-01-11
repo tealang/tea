@@ -17,16 +17,16 @@ trait IVariableDeclarationTrait
 
 	public $value;
 
-	public $reassignable;
+	public $is_assignable;
 
-	public $mutable;
+	public $is_mutable;
 
-	public function __construct(string $name, IType $type = null, IExpression $value = null, bool $reassignable = null)
+	public function __construct(string $name, IType $type = null, IExpression $value = null, bool $is_assignable = false)
 	{
 		$this->name = $name;
 		$this->type = $type;
 		$this->value = $value;
-		$this->reassignable = $reassignable;
+		$this->is_assignable = $is_assignable;
 	}
 }
 

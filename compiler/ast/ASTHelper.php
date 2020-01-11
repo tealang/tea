@@ -13,14 +13,14 @@ class ASTHelper
 {
 	static function create_symbol_this(ClassLikeIdentifier $class)
 	{
-		$declaration = new VariableDeclaration(_THIS, $class, null, null);
+		$declaration = new VariableDeclaration(_THIS, $class);
 		$declaration->checked = true; // do not need to check
 		return new Symbol($declaration);
 	}
 
 	static function create_symbol_super(ClassLikeIdentifier $class)
 	{
-		$declaration = new VariableDeclaration(_SUPER, $class, null, null);
+		$declaration = new VariableDeclaration(_SUPER, $class);
 		$declaration->checked = true; // do not need to check
 		return new Symbol($declaration);
 	}

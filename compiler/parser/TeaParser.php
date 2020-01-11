@@ -2048,10 +2048,10 @@ class TeaParser
 
 		$type = null;
 		$value = null;
-		// $reassignable = null;
+		// $is_assignable = null;
 
 		// if ($name === _VAR) {
-		// 	$reassignable = true;
+		// 	$is_assignable = true;
 		// 	$name = $this->scan_token_ignore_space();
 		// }
 
@@ -2079,7 +2079,7 @@ class TeaParser
 
 	protected function create_parameter(string $name, IType $type = null, IExpression $value = null)
 	{
-		$parameter = new ParameterDeclaration($name, $type, $value);
+		$parameter = new ParameterDeclaration($name, $type, $value, true);
 		$parameter->pos = $this->pos;
 		return $parameter;
 	}

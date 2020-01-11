@@ -26,7 +26,7 @@ class Symbol
 
 	public function is_assignable()
 	{
-		return $this->declaration instanceof IVariableDeclaration && $this->declaration->reassignable;
+		return $this->declaration instanceof IVariableDeclaration && $this->declaration->is_assignable;
 	}
 }
 

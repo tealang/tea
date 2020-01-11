@@ -33,6 +33,26 @@ function fib_with_generator(int $num = 9): \Generator {
 	}
 }
 
+function say_hello(string $name = 'World') {
+	echo 'Hello, $name!', NL;
+}
+
+function set_field(string $key, string $value, array $dict): array {
+	$dict[$key] = $value;
+	return $dict;
+}
+
+function show_file_path(string $filename = null) {
+	if ($filename === null) {
+		$filename = __FILE__;
+	}
+	else {
+		$filename = realpath($filename);
+	}
+
+	echo $filename, NL;
+}
+
 
 // program end
 
