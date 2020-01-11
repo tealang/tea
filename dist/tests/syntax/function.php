@@ -12,6 +12,10 @@ fn1(function ($str) {
 	return fn0($str);
 });
 
+$num = 1000;
+fn2($num);
+echo 'num referenced by fn2: ' . $num, NL;
+
 echo fn3(123, function ($a) {
 	return $a . ' has called';
 }, function ($error) {

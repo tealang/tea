@@ -22,6 +22,10 @@ function fn1(callable $callee) {
 	$unknow_type_value = $callee('hei');
 }
 
+function fn2(int &$n) {
+	$n += 1;
+}
+
 function fn3($some, callable $done, callable $error = null): string {
 	return $done('A cool man') . ' with ' . $some;
 }

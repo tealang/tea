@@ -54,7 +54,8 @@ const
 	_COLON = ':', _COMMA = ',', _SEMICOLON = ';',
 	_AS = 'as', _IS = 'is',
 	_IN = 'in', _TO = 'to', _DOWNTO = 'downto', _STEP = 'step', // just use in the 'for' block
-	_NEGATION = '-', // -1, -num
+
+	_REFERENCE = '&',  _NEGATION = '-', // -1, -num
 	_ADDITION = '+', _SUBTRACTION = '-', _MULTIPLICATION = '*', _DIVISION = '/', _REMAINDER = '%', _EXPONENTIATION = '**',
 	_BITWISE_NOT = '~', _BITWISE_AND = '&', _BITWISE_OR = '|', _BITWISE_XOR = '^', //bitwise
 	_CONCAT = 'concat', _MERGE = 'merge',

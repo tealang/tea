@@ -966,7 +966,7 @@ class TeaParser
 		// lambda: (param1, ...) => {}
 		// lambda: (param1 type, ...) => {}
 
-		$parameter = $this->read_parameter_declaration_with_token($readed_identifier->name);
+		$parameter = $this->read_parameter_with_token($readed_identifier->name);
 		$parameters = $this->read_rest_lambda_parameters($parameter);
 		$this->expect_token_ignore_empty(_PAREN_CLOSE);
 
@@ -984,9 +984,8 @@ class TeaParser
 			}
 		}
 
-		while ($parameter = $this->try_read_parameter_declaration()) {
+		while ($parameter = $this->try_read_parameter()) {
 			$items[] = $parameter;
-
 			if (!$this->skip_comma()) {
 				break;
 			}
@@ -1397,7 +1396,9 @@ class TeaParser
 			throw $this->new_unexpect_exception();
 		}
 
-		$args = $this->read_arguments_with_parentheses();
+		$this->skip_token(_PAREN_OPEN);
+		$args = $this->read_call_expression_arguments();
+		$this->skip_token(_PAREN_CLOSE);
 
 		// function call
 		$call = new CallExpression($handler, $args);
@@ -1544,16 +1545,7 @@ class TeaParser
 		$this->expect_space("Missed space char after operator '$operator'.");
 	}
 
-	protected function read_arguments_with_parentheses()
-	{
-		$this->skip_token(_PAREN_OPEN);
-		$items = $this->read_labelable_arguments();
-		$this->skip_token(_PAREN_CLOSE);
-
-		return $items;
-	}
-
-	protected function read_labelable_arguments()
+	protected function read_call_expression_arguments()
 	{
 		$has_label = false;
 		$items = [];
@@ -1581,6 +1573,22 @@ class TeaParser
 
 		return $items;
 	}
+
+	// protected function read_argument_expression()
+	// {
+	// 	// eg. &identifier
+	// 	// eg. expression
+
+	// 	if ($this->skip_token_ignore_empty(_REFERENCE)) {
+	// 		$expression = $this->read_expression();
+	// 		$expression = new ReferenceOperation($expression);
+	// 	}
+	// 	else {
+	// 		$expression = $this->read_expression();
+	// 	}
+
+	// 	return $expression;
+	// }
 
 	protected function read_inline_arguments()
 	{
@@ -2011,26 +2019,21 @@ class TeaParser
 	protected function read_parameters_with_parentheses()
 	{
 		$this->expect_token_ignore_empty(_PAREN_OPEN);
-		$items = $this->read_parameters();
-		$this->expect_token_ignore_empty(_PAREN_CLOSE);
 
-		return $items;
-	}
-
-	protected function read_parameters()
-	{
 		$items = [];
-		while ($item = $this->try_read_parameter_declaration()) {
+		while ($item = $this->try_read_parameter()) {
 			$items[] = $item;
 			if (!$this->skip_comma()) {
 				break;
 			}
 		}
 
+		$this->expect_token_ignore_empty(_PAREN_CLOSE);
+
 		return $items;
 	}
 
-	protected function try_read_parameter_declaration()
+	protected function try_read_parameter()
 	{
 		$token = $this->get_token_ignore_empty();
 		if ($token === _PAREN_CLOSE) {
@@ -2038,22 +2041,22 @@ class TeaParser
 		}
 
 		$this->scan_token_ignore_empty();
-		return $this->read_parameter_declaration_with_token($token);
+		return $this->read_parameter_with_token($token);
 	}
 
-	protected function read_parameter_declaration_with_token(string $name)
+	protected function read_parameter_with_token(string $name)
 	{
 		// param Int = 1
-		// var param Int = 1  // for assignable parameters
+		// &param Int  // for referenced parameters
 
 		$type = null;
 		$value = null;
-		// $is_assignable = null;
 
-		// if ($name === _VAR) {
-		// 	$is_assignable = true;
-		// 	$name = $this->scan_token_ignore_space();
-		// }
+		$is_referenced = false;
+		if ($name === _REFERENCE) {
+			$is_referenced = true;
+			$name = $this->scan_token_ignore_space();
+		}
 
 		if (!TeaHelper::is_declarable_variable_name($name)) {
 			throw $this->new_unexpect_exception();
@@ -2074,7 +2077,17 @@ class TeaParser
 			$value = $this->read_literal_expression();
 		}
 
-		return $this->create_parameter($name, $type, $value);
+		$parameter = $this->create_parameter($name, $type, $value);
+
+		if ($is_referenced) {
+			if ($value && $value !== ASTFactory::$default_value_marker) {
+				throw $this->new_exception("Cannot set a default value for the referenced parameter.");
+			}
+
+			$parameter->is_referenced = $is_referenced;
+		}
+
+		return $parameter;
 	}
 
 	protected function create_parameter(string $name, IType $type = null, IExpression $value = null)

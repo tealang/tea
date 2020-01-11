@@ -13,7 +13,13 @@ public LOCK_EX Int
 public JSON_UNESCAPED_UNICODE Int
 public PREG_SPLIT_DELIM_CAPTURE Int
 
+#php isset(expr Any) Bool
+
+#php empty(expr Any) Bool
+
 #php var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default)
+
+#php print_r(expr Any, is_return Bool = #default)
 
 #php Exception {
 	public construct(message String, code Int = 0)
@@ -47,6 +53,10 @@ public uintval(val Any) UInt
 
 public uint_ensure(num Int) Int
 
+#php is_int(val Any) Bool
+
+public is_uint(val Any) Bool
+
 #php abs(val Any) Float
 
 #php round(val Any, precision UInt = 0) Float
@@ -54,10 +64,6 @@ public uint_ensure(num Int) Int
 #php ceil(val Any) Float
 
 #php floor(val Any) Float
-
-#php is_int(val Any) Bool
-
-public is_uint(val Any) Bool
 
 #php trim(str Any, char_mask String = #default) String
 
@@ -149,9 +155,9 @@ public _dict_search(master Dict, search Any) String
 
 #php date(format String, timestamp Int = #default) String
 
-#php preg_match(regex Regex, subject String, matches Array = #default, flags Int = #default, offset Int = #default) Bool
+#php preg_match(regex Regex, subject String, &matches Array = #default, flags Int = #default, offset Int = #default) Bool
 
-#php preg_match_all(regex Regex, subject String, matches Array = #default, flags Int = #default, offset Int = #default) Bool
+#php preg_match_all(regex Regex, subject String, &matches Array = #default, flags Int = #default, offset Int = #default) Bool
 
 #php preg_split(regex Regex, subject String, limit Int = #default, flags Int = #default) Array
 

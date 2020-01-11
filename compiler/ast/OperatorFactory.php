@@ -12,7 +12,7 @@ namespace Tea;
 use Exception;
 
 const _PREFIX_OP_PRECEDENCES = [
-	_NEGATION => 2, _BITWISE_NOT => 2,
+	_NEGATION => 2, _BITWISE_NOT => 2, _REFERENCE => 2,
 	_NOT => 8,
 ];
 
@@ -70,6 +70,7 @@ class OperatorFactory
 
 	static $_negation;
 	static $_bitwise_not; // eg. ~0 == -1
+	static $_reference;
 
 	static $_as;
 
@@ -124,6 +125,8 @@ class OperatorFactory
 	{
 		self::$_negation = self::create_prefix_operator_symbol(_NEGATION);
 		self::$_bitwise_not = self::create_prefix_operator_symbol(_BITWISE_NOT);
+		self::$_reference = self::create_prefix_operator_symbol(_REFERENCE);
+		self::$_bool_not = self::create_prefix_operator_symbol(_NOT);
 
 		self::$_dot = self::create_normal_operator_symbol(_DOT);
 		// self::$_notify = self::create_normal_operator_symbol(_NOTIFY);
@@ -167,7 +170,6 @@ class OperatorFactory
 
 		self::$_conditional = self::create_normal_operator_symbol(_CONDITIONAL);
 
-		self::$_bool_not = self::create_prefix_operator_symbol(_NOT);
 		self::$_bool_and = self::create_normal_operator_symbol(_AND);
 		self::$_bool_or = self::create_normal_operator_symbol(_OR);
 

@@ -14,22 +14,17 @@ internal fn1(callee Callable) {
 fn1(fn0)
 fn1((str) => fn0(str))
 
-// internal fn2(some Any) String -> done(caller String) String -> error(message) Void {
-// 	if done {
-// 		return done('A cool man')
-// 	}
-// 	elseif error {
-// 		error('Error!')
-// 	}
-// 	else {
-// 		return 'No any callbacks implemented.'
-// 	}
-// }
+// parameter reference
+internal fn2(&n Int) {
+	n += 1
+}
 
-// echo fn2('any...') -> done(caller String) {
-// 	return "$caller has called!"
-// }
+var num = 1000
+fn2(num)  	// okay
+// fn2(1000)   // error
+echo 'num referenced by fn2: $num'
 
+// callbacks
 internal fn3(some Any, done (caller String) String, error (message) = none) String {
 	return done('A cool man') concat ' with $some'
 }

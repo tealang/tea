@@ -48,5 +48,7 @@ class ParameterDeclaration extends Node implements IVariableDeclaration
 {
 	use IVariableDeclarationTrait;
 	const KIND = 'parameter_declaration';
+
+	public $is_referenced;
 }
 

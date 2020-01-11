@@ -120,16 +120,16 @@ trait TeaSharpTrait
 	{
 		// #expect var0 Type0, var1 Type1, ...
 
-		$items[] = $this->read_expect_parameter_declaration();
+		$items[] = $this->read_expect_parameter();
 
 		while ($this->skip_comma()) {
-			$items[] = $this->read_expect_parameter_declaration();
+			$items[] = $this->read_expect_parameter();
 		}
 
 		return $this->factory->create_program_expection(...$items);
 	}
 
-	protected function read_expect_parameter_declaration()
+	protected function read_expect_parameter()
 	{
 		$name = $this->scan_token_ignore_space();
 

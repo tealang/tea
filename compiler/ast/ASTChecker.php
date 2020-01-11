@@ -1118,6 +1118,9 @@ class ASTChecker
 			case RegularExpression::KIND:
 				$infered_type = $this->infer_regular_expression($node);
 				break;
+			case ReferenceOperation::KIND:
+				$infered_type = $this->infer_expression($node->identifier);
+				break;
 			// case RelayExpression::KIND:
 			// 	$infered_type = $this->infer_relay_expression($node);
 			// 	break;
@@ -1302,6 +1305,9 @@ class ASTChecker
 			return $infered_type === TypeFactory::$_uint
 				? TypeFactory::$_int
 				: $infered_type;
+		}
+		elseif ($node->operator === OperatorFactory::$_reference) {
+			return $infered_type;
 		}
 		elseif ($node->operator === OperatorFactory::$_bitwise_not) {
 			return $infered_type === TypeFactory::$_uint || $infered_type === TypeFactory::$_int || $infered_type === TypeFactory::$_float
@@ -1578,7 +1584,7 @@ class ASTChecker
 			if (is_numeric($key)) {
 				$parameter = $parameters[$key] ?? null;
 				if (!$parameter) {
-					throw $this->new_syntax_error("Argument $key does not matched parameter in declaration of '{$src_callee_declar->name}'.", $argument);
+					throw $this->new_syntax_error("Argument $key does not matched parameter defined in '{$src_callee_declar->name}'.", $argument);
 				}
 
 				$idx = $key;
@@ -1586,6 +1592,14 @@ class ASTChecker
 			else {
 				$used_arg_names = true;
 				list($idx, $parameter) = $this->require_parameter_by_name($key, $parameters, $node->callee);
+			}
+
+			if ($parameter->is_referenced) {
+				if ($argument instanceof ILiteral
+					|| (!$argument->symbol->declaration instanceof VariableDeclaration
+						&& !$argument->symbol->declaration instanceof KeyAccessing)) {
+					throw $this->new_syntax_error("Argument $key is invalid for the referenced parameter defined in '{$src_callee_declar->name}'.", $argument);
+				}
 			}
 
 			// check type is match

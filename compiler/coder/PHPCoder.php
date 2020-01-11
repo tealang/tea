@@ -461,6 +461,9 @@ class PHPCoder extends TeaCoder
 	public function render_parameter_declaration(ParameterDeclaration $node)
 	{
 		$expr = $this->add_variable_prefix($node->name);
+		if ($node->is_referenced) {
+			$expr = _REFERENCE . $expr;
+		}
 
 		if ($node->type) {
 			$type = $node->type->render($this);
@@ -1029,9 +1032,10 @@ class PHPCoder extends TeaCoder
 		$items = [];
 		foreach ($nodes as $arg) {
 			if ($arg) {
-				if ($arg instanceof Parentheses) {
-					$arg = $arg->expression;
-				}
+				// // do not need & in PHP scripts
+				// if ($arg instanceof ReferenceOperation) {
+				// 	$arg = $arg->identifier;
+				// }
 
 				$item = $arg->render($this);
 			}

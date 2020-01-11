@@ -44,8 +44,7 @@ class BinaryOperation extends BaseBinaryOperation
 {
 	const KIND = 'binary_operation';
 
-	public function __construct(OperatorSymbol $operator, IExpression $left, IExpression $right)
-	{
+	public function __construct(OperatorSymbol $operator, IExpression $left, IExpression $right) {
 		$this->operator = $operator;
 		$this->left = $left;
 		$this->right = $right;
@@ -59,10 +58,20 @@ class PrefixOperation extends Node implements IExpression
 	public $operator;
 	public $expression;
 
-	public function __construct(OperatorSymbol $operator, IExpression $expression)
-	{
+	public function __construct(OperatorSymbol $operator, IExpression $expression) {
 		$this->operator = $operator;
 		$this->expression = $expression;
+	}
+}
+
+class ReferenceOperation extends Node implements IExpression
+{
+	const KIND = 'reference_operation';
+
+	public $identifier;
+
+	public function __construct(Identifiable $identifier) {
+		$this->identifier = $identifier;
 	}
 }
 
