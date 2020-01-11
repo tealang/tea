@@ -44,8 +44,22 @@ public NL = "\n"
 #php intval(val) Int
 #php floatval(val) Float
 #php boolval(val) Bool
+
 public uintval(val) UInt {
 	return val as UInt
+}
+
+public uint_ensure(num Int) {
+	if num < 0 {
+		throw ErrorException('Cannot use $num as a UInt value.')
+	}
+
+	return num
+}
+
+#php is_int(val) Bool
+public is_uint(val) Bool {
+	return is_int(val) and val >= 0
 }
 
 // math
@@ -53,11 +67,6 @@ public uintval(val) UInt {
 #php round(val, precision = 0) Float
 #php ceil(val) Float
 #php floor(val) Float
-
-#php is_int(val) Bool
-public is_uint(val) Bool {
-	return is_int(val) and val >= 0
-}
 
 // string
 #php trim(str, char_mask String = #default) String

@@ -11,7 +11,7 @@ $uint_num = 123;
 $int_num = 123;
 
 $int_from_string = (int)'123';
-$uint_from_string = abs((int)'-123');
+$uint_from_string = uint_ensure((int)'-123');
 
 $str_from_uint = (string)123;
 $str_from_int = (string)-123;

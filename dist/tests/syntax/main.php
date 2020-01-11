@@ -25,10 +25,6 @@ class TeaDemoClass {
 }
 
 // ---------
-echo intval('-123abc'), NL;
-echo uintval('-123abc'), NL;
-echo strlen('-123abc'), NL;
-
 echo "\n***Test for class call:", NL;
 $php_class_demo_object = new PHPClassDemo();
 echo $php_class_demo_object->get_class_name('main1'), NL;
@@ -46,6 +42,10 @@ echo "\n***Test for include:", NL;
 $title = 'include from main1.tea';
 $result = (include UNIT_PATH . 'label-expect.php');
 echo $result, NL;
+
+echo "\n***Test for int/uint convert:", NL;
+echo "'-123abc' convert to int: ", intval('-123abc'), NL;
+echo "'-123abc' convert to uint: ", uintval('-123abc'), NL;
 // ---------
 
 // program end

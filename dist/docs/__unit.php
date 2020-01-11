@@ -13,7 +13,6 @@ const PI = 3.1415926;
 #public
 const ARRAY_CONST = [1, 2];
 
-
 function demo_function1(string $message) {
 	echo 'this function can only be called by local unit', NL;
 }

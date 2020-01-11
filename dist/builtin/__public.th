@@ -45,6 +45,8 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 
 public uintval(val Any) UInt
 
+public uint_ensure(num Int) Int
+
 #php abs(val Any) Float
 
 #php round(val Any, precision UInt = 0) Float

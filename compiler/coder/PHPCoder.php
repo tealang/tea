@@ -1335,7 +1335,7 @@ class PHPCoder extends TeaCoder
 		$left = $this->render_expression($node->left);
 
 		if ($node->right->name === _UINT) {
-			return "abs((int)$left)";
+			return "uint_ensure((int)$left)";
 		}
 
 		$type_name = static::TYPE_MAP[$node->right->name] ?? null;

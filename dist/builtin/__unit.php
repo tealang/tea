@@ -5,7 +5,15 @@ const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 const NL = "\n";
 
 function uintval($val): int {
-	return abs((int)$val);
+	return uint_ensure((int)$val);
+}
+
+function uint_ensure(int $num): int {
+	if ($num < 0) {
+		throw new \ErrorException('Cannot use ' . $num . ' as a UInt value.');
+	}
+
+	return $num;
 }
 
 function is_uint($val): bool {

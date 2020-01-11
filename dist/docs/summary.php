@@ -141,7 +141,7 @@ $array_merge = array_replace(['A', 'B'], ['A1', 'B1']);
 $dict_merge = array_replace(['a' => 'A', 'b' => 'B'], ['a' => 'A1', 'c' => 'C1']);
 
 $int_from_string = (int)'123';
-$uint_from_string = uintval('-123');
+$uint_from_string = uint_ensure((int)'-123');
 $str_from_uint = (string)123;
 $str_from_int = (string)-123;
 $str_from_float = (string)123.123;
