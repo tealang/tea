@@ -233,8 +233,8 @@ var array_merge = ['A', 'B'] merge ['A1', 'B1'] // result: ['A1', 'B1']
 var dict_merge = ['a': 'A', 'b': 'B'] merge ['a': 'A1', 'c': 'C1'] // result: ['a': 'A1', 'b': 'B', 'c': 'C1']
 
 // as运算符，当用于基础类型时，将进行类型转换
-var int_from_string = '123' as Int  // 相当于PHP中 (int)'123'
-var uint_from_string = '-123' as UInt  // 相当于PHP中 abs('-123')
+var uint_from_non_negative_string = '123' as UInt  // okay
+// var uint_from_negative_string = '-123' as UInt  // error
 var str_from_uint = 123 as String
 var str_from_int = -123 as String
 var str_from_float = 123.123 as String

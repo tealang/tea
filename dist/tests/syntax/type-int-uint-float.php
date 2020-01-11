@@ -1,6 +1,8 @@
 <?php
 namespace tea\tests\syntax;
 
+require_once __DIR__ . '/__unit.php';
+
 // ---------
 $num1 = 123456;
 $num2 = -123456;

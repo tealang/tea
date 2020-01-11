@@ -1,6 +1,8 @@
 <?php
 namespace tea\tests\syntax;
 
+require_once __DIR__ . '/__unit.php';
+
 // ---------
 $arr = [
 	"k1" => "hi",

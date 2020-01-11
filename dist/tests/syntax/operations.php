@@ -4,6 +4,8 @@ namespace tea\tests\syntax;
 use ErrorException;
 use Exception;
 
+require_once __DIR__ . '/__unit.php';
+
 // ---------
 $some = 'abc' . (1 + (2 & 2) * 2 ** 3 / 5 % 6);
 
