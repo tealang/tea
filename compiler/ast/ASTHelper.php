@@ -32,5 +32,31 @@ class ASTHelper
 
 		return $identifier;
 	}
+
+	static function is_assignable_expression(IExpression $expr)
+	{
+		if ($expr instanceof Identifiable && $expr->is_assignable()) {
+			return true;
+		}
+
+		if ($expr instanceof KeyAccessing && self::is_value_mutable($expr->left)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	static function is_value_mutable(IExpression $expr)
+	{
+		if ($expr instanceof Identifiable && $expr->is_value_mutable()) {
+			return true;
+		}
+
+		if ($expr instanceof KeyAccessing && self::is_value_mutable($expr->left)) {
+			return true;
+		}
+
+		return false;
+	}
 }
 

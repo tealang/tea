@@ -1015,9 +1015,6 @@ class PHPCoder extends TeaCoder
 		$arguments = $this->render_arguments($arguments);
 
 		if ($node->is_class_new()) {
-			if (is_array($callee)) {
-				dump($node->callee);exit;
-			}
 			return "new {$callee}($arguments)";
 		}
 		else {
@@ -1032,11 +1029,6 @@ class PHPCoder extends TeaCoder
 		$items = [];
 		foreach ($nodes as $arg) {
 			if ($arg) {
-				// // do not need & in PHP scripts
-				// if ($arg instanceof ReferenceOperation) {
-				// 	$arg = $arg->identifier;
-				// }
-
 				$item = $arg->render($this);
 			}
 			else {

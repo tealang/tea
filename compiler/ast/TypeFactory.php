@@ -87,10 +87,6 @@ class TypeFactory
 			return true;
 		}
 
-		if ($type->symbol === null) {
-			dump($type);exit;
-		}
-
 		return $type->symbol->declaration->is_same_or_based_with_symbol(self::$_iterator_interface_symbol);
 	}
 

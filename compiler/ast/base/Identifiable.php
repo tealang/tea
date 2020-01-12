@@ -31,6 +31,18 @@ abstract class Identifiable extends Node implements IExpression, ICallee, IAssig
 	{
 		return $this->symbol->declaration->unit;
 	}
+
+	public function is_assignable()
+	{
+		$declaration = $this->symbol->declaration;
+		return $declaration instanceof IVariableDeclaration && $declaration->is_assignable;
+	}
+
+	public function is_value_mutable()
+	{
+		$declaration = $this->symbol->declaration;
+		return $declaration instanceof IVariableDeclaration && $declaration->is_mutable;
+	}
 }
 
 class AccessingIdentifier extends Identifiable

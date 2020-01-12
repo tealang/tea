@@ -98,6 +98,7 @@ const __AUTOLOADS = [
 	'tea\tests\syntax\Test3' => 'class.php',
 	'tea\tests\syntax\Test4' => 'class.php',
 	'tea\tests\syntax\Test5' => 'class.php',
+	'tea\tests\syntax\Data' => 'function.php',
 	'tea\tests\syntax\TeaDemoClass' => 'main.php',
 	'tea\tests\syntax\CollectorDemo' => 'type-collector.php',
 	'tea\tests\syntax\CollectorDemoFactory' => 'type-collector.php',

@@ -17,9 +17,9 @@ trait IVariableDeclarationTrait
 
 	public $value;
 
-	public $is_assignable;
+	public $is_assignable = true;
 
-	public $is_mutable;
+	public $is_mutable = true;
 
 	public function __construct(string $name, IType $type = null, IExpression $value = null, bool $is_assignable = false)
 	{
@@ -42,6 +42,8 @@ class VariableDeclaration extends Node implements IVariableDeclaration, IStateme
 class SuperVariableDeclaration extends VariableDeclaration implements IRootDeclaration
 {
 	const KIND = 'super_variable_declaration';
+
+	public $is_assignable = false;
 }
 
 class ParameterDeclaration extends Node implements IVariableDeclaration

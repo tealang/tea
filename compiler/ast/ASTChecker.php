@@ -1005,6 +1005,10 @@ class ASTChecker
 			}
 		}
 
+		if (!ASTHelper::is_assignable_expression($master)) {
+			throw $this->new_syntax_error("Invalid expression to assign.", $master);
+		}
+
 		if ($infered_type === null) {
 			throw $this->new_syntax_error("The return type is Void, cannot as a value.", $node->value);
 		}
@@ -1127,10 +1131,6 @@ class ASTChecker
 			default:
 				$kind = $node::KIND;
 				throw $this->new_syntax_error("Unknow expression kind: '{$kind}'.", $node);
-		}
-
-		if (isset($node->name) && $node->name === 'a_function') {
-			dump($node);exit;
 		}
 
 		return $infered_type;
@@ -1544,7 +1544,7 @@ class ASTChecker
 	{
 		$callee_declar = $src_callee_declar = $node->callee->symbol->declaration;
 
-		// for ParameterDeclaration
+		// for variable
 		if ($callee_declar instanceof IVariableDeclaration) {
 			$callee_declar = $callee_declar->type;
 		}
@@ -1553,22 +1553,15 @@ class ASTChecker
 			$callee_declar = $this->require_construct_declaration_for_class($callee_declar, $node);
 		}
 
-		if ($callee_declar === null) {
-			$parameters = [];
-		}
-		elseif ($callee_declar === ASTFactory::$virtual_property_for_any || $callee_declar === TypeFactory::$_callable) {
+		if ($callee_declar === ASTFactory::$virtual_property_for_any || $callee_declar === TypeFactory::$_callable) {
 			foreach ($node->arguments as $argument) {
 				$this->infer_expression($argument);
 			}
 
 			return; // ignore check parameters for type Any
 		}
-		elseif (isset($callee_declar->parameters)) {
-			$parameters = $callee_declar->parameters;
-		}
 		else {
-			dump($callee_declar);exit;
-			$parameters = [];
+			$parameters = $callee_declar->parameters ?? [];
 		}
 
 		$arguments = $node->arguments;
@@ -1594,14 +1587,6 @@ class ASTChecker
 				list($idx, $parameter) = $this->require_parameter_by_name($key, $parameters, $node->callee);
 			}
 
-			if ($parameter->is_referenced) {
-				if ($argument instanceof ILiteral
-					|| (!$argument->symbol->declaration instanceof VariableDeclaration
-						&& !$argument->symbol->declaration instanceof KeyAccessing)) {
-					throw $this->new_syntax_error("Argument $key is invalid for the referenced parameter defined in '{$src_callee_declar->name}'.", $argument);
-				}
-			}
-
 			// check type is match
 			$infered_type = $this->infer_expression($argument);
 			if (!$parameter->type->is_accept_type($infered_type)) {
@@ -1615,6 +1600,12 @@ class ASTChecker
 				}
 
 				throw $this->new_syntax_error("Type of argument $key does not matched the parameter for '{$callee_name}', expected '{$expected_type_name}', supplied '{$infered_type_name}'.", $argument);
+			}
+
+			if ($parameter->is_referenced) {
+				if (!ASTHelper::is_assignable_expression($argument)) {
+					throw $this->new_syntax_error("Argument $key is invalid for the referenced parameter defined in '{$src_callee_declar->name}'.", $argument);
+				}
 			}
 
 			$normalizeds[$idx] = $argument;

@@ -70,9 +70,6 @@ abstract class BaseType extends Node implements IType {
 	}
 
 	public function is_accept_type(IType $type) {
-		if ($this->symbol === null) {
-			dump($this);exit;
-		}
 		return $type === $this
 			|| $type === TypeFactory::$_none
 			|| in_array($type->name, static::ACCEPT_TYPES, true)

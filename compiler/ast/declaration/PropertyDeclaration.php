@@ -9,15 +9,13 @@
 
 namespace Tea;
 
-class PropertyDeclaration extends Node implements IClassMemberDeclaration
+class PropertyDeclaration extends Node implements IClassMemberDeclaration, IVariableDeclaration
 {
-	use DeclarationTrait;
+	use IVariableDeclarationTrait;
 
 	const KIND = 'property_declaration';
 
 	public $modifier;
-
-	public $value;
 
 	public $is_static;
 

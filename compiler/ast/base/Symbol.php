@@ -24,10 +24,10 @@ class Symbol
 		$this->declaration = $declaration;
 	}
 
-	public function is_assignable()
-	{
-		return $this->declaration instanceof IVariableDeclaration && $this->declaration->is_assignable;
-	}
+	// public function is_assignable()
+	// {
+	// 	return $this->declaration instanceof IVariableDeclaration && $this->declaration->is_assignable;
+	// }
 }
 
 class NamespaceSymbol extends Symbol
@@ -42,9 +42,9 @@ class NamespaceSymbol extends Symbol
 		$this->declaration = $declaration;
 	}
 
-	public function is_assignable()
-	{
-		return false;
-	}
+	// public function is_assignable()
+	// {
+	// 	return false;
+	// }
 }
 

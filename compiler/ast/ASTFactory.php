@@ -193,7 +193,7 @@ class ASTFactory
 	{
 		if ($assignable instanceof PlainIdentifier) {
 			if ($assignable->symbol) {
-				if (!$assignable->symbol->is_assignable()) {
+				if (!$assignable->is_assignable()) {
 					throw $this->parser->new_exception("Cannot assign to non-assignable item '{$assignable->name}'.");
 				}
 			}
@@ -433,7 +433,7 @@ class ASTFactory
 		// do not need enter_block() here
 
 		$this->create_global_symbol($declaration);
-		if ($declaration->super_block) {dump($declaration->super_block);exit;}
+
 		return $declaration;
 	}
 
