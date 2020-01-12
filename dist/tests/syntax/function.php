@@ -11,7 +11,8 @@ class Data {
 
 // ---------
 $a_function = 'tea\tests\syntax\fn0';
-$a_function('some');
+$a_string = "string";
+$a_function('call with callable type');
 
 fn1('tea\tests\syntax\fn0');
 fn1(function ($str) {

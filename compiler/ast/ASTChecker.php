@@ -985,8 +985,12 @@ class ASTChecker
 	private function check_assignment(IAssignment $node)
 	{
 		$infered_type = $this->infer_expression($node->value);
-		$master = $node->master;
 
+		if ($infered_type === TypeFactory::$_void) {
+			throw $this->new_syntax_error("Cannot use the Void type as a value.", $node->value);
+		}
+
+		$master = $node->master;
 		if ($master instanceof KeyAccessing) {
 			// just like: items['abc'] = 123
 			$master_type = $this->infer_key_accessing($master); // it should be not null
@@ -998,22 +1002,19 @@ class ASTChecker
 			else {
 				$master_type = $this->infer_expression($master);
 			}
-
-			if (!$master_type) {
-				$master->symbol->declaration->type = $infered_type;
-				return ;
-			}
 		}
 
 		if (!ASTHelper::is_assignable_expression($master)) {
 			throw $this->new_syntax_error("Invalid expression to assign.", $master);
 		}
 
-		if ($infered_type === null) {
-			throw $this->new_syntax_error("The return type is Void, cannot as a value.", $node->value);
+		if ($master_type) {
+			$this->assert_type_compatible($master_type, $infered_type, $node->value);
 		}
-
-		$this->assert_type_compatible($master_type, $infered_type, $node->value);
+		else {
+			// just for the undeclared var
+			$master->symbol->declaration->type = $infered_type;
+		}
 	}
 
 	private function infer_expression(IExpression $node): ?IType
@@ -1542,29 +1543,37 @@ class ASTChecker
 
 	private function check_call_arguments(CallExpression $node)
 	{
-		$callee_declar = $src_callee_declar = $node->callee->symbol->declaration;
+		$src_callee_declar = $node->callee->symbol->declaration;
 
-		// for variable
-		if ($callee_declar instanceof IVariableDeclaration) {
-			$callee_declar = $callee_declar->type;
+		// if is a variable, use it's type decalartion
+		if ($src_callee_declar instanceof IVariableDeclaration) {
+			$callee_declar = $src_callee_declar->type;
+		}
+		else {
+			$callee_declar = $src_callee_declar;
 		}
 
-		if ($callee_declar instanceof ClassDeclaration) {
-			$callee_declar = $this->require_construct_declaration_for_class($callee_declar, $node);
-		}
-
-		if ($callee_declar === ASTFactory::$virtual_property_for_any || $callee_declar === TypeFactory::$_callable) {
-			foreach ($node->arguments as $argument) {
+		$arguments = $node->arguments;
+		if ($callee_declar === TypeFactory::$_any || $callee_declar === TypeFactory::$_callable) {
+			foreach ($arguments as $argument) {
 				$this->infer_expression($argument);
 			}
 
 			return; // ignore check parameters for type Any
 		}
-		else {
-			$parameters = $callee_declar->parameters ?? [];
+
+		// if is a class, use it's construct declaration
+		if ($callee_declar instanceof ClassDeclaration) {
+			$callee_declar = $this->require_construct_declaration_for_class($callee_declar, $node);
+			if ($callee_declar === null) {
+				if ($arguments) {
+					throw $this->new_syntax_error("Cannot use arguments to create a non-construct class instance.", $argument);
+				}
+				return;
+			}
 		}
 
-		$arguments = $node->arguments;
+		$parameters = $callee_declar->parameters;
 
 		// the -> style callbacks
 		if ($node->callbacks) {

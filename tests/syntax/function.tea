@@ -5,7 +5,9 @@ public fn0(str) {
 }
 
 var a_function = fn0
-a_function('some')
+var a_string = "string"
+a_function('call with callable type')  	// okay
+// a_string('call with string type')  		// error
 
 internal fn1(callee Callable) {
 	var unknow_type_value Any = callee('hei')
