@@ -59,9 +59,9 @@ class DemoPublicClass extends DemoBaseClass implements IDemo, DemoInterface {
 }
 
 // ---------
-echo "世界你好！", NL;
+echo "Hello, 世界", NL;
 
-echo 'Hey,', 'Who are you?', NL;
+echo 'Hi,', 'How are you?', NL;
 
 echo 'string1', 'string2', NL;
 
