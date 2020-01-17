@@ -39,11 +39,11 @@ class Fib implements IFib {
 		}
 
 		$temp = $this->current;
-		$this->current = $this->previous + $this->current;
+		$this->current += $this->previous;
 		$this->previous = $temp;
 		$this->current_index += 1;
 
-		return $this->previous;
+		return $temp;
 	}
 }
 

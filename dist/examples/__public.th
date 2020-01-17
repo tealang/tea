@@ -31,4 +31,10 @@ public SQLitePDO: PDO {
 
 #php pi() Float
 
+public ListView: IBaseView {
+	get_subviews() Array
+
+	render() XView
+}
+
 // program end

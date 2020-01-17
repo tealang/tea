@@ -70,7 +70,10 @@ const __AUTOLOADS = [
 	'tea\examples\IFib' => 'fib_with_class.php',
 	'tea\examples\IFibTrait' => 'fib_with_class.php',
 	'tea\examples\Fib' => 'fib_with_class.php',
-	'tea\examples\SQLitePDO' => 'pdo_sqlite.php'
+	'tea\examples\SQLitePDO' => 'pdo_sqlite.php',
+	'tea\examples\IBaseView' => 'view.php',
+	'tea\examples\IBaseViewTrait' => 'view.php',
+	'tea\examples\ListView' => 'view.php'
 ];
 
 spl_autoload_register(function ($class) {

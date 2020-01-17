@@ -148,8 +148,15 @@ trait TeaStringTrait
 		}
 
 		if ($this->get_token() === _DOT) {
+			$temp_pos = $this->pos;
 			$this->scan_token(); // skip the dot
-			$identifer = $this->try_read_identifier_expression($identifer);
+			$new_identifer = $this->try_read_identifier_expression($identifer);
+			if ($new_identifer === null) {
+				$this->pos = $temp_pos;
+			}
+			else {
+				$identifer = $new_identifer;
+			}
 		}
 
 		$identifer->pos = $this->pos;
