@@ -8,6 +8,8 @@ $num = 123;
 $str = "hello ";
 $key = "f3";
 
+echo strlen("some string"), NL;
+
 $str = trim($str);
 
 echo $str, NL;

@@ -5,14 +5,13 @@ internal say_hello(name = 'World') {
 
 say_hello()
 
-internal set_field(key String, value String, dict Dict) {
+internal set_field(key String, value String, &dict Dict) {
 	dict[key] = value
-	return dict
 }
 
 var dict = [:]
-dict = set_field('the key', 'the value', dict)
-var_dump(dict)
+set_field('the key', 'the value', dict)
+var_dump(dict)  // ['the key': 'the value']
 
 internal show_file_path(filename String = none) {
 	if filename === none {

@@ -7,7 +7,17 @@ $super_path = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR; // the workspace/vendor
 require_once $super_path . 'tea/dist/builtin/__unit.php'; // the builtins
 
 #internal
+const NUM = 10;
+#internal
 const MIN_FLOAT = 1.11e-16;
+
+function factorial(int $n): int {
+	if ($n > 1) {
+		return $n * factorial($n - 1);
+	}
+
+	return 1;
+}
 
 function fib_with_closure(): callable {
 	$a = 0;
@@ -34,12 +44,11 @@ function fib_with_generator(int $num = 9): \Generator {
 }
 
 function say_hello(string $name = 'World') {
-	echo 'Hello, $name!', NL;
+	echo 'Hello, ' . $name . '!', NL;
 }
 
-function set_field(string $key, string $value, array $dict): array {
+function set_field(string $key, string $value, array &$dict) {
 	$dict[$key] = $value;
-	return $dict;
 }
 
 function show_file_path(string $filename = null) {

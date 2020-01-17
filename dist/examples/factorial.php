@@ -4,13 +4,7 @@ namespace tea\examples;
 require_once __DIR__ . '/__unit.php';
 
 // ---------
-say_hello();
-
-$dict = [];
-set_field('the key', 'the value', $dict);
-var_dump($dict);
-
-show_file_path();
+echo NUM . '! = ' . factorial(NUM), NL;
 // ---------
 
 // program end

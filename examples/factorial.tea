@@ -1,0 +1,13 @@
+#main
+
+internal factorial(n UInt) UInt {
+	if n > 1 {
+		return n * factorial(n - 1)
+	}
+
+	return 1
+}
+
+internal NUM = 10
+echo '$NUM! = ${factorial(NUM)}'
+
