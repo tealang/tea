@@ -4,8 +4,10 @@
 echo "Hello，世界！"
 ```
 
-Tea:
+## 示例
+
 ```Tea
+// Tea
 var days = ['Monday', 'Tuesday', 'Wednesday']
 var items String.Array = []   // supported declaring with a Type
 for i, day in days {
@@ -14,9 +16,9 @@ for i, day in days {
 echo items.join(', ')
 ```
 
-PHP:
 ```PHP
 <?php
+// PHP
 $days = ['Monday', 'Tuesday', 'Wednesday'];
 $items = [];  	// do not supported declaring with a Type
 foreach ($days as $i => $day) {
@@ -25,8 +27,8 @@ foreach ($days as $i => $day) {
 echo implode(', ', $items), "\n";
 ```
 
-JavaScript:
 ```javascript
+// JavaScript(ES2015)
 let days = ['Monday', 'Tuesday', 'Wednesday']
 let items = []   // do not supported declaring with a Type
 for (i = 0; i < days.length; i++) {
