@@ -4,14 +4,14 @@
 echo "Hello，世界！"
 ```
 
-## 示例
+## 简单示例
 
 ```Tea
 // Tea
 var days = ['Monday', 'Tuesday', 'Wednesday']
-var items String.Array = []   // supported declaring with a Type
+var items String.Array = []   	// supported declaring with a Type
 for i, day in days {
-	items[] = "${i + 1}: $day"   // supported all expression interpolation
+	items[] = "${i + 1}: $day"  // supported all expression interpolations
 }
 echo items.join(', ')
 ```
@@ -22,7 +22,7 @@ echo items.join(', ')
 $days = ['Monday', 'Tuesday', 'Wednesday'];
 $items = [];  	// do not supported declaring with a Type
 foreach ($days as $i => $day) {
-	$items[] = ($i + 1) . ": {$day}";  // do not supported operation/const/function/class interpolation
+	$items[] = ($i + 1) . ": {$day}";  // do not supported operation/const/function/class interpolations
 }
 echo implode(', ', $items), "\n";
 ```
@@ -33,7 +33,7 @@ let days = ['Monday', 'Tuesday', 'Wednesday']
 let items = []   // do not supported declaring with a Type
 for (i = 0; i < days.length; i++) {
 	let day = days[i]
-	items.push(`${i + 1}: ${day}`)  // do not supported interpolation on version < ES2015
+	items.push(`${i + 1}: ${day}`)  // do not supported interpolations on version < ES2015
 }
 console.log(items.join(', '))
 ```
