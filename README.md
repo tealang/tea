@@ -1,17 +1,17 @@
 # Tea语言 (Tealang)
 
 ```Tea
-echo "Hello，世界！"
+echo "Hello, 世界"
 ```
 
-## 简单示例
+## 示例对比
 
 ```Tea
 // Tea
 var days = ['Monday', 'Tuesday', 'Wednesday']
 var items String.Array = []   	// supported declaring with a Type
 for i, day in days {
-	items[] = "${i + 1}: $day"  // supported all expression interpolations
+	items[] = "${i + 1}: $day"  // the Interpolation supports all expressions
 }
 echo items.join(', ')
 ```
@@ -22,7 +22,7 @@ echo items.join(', ')
 $days = ['Monday', 'Tuesday', 'Wednesday'];
 $items = [];  	// do not supported declaring with a Type
 foreach ($days as $i => $day) {
-	$items[] = ($i + 1) . ": {$day}";  // do not supported operation/const/function/class interpolations
+	$items[] = ($i + 1) . ": {$day}";  // the Interpolation only supported variable / array value / object property
 }
 echo implode(', ', $items), "\n";
 ```
@@ -33,7 +33,7 @@ let days = ['Monday', 'Tuesday', 'Wednesday']
 let items = []   // do not supported declaring with a Type
 for (i = 0; i < days.length; i++) {
 	let day = days[i]
-	items.push(`${i + 1}: ${day}`)  // do not supported interpolations on version < ES2015
+	items.push(`${i + 1}: ${day}`)  // the Interpolation do not supported on version < ES2015
 }
 console.log(items.join(', '))
 ```
