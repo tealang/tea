@@ -6,6 +6,9 @@ use Exception;
 
 require_once __DIR__ . '/__unit.php';
 
+#internal
+const PI = 3.1415926;
+
 // ---------
 $some = 'abc' . (1 + (2 & 2) * 2 ** 3 / 5 % 6);
 

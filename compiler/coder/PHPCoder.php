@@ -131,8 +131,12 @@ class PHPCoder extends TeaCoder
 		$constants = [];
 		$functions = [];
 		foreach ($normal_programs as $program) {
-			// 将所有常量和函数生成到头文件中
+			// render the Unit level functions & constants to __unit.php
 			foreach ($program->declarations as $declaration) {
+				if (!$declaration->is_unit_level) {
+					continue;
+				}
+
 				if ($declaration instanceof ConstantDeclaration) {
 					$item = $declaration->render($this);
 					if ($item !== null) {
@@ -193,17 +197,17 @@ class PHPCoder extends TeaCoder
 			}
 		}
 
-		foreach ($program->declarations as $node) {
-			if ($node instanceof ExpectDeclaration) {
-				$item = $node->render($this);
-				$items[] = $item . NL;
-			}
-		}
+		// foreach ($program->declarations as $node) {
+		// 	if ($node instanceof ExpectDeclaration) {
+		// 		$item = $node->render($this);
+		// 		$items[] = $item . NL;
+		// 	}
+		// }
 
 		// 生成定义，使用了trait的类，必须放在文件的前面，否则执行时提示找不到
 		foreach ($program->declarations as $node) {
 			// 常量和函数都生成到了__unit.php中
-			if ($node instanceof ClassLikeDeclaration) {
+			if (!$node->is_unit_level || $node instanceof ClassLikeDeclaration) {
 				$item = $node->render($this);
 				$item === null || $items[] = $item . NL;
 			}

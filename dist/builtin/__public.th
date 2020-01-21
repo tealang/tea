@@ -143,6 +143,8 @@ public _dict_search(master Dict, search Any) String
 
 #php array_key_exists(key Any, arr Dict) Bool
 
+public array_last_index(array Array) UInt
+
 #php unset(target Any)
 
 #php array_keys(array Dict) Array
@@ -160,6 +162,8 @@ public _dict_search(master Dict, search Any) String
 #php preg_match_all(regex Regex, subject String, &matches Array = #default, flags Int = #default, offset Int = #default) Bool
 
 #php preg_split(regex Regex, subject String, limit Int = #default, flags Int = #default) Array
+
+public regex_test(regex Regex, subject String) Bool
 
 public regex_match(regex Regex, subject String) String.Array
 
@@ -228,6 +232,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 
 #tea Array {
 	masked length UInt
+	masked end UInt
 	masked has_value(val Any) Bool
 	masked find(val Any) Int
 	masked copy(start Int, length UInt = #default) Array
@@ -255,6 +260,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 }
 
 #tea Regex {
+	masked test(text String) Bool
 	masked match(text String) String.Array
 	masked matches(text String) String.Array.Array
 	masked split(text String) String.Array

@@ -3,6 +3,9 @@ namespace tea\examples;
 
 require_once __DIR__ . '/__unit.php';
 
+#internal
+const MIN_FLOAT = 1.11e-16;
+
 // ---------
 $computed_pi = 2.0;
 $tmp = 2.0;

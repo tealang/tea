@@ -39,7 +39,10 @@ trait DeclarationTrait {
 	 */
 	public $symbol;
 
-	public $checked; // set true when checked by ASTChecker
+	public $checked = false; // set true when checked by ASTChecker
+
+	// public or used by other programs
+	public $is_unit_level = false;
 }
 
 class RootDeclaration extends Node implements IRootDeclaration, IStatement

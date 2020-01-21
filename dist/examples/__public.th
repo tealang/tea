@@ -4,10 +4,6 @@
 
 public M_PI Float
 
-public fib_closure() () UInt
-
-public fib_generator(num UInt = 9) GeneratorInterface
-
 #php PDOStatement {
 	fetch(fetch_style Int = #default) String.Dict
 	fetchAll(fetch_style Int = #default) String.Dict.Array

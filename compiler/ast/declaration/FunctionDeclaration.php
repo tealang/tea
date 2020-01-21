@@ -49,6 +49,10 @@ class FunctionDeclaration extends BaseBlock implements IEnclosingBlock, IFunctio
 
 	function __construct(?string $modifier, string $name, ?IType $type, ?array $parameters)
 	{
+		if ($modifier !== null && $modifier === _PUBLIC) {
+			$this->is_unit_level = true;
+		}
+
 		$this->modifier = $modifier;
 		$this->name = $name;
 		$this->type = $type;

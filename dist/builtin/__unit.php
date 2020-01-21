@@ -54,6 +54,14 @@ function _dict_search(array $master, $search): string {
 	return $key === false ? null : $key;
 }
 
+function array_last_index(array $array): int {
+	return count($array) - 1;
+}
+
+function regex_test(string $regex, string $subject): bool {
+	return preg_match($regex, $subject) ? true : false;
+}
+
 function regex_match(string $regex, string $subject): array {
 	$matches = null;
 	$count = preg_match($regex, $subject, $matches);

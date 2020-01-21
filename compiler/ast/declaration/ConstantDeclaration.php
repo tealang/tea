@@ -21,6 +21,10 @@ trait IConstantDeclarationTrait
 
 	public function __construct(?string $modifier, string $name, ?BaseType $type, ?IExpression $value)
 	{
+		if ($modifier !== null && $modifier === _PUBLIC) {
+			$this->is_unit_level = true;
+		}
+
 		$this->modifier = $modifier;
 		$this->name = $name;
 		$this->type = $type;

@@ -11,23 +11,8 @@ require_once $super_path . 'tea/dist/builtin/__unit.php'; // the builtins
 require_once $super_path . 'tea/dist/tests/xview/__unit.php';
 require_once $super_path . 'tea/tests/PHPDemoUnit/__unit.php';
 
-#internal
-const PI = 3.1415926;
-
 function fn0($str) {
 	echo $str, NL;
-}
-
-function fn1(callable $callee) {
-	$unknow_type_value = $callee('hei');
-}
-
-function fn2(int &$n) {
-	$n += 1;
-}
-
-function fn3($some, callable $done, callable $error = null): string {
-	return $done('A cool man') . ' with ' . $some;
 }
 
 function xrange(int $start, int $stop, int $step = 1): \Generator {
@@ -52,36 +37,6 @@ function xrange(int $start, int $stop, int $step = 1): \Generator {
 		yield $i;
 		$i += $step;
 	}
-}
-
-function new_collector_demo(): CollectorDemo {
-	return new CollectorDemo();
-}
-
-function collector1(): array {
-	$__collects = [];
-	$__collects[] = '<div>hei~</div>';
-
-	new CollectorDemo();
-
-	(new CollectorDemo())->subnode->text('red')->subnode = new_collector_demo();
-
-	$abc = new CollectorDemo();
-
-	$factory = new CollectorDemoFactory();
-
-	new_collector_demo();
-	$factory->new_collector_demo();
-
-	if (1) {
-		(new CollectorDemo())->text('red')->subnode->text('hei~');
-	}
-
-	foreach ([1, 2, 3] as $item) {
-		(new CollectorDemo())->subnode->text('hello');
-	}
-
-	return $__collects;
 }
 
 

@@ -3,6 +3,25 @@ namespace tea\examples;
 
 require_once __DIR__ . '/__unit.php';
 
+function say_hello(string $name = 'World') {
+	echo 'Hello, ' . $name . '!', NL;
+}
+
+function set_field(string $key, string $value, array &$dict) {
+	$dict[$key] = $value;
+}
+
+function show_file_path(string $filename = null) {
+	if ($filename === null) {
+		$filename = __FILE__;
+	}
+	else {
+		$filename = realpath($filename);
+	}
+
+	echo $filename, NL;
+}
+
 // ---------
 $days = ['Monday', 'Tuesday', 'Wednesday'];
 $items = [];

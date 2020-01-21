@@ -1943,7 +1943,18 @@ class ASTChecker
 
 	private function get_symbol_in_program(Program $program, string $name)
 	{
-		return $program->symbols[$name] ?? $program->unit->symbols[$name] ?? null;
+		if (isset($program->symbols[$name])) {
+			$symbol = $program->symbols[$name];
+		}
+		elseif (isset($program->unit->symbols[$name])) {
+			$symbol = $program->unit->symbols[$name];
+			$symbol->declaration->is_unit_level = true;
+		}
+		else {
+			$symbol = null;
+		}
+
+		return $symbol;
 	}
 
 	private function require_callee_declaration(ICallee $node): IDeclaration

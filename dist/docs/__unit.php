@@ -6,16 +6,10 @@ const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 $super_path = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR; // the workspace/vendor path
 require_once $super_path . 'tea/dist/builtin/__unit.php'; // the builtins
 
-#internal
-const STRING_CONST = 'abcdefg';
 #public
 const PI = 3.1415926;
 #public
 const ARRAY_CONST = [1, 2];
-
-function demo_function1(string $message) {
-	echo 'this function can only be called by local unit', NL;
-}
 
 function demo_function2(string $message = 'with a default value') {
 	echo 'this function can be called by local or foriegn units', NL;

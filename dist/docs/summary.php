@@ -6,6 +6,13 @@ use ErrorException;
 
 require_once __DIR__ . '/__unit.php';
 
+#internal
+const STRING_CONST = 'abcdefg';
+
+function demo_function1(string $message) {
+	echo 'this function can only be called by local unit', NL;
+}
+
 #public
 interface IDemo {
 	const CONST1 = 'This is a constant!';

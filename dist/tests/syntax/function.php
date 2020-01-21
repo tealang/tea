@@ -3,10 +3,22 @@ namespace tea\tests\syntax;
 
 require_once __DIR__ . '/__unit.php';
 
+function fn1(callable $callee) {
+	$unknow_type_value = $callee('hei');
+}
+
+function fn2(int &$n) {
+	$n += 1;
+}
+
 #internal
 class Data {
 	const ABC = 11;
 	public static $num = 3000;
+}
+
+function fn3($some, callable $done, callable $error = null): string {
+	return $done('A cool man') . ' with ' . $some;
 }
 
 // ---------

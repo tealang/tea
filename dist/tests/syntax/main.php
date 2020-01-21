@@ -45,7 +45,6 @@ echo $result, NL;
 
 echo "\n***Test for int/uint convert:", NL;
 echo "'-123abc' convert to int: ", intval('-123abc'), NL;
-echo "'-123abc' convert to uint: ", uintval('-123abc'), NL;
 // ---------
 
 // program end
