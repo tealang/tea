@@ -4,8 +4,9 @@ namespace tea\examples;
 require_once __DIR__ . '/__unit.php';
 
 // ---------
-foreach (fib_with_generator() as $k => $v) {
-	echo "{$k} ==> {$v}", NL;
+$f = fib_closure();
+for ($i = 0; $i <= 9; $i += 1) {
+	echo "{$i} ==> " . $f(), NL;
 }
 // ---------
 

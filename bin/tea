@@ -15,14 +15,13 @@ namespace Tea;
 define('BASE_PATH', dirname(__DIR__) . '/');
 define('LOG_PATH', BASE_PATH . 'log/');
 
-const DEBUG = 1;
+const DEBUG = false;
 
 const KEY_INIT = 'init';
 const OPTION_KEYS = [KEY_INIT];
 
-const USAGE = 'usage:
-	tea tea/tests/syntax
-	tea --init myproject/hello';
+const USAGE = 'Usage: tea tea/tests/syntax
+Usage: tea --init myproject/hello';
 
 require BASE_PATH . 'compiler/__unit.php';
 

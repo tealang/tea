@@ -15,9 +15,9 @@ namespace Tea;
 define('BASE_PATH', dirname(__DIR__) . '/');
 define('LOG_PATH', BASE_PATH . 'log/');
 
-const DEBUG = 0;
+const DEBUG = false;
 const OPTION_KEYS = ['init'];
-const USAGE = 'usage: genphploader tea/tests/PHPDemoUnit';
+const USAGE = 'Usage: genphploader tea/tests/PHPDemoUnit';
 
 require BASE_PATH . 'compiler/__unit.php';
 

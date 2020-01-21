@@ -49,23 +49,14 @@ class Fib implements IFib {
 
 // ---------
 $fib = new Fib(9);
-$list = [];
 try {
 	while ($fib->has_next()) {
-		$list[] = '<li>' . $fib->get_next() . '</li>';
+		echo $fib->get_next(), NL;
 	}
 }
 catch (\Exception $ex) {
 	echo $ex->getMessage(), NL;
-	exit;
 }
-
-echo '<section>
-	<h1>' . htmlspecialchars(Fib::TITLE, ENT_QUOTES) . '</h1>
-	<ul>
-		' . implode("\n\t\t", $list) . '
-	</ul>
-</section>', NL;
 // ---------
 
 // program end

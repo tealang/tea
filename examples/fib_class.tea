@@ -38,20 +38,11 @@ internal Fib: IFib {
 }
 
 var fib = Fib(9)
-var list XView.Array = []
 while fib.has_next() {
-	list[] = <li>${fib.get_next()}</li>
+	echo fib.get_next()
 }
 catch ex {
 	echo ex.getMessage()
-	exit
 }
-
-echo <section>
-	<h1>#{Fib.TITLE}</h1>
-	<ul>
-		${list.join("\n\t\t")}
-	</ul>
-</section>
 
 // end

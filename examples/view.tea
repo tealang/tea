@@ -1,6 +1,6 @@
 internal IBaseView {
 	protected attributes String.Dict = [:]
-	protected subitems = []  // infer to Any.Array
+	protected subitems = []  // infered to Any.Array
 
 	construct(id String = none) {
 		if id !== none {
@@ -13,7 +13,7 @@ internal IBaseView {
 	}
 
 	set_attribute(key String, value String) {
-		if not /^[a-z][a-z0-9]*$/.test(key) {
+		if not /^[a-z][a-z0-9]*$/i.test(key) {
 			throw Exception("Invalid key '$key'")
 		}
 

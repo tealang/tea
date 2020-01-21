@@ -19,7 +19,7 @@ function factorial(int $n): int {
 	return 1;
 }
 
-function fib_with_closure(): callable {
+function fib_closure(): callable {
 	$a = 0;
 	$b = 1;
 	return function () use(&$b, &$a) {
@@ -30,7 +30,7 @@ function fib_with_closure(): callable {
 	};
 }
 
-function fib_with_generator(int $num = 9): \Generator {
+function fib_generator(int $num = 9): \Generator {
 	$c = null;
 
 	$a = 0;
@@ -67,9 +67,9 @@ function show_file_path(string $filename = null) {
 
 # --- generates ---
 const __AUTOLOADS = [
-	'tea\examples\IFib' => 'fib_with_class.php',
-	'tea\examples\IFibTrait' => 'fib_with_class.php',
-	'tea\examples\Fib' => 'fib_with_class.php',
+	'tea\examples\IFib' => 'fib_class.php',
+	'tea\examples\IFibTrait' => 'fib_class.php',
+	'tea\examples\Fib' => 'fib_class.php',
 	'tea\examples\SQLitePDO' => 'pdo_sqlite.php',
 	'tea\examples\IBaseView' => 'view.php',
 	'tea\examples\IBaseViewTrait' => 'view.php',
