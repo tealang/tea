@@ -99,7 +99,7 @@ Tea语言项目最早开始于19年2月份，主要由创业者Benny设计与开
 - 创建或初始化一个新的Unit，如：
 	
 	```sh
-	php tea/bin/tea --init myproject.com/hello
+	php tea/bin/tea --init myproject/hello
 	```
 
 ## 致谢
