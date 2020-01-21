@@ -24,7 +24,7 @@ echo items.join(', ')
 $days = ['Monday', 'Tuesday', 'Wednesday'];
 $items = [];  	// do not supported type declarations
 foreach ($days as $i => $day) {
-	$items[] = ($i + 1) . ": {$day}";  // only supported variable / array-value / object-property interpolations
+	$items[] = ($i + 1) . ": $day";  // only supported variable / array-value / object-property interpolations
 }
 
 echo implode(', ', $items), "\n";
@@ -48,7 +48,7 @@ Tea语言是一种新的计算机编程语言，采用强规范设计（规范�
 
 Tea语言非常注重语法的友好性，通过对语法进行优化设计，希望开发者可以更轻松自然的编写代码，可以更专注于创意实现。也尽量保持了常用编程语言的语法风格和习惯，以降低学习成本。
 
-Tea语言项目最早开始于19年2月份，主要由创业者Benny设计与开发，潘春孟（高级工程师/架构师）与刘景能（计算机博士）参与了设计与使用。项目初衷主要用于实现自研产品功能和提升团队内部开发效率，最初特性较少，在进行完善和优化后，于19年12月初首次发布开源。
+Tea语言项目最早开始于19年2月份，主要由创业者Benny设计与开发，潘春孟（高级工程师/架构师）与刘景能（计算机博士）参与了设计与使用。项目初衷为用于实现自研产品功能和提升团队内部开发效率，最初特性较少，在完善和优化后，于19年12月初首次发布开源。
 
 ## 语言特性
 
