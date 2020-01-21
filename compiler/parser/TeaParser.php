@@ -1822,6 +1822,10 @@ class TeaParser
 				throw $this->new_exception("The target type for collector should be 'Array'.");
 			}
 
+			if ($type === TypeFactory::$_string || $type === TypeFactory::$_any) {
+				throw $this->new_exception("The type to collect do not supported String or Any.");
+			}
+
 			$type = TypeFactory::create_collector_type($type);
 		}
 

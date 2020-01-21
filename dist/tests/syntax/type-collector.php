@@ -24,10 +24,11 @@ function new_collector_demo(): CollectorDemo {
 function collector1(): array {
 	$__collects = [];
 	$__collects[] = '<div>hei~</div>';
+	$__collects[] = new CollectorDemo();
 
-	new CollectorDemo();
-
-	(new CollectorDemo())->subnode->text('red')->subnode = new_collector_demo();
+	$__tmp0 = new CollectorDemo();
+	$__tmp0->subnode->text('red')->subnode = new_collector_demo();
+	$__collects[] = $__tmp0;
 
 	$abc = new CollectorDemo();
 
@@ -37,11 +38,15 @@ function collector1(): array {
 	$factory->new_collector_demo();
 
 	if (1) {
-		(new CollectorDemo())->text('red')->subnode->text('hei~');
+		$__tmp1 = new CollectorDemo();
+		$__tmp1->text('red')->subnode->text('hei~');
+		$__collects[] = $__tmp1;
 	}
 
 	foreach ([1, 2, 3] as $item) {
-		(new CollectorDemo())->subnode->text('hello');
+		$__tmp2 = new CollectorDemo();
+		$__tmp2->subnode->text('hello');
+		$__collects[] = $__tmp2;
 	}
 
 	return $__collects;

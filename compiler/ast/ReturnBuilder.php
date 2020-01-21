@@ -93,7 +93,8 @@ class ReturnBuilder
 	{
 		$expr = $stmt->expression;
 		if ($expr->callee instanceof PlainIdentifier) {
-			if ($expr->is_class_new() && $expr->callee->is_same_or_based_with($this->collect_type)) {
+			// if ($expr->is_class_new() && $expr->callee->is_same_or_based_with($this->collect_type)) {
+			if ($expr->is_class_new() && $this->collect_type->is_accept_type($expr->callee)) {
 				$this->collecteds++;
 				$fixeds[] = new ArrayElementAssignment($this->vector_identifier, null, $expr);
 				return;
@@ -152,7 +153,7 @@ class ReturnBuilder
 		$hit = null;
 
 		if ($callee instanceof PlainIdentifier) {
-			if ($callee->is_same_or_based_with($this->collect_type)) {
+			if ($this->collect_type->is_accept_type($callee)) {
 				// create a temp variable to insteadof old expression
 				$var_declar = $this->create_local_variable($call);
 				$var_ident = ASTHelper::create_variable_identifier($var_declar);
