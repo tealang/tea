@@ -94,7 +94,14 @@ class ReturnBuilder
 		$expr = $stmt->expression;
 		if ($expr->callee instanceof PlainIdentifier) {
 			// if ($expr->is_class_new() && $expr->callee->is_same_or_based_with($this->collect_type)) {
-			if ($expr->is_class_new() && $this->collect_type->is_accept_type($expr->callee)) {
+			if ($expr->is_class_new()) {
+				if ($this->collect_type->is_accept_type($expr->callee)) {
+					$this->collecteds++;
+					$fixeds[] = new ArrayElementAssignment($this->vector_identifier, null, $expr);
+					return;
+				}
+			}
+			elseif ($this->collect_type->is_accept_type($expr->callee->symbol->declaration->type)) {
 				$this->collecteds++;
 				$fixeds[] = new ArrayElementAssignment($this->vector_identifier, null, $expr);
 				return;
