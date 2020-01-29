@@ -77,7 +77,7 @@ $any = 1;
 $any = [];
 $any = 'abc';
 
-$str_from_any = (string)$any;
+$any_as_string = (string)$any;
 
 $str = 'Unescaped string\n';
 $str = "Escaped string\n";

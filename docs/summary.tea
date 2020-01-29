@@ -61,7 +61,7 @@ any = []
 any = 'abc'
 
 // 将Any类型值转换成String类型
-var str_from_any = any as String
+var any_as_string = any as String
 
 // String
 var str String = 'Unescaped string\n' 	// 单引号字符串，\n\t\r等字符将当作字面字符
@@ -70,12 +70,12 @@ str_with_interpolation = 'Unescaped string with interpolation ${5 * 6}'	// 单�
 str_with_interpolation = "Escaped string with interpolation ${5 * 6}\n"
 
 xss = '<script>alert("XSS!")</script>'
-html_escaped_interpolation = "The html-escaped string: #{xss}" 	// 带#插值的字符串，将转义HTML字符
+html_escaped_interpolation = "The html-escaped string: #{xss}" 	// #插值，将转义HTML字符
 text_labeled = #text "would not process interpolation ${5 * 6}" // 以#text标记的字符串，其中插值表达式将不被处理
 
 // 类似对象一样的调用String伪对象属性或方法
-str.length  // 按原生实现统计的长度（表达称PHP后是strlen）
-str.rune_length  // 按默认字符集统计的字符串长度（表达称PHP后是iconv_strlen）
+str.length  // 按原生实现统计的长度（表达成PHP后是strlen）
+str.rune_length  // 按默认字符集统计的字符串长度（表达成PHP后是iconv_strlen）
 str.copy(0, 3)  // 按原生实现从0开始拷贝长度为3的字符串片段（表达成PHP代码后是substr）
 str.rune_copy(0, 3)  // 按默认字符集从0开始拷贝长度为3的字符串片段（表达成PHP代码后是iconv_substr）
 
