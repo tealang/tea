@@ -57,14 +57,15 @@ dx = bbox[2] + bbox[0]
 dy = abs(bbox[5] + bbox[1]) as Int
 imagettftext(im, size, 0, ((w - dx) / 2).int(), h - dy - 100, black, fontfile, text)
 
-var target_file = tmp_path concat 'chun.png'
-result = imagepng(im, target_file)
+// save the target image
+var target_image_file = tmp_path concat 'chun.png'
+result = imagepng(im, target_image_file)
 imagedestroy(im)
 
 if result {
-	echo 'Image $target_file generated.'
+	echo 'Image $target_image_file generated.'
 }
 else {
-	echo 'Image $target_file generate failure.'
+	echo 'Image $target_image_file generate failure.'
 }
 

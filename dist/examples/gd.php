@@ -47,15 +47,15 @@ $dx = $bbox[2] + $bbox[0];
 $dy = (int)abs($bbox[5] + $bbox[1]);
 imagettftext($im, $size, 0, intval((($w - $dx) / 2)), $h - $dy - 100, $black, $fontfile, $text);
 
-$target_file = $tmp_path . 'chun.png';
-$result = imagepng($im, $target_file);
+$target_image_file = $tmp_path . 'chun.png';
+$result = imagepng($im, $target_image_file);
 imagedestroy($im);
 
 if ($result) {
-	echo 'Image ' . $target_file . ' generated.', NL;
+	echo 'Image ' . $target_image_file . ' generated.', NL;
 }
 else {
-	echo 'Image ' . $target_file . ' generate failure.', NL;
+	echo 'Image ' . $target_image_file . ' generate failure.', NL;
 }
 // ---------
 
