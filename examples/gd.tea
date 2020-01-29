@@ -1,0 +1,70 @@
+#main
+
+#php imagecreatetruecolor(width Int, height Int) Any
+#php imagecolorallocatealpha(image, r Int, g Int, b Int, a Int) Int
+#php imagefill(image, x Int, y Int, color Int) Bool
+#php imagerotate(image, angle Float, background_color Int) Any
+#php imagesx(image) Int
+#php imagesy(image) Int
+#php imagettfbbox(size Float, angle Float, fontfile String, text String) Int.Array
+#php imagettftext(image, size Float, angle Float, x Int, y Int, color Int, fontfile String, text String) Int.Array
+#php imagepng(image, to String = none, quality = -1, filters Int = #default) Bool
+#php imagedestroy(image)
+
+var tmp_path = dirname(__DIR__, 2) concat '/tmp/'
+var fontfile = tmp_path concat 'SourceHanSansSC-Regular.otf'
+if not file_exists(fontfile) {
+	echo "The font file '$fontfile' not found.\nPlease download it and put to path $fontfile"
+	exit
+}
+
+var w Int = 629
+var h = w
+var im = imagecreatetruecolor(w, h)
+
+var black = imagecolorallocatealpha(im, 0, 0, 0, 0)
+var non_color = imagecolorallocatealpha(im, 0, 0, 0, 127)
+var red = imagecolorallocatealpha(im, 255, 0, 0, 0)
+
+imagefill(im, 0, 0, red)
+
+im = imagerotate(im, 45, non_color)
+w = imagesx(im)
+h = imagesy(im)
+
+// the main text
+var size = 310
+var angle = 0
+var text = '春'
+var bbox = imagettfbbox(size, angle, fontfile, text)
+var dx = bbox[2] + bbox[0]
+var dy = abs(bbox[5] + bbox[1]) as Int
+imagettftext(im, size, angle, ((w - dx) / 2).int(), dy + ((h - dy) / 2).int(), black, fontfile, text)
+
+// the subtext
+size = 30
+text = '新春快乐'
+bbox = imagettfbbox(size, 0, fontfile, text)
+dx = bbox[2] + bbox[0]
+dy = abs(bbox[5] + bbox[1]) as Int
+imagettftext(im, size, 0, ((w - dx) / 2).int(), h - dy - 130, black, fontfile, text)
+
+// the creator
+size = 10
+text = 'tealang'
+bbox = imagettfbbox(size, 0, fontfile, text)
+dx = bbox[2] + bbox[0]
+dy = abs(bbox[5] + bbox[1]) as Int
+imagettftext(im, size, 0, ((w - dx) / 2).int(), h - dy - 100, black, fontfile, text)
+
+var target_file = tmp_path concat 'chun.png'
+result = imagepng(im, target_file)
+imagedestroy(im)
+
+if result {
+	echo 'Image $target_file generated.'
+}
+else {
+	echo 'Image $target_file generate failure.'
+}
+

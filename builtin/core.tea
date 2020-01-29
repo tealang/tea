@@ -11,6 +11,7 @@ public NL = "\n"
 #php empty(expr Any) Bool
 #php var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default)
 #php print_r(expr, is_return Bool = #default)
+#php header(info String, replace = true, http_response_code Int = #default)
 
 // php builtin constants
 #php __DIR__ String
@@ -34,6 +35,7 @@ public NL = "\n"
 #php ErrorException: Exception {}
 
 // file
+#php file_exists(filename String) Bool
 #php dirname(path String, levels UInt = #default) String
 #php basename(path String, suffix String = #default) String
 #php realpath(path String) String

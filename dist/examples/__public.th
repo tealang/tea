@@ -4,6 +4,26 @@
 
 public M_PI Float
 
+#php imagecreatetruecolor(width Int, height Int) Any
+
+#php imagecolorallocatealpha(image Any, r Int, g Int, b Int, a Int) Int
+
+#php imagefill(image Any, x Int, y Int, color Int) Bool
+
+#php imagerotate(image Any, angle Float, background_color Int) Any
+
+#php imagesx(image Any) Int
+
+#php imagesy(image Any) Int
+
+#php imagettfbbox(size Float, angle Float, fontfile String, text String) Int.Array
+
+#php imagettftext(image Any, size Float, angle Float, x Int, y Int, color Int, fontfile String, text String) Int.Array
+
+#php imagepng(image Any, to String = none, quality Int = -1, filters Int = #default) Bool
+
+#php imagedestroy(image Any)
+
 #php PDOStatement {
 	fetch(fetch_style Int = #default) String.Dict
 	fetchAll(fetch_style Int = #default) String.Dict.Array
