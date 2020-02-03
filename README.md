@@ -80,10 +80,10 @@ Tea语言项目最早开始于19年2月份，主要由创业者Benny设计与开
 	git clone https://github.com/tealang/tea.git
 	```
 	
-- 将当前目录切换到tea的上级目录中，执行如下命令即可编译本文档程序：
+- 将当前目录切换到tea的上级目录中，执行如下命令即可编译示例程序：
 	```sh
 	# use the normal method
-	php tea/bin/tea tea/docs
+	php tea/bin/tea tea/examples
 	```
 	
 - 如使用Mac或Linux系统，可使用Shebang方式，如：
