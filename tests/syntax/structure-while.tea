@@ -2,8 +2,8 @@
 // normal while
 i = 0
 while i < 10 {
+	continue when i == 5
 	i += 1
-	continue
 }
 catch ex {
 	//
@@ -20,11 +20,7 @@ i = 0
 #outer_loop while 1 {
 	#inner_loop while true {
 		i = i + 1
-		if i > 10 {
-			break #outer_loop
-		}
-		else {
-			continue #inner_loop
-		}
+		continue #inner_loop when i < 3
+		break #outer_loop when i > 5
 	}
 }

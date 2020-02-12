@@ -1107,33 +1107,68 @@ class TeaCoder
 		}
 	}
 
-	public function render_exit_statement(Node $node)
+	protected function render_with_when_condition(PostConditionAbleStatement $node, string $code)
 	{
-		$status = $node->status ? ' ' . $node->status->render($this) : '';
-		return 'exit' . $status . static::STATEMENT_TERMINATOR;
+		return $code . ' when ' . $node->condition->render($this);
 	}
 
 	public function render_break_statement(Node $node)
 	{
 		$argument = $node->argument ? ' #' . $node->argument : '';
-		return 'break' . $argument;
+		$code = 'break' . $argument;
+
+		if ($node->condition) {
+			$code = $this->render_with_when_condition($node, $code);
+		}
+
+		return $code;
 	}
 
 	public function render_continue_statement(Node $node)
 	{
 		$argument = $node->argument ? ' #' . $node->argument : '';
-		return 'continue' . $argument;
+		$code = 'continue' . $argument;
+
+		if ($node->condition) {
+			$code = $this->render_with_when_condition($node, $code);
+		}
+
+		return $code;
 	}
 
 	public function render_return_statement(Node $node)
 	{
-		$expression = $node->argument ? "return " . $node->argument->render($this) : 'return';
-		return $expression . static::STATEMENT_TERMINATOR;
+		$statement = $node->argument ? "return " . $node->argument->render($this) : 'return';
+		$code = $statement . static::STATEMENT_TERMINATOR;
+
+		if ($node->condition) {
+			$code = $this->render_with_when_condition($node, $code);
+		}
+
+		return $code;
 	}
 
 	public function render_throw_statement(Node $node)
 	{
-		return "throw " . $node->argument->render($this) . static::STATEMENT_TERMINATOR;
+		$code = "throw " . $node->argument->render($this) . static::STATEMENT_TERMINATOR;
+
+		if ($node->condition) {
+			$code = $this->render_with_when_condition($node, $code);
+		}
+
+		return $code;
+	}
+
+	public function render_exit_statement(Node $node)
+	{
+		$argument = $node->argument ? ' ' . $node->argument->render($this) : '';
+		$code = 'exit' . $argument . static::STATEMENT_TERMINATOR;
+
+		if ($node->condition) {
+			$code = $this->render_with_when_condition($node, $code);
+		}
+
+		return $code;
 	}
 
 	public function render_normal_statement(NormalStatement $statement)

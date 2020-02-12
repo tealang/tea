@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class ThrowStatement extends BaseStatement
+class ThrowStatement extends PostConditionAbleStatement
 {
 	const KIND = 'throw_statement';
 

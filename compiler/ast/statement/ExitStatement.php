@@ -9,14 +9,14 @@
 
 namespace Tea;
 
-class ExitStatement extends BaseStatement
+class ExitStatement extends PostConditionAbleStatement
 {
 	const KIND = 'exit_statement';
 
-	public $status;
+	public $argument;
 
-	public function __construct(IExpression $status = null)
+	public function __construct(IExpression $argument = null)
 	{
-		$this->status = $status;
+		$this->argument = $argument;
 	}
 }

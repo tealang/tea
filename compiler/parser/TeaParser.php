@@ -407,18 +407,28 @@ class TeaParser
 		return $this->factory->create_variable_declaration($name, $type, $value);
 	}
 
+	protected function try_attach_when_post_condition(PostConditionAbleStatement $statement)
+	{
+		if (!$this->skip_token_ignore_space(_WHEN)) {
+			return;
+		}
+
+		$condition = $this->read_expression_inline();
+		if ($condition === null) {
+			throw $this->new_exception("Required condition expression after 'when' keyword.");
+		}
+
+		$statement->condition = $condition;
+	}
+
 	protected function read_continue_statement()
 	{
 		// continue
 		// continue #label
 
 		$statement = new ContinueStatement();
-
-		$destination_label = $this->try_read_destination_label();
-		if ($destination_label) {
-			$statement->layer_num = $this->factory->require_labeled_layer_number($destination_label, true);
-			$statement->destination_label = $destination_label;
-		}
+		$this->try_attach_goto_label($statement, true);
+		$this->try_attach_when_post_condition($statement);
 
 		return $statement;
 	}
@@ -426,26 +436,24 @@ class TeaParser
 	protected function read_break_statement()
 	{
 		// break
-		// break #destination_label
+		// break #goto_label
 
 		$statement = new BreakStatement();
-
-		$destination_label = $this->try_read_destination_label();
-		if ($destination_label) {
-			$statement->layer_num = $this->factory->require_labeled_layer_number($destination_label);
-			$statement->destination_label = $destination_label;
-		}
+		$this->try_attach_goto_label($statement);
+		$this->try_attach_when_post_condition($statement);
 
 		return $statement;
 	}
 
-	protected function try_read_destination_label()
+	protected function try_attach_goto_label(IGotoAbleStatement $statement, bool $is_continue_statement = false)
 	{
 		if (!$this->skip_token_ignore_space(_SHARP)) {
-			return null;
+			return;
 		}
 
-		return $this->expect_identifier_token();
+		$goto_label = $this->expect_identifier_token();
+		$statement->layer_num = $this->factory->require_labeled_layer_number($goto_label, $is_continue_statement);
+		$statement->goto_label = $goto_label;
 	}
 
 	protected function read_exit_declaration()
@@ -454,7 +462,11 @@ class TeaParser
 		// exit int expression
 
 		$status = $this->read_expression_inline();
-		return new ExitStatement($status);
+		$statement = new ExitStatement($status);
+
+		$this->try_attach_when_post_condition($statement);
+
+		return $statement;
 	}
 
 	protected function read_return_statement()
@@ -463,13 +475,21 @@ class TeaParser
 		// return expression
 
 		$argument = $this->read_expression_inline();
-		return new ReturnStatement($argument);
+		$statement = new ReturnStatement($argument);
+
+		$this->try_attach_when_post_condition($statement);
+
+		return $statement;
 	}
 
 	protected function read_throw_statement()
 	{
 		$argument = $this->read_expression_inline();
-		return new ThrowStatement($argument);
+		$statement = new ThrowStatement($argument);
+
+		$this->try_attach_when_post_condition($statement);
+
+		return $statement;
 	}
 
 	protected function read_if_block()

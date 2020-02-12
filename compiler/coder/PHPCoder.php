@@ -1476,16 +1476,33 @@ class PHPCoder extends TeaCoder
 		return "(include UNIT_PATH . '{$expr->target}.php')";
 	}
 
+	protected function render_with_when_condition(PostConditionAbleStatement $node, string $code)
+	{
+		return sprintf("if (%s) {\n\t%s\n}", $node->condition->render($this), $code);
+	}
+
 	public function render_break_statement(Node $node)
 	{
 		$argument = $node->layer_num ? ' ' . $node->layer_num : '';
-		return 'break' . $argument . static::STATEMENT_TERMINATOR;
+		$code = 'break' . $argument . static::STATEMENT_TERMINATOR;
+
+		if ($node->condition) {
+			$code = $this->render_with_when_condition($node, $code);
+		}
+
+		return $code;
 	}
 
 	public function render_continue_statement(Node $node)
 	{
 		$argument = $node->layer_num ? ' ' . $node->layer_num : '';
-		return 'continue' . $argument . static::STATEMENT_TERMINATOR;
+		$code = 'continue' . $argument . static::STATEMENT_TERMINATOR;
+
+		if ($node->condition) {
+			$code = $this->render_with_when_condition($node, $code);
+		}
+
+		return $code;
 	}
 
 	public function render_echo_statement(EchoStatement $node)

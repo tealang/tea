@@ -9,9 +9,18 @@
 
 namespace Tea;
 
+interface IGotoAbleStatement {}
 interface IContinueAble {}
 
-class BreakStatement extends BaseStatement
+abstract class PostConditionAbleStatement extends BaseStatement
+{
+	/**
+	 * @IExpression
+	 */
+	public $condition;
+}
+
+class BreakStatement extends PostConditionAbleStatement implements IGotoAbleStatement
 {
 	const KIND = 'break_statement';
 
@@ -28,7 +37,7 @@ class BreakStatement extends BaseStatement
 	}
 }
 
-class ContinueStatement extends BreakStatement
+class ContinueStatement extends BreakStatement implements IGotoAbleStatement
 {
 	const KIND = 'continue_statement';
 }

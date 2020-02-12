@@ -78,10 +78,11 @@ const
 	_UNIT_PATH = 'UNIT_PATH',
 	_VAL_NONE = 'none', _VAL_TRUE = 'true', _VAL_FALSE = 'false',
 	_VAR = 'var', _YIELD = 'yield',
-	_IF = 'if', _ELSE = 'else', _ELSEIF = 'elseif', _CASE = 'case',
+	_IF = 'if', _ELSE = 'else', _ELSEIF = 'elseif', _CASE = 'case', _WHEN = 'when',
 	_FOR = 'for', _WHILE = 'while', _LOOP = 'loop',
 	_TRY = 'try', _CATCH = 'catch', _FINALLY = 'finally',
-	_ECHO = 'echo', _PRINT = 'print', _RETURN = 'return', _EXIT = 'exit', _BREAK = 'break', _CONTINUE = 'continue', _THROW = 'throw',
+	_ECHO = 'echo', _PRINT = 'print',
+	_RETURN = 'return', _EXIT = 'exit', _BREAK = 'break', _CONTINUE = 'continue', _THROW = 'throw',
 	_STATIC = 'static', _MASKED = 'masked', _PUBLIC = 'public', _INTERNAL = 'internal', _PROTECTED = 'protected', _PRIVATE = 'private',
 	_THIS = 'this', _SUPER = 'super', _CONSTRUCT = 'construct', _DESTRUCT = 'destruct';
 

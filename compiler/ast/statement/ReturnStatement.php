@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class ReturnStatement extends BaseStatement
+class ReturnStatement extends PostConditionAbleStatement
 {
 	const KIND = 'return_statement';
 

@@ -521,31 +521,37 @@ class ASTFactory
 		return $block;
 	}
 
-	public function require_labeled_layer_number(string $label, bool $is_continue = false)
+	public function require_labeled_layer_number(string $label, bool $is_continue_statement = false)
 	{
 		$layer = 0;
-
 		$block = $this->block;
-		while ($block = $block->super_block) {
-			if ($block instanceof IEnclosingBlock) {
-				break;
-			}
-			elseif (!$block instanceof ILoopLikeBlock) {
-				continue;
+
+		if (!$block instanceof ILoopLikeBlock || $block->label !== $label) {
+			if ($block instanceof ILoopLikeBlock) {
+				$layer++;
 			}
 
-			$layer++;
-			if ($block->label === $label) {
-				break;
+			while ($block = $block->super_block) {
+				if ($block instanceof IEnclosingBlock) {
+					break;
+				}
+				elseif (!$block instanceof ILoopLikeBlock) {
+					continue;
+				}
+
+				$layer++;
+				if ($block->label === $label) {
+					break;
+				}
+			}
+
+			if (!$block) {
+				throw $this->parser->new_exception("Block of label '$label' not found.");
 			}
 		}
 
-		if (!$block) {
-			throw $this->parser->new_exception("Block of label '$label' not found.");
-		}
-
-		if ($is_continue && !$block instanceof IContinueAble) {
-			throw $this->parser->new_exception("Block of label '$label' cannot use to continue.");
+		if ($is_continue_statement && !$block instanceof IContinueAble) {
+			throw $this->parser->new_exception("Block of label '$label' cannot use to the continue statement.");
 		}
 
 		return $layer;

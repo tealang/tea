@@ -21,6 +21,8 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 
 #php print_r(expr Any, is_return Bool = #default)
 
+#php header(info String, replace Bool = true, http_response_code Int = #default)
+
 #php Exception {
 	public construct(message String, code Int = 0)
 	public getCode() Int
@@ -30,6 +32,8 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 #php ErrorException: Exception {
 	// no any
 }
+
+#php file_exists(filename String) Bool
 
 #php dirname(path String, levels UInt = #default) String
 
