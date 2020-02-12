@@ -1076,8 +1076,8 @@ class TeaCoder
 
 	public function render_catch_block(CatchBlock $node)
 	{
-		$var = $node->var->render($this);
-		$type = $node->type ? $node->type->render($this) : '\Exception';
+		$var = static::VAR_DECLARE_PREFIX . $node->var->name;
+		$type = $node->var->type->render($this);
 
 		$items = [];
 		$items[] = "\ncatch ($type $var) " . $this->render_block($node, _CATCH);

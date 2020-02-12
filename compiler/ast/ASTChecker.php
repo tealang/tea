@@ -657,8 +657,7 @@ class ASTChecker
 		}
 
 		if ($node->except) {
-			$except_type = $this->infer_except_block($node->except);
-			$result_type = $this->reduce_types([$result_type, $except_type], $node);
+			$result_type = $this->reduce_types_with_except_block($node, $result_type);
 		}
 
 		return $result_type;
@@ -682,20 +681,29 @@ class ASTChecker
 
 	protected function infer_except_block(IExceptBlock $node): ?IType
 	{
-		$result_type = $this->infer_block($node);
-
 		if ($node instanceof CatchBlock) {
-			if ($node->type) {
-				$node->var->symbol->declaration = $this->require_classlike_declaration($node->type);
-			}
+			$this->check_variable_declaration($node->var);
+			$result_type = $this->infer_block($node);
 
 			if ($node->except) {
-				$except_type = $this->infer_except_block($node->except);
-				$result_type = $this->reduce_types([$result_type, $except_type], $node);
+				$result_type = $this->reduce_types_with_except_block($node, $result_type);
 			}
+		}
+		else {
+			$result_type = $this->infer_block($node);
 		}
 
 		return $result_type;
+	}
+
+	private function reduce_types_with_except_block(BaseBlock $node, ?IType $previous_type)
+	{
+		$except_type = $this->infer_except_block($node->except);
+		if ($previous_type) {
+			return $this->reduce_types([$previous_type, $except_type], $node);
+		}
+
+		return $except_type;
 	}
 
 	private function infer_case_block(CaseBlock $node): ?IType
@@ -754,8 +762,7 @@ class ASTChecker
 		}
 
 		if ($node->except) {
-			$except_type = $this->infer_except_block($node->except);
-			$result_type = $this->reduce_types([$result_type, $except_type], $node);
+			$result_type = $this->reduce_types_with_except_block($node, $result_type);
 		}
 
 		return $result_type;
@@ -779,8 +786,7 @@ class ASTChecker
 		}
 
 		if ($node->except) {
-			$except_type = $this->infer_except_block($node->except);
-			$result_type = $this->reduce_types([$result_type, $except_type], $node);
+			$result_type = $this->reduce_types_with_except_block($node, $result_type);
 		}
 
 		return $result_type;
@@ -792,8 +798,7 @@ class ASTChecker
 		$result_type = $this->infer_block($node);
 
 		if ($node->except) {
-			$except_type = $this->infer_except_block($node->except);
-			$result_type = $this->reduce_types([$result_type, $except_type], $node);
+			$result_type = $this->reduce_types_with_except_block($node, $result_type);
 		}
 
 		return $result_type;
@@ -804,8 +809,7 @@ class ASTChecker
 		$result_type = $this->infer_block($node);
 
 		if ($node->except) {
-			$except_type = $this->infer_except_block($node->except);
-			$result_type = $this->reduce_types([$result_type, $except_type], $node);
+			$result_type = $this->reduce_types_with_except_block($node, $result_type);
 		}
 
 		return $result_type;
@@ -816,8 +820,7 @@ class ASTChecker
 		$result_type = $this->infer_block($node);
 
 		if ($node->except) {
-			$except_type = $this->infer_except_block($node->except);
-			$result_type = $this->reduce_types([$result_type, $except_type], $node);
+			$result_type = $this->reduce_types_with_except_block($node, $result_type);
 		}
 
 		return $result_type;

@@ -1,17 +1,20 @@
 <?php
 namespace tea\tests\syntax;
 
+use Exception;
 use ErrorException;
+
+require_once __DIR__ . '/__unit.php';
 
 // ---------
 try {
 	// no any
 }
 catch (\Exception $ex) {
-	// no any
+	echo $ex->getMessage(), NL;
 }
 finally {
-	// no any
+	echo 'do finally', NL;
 }
 
 try {
@@ -23,19 +26,21 @@ try {
 	}
 }
 catch (\Exception $ex) {
-	// no any
+	echo $ex->getMessage(), NL;
 }
 finally {
 	// no any
 }
 
 try {
-	foreach ([] as $v) {
-		throw new \ErrorException('some message');
+	foreach ([0, 1, 2, 3] as $v) {
+		if ($v == 2) {
+			throw new \ErrorException('some message');
+		}
 	}
 }
 catch (\ErrorException $ex) {
-	// no any
+	echo $ex->getMessage(), NL;
 }
 finally {
 	// no any

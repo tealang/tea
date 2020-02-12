@@ -26,12 +26,10 @@ class CatchBlock extends BaseBlock implements IExceptBlock, IExceptAble
 	const KIND = 'catch_block';
 
 	public $var;
-	public $type;
 
-	public function __construct(VariableIdentifier $var, ?ClassLikeIdentifier $type)
+	public function __construct(VariableDeclaration $var)
 	{
-		$this->var = $var instanceof Parentheses ? $var->expression : $var;
-		$this->type = $type;
+		$this->var = $var;
 	}
 }
 

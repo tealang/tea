@@ -1,13 +1,14 @@
+#main
 
 // normal try-catch-finally
 try {
 	//
 }
-catch ex {
-	//
+catch ex Exception {
+	echo ex.getMessage()
 }
 finally {
-	//
+	echo 'do finally'
 }
 
 // if with catch-finally
@@ -17,14 +18,18 @@ if 1 {
 else {
 	//
 }
-catch ex {}
+catch ex {
+	echo ex.getMessage()
+}
 finally {}
 
 // for with catch-finally
-for v in [] {
-	throw ErrorException('some message')
+for v in [0, 1, 2, 3] {
+	throw ErrorException('some message') when v == 2
 }
-catch ex ErrorException {}
+catch ex ErrorException {
+	echo ex.getMessage()
+}
 finally {}
 
 // also supported in while

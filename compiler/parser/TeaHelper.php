@@ -40,6 +40,7 @@ class TeaHelper
 	const OTHER_RESERVEDS = [
 		_THIS, _SUPER, _CONSTRUCT, _DESTRUCT, _STATIC,
 		_ELSEIF, _ELSE, _CATCH, _FINALLY,
+		_WHEN,
 	];
 
 	const ASSIGN_OPERATORS = [_ASSIGN, '.=', '**=', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^=', '<<=', '>>=']; // '??='

@@ -421,10 +421,21 @@ class TeaParser
 		$statement->condition = $condition;
 	}
 
+	protected function try_attach_goto_label(IGotoAbleStatement $statement, bool $is_continue_statement = false)
+	{
+		if (!$this->skip_token_ignore_space(_SHARP)) {
+			return;
+		}
+
+		$goto_label = $this->expect_identifier_token();
+		$statement->layer_num = $this->factory->require_labeled_layer_number($goto_label, $is_continue_statement);
+		$statement->goto_label = $goto_label;
+	}
+
 	protected function read_continue_statement()
 	{
 		// continue
-		// continue #label
+		// continue #goto_label
 
 		$statement = new ContinueStatement();
 		$this->try_attach_goto_label($statement, true);
@@ -437,6 +448,7 @@ class TeaParser
 	{
 		// break
 		// break #goto_label
+		// break #goto_label when condition-expression
 
 		$statement = new BreakStatement();
 		$this->try_attach_goto_label($statement);
@@ -445,25 +457,20 @@ class TeaParser
 		return $statement;
 	}
 
-	protected function try_attach_goto_label(IGotoAbleStatement $statement, bool $is_continue_statement = false)
-	{
-		if (!$this->skip_token_ignore_space(_SHARP)) {
-			return;
-		}
-
-		$goto_label = $this->expect_identifier_token();
-		$statement->layer_num = $this->factory->require_labeled_layer_number($goto_label, $is_continue_statement);
-		$statement->goto_label = $goto_label;
-	}
-
 	protected function read_exit_declaration()
 	{
 		// exit
 		// exit int expression
+		// exit when condition-expression
 
-		$status = $this->read_expression_inline();
-		$statement = new ExitStatement($status);
+		if ($this->get_token_ignore_space() === _WHEN) {
+			$argument = null;
+		}
+		else {
+			$argument = $this->read_expression_inline();
+		}
 
+		$statement = new ExitStatement($argument);
 		$this->try_attach_when_post_condition($statement);
 
 		return $statement;
@@ -473,10 +480,16 @@ class TeaParser
 	{
 		// return
 		// return expression
+		// return when condition-expression
 
-		$argument = $this->read_expression_inline();
+		if ($this->get_token_ignore_space() === _WHEN) {
+			$argument = null;
+		}
+		else {
+			$argument = $this->read_expression_inline();
+		}
+
 		$statement = new ReturnStatement($argument);
-
 		$this->try_attach_when_post_condition($statement);
 
 		return $statement;
@@ -484,9 +497,14 @@ class TeaParser
 
 	protected function read_throw_statement()
 	{
-		$argument = $this->read_expression_inline();
-		$statement = new ThrowStatement($argument);
+		// throw Exception()
 
+		$argument = $this->read_expression_inline();
+		if ($argument === null) {
+			throw $this->new_exception("Required an Exception argument.");
+		}
+
+		$statement = new ThrowStatement($argument);
 		$this->try_attach_when_post_condition($statement);
 
 		return $statement;
@@ -566,9 +584,13 @@ class TeaParser
 		if ($keyword === _CATCH) {
 			$this->scan_token_ignore_empty();
 
-			$var = $this->read_variable_identifier();
+			$var_name = $this->scan_token_ignore_space();
+			if (!TeaHelper::is_declarable_variable_name($var_name)) {
+				throw $this->new_exception("Invalid variable name '{$var_name}'", 1);
+			}
+
 			$type = $this->try_read_classlike_identifier();
-			$sub_block = $this->factory->create_catch_block($var, $type);
+			$sub_block = $this->factory->create_catch_block($var_name, $type);
 
 			$this->read_statements_for_block($sub_block);
 

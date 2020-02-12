@@ -17,6 +17,9 @@ class ASTFactory
 	// for properties of Any type object in AccessingIdentifer
 	public static $virtual_property_for_any;
 
+	// use for untyped catch
+	public $base_exception_identifier;
+
 	public $parser;
 
 	protected $unit;
@@ -56,6 +59,10 @@ class ASTFactory
 		// 设置预置常量
 		$declaration = new ConstantDeclaration(_PUBLIC, _UNIT_PATH, TypeFactory::$_string, null);
 		$this->unit_path_symbol = new Symbol($declaration);
+
+
+		// use for untyped catch
+		$this->base_exception_identifier = new ClassLikeIdentifier('Exception');
 	}
 
 	public function set_as_main_program()
@@ -489,12 +496,12 @@ class ASTFactory
 		return $block;
 	}
 
-	public function create_catch_block(VariableIdentifier $var, ?ClassLikeIdentifier $type)
+	public function create_catch_block(string $var_name, ?ClassLikeIdentifier $type)
 	{
-		$block = new CatchBlock($var, $type);
+		$var_declaration = new VariableDeclaration($var_name, $type ?? $this->base_exception_identifier);
 
-		$var_declaration = new VariableDeclaration($var->name, TypeFactory::$_any);
-		$block->symbols[$var->name] = $var->symbol = new Symbol($var_declaration);
+		$block = new CatchBlock($var_declaration);
+		$block->symbols[$var_name] = new Symbol($var_declaration);
 
 		$this->enter_block($block);
 		return $block;
