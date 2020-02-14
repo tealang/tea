@@ -442,7 +442,7 @@ trait TeaTokenTrait
 
 	protected function expect_block_begin()
 	{
-		$this->expect_token_ignore_empty(_BLOCK_BEGIN);
+		$this->expect_token_ignore_space(_BLOCK_BEGIN);
 
 		// skip current empty line
 		if ($this->get_token_ignore_space() === NL) {
