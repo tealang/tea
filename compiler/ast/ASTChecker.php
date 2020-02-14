@@ -292,9 +292,9 @@ class ASTChecker
 		$parameters_map = [_THIS => $i++];
 
 		$parameters = $node->parameters ?? [];
-		if ($node->callbacks) {
-			$parameters = array_merge($parameters, $node->callbacks);
-		}
+		// if ($node->callbacks) {
+		// 	$parameters = array_merge($parameters, $node->callbacks);
+		// }
 
 		foreach ($parameters as $item) {
 			$parameters_map[$item->name] = $i++;
@@ -353,23 +353,14 @@ class ASTChecker
 			}
 		}
 
-		$this->check_function_block($node);
+		$this->check_parameters_for_callable_declaration($node);
+		$this->check_function_body($node);
 
 		return TypeFactory::create_callable_type($node->type, $node->parameters);
 	}
 
-	private function check_function_block(IEnclosingBlock $node)
+	private function check_function_body(IEnclosingBlock $node)
 	{
-		if ($node->checked) return;
-		$node->checked = true;
-
-		// create 'this' / 'super' symbols for static method
-		if ($node->is_static) {
-			$this->create_class_symbols_for_static_method($node);
-		}
-
-		$this->check_parameters_for_callable_declaration($node);
-
 		if (is_array($node->body)) {
 			$infered_type = $this->infer_block($node);
 		}
@@ -399,15 +390,31 @@ class ASTChecker
 		}
 	}
 
-	private function create_class_symbols_for_static_method(FunctionBlock $node)
+	private function check_function_block(FunctionBlock $node)
 	{
-		$class = $node->super_block;
-		$node->symbols[_THIS] = new Symbol($class);
+		if ($node->checked) return;
+		$node->checked = true;
 
-		if ($class->inherits) {
-			$node->symbols[_SUPER] = new Symbol($class->inherits->symbol->declaration);
-		}
+		// // create _THIS / _SUPER symbols for static method
+		// if ($node->is_static) {
+		// 	$this->create_class_symbols_for_static_method($node);
+		// }
+
+		$this->current_function = $node; // for find _SUPER
+
+		$this->check_parameters_for_callable_declaration($node);
+		$this->check_function_body($node);
 	}
+
+	// private function create_class_symbols_for_static_method(FunctionBlock $node)
+	// {
+	// 	$class = $node->super_block;
+	// 	$node->symbols[_THIS] = new Symbol($class);
+
+	// 	if ($class->inherits) {
+	// 		$node->symbols[_SUPER] = new Symbol($class->inherits->symbol->declaration);
+	// 	}
+	// }
 
 	private function check_function_declaration(FunctionDeclaration $node)
 	{
@@ -525,9 +532,9 @@ class ASTChecker
 		if ($node->inherits) {
 			$node->baseds = $interfaces;
 
-			// add super symbol for current class declaration
-			// super keyword could not to access the implements interfaces
-			$node->symbols[_SUPER] = ASTHelper::create_symbol_super($node->inherits);
+			// // add super symbol for current class declaration
+			// // super keyword could not to access the implements interfaces
+			// $node->symbols[_SUPER] = ASTHelper::create_symbol_super($node->inherits);
 		}
 	}
 
@@ -1475,6 +1482,7 @@ class ASTChecker
 
 	private function infer_include_expression(IncludeExpression $node): ?IType
 	{
+		$including = $this->program;
 		$program = $this->require_program_declaration($node->target, $node);
 
 		$target_main = $program->main_function;
@@ -1484,9 +1492,11 @@ class ASTChecker
 
 		// check all expect variables is decalared in current including place
 		foreach ($target_main->parameters as $parameter) {
-			$symbol = $this->find_symbol_by_name($parameter->name);
+			$param_name = $parameter->name;
+			$symbol = $node->symbols[$param_name] ?? $this->find_symbol_by_name($param_name);
 			if ($symbol === null) {
-				throw $this->new_syntax_error("Expect var '{$parameter->name}' for #include({$node->target}) not found in program file '{$this->program->name}'.", $node);
+				throw $including->parser->new_ast_check_error("Expected var '{$param_name}' to #include({$node->target}).", $node, 1);
+				// throw $including_unit->get_checker()->new_syntax_error("Expect var '{$param_name}' for #include({$node->target}) not found in program file '{$this->program->name}'.", $node);
 			}
 		}
 
@@ -1689,51 +1699,51 @@ class ASTChecker
 		return $symbol->declaration;
 	}
 
-	private function check_call_callbacks(CallExpression $node, ICallableDeclaration $callee_declar, array $parameters, array &$normalizeds)
-	{
-		if (!$callee_declar->callbacks) {
-			throw $this->new_syntax_error("Callback arguments has setted, but not found any callback-protocols in declaration of '{$src_callee_declar->name}'.", $node);
-		}
+	// private function check_call_callbacks(CallExpression $node, ICallableDeclaration $callee_declar, array $parameters, array &$normalizeds)
+	// {
+	// 	if (!$callee_declar->callbacks) {
+	// 		throw $this->new_syntax_error("Callback arguments has setted, but not found any callback-protocols in declaration of '{$src_callee_declar->name}'.", $node);
+	// 	}
 
-		// check and fill all rest and default parameter values
-		// because of callback arguments would append at end
-		$normalizeds_count = count($normalizeds);
-		$parameters_count = count($parameters);
-		if ($normalizeds_count < $parameters_count) {
-			for ($i = $normalizeds_count; $i < $parameters_count; $i++) {
-				$normalizeds[$i] = $parameters[$i]->value;
-			}
-		}
+	// 	// check and fill all rest and default parameter values
+	// 	// because of callback arguments would append at end
+	// 	$normalizeds_count = count($normalizeds);
+	// 	$parameters_count = count($parameters);
+	// 	if ($normalizeds_count < $parameters_count) {
+	// 		for ($i = $normalizeds_count; $i < $parameters_count; $i++) {
+	// 			$normalizeds[$i] = $parameters[$i]->value;
+	// 		}
+	// 	}
 
-		// set to default when not set a name
-		if (count($node->callbacks) === 1 && $node->callbacks[0]->name === null) {
-			$node->callbacks[0]->name = $callee_declar->callbacks[0]->name;
-		}
+	// 	// set to default when not set a name
+	// 	if (count($node->callbacks) === 1 && $node->callbacks[0]->name === null) {
+	// 		$node->callbacks[0]->name = $callee_declar->callbacks[0]->name;
+	// 	}
 
-		foreach ($node->callbacks as $cb) {
-			$infered_type = $this->infer_callback_argument($cb);
+	// 	foreach ($node->callbacks as $cb) {
+	// 		$infered_type = $this->infer_callback_argument($cb);
 
-			list($idx, $protocol) = $this->require_callback_protocol_by_name($cb->name, $callee_declar->callbacks, $node->callee);
+	// 		list($idx, $protocol) = $this->require_callback_protocol_by_name($cb->name, $callee_declar->callbacks, $node->callee);
 
-			if ($infered_type === null) {
-				if ($protocol->type !== null && $protocol->type !== TypeFactory::$_void) {
-					$protocol_type_name = self::get_type_name($protocol->type);
-					throw $this->new_syntax_error("Type invalid. The supplied callback return type is 'Void', required of '{$protocol->name}' is '{$protocol_type_name}'.", $cb);
-				}
-			}
-			elseif ($protocol->type === null) {
-				$infered_type_name = self::get_type_name($infered_type);
-				throw $this->new_syntax_error("Type invalid. The supplied callback return type is '{$infered_type_name}', required of '{$protocol->name}' is 'Void'.", $cb);
-			}
-			elseif (!$protocol->type->is_accept_type($infered_type)) {
-				$infered_type_name = self::get_type_name($infered_type);
-				$protocol_type_name = self::get_type_name($protocol->type);
-				throw $this->new_syntax_error("Type invalid. The supplied callback return type is '{$infered_type_name}', required of '{$protocol->name}' is '{$protocol_type_name}'.", $cb);
-			}
+	// 		if ($infered_type === null) {
+	// 			if ($protocol->type !== null && $protocol->type !== TypeFactory::$_void) {
+	// 				$protocol_type_name = self::get_type_name($protocol->type);
+	// 				throw $this->new_syntax_error("Type invalid. The supplied callback return type is 'Void', required of '{$protocol->name}' is '{$protocol_type_name}'.", $cb);
+	// 			}
+	// 		}
+	// 		elseif ($protocol->type === null) {
+	// 			$infered_type_name = self::get_type_name($infered_type);
+	// 			throw $this->new_syntax_error("Type invalid. The supplied callback return type is '{$infered_type_name}', required of '{$protocol->name}' is 'Void'.", $cb);
+	// 		}
+	// 		elseif (!$protocol->type->is_accept_type($infered_type)) {
+	// 			$infered_type_name = self::get_type_name($infered_type);
+	// 			$protocol_type_name = self::get_type_name($protocol->type);
+	// 			throw $this->new_syntax_error("Type invalid. The supplied callback return type is '{$infered_type_name}', required of '{$protocol->name}' is '{$protocol_type_name}'.", $cb);
+	// 		}
 
-			$normalizeds[$parameters_count + $idx] = $cb;
-		}
-	}
+	// 		$normalizeds[$parameters_count + $idx] = $cb;
+	// 	}
+	// }
 
 	private function assert_type_compatible(IType $left, IType $right, Node $value_node)
 	{
@@ -1911,7 +1921,7 @@ class ASTChecker
 
 	private function attach_symbol(PlainIdentifier $node)
 	{
-		$symbol = $this->find_symbol_by_name($node->name);
+		$symbol = $this->find_symbol_by_name($node->name, $node);
 		if ($symbol === null) {
 			throw $this->new_syntax_error("Symbol of '{$node->name}' not found.", $node);
 		}
@@ -1920,32 +1930,49 @@ class ASTChecker
 		return $symbol;
 	}
 
-	private function find_symbol_by_name(string $name)
+	private function find_symbol_by_name(string $name, Node $node = null)
 	{
-		if ($this->block === null) {
-			$symbol = $this->get_symbol_in_program($this->program, $name);
-		}
-		else {
-			// find in block
-			$block = $this->block;
+		$symbol = $this->get_symbol_in_program($this->program, $name);
 
-			if (isset($block->symbols[$name])) {
-				$symbol = $block->symbols[$name];
+		// find for 'super'
+		if ($symbol === null && $name === _SUPER) {
+			if ($this->current_function->super_block->inherits === null) {
+				throw $this->new_syntax_error("There are not inherits a class/interface for 'super' reference.", $node);
+			}
+
+			$inherits_class = $this->current_function->super_block->inherits->symbol->declaration;
+			if ($this->current_function->is_static) {
+				$symbol = $inherits_class->this_class_symbol;
 			}
 			else {
-				while (isset($block->super_block)) {
-					$block = $block->super_block;
-					if (isset($block->symbols[$name])) {
-						$symbol = $block->symbols[$name];
-						break;
-					}
-				}
-			}
-
-			if (!isset($symbol)) {
-				$symbol = $this->get_symbol_in_program($block->program, $name);
+				$symbol = $inherits_class->this_object_symbol;
 			}
 		}
+
+		// if ($this->block === null) {
+		// 	$symbol = $this->get_symbol_in_program($this->program, $name);
+		// }
+		// else {
+		// 	// find in block
+		// 	$block = $this->block;
+
+		// 	if (isset($block->symbols[$name])) {
+		// 		$symbol = $block->symbols[$name];
+		// 	}
+		// 	else {
+		// 		while (isset($block->super_block)) {
+		// 			$block = $block->super_block;
+		// 			if (isset($block->symbols[$name])) {
+		// 				$symbol = $block->symbols[$name];
+		// 				break;
+		// 			}
+		// 		}
+		// 	}
+
+		// 	if (!isset($symbol)) {
+		// 		$symbol = $this->get_symbol_in_program($block->program, $name);
+		// 	}
+		// }
 
 		if ($symbol) {
 			if ($symbol->declaration instanceof UseDeclaration) {
@@ -1982,7 +2009,7 @@ class ASTChecker
 			$declar = $this->require_accessing_identifier_declaration($node);
 		}
 		elseif ($node instanceof PlainIdentifier) {
-			$this->attach_symbol($node);
+			$node->symbol || $this->attach_symbol($node);
 
 			$declar = $node->symbol->declaration;
 			if ($declar instanceof ICallableDeclaration) {
@@ -2076,10 +2103,12 @@ class ASTChecker
 				$this->create_any_symbol_for_accessing_identifier($node);
 			}
 			elseif ($infered_type === TypeFactory::$_namespace) {
+				dump($master);
+				throw new Exception('whats the problem!!!');
 				$this->attach_namespace_member_symbol($master->symbol->declaration, $node);
 			}
 			// elseif ($infered_type === TypeFactory::$_class) {
-			elseif ($infered_type instanceof MetaType) {
+			elseif ($infered_type instanceof MetaType) { // includes static call for class members
 				$node->symbol = $this->require_class_member_symbol($master->symbol->declaration, $node);
 				if (!$node->symbol->declaration->is_static) {
 					$name = $this->get_declaration_name($node->symbol->declaration);

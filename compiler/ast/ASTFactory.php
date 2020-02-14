@@ -22,24 +22,24 @@ class ASTFactory
 
 	public $parser;
 
-	protected $unit;
+	private $unit;
 
-	protected $program;
+	private $program;
 
-	protected $class;
+	private $class;
 
-	protected $function;
+	private $function;
 
 	/**
 	 * current function or lambda
 	 * @var IEnclosingBlock
 	 */
-	protected $enclosing;
+	private $enclosing;
 
 	/**
 	 * @var BaseBlock
 	 */
-	protected $block;
+	private $block;
 
 	public static function init_ast_system()
 	{
@@ -111,28 +111,6 @@ class ASTFactory
 		return $declaration;
 	}
 
-	protected function create_builtins_constant(string $token): IExpression
-	{
-		if ($token === _VAL_TRUE) {
-			$expression = new BooleanLiteral(true);
-		}
-		elseif ($token === _VAL_FALSE) {
-			$expression = new BooleanLiteral(false);
-		}
-		elseif ($token === _VAL_NONE) {
-			$expression = new NoneLiteral();
-		}
-		elseif ($token === _UNIT_PATH) {
-			$expression = new ConstantIdentifier(_UNIT_PATH);
-			$expression->symbol = $this->unit_path_symbol;
-		}
-		else {
-			throw $this->parser->new_exception("Unknow constant name '$token'.");
-		}
-
-		return $expression;
-	}
-
 	public function create_namespace_identifier(array $names)
 	{
 		return new NamespaceIdentifier($names);
@@ -152,8 +130,8 @@ class ASTFactory
 
 	public function create_identifier(string $name) // PlainIdentifier or ILiteral
 	{
-		if (TeaHelper::is_builtin_constant($name)) {
-			$identifier = $this->create_builtins_constant($name);
+		if (TeaHelper::is_builtin_identifier($name)) {
+			$identifier = $this->create_builtin_identifier($name);
 		}
 		else {
 			$identifier = new PlainIdentifier($name);
@@ -161,6 +139,62 @@ class ASTFactory
 		}
 
 		return $identifier;
+	}
+
+	private function create_builtin_identifier(string $token): IExpression
+	{
+		if ($token === _THIS) {
+			$identifier = new PlainIdentifier($token);
+			if ($this->class) {
+				if ($this->function !== $this->enclosing) { // it is would be in a lambda block
+					throw $this->parser->new_exception("Cannot use '$token' identifier in lambda functions.");
+				}
+
+				$identifier->symbol = $this->function->is_static ? $this->class->this_class_symbol : $this->class->this_object_symbol;
+			}
+			elseif (!$this->seek_symbol_in_function($identifier)) { // it would be has an #expect
+				throw $this->parser->new_exception("Identifier '$token' not defined.");
+			}
+		}
+		elseif ($token === _SUPER) {
+			$identifier = new PlainIdentifier($token);
+			if ($this->class) {
+				if ($this->function !== $this->enclosing) { // it is would be in a lambda block
+					throw $this->parser->new_exception("Cannot use '$token' identifier in lambda functions.");
+				}
+			}
+			else {
+				throw $this->parser->new_exception("Identifier '$token' cannot use without in a class.");
+			}
+		}
+		elseif ($token === _VAL_TRUE) {
+			$identifier = new BooleanLiteral(true);
+		}
+		elseif ($token === _VAL_FALSE) {
+			$identifier = new BooleanLiteral(false);
+		}
+		elseif ($token === _VAL_NONE) {
+			$identifier = new NoneLiteral();
+		}
+		elseif ($token === _UNIT_PATH) {
+			$identifier = new ConstantIdentifier(_UNIT_PATH);
+			$identifier->symbol = $this->unit_path_symbol;
+		}
+		else {
+			throw $this->parser->new_exception("Unknow builtin identifier '$token'.");
+		}
+
+		return $identifier;
+	}
+
+	public function create_include_expression(string $target)
+	{
+		$expression = new IncludeExpression($target);
+
+		// prepare for check #expect of target program
+		$expression->symbols = $this->collect_created_symbols_in_current_function();
+
+		return $expression;
 	}
 
 	public function create_yield_expression(IExpression $argument)
@@ -172,7 +206,7 @@ class ASTFactory
 		return new YieldExpression($argument);
 	}
 
-	protected function set_to_defer_check(Identifiable $identifier)
+	private function set_to_defer_check(Identifiable $identifier)
 	{
 		if (!$this->seek_symbol_in_function($identifier)) {
 			// add to check list
@@ -206,7 +240,7 @@ class ASTFactory
 			}
 			else {
 				// symbol has not declared
-				$this->auto_declared_to_assign_identifier($assignable);
+				$this->auto_declare_to_assigning_identifier($assignable);
 
 				// remove from check list
 				$this->remove_defer_check($this->enclosing, $assignable);
@@ -226,6 +260,20 @@ class ASTFactory
 		return $assignment;
 	}
 
+	private function auto_declare_to_assigning_identifier(IExpression $identifier)
+	{
+		if (!TeaHelper::is_declarable_variable_name($identifier->name)) {
+			throw $this->parser->new_exception("Identifier '$identifier->name' not a valid variable name.");
+		}
+
+		$declaration = new VariableDeclaration($identifier->name, null, null, true);
+		$declaration->block = $this->block;
+		$this->enclosing->auto_declarations[$identifier->name] = $declaration;
+
+		// link to symbol
+		$identifier->symbol = $this->create_local_symbol($declaration);
+	}
+
 	public function create_super_variable_declaration(string $name, ?IType $type)
 	{
 		$declaration = new SuperVariableDeclaration($name, $type, null, true);
@@ -238,6 +286,7 @@ class ASTFactory
 	{
 		$declaration = new VariableDeclaration($name, $type, $value, true);
 		$this->create_local_symbol($declaration);
+
 		return $declaration;
 	}
 
@@ -246,9 +295,8 @@ class ASTFactory
 		$this->check_global_modifier($modifier, 'non class member constant');
 
 		$declaration = new ConstantDeclaration($modifier, $name, $type, $value);
-
 		$symbol = $this->create_global_symbol($declaration);
-		$this->add_enclosing_symbol($symbol);
+		// $this->add_enclosing_symbol($symbol);
 
 		return $declaration;
 	}
@@ -377,12 +425,29 @@ class ASTFactory
 		// create 'this' symbol
 		$class_identifier = new ClassIdentifier($declaration->name); // as a Type for this
 		$class_identifier->symbol = $symbol;
-		$declaration->symbols[_THIS] = ASTHelper::create_symbol_this($class_identifier);
+		// $declaration->symbols[_THIS] = ASTHelper::create_symbol_this($class_identifier);
+
+		$declaration->this_class_symbol = $symbol;
+		$declaration->this_object_symbol = ASTHelper::create_symbol_this($class_identifier);
 
 		// create the MetaType
 		$declaration->type = TypeFactory::create_meta_type($class_identifier);
 
 		return $symbol;
+	}
+
+	public function create_masked_method_block(string $name, ?IType $type, ?array $parameters, ?array $callbacks)
+	{
+		$declaration = new MaskedDeclaration(_PUBLIC, $name, $type, $parameters);
+		$this->append_class_member($declaration);
+
+		$callbacks && $declaration->set_callbacks(...$callbacks);
+
+		$this->init_enclosing($declaration);
+		$this->function = $declaration;
+		$this->block = $declaration;
+
+		return $declaration;
 	}
 
 	public function declare_method(?string $modifier, string $name, ?IType $type, array $parameters, ?array $callbacks)
@@ -408,20 +473,6 @@ class ASTFactory
 		$this->enter_block($declaration);
 		$this->init_enclosing($declaration);
 		$this->function = $declaration;
-
-		return $declaration;
-	}
-
-	public function create_masked_method_block(string $name, ?IType $type, ?array $parameters, ?array $callbacks)
-	{
-		$declaration = new MaskedDeclaration(_PUBLIC, $name, $type, $parameters);
-		$this->append_class_member($declaration);
-
-		$callbacks && $declaration->set_callbacks(...$callbacks);
-
-		$this->init_enclosing($declaration);
-		$this->function = $declaration;
-		$this->block = $declaration;
 
 		return $declaration;
 	}
@@ -605,7 +656,7 @@ class ASTFactory
 		return $block;
 	}
 
-	protected function enter_block(BaseBlock $block)
+	private function enter_block(BaseBlock $block)
 	{
 		$block->super_block = $this->block;
 		$this->block = $block;
@@ -643,7 +694,7 @@ class ASTFactory
 		$this->set_to_main_function();
 	}
 
-	protected static function get_enclosing(BaseBlock $block)
+	private static function get_enclosing(BaseBlock $block)
 	{
 		$block= $block->super_block;
 		if (!$block || $block instanceof IEnclosingBlock) {
@@ -657,29 +708,32 @@ class ASTFactory
 		return self::get_enclosing($block);
 	}
 
-	private function auto_declared_to_assign_identifier(IExpression $identifier)
-	{
-		if (!TeaHelper::is_declarable_variable_name($identifier->name)) {
-			throw $this->parser->new_exception("Identifier '$identifier->name' not a valid variable name.");
-		}
-
-		$declaration = new VariableDeclaration($identifier->name, null, null, true);
-		$declaration->block = $this->block;
-		$this->enclosing->auto_declarations[$identifier->name] = $declaration;
-
-		// link to symbol
-		$identifier->symbol = $this->create_enclosing_symbol($declaration);
-	}
-
 	const GLOBAL_MODIFIERS = [_PUBLIC, _INTERNAL];
-	protected function check_global_modifier(?string $modifier, string $type_label)
+	private function check_global_modifier(?string $modifier, string $type_label)
 	{
 		if ($modifier && !in_array($modifier, self::GLOBAL_MODIFIERS, true)) {
 			throw $this->parser->new_exception("Cannot use modifier '{$modifier}' for $type_label.");
 		}
 	}
 
-	protected function seek_symbol_in_function(Identifiable $identifier, BaseBlock $seek_block = null)
+	// use for include expression
+	private function collect_created_symbols_in_current_function()
+	{
+		$block = $this->block;
+		$symbols = $block->symbols;
+
+		while (($block = $block->super_block) && !$block instanceof ClassLikeDeclaration) {
+			$symbols = array_merge($symbols, $block->symbols);
+		}
+
+		if ($this->class) {
+			$symbols[_THIS] = $this->class->this_object_symbol;
+		}
+
+		return $symbols;
+	}
+
+	private function seek_symbol_in_function(Identifiable $identifier, BaseBlock $seek_block = null)
 	{
 		if ($seek_block === null) {
 			$seek_block = $this->block;
@@ -710,7 +764,7 @@ class ASTFactory
 		return $symbol;
 	}
 
-	protected function seek_symbol_in_encolsing(string $name, BaseBlock &$seek_block): ?Symbol
+	private function seek_symbol_in_encolsing(string $name, BaseBlock &$seek_block): ?Symbol
 	{
 		do {
 			if (isset($seek_block->symbols[$name])) {
@@ -725,7 +779,7 @@ class ASTFactory
 		return null;
 	}
 
-	protected function init_enclosing($block)
+	private function init_enclosing($block)
 	{
 		$this->enclosing = $block;
 
@@ -736,24 +790,33 @@ class ASTFactory
 			}
 		}
 
-		if (!empty($block->callbacks)) {
-			foreach ($block->callbacks as $parameter) {
-				$symbol = new Symbol($parameter);
-				$this->add_enclosing_symbol($symbol);
-			}
-		}
+		// if (!empty($block->callbacks)) {
+		// 	foreach ($block->callbacks as $parameter) {
+		// 		$symbol = new Symbol($parameter);
+		// 		$this->add_enclosing_symbol($symbol);
+		// 	}
+		// }
 	}
 
-	// Add to enclosing block, includes: Anonymous Function, Normal Function, Method
-	protected function create_enclosing_symbol(IDeclaration $declaration)
+	// create symbol, and add to current block
+	private function create_local_symbol(IDeclaration $declaration)
 	{
 		$symbol = new Symbol($declaration);
-		$this->add_enclosing_symbol($symbol);
+		$this->add_block_symbol($symbol);
 
 		return $symbol;
 	}
 
-	protected function create_program_symbol(IDeclaration $declaration, Symbol $symbol = null)
+	// // create symbol, and add to enclosing block, includes: Anonymous Function, Normal Function, Method
+	// private function create_enclosing_symbol(IDeclaration $declaration)
+	// {
+	// 	$symbol = new Symbol($declaration);
+	// 	$this->add_enclosing_symbol($symbol);
+
+	// 	return $symbol;
+	// }
+
+	private function create_program_symbol(IDeclaration $declaration, Symbol $symbol = null)
 	{
 		if (!$symbol) {
 			$symbol = new Symbol($declaration);
@@ -764,7 +827,7 @@ class ASTFactory
 		return $symbol;
 	}
 
-	protected function create_global_symbol(IDeclaration $declaration, Symbol $symbol = null)
+	private function create_global_symbol(IDeclaration $declaration, Symbol $symbol = null)
 	{
 		$declaration->program = $this->program;
 
@@ -781,7 +844,7 @@ class ASTFactory
 		return $symbol;
 	}
 
-	protected function create_global_symbol_with_namepath(array $namepath, IDeclaration $declaration)
+	private function create_global_symbol_with_namepath(array $namepath, IDeclaration $declaration)
 	{
 		$declaration->program = $this->program;
 		$symbol = new Symbol($declaration);
@@ -810,13 +873,13 @@ class ASTFactory
 		return $symbol;
 	}
 
-	protected function create_symbol_for_ns(string $ns_name)
+	private function create_symbol_for_ns(string $ns_name)
 	{
 		$declaration = new NamespaceDeclaration($ns_name);
 		return new NamespaceSymbol($declaration);
 	}
 
-	protected function find_or_create_subsymbol_for_ns(NamespaceSymbol $super_symbol, string $sub_ns_name)
+	private function find_or_create_subsymbol_for_ns(NamespaceSymbol $super_symbol, string $sub_ns_name)
 	{
 		$sub_ns_symbol = $super_symbol->declaration->symbols[$sub_ns_name] ?? null;
 		if ($sub_ns_symbol) {
@@ -832,16 +895,7 @@ class ASTFactory
 		return $sub_ns_symbol;
 	}
 
-	// Add to current block
-	protected function create_local_symbol(IDeclaration $declaration)
-	{
-		$symbol = new Symbol($declaration);
-		$this->add_block_symbol($symbol);
-
-		return $symbol;
-	}
-
-	protected function add_unit_symbol(Symbol $symbol)
+	private function add_unit_symbol(Symbol $symbol)
 	{
 		if (isset($this->unit->symbols[$symbol->name])) {
 			throw $this->parser->new_exception("Symbol '{$symbol->name}' is already in use, cannot redeclare.");
@@ -850,7 +904,7 @@ class ASTFactory
 		$this->unit->symbols[$symbol->name] = $symbol;
 	}
 
-	protected function add_program_symbol(Symbol $symbol)
+	private function add_program_symbol(Symbol $symbol)
 	{
 		if (isset($this->program->symbols[$symbol->name])) {
 			throw $this->parser->new_exception("Symbol '{$symbol->name}' is already in use in current program, cannot redeclare.");
@@ -859,7 +913,7 @@ class ASTFactory
 		$this->program->symbols[$symbol->name] = $symbol;
 	}
 
-	protected function add_enclosing_symbol(Symbol $symbol)
+	private function add_enclosing_symbol(Symbol $symbol)
 	{
 		if (isset($this->enclosing->symbols[$symbol->name])) {
 			throw $this->parser->new_exception("Symbol '{$symbol->name}' is already in use in enclosing function, cannot redeclare.");
@@ -868,7 +922,7 @@ class ASTFactory
 		$this->enclosing->symbols[$symbol->name] = $symbol;
 	}
 
-	protected function add_block_symbol(Symbol $symbol)
+	private function add_block_symbol(Symbol $symbol)
 	{
 		if (isset($this->block->symbols[$symbol->name])) {
 			throw $this->parser->new_exception("Symbol '{$symbol->name}' is already in use in local block, cannot redeclare.");

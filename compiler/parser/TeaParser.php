@@ -1453,26 +1453,6 @@ class TeaParser
 		return $call;
 	}
 
-	protected function read_include_expression()
-	{
-		$this->expect_token_ignore_empty(_PAREN_OPEN);
-
-		$name = '';
-		while (($token = $this->get_token()) !== null) {
-			if (TeaHelper::is_identifier_name($token) || $token === _SLASH || $token === _STRIKETHROUGH) {
-				$this->scan_token();
-				$name .= $token;
-			}
-			else {
-				break;
-			}
-		}
-
-		$this->expect_token_ignore_empty(_PAREN_CLOSE);
-
-		return new IncludeExpression($name);
-	}
-
 	protected function try_read_callback_arguments()
 	{
 		if (!$this->skip_token_ignore_empty(_NOTIFY)) {
@@ -1699,7 +1679,7 @@ class TeaParser
 		while ($item = $this->read_class_member_declaration());
 
 		$this->expect_block_end();
-		$this->factory->end_block();
+		$this->factory->end_class();
 	}
 
 	protected function read_class_baseds()
@@ -1874,7 +1854,7 @@ class TeaParser
 		return $type;
 	}
 
-	protected function read_class_member_declaration($leading = null, Docs $docs = null, string $modifier = null, bool $static = null)
+	protected function read_class_member_declaration($leading = null, Docs $docs = null, string $modifier = null, bool $static = false)
 	{
 		$token = $this->get_token_ignore_space();
 		if ($token === null || $token === _BLOCK_END) {
@@ -1914,10 +1894,10 @@ class TeaParser
 		}
 		elseif (TeaHelper::is_strict_less_function_name($token)) { // 因为需要支持PHP库，这里放开为宽松的命名规范
 			if ($this->get_token() === _PAREN_OPEN) {
-				$declaration = $this->read_method_declaration($token, $modifier);
+				$declaration = $this->read_method_declaration($token, $modifier, $static);
 			}
 			else {
-				$declaration = $this->read_property_declaration($token, $modifier);
+				$declaration = $this->read_property_declaration($token, $modifier, $static);
 			}
 		}
 		elseif ($token === _DOCS_MARK) {
@@ -1937,7 +1917,6 @@ class TeaParser
 		$declaration->pos = $header_pos;
 		$declaration->leading = $leading;
 		$docs && $declaration->docs = $docs;
-		$static && $declaration->is_static = $static;
 
 		return $declaration;
 	}
@@ -1972,7 +1951,7 @@ class TeaParser
 		return $this->factory->create_class_constant_declaration($modifier, $name, $type, $value);
 	}
 
-	protected function read_property_declaration(string $name, ?string $modifier)
+	protected function read_property_declaration(string $name, ?string $modifier, bool $static)
 	{
 		// prop1 String
 		// prop1 = 'abcdef'
@@ -1997,10 +1976,13 @@ class TeaParser
 			$value = $this->read_literal_expression();
 		}
 
-		return $this->factory->create_property($modifier, $name, $type, $value);
+		$declaration = $this->factory->create_property($modifier, $name, $type, $value);
+		$declaration->is_static = $static;
+
+		return $declaration;
 	}
 
-	protected function read_method_declaration(string $name, ?string $modifier)
+	protected function read_method_declaration(string $name, ?string $modifier, bool $static)
 	{
 		$parameters = $this->read_parameters_with_parentheses();
 		$return_type = $this->try_read_return_type_identifier();
@@ -2009,10 +1991,12 @@ class TeaParser
 		$next = $this->get_token_ignore_empty();
 		if ($next === _BLOCK_BEGIN) {
 			$declaration = $this->factory->create_method_block($modifier, $name, $return_type, $parameters, $callbacks);
+			$declaration->is_static = $static;
 			$this->read_function_body($declaration);
 		}
 		elseif ($this->is_declare_mode) {
 			$declaration = $this->factory->declare_method($modifier, $name, $return_type, $parameters, $callbacks);
+			$declaration->is_static = $static;
 		}
 		else {
 			throw $this->new_exception('"{" missed for define method.');

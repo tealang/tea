@@ -143,13 +143,15 @@ class HeaderParser extends TeaParser
 		return $this->factory->create_class_constant_declaration($modifier, $name, $type, $value);
 	}
 
-	protected function read_method_declaration(string $name, ?string $modifier)
+	protected function read_method_declaration(string $name, ?string $modifier, bool $static)
 	{
 		$parameters = $this->read_parameters_with_parentheses();
 		$return_type = $this->try_read_return_type_identifier();
 		$callbacks = $this->try_read_callback_protocols();
 
 		$declaration = $this->factory->declare_method($modifier, $name, $return_type, $parameters, $callbacks);
+		$declaration->is_static = $static;
+
 		return $declaration;
 	}
 }

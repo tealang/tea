@@ -15,6 +15,11 @@ class IncludeExpression extends Node implements IExpression
 
 	public $target;
 
+	/**
+	 * @var Symbol[]
+	 */
+	public $symbols; // use for check
+
 	public function __construct(string $target)
 	{
 		$this->target = $target;

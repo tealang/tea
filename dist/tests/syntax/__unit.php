@@ -16,8 +16,6 @@ function fn0($str) {
 }
 
 function xrange(int $start, int $stop, int $step = 1): \Generator {
-	$i = null;
-
 	if ($step > 0) {
 		$i = $start;
 		while ($i < $stop) {

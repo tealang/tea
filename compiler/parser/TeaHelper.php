@@ -13,7 +13,7 @@ TeaHelper::$NORMAL_RESERVEDS = array_merge(
 	TypeFactory::BUILTIN_TYPE_NAMES,
 	TeaHelper::STRUCTURE_KEYS,
 	TeaHelper::MODIFIERS,
-	TeaHelper::PREDEFINED_CONSTS,
+	TeaHelper::BUILTIN_IDENTIFIERS,
 	TeaHelper::OTHER_RESERVEDS
 );
 
@@ -35,10 +35,10 @@ class TeaHelper
 		_PRIVATE
 	];
 
-	const PREDEFINED_CONSTS = [_VAL_NONE, _VAL_TRUE, _VAL_FALSE, _UNIT_PATH];
+	const BUILTIN_IDENTIFIERS = [_THIS, _SUPER, _VAL_NONE, _VAL_TRUE, _VAL_FALSE, _UNIT_PATH];
 
 	const OTHER_RESERVEDS = [
-		_THIS, _SUPER, _CONSTRUCT, _DESTRUCT, _STATIC,
+		_CONSTRUCT, _DESTRUCT, _STATIC,
 		_ELSEIF, _ELSE, _CATCH, _FINALLY,
 		_WHEN,
 	];
@@ -104,9 +104,9 @@ class TeaHelper
 		return in_array($token, self::STRUCTURE_KEYS, true);
 	}
 
-	static function is_builtin_constant($token)
+	static function is_builtin_identifier($token)
 	{
-		return in_array($token, self::PREDEFINED_CONSTS, true);
+		return in_array($token, self::BUILTIN_IDENTIFIERS, true);
 	}
 
 	static function is_xtag_name($token)

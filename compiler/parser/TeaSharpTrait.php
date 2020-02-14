@@ -351,6 +351,26 @@ trait TeaSharpTrait
 		}
 	}
 
+	protected function read_include_expression()
+	{
+		$this->expect_token_ignore_empty(_PAREN_OPEN);
+
+		$name = '';
+		while (($token = $this->get_token()) !== null) {
+			if (TeaHelper::is_identifier_name($token) || $token === _SLASH || $token === _STRIKETHROUGH) {
+				$this->scan_token();
+				$name .= $token;
+			}
+			else {
+				break;
+			}
+		}
+
+		$this->expect_token_ignore_empty(_PAREN_CLOSE);
+
+		return $this->factory->create_include_expression($name);
+	}
+
 	private function read_string_literal()
 	{
 		$token = $this->scan_token_ignore_space();

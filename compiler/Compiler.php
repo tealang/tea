@@ -235,6 +235,10 @@ class Compiler
 					continue;
 				}
 
+				if ($identifier->name === 'this') {
+					dump($identifier); exit;
+				}
+
 				$symbol = $this->unit->symbols[$identifier->name] ?? null;
 				if (!$symbol) {
 					continue;
