@@ -25,6 +25,7 @@ $str_from_float = (string)123.123;
 if (is_string($str_from_float)) {
 	echo $str_from_float . ' is String', NL;
 }
+
 $num = 3;
 $result = -$num * PI ** 2 - 12;
 

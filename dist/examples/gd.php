@@ -34,6 +34,7 @@ if (!file_exists($fontfile)) {
 	echo "The font file '{$fontfile}' not found.\nPlease download it and put to path {$fontfile}", NL;
 	exit;
 }
+
 $image = imagecreatetruecolor(BOX_WIDTH, BOX_WIDTH);
 
 $non_color = imagecolorallocatealpha($image, 0, 0, 0, 127);

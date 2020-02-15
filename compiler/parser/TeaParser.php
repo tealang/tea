@@ -21,6 +21,8 @@ class TeaParser
 
 	protected $program;
 
+	protected $root_statements;
+
 	public function __construct(ASTFactory $factory)
 	{
 		$this->factory = $factory;
@@ -49,22 +51,22 @@ class TeaParser
 			$this->factory->set_as_main_program();
 		}
 
-		$root_statements = [];
+		$this->root_statements = [];
 		while ($this->pos < $this->tokens_count) {
 			$item = $this->read_root_statement();
 			if ($item instanceof IRootDeclaration) {
 				$program->append_declaration($item);
 			}
 			elseif ($item) {
-				$root_statements[] = $item;
+				$this->root_statements[] = $item;
 			}
 		}
 
 		$this->factory->end_block();
 
 		// set statements to main function when has any onload executings
-		if ($root_statements) {
-			$program->main_function->set_body_with_statements(...$root_statements);
+		if ($this->root_statements) {
+			$program->main_function->set_body_with_statements(...$this->root_statements);
 		}
 		else {
 			$program->main_function = null;
@@ -278,6 +280,10 @@ class TeaParser
 
 	protected function read_constant_declaration(string $name, string $modifier = null)
 	{
+		if ($this->root_statements) {
+			throw $this->new_exception("Please define the constants at header of the program.");
+		}
+
 		$type = $this->try_read_type_identifier();
 		$this->expect_token_ignore_space(_ASSIGN);
 		$value = $this->read_expression();

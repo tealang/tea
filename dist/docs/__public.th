@@ -2,8 +2,6 @@
 
 #unit tea/docs
 
-public PI Float = 3.1415926
-public ARRAY_CONST UInt.Array = [1, 2]
 public __TRAIT__ String
 
 public demo_function2(message String = 'with a default value')
