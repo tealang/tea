@@ -4,7 +4,7 @@
 
 public fn0(str Any)
 
-public xrange(start Int, stop Int, step UInt = 1) GeneratorInterface
+public xrange(start Int, stop Int, step UInt = 1) IGenerator
 
 #php range(start Int, end Int, step UInt = 1) Array
 

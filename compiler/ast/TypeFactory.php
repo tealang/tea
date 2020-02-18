@@ -132,8 +132,8 @@ class TypeFactory
 		}
 
 		static::$_iview_symbol = $unit->symbols['IView'];
-		static::$_iterator_interface_symbol = $unit->symbols['IteratorInterface'];
-		static::$_generator_interface_symbol = $unit->symbols['GeneratorInterface'];
+		static::$_iterator_interface_symbol = $unit->symbols['IIterator'];
+		static::$_generator_interface_symbol = $unit->symbols['IGenerator'];
 	}
 
 	static function exists_type(string $name): bool

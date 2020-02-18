@@ -199,8 +199,8 @@ class ASTFactory
 
 	public function create_yield_expression(IExpression $argument)
 	{
-		// force set type GeneratorInterface to current function
-		$this->function->type = new ClassLikeIdentifier('GeneratorInterface');
+		// force set type IGenerator to current function
+		$this->function->type = new ClassLikeIdentifier('IGenerator');
 		$this->function->has_yield = true;
 
 		return new YieldExpression($argument);

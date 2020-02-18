@@ -320,8 +320,8 @@ public IView {}
 
 #tea Callable {}
 
-#tea Iterable {} // accept IteratorInterface
-#php Iterator as IteratorInterface {
+#tea Iterable {} // accept IIterator
+#php Iterator as IIterator {
 	current() Any
 	key() String
 	next()
@@ -329,7 +329,7 @@ public IView {}
 	valid() Bool
 }
 
-#php Generator as GeneratorInterface: IteratorInterface {
+#php Generator as IGenerator: IIterator {
 	send(value Any) Any
 	throw(exception Exception)
 }
