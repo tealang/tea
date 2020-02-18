@@ -86,7 +86,7 @@ class TeaHelper
 
 	static function is_space_tab_nl($token)
 	{
-		return $token === _SPACE || $token === _TAB || $token === NL || $token === _CR;
+		return $token === _SPACE || $token === _TAB || $token === LF || $token === _CR;
 	}
 
 	static function is_normal_reserveds($token)

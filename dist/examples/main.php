@@ -4,7 +4,7 @@ namespace tea\examples;
 require_once __DIR__ . '/__unit.php';
 
 function say_hello(string $name = 'World') {
-	echo 'Hello, ' . $name . '!', NL;
+	echo 'Hello, ' . $name . '!', LF;
 }
 
 function set_field(string $key, string $value, array &$dict) {
@@ -19,7 +19,7 @@ function show_file_path(string $filename = null) {
 		$filename = realpath($filename);
 	}
 
-	echo $filename, NL;
+	echo $filename, LF;
 }
 
 // ---------
@@ -29,9 +29,9 @@ foreach ($days as $i => $day) {
 	$items[] = ($i + 1) . ": {$day}";
 }
 
-echo implode(', ', $items), NL;
+echo implode(', ', $items), LF;
 
-echo NL;
+echo LF;
 
 say_hello();
 

@@ -7,7 +7,7 @@ use ErrorException;
 require_once __DIR__ . '/__unit.php';
 
 function demo_function1(string $message) {
-	echo 'this function can only be called by local unit', NL;
+	echo 'this function can only be called by local unit', LF;
 }
 
 #public
@@ -41,11 +41,11 @@ trait DemoInterfaceTrait {
 #internal
 class DemoBaseClass {
 	public function __construct(string $name) {
-		echo "Hey, {$name}, it is constructing...", NL;
+		echo "Hey, {$name}, it is constructing...", LF;
 	}
 
 	public function __destruct() {
-		echo "it is destructing...", NL;
+		echo "it is destructing...", LF;
 	}
 
 	protected function a_protected_method() {
@@ -63,11 +63,11 @@ class DemoPublicClass extends DemoBaseClass implements IDemo, DemoInterface {
 }
 
 // ---------
-echo "Hello, 世界", NL;
+echo "Hello, 世界", LF;
 
-echo 'Hi,', 'How are you?', NL;
+echo 'Hi,', 'How are you?', LF;
 
-echo 'string1', 'string2', NL;
+echo 'string1', 'string2', LF;
 
 $any = null;
 $any = 1;
@@ -104,7 +104,7 @@ $xview = '<div>
 
 $regex = '/^[a-z0-9\'_"]+$/i';
 if (regex_match($regex, 'Abc\'123"') !== null) {
-	echo 'matched!', NL;
+	echo 'matched!', LF;
 }
 
 $any_array = [
@@ -191,7 +191,7 @@ if ($str_dict && count($str_dict) > 0) {
 	}
 }
 else {
-	echo 'dict is empty', NL;
+	echo 'dict is empty', LF;
 }
 
 if (0 <= 9) {
@@ -228,10 +228,10 @@ catch (\Exception $ex) {
 $ret1 = demo_function_with_a_return_type('some data');
 
 $ret2 = demo_function_with_callbacks('some data', function ($message) {
-	echo $message, NL;
+	echo $message, LF;
 	return 'some return data';
 }, function ($error) {
-	echo $error, NL;
+	echo $error, LF;
 });
 
 $object = new DemoPublicClass('Benny');

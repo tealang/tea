@@ -17,7 +17,7 @@ function fib_closure(): callable {
 // ---------
 $f = fib_closure();
 for ($i = 0; $i <= 9; $i += 1) {
-	echo "{$i} ==> " . $f(), NL;
+	echo "{$i} ==> " . $f(), LF;
 }
 // ---------
 

@@ -8,11 +8,11 @@ $num = 123;
 $str = "hello ";
 $key = "f3";
 
-echo strlen("some string"), NL;
+echo strlen("some string"), LF;
 
 $str = trim($str);
 
-echo $str, NL;
+echo $str, LF;
 
 substr($str, 2);
 substr($str, 0, 3);
@@ -24,17 +24,17 @@ $arr = [
 	"sub" => [1, 2, 3]
 ];
 
-echo ($str . 'abc') . " world", NL;
+echo ($str . 'abc') . " world", LF;
 echo $str . '\n
 	- ' . $arr['f1'] . '
 	- ' . $arr[$key] . '
-', NL;
+', LF;
 
-echo "\$str world", NL;
+echo "\$str world", LF;
 echo '
 	- ${arr[\'f1\']}
 	- ${arr[key]}
-', NL;
+', LF;
 
 $abc = 'hhh';
 

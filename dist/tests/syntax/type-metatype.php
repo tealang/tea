@@ -25,7 +25,7 @@ class TestForMetaType2 {
 
 // ---------
 $string_type = 'String';
-echo $string_type, NL;
+echo $string_type, LF;
 
 $class_type = TestForMetaType0::class;
 TestForMetaType0::test_class_argument($class_type);

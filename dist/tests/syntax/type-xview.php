@@ -14,7 +14,7 @@ class Cell extends BaseView {
 	}
 
 	public function render(): string {
-		$text = _str_replace($this->text, NL, '<br>');
+		$text = _str_replace($this->text, LF, '<br>');
 		return '<cell>' . $text . '</cell>';
 	}
 }
@@ -59,10 +59,10 @@ class DemoList extends BaseView {
 	' . ($this->title == "abc" ? '<h1>' . htmlspecialchars($this->title . 123, ENT_QUOTES) . '</h1>' : null) . '
 	<i></i>
 	<cells>
-		' . implode(NL, $cells) . '
+		' . implode(LF, $cells) . '
 	</cells>
 	<views>
-		' . implode(NL, $this->subviews) . '
+		' . implode(LF, $this->subviews) . '
 	</views>
 	<script> if (a < 1 || a >= 5) {} </script>
 </' . $this->tag . '>';
@@ -77,7 +77,7 @@ new DemoList('demo-list', 'title', [], function () {
 });
 
 new DemoList('demo-list', 'Demo List', ['A', 'B', 'C'], null, function (string $message) {
-	echo $message, NL;
+	echo $message, LF;
 });
 
 $str = 'str';
@@ -86,7 +86,7 @@ $num = 2;
 $abc = new DemoList('', '', ['A', 'B', 'C'], function () {
 	return new Cell();
 }, function ($message) use(&$str, &$num) {
-	echo $str, $num, NL;
+	echo $str, $num, LF;
 });
 // ---------
 

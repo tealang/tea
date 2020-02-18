@@ -12,7 +12,7 @@ require_once $super_path . 'tea/dist/tests/xview/__unit.php';
 require_once $super_path . 'tea/tests/PHPDemoUnit/__unit.php';
 
 function fn0($str) {
-	echo $str, NL;
+	echo $str, LF;
 }
 
 function xrange(int $start, int $stop, int $step = 1): \Generator {

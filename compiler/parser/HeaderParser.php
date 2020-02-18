@@ -16,7 +16,7 @@ class HeaderParser extends TeaParser
 	protected function read_root_statement($leading = null, Docs $docs = null)
 	{
 		$token = $this->scan_token_ignore_space();
-		if ($token === NL) {
+		if ($token === LF) {
 			return $this->read_root_statement(true);
 		}
 		elseif ($token === _SEMICOLON || $token === null) {

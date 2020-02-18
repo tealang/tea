@@ -18,7 +18,7 @@ function fib_generator(int $num = 9): \Generator {
 
 // ---------
 foreach (fib_generator() as $k => $v) {
-	echo "{$k} ==> {$v}", NL;
+	echo "{$k} ==> {$v}", LF;
 }
 // ---------
 

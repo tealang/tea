@@ -15,7 +15,7 @@ class Dumper
 {
 	const INDENT = '    ';
 
-	const QUOTE_ENCODES = ['\\' => '\\\\', NL => '\n', "\r" => '\r', _TAB => '\t', '"' => '\"'];
+	const QUOTE_ENCODES = ['\\' => '\\\\', LF => '\n', "\r" => '\r', _TAB => '\t', '"' => '\"'];
 
 	private $ignore_list = [];
 
@@ -72,7 +72,7 @@ class Dumper
 
 		if ($is_index_array) {
 			$indents = $indent_num ? str_repeat(static::INDENT, $indent_num) : '';
-			$indents = NL . $indents;
+			$indents = LF . $indents;
 
 			$items = [];
 			foreach ($data as $value) {
@@ -87,7 +87,7 @@ class Dumper
 
 		// 换行控制
 		if (strlen($code) < $max_chars_inline) {
-			$code = strtr($code, [static::INDENT => '', ",\n" => ', ', NL => '']);
+			$code = strtr($code, [static::INDENT => '', ",\n" => ', ', LF => '']);
 		}
 
 		return $code;
@@ -123,7 +123,7 @@ class Dumper
 	function stringing_as_object(string $name, $object, $indent_num = 1, $expansion_depth = 1, $max_chars_inline = MAX_CHARS_INLINE)
 	{
 		$indents = $indent_num ? str_repeat(static::INDENT, $indent_num) : '';
-		$indents = NL . $indents;
+		$indents = LF . $indents;
 
 		$items = [];
 		foreach ($object as $key => $value) {
@@ -148,7 +148,7 @@ class Dumper
 
 		// 换行控制
 		if (strlen($code) < $max_chars_inline) {
-			$code = strtr($code, [static::INDENT => '', ",\n" => ', ', NL => '']);
+			$code = strtr($code, [static::INDENT => '', ",\n" => ', ', LF => '']);
 		}
 
 		return $code;

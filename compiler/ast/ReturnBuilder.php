@@ -44,7 +44,7 @@ class ReturnBuilder
 
 		// the return statement
 		$return = new ReturnStatement($this->vector_identifier);
-		$return->leading = NL;
+		$return->leading = LF;
 		$fixeds[] = $return;
 
 		return $fixeds;
@@ -115,7 +115,7 @@ class ReturnBuilder
 			$fixeds_count = count($fixeds);
 			if ($new_stmt->leading) {
 				// just to let code prety
-				$fixeds[$fixeds_count - 2]->leading = NL;
+				$fixeds[$fixeds_count - 2]->leading = LF;
 				$new_stmt->leading = false;
 			}
 
@@ -140,7 +140,7 @@ class ReturnBuilder
 			$fixeds_count = count($fixeds);
 			if ($new_assignment->leading) {
 				// just to let code prety
-				$fixeds[$fixeds_count - 2]->leading = NL;
+				$fixeds[$fixeds_count - 2]->leading = LF;
 				$new_assignment->leading = false;
 			}
 

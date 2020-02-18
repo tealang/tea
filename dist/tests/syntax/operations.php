@@ -23,7 +23,7 @@ $str_from_int = (string)-123;
 $str_from_float = (string)123.123;
 
 if (is_string($str_from_float)) {
-	echo $str_from_float . ' is String', NL;
+	echo $str_from_float . ' is String', LF;
 }
 
 $num = 3;

@@ -18,8 +18,8 @@ trait TeaDocsTrait
 		$left_spaces = $this->get_previous_inline($this->pos - 1);
 
 		$token = $this->scan_token_ignore_space();
-		if ($token === NL) {
-			$this->skip_token(NL); // skip current line
+		if ($token === LF) {
+			$this->skip_token(LF); // skip current line
 		}
 		else {
 			$docs = $this->read_inline_docs();
@@ -40,7 +40,7 @@ trait TeaDocsTrait
 				$docs = new Docs([$content]);
 				break;
 			}
-			elseif ($token === NL) {
+			elseif ($token === LF) {
 				$docs = null;
 				break; // ignore inline doc content
 			}
@@ -67,7 +67,7 @@ trait TeaDocsTrait
 				break;
 			}
 
-			if ($token === NL) {
+			if ($token === LF) {
 				$items[] = $this->remove_prefix_spaces($tmp, $left_spaces, $left_spaces_len);
 				$tmp = '';
 			}
@@ -108,8 +108,8 @@ trait TeaDocsTrait
 	private function read_parameter_doc()
 	{
 		$name = $this->expect_identifier_token();
-		$comment = $this->scan_to_token(NL);
-		$this->scan_token(); // skip NL
+		$comment = $this->scan_to_token(LF);
+		$this->scan_token(); // skip LF
 
 		return new ParameterDoc($name, null, $comment);
 	}

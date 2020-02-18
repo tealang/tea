@@ -17,7 +17,7 @@ $rows = $rs->fetchAll(\PDO::FETCH_ASSOC);
 
 if (!$rows) {
 	$sqlite->exec('CREATE TABLE demo (id int,name string)');
-	echo 'The demo table created', NL;
+	echo 'The demo table created', LF;
 }
 else {
 	var_dump($rows);

@@ -25,26 +25,26 @@ class TeaDemoClass {
 }
 
 // ---------
-echo "\n***Test for class call:", NL;
+echo "\n***Test for class call:", LF;
 $php_class_demo_object = new PHPClassDemo();
-echo $php_class_demo_object->get_class_name('main1'), NL;
+echo $php_class_demo_object->get_class_name('main1'), LF;
 $methods = $php_class_demo_object::get_target_class_methods(TeaDemoClass::class);
 var_dump($methods);
 
 php_function_demo('hei~');
 var_dump(PHP_CONST_DEMO);
 
-echo "\n***Test for range:", NL;
+echo "\n***Test for range:", LF;
 $items = range(0, 9, 2);
 var_dump($items);
 
-echo "\n***Test for include:", NL;
+echo "\n***Test for include:", LF;
 $title = 'include from main1.tea';
 $result = (include UNIT_PATH . 'label-expect.php');
-echo $result, NL;
+echo $result, LF;
 
-echo "\n***Test for int/uint convert:", NL;
-echo "'-123abc' convert to int: ", intval('-123abc'), NL;
+echo "\n***Test for int/uint convert:", LF;
+echo "'-123abc' convert to int: ", intval('-123abc'), LF;
 // ---------
 
 // program end

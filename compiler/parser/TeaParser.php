@@ -56,8 +56,8 @@ class TeaParser extends BaseParser
 	protected function read_root_statement($leading = null, Docs $docs = null)
 	{
 		$token = $this->scan_token_ignore_space();
-		if ($token === NL) {
-			return $this->read_root_statement(NL);
+		if ($token === LF) {
+			return $this->read_root_statement(LF);
 		}
 		elseif ($token === _SEMICOLON || $token === null) {
 			// empty statement, or at the end of program
@@ -114,8 +114,8 @@ class TeaParser extends BaseParser
 		}
 
 		$token = $this->scan_token_ignore_space();
-		if ($token === NL) {
-			return $this->read_normal_statement(NL, null, $is_in_case_branch);
+		if ($token === LF) {
+			return $this->read_normal_statement(LF, null, $is_in_case_branch);
 		}
 		elseif ($token === _SEMICOLON || $token === null) {
 			return null;
@@ -794,7 +794,7 @@ class TeaParser extends BaseParser
 
 	protected function read_expression_inline()
 	{
-		if ($this->get_token() === NL) {
+		if ($this->get_token() === LF) {
 			return null;
 		}
 
@@ -1198,7 +1198,7 @@ class TeaParser extends BaseParser
 		$has_non_literal_value = false;
 
 		$check_token = $this->get_token_ignore_space();
-		if ($check_token === NL || $check_token === _INLINE_COMMENT_MARK) {
+		if ($check_token === LF || $check_token === _INLINE_COMMENT_MARK) {
 			$is_vertical_layout = true;
 		}
 		elseif ($check_token === _COLON) {
@@ -1603,7 +1603,7 @@ class TeaParser extends BaseParser
 	protected function read_inline_arguments()
 	{
 		$token = $this->get_token_ignore_space();
-		if ($token === NL || $token === _INLINE_COMMENT_MARK) {
+		if ($token === LF || $token === _INLINE_COMMENT_MARK) {
 			return [];
 		}
 
@@ -1851,10 +1851,10 @@ class TeaParser extends BaseParser
 
 		$this->scan_token_ignore_space();
 
-		if ($token === NL) {
+		if ($token === LF) {
 			// has leading empty line
 			// will ignore docs when has empty lines
-			return $this->read_class_member_declaration(NL);
+			return $this->read_class_member_declaration(LF);
 		}
 
 		$this->trace_statement($token);

@@ -7,7 +7,7 @@ $super_path = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR; // the workspace/vendor
 require_once $super_path . 'tea/dist/builtin/__unit.php'; // the builtins
 
 function demo_function2(string $message = 'with a default value') {
-	echo 'this function can be called by local or foriegn units', NL;
+	echo 'this function can be called by local or foriegn units', LF;
 }
 
 function demo_function_with_a_return_type(string $some): int {

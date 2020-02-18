@@ -145,7 +145,7 @@ class PHPCoder extends TeaCoder
 				}
 				elseif ($declaration instanceof FunctionBlock) {
 					$item = $declaration->render($this);
-					$functions[] = $item . NL;
+					$functions[] = $item . LF;
 				}
 			}
 		}
@@ -175,7 +175,7 @@ class PHPCoder extends TeaCoder
 		}
 
 		if ($program->uses) {
-			$items[] = $this->render_uses($program->uses) . NL;
+			$items[] = $this->render_uses($program->uses) . LF;
 		}
 
 		return $items;
@@ -189,18 +189,18 @@ class PHPCoder extends TeaCoder
 			$levels = $program->unit->count_subdirectory_levels_for_file($program->file);
 			if ($levels) {
 				// 在Unit子目录中
-				$items[] = "require_once dirname(__DIR__, {$levels}) . '/__unit.php';" . NL;
+				$items[] = "require_once dirname(__DIR__, {$levels}) . '/__unit.php';" . LF;
 			}
 			else {
 				// 在Unit根目录中
-				$items[] = "require_once __DIR__ . '/__unit.php';" . NL;
+				$items[] = "require_once __DIR__ . '/__unit.php';" . LF;
 			}
 		}
 
 		// foreach ($program->declarations as $node) {
 		// 	if ($node instanceof ExpectDeclaration) {
 		// 		$item = $node->render($this);
-		// 		$items[] = $item . NL;
+		// 		$items[] = $item . LF;
 		// 	}
 		// }
 
@@ -209,7 +209,7 @@ class PHPCoder extends TeaCoder
 			// 常量和函数都生成到了__unit.php中
 			if (!$node->is_unit_level || $node instanceof ClassLikeDeclaration) {
 				$item = $node->render($this);
-				$item === null || $items[] = $item . NL;
+				$item === null || $items[] = $item . LF;
 			}
 		}
 
@@ -435,7 +435,7 @@ class PHPCoder extends TeaCoder
 				}
 			}
 
-			$items[] = NL;
+			$items[] = LF;
 		}
 
 		if (is_array($body)) {
@@ -569,7 +569,7 @@ class PHPCoder extends TeaCoder
 				continue;
 			}
 
-			$members[] = $item === NL ? $item : $item . NL;
+			$members[] = $item === LF ? $item : $item . LF;
 		}
 
 		return $members;
@@ -605,7 +605,7 @@ class PHPCoder extends TeaCoder
 			$branches[] = $this->render_else_for_case_block($node->else);
 		}
 
-		$branches = $this->indents(join(NL, $branches));
+		$branches = $this->indents(join(LF, $branches));
 		$code = "switch ($test) {\n$branches\n}";
 
 		if ($node->except) {
@@ -652,7 +652,7 @@ class PHPCoder extends TeaCoder
 
 		$codes[] = $this->render_case_branch_body($node->body);
 
-		return join(NL, $codes);
+		return join(LF, $codes);
 	}
 
 	protected function render_case_branch_body(array $nodes)
@@ -660,7 +660,7 @@ class PHPCoder extends TeaCoder
 		$items = [];
 		foreach ($nodes as $node) {
 			$item = $node->render($this);
-			$items[] = $item === NL ? $item : $item . NL;
+			$items[] = $item === LF ? $item : $item . LF;
 		}
 
 		if (isset($node) && !$node instanceof BreakStatement) {
@@ -829,6 +829,10 @@ class PHPCoder extends TeaCoder
 		// remove the virtual tag
 		if (substr($code, 0, 5) === '<vtag>') {
 			$code = substr($code, 5, -11);
+		}
+
+		if (strpos($code, "\t\n")) {
+			$code = preg_replace('/\t+\n/', '', $code);
 		}
 
 		return $this->new_string_placeholder($code);
@@ -1516,10 +1520,10 @@ class PHPCoder extends TeaCoder
 		// for echo
 		if ($node->arguments) {
 			$arguments = $this->render_arguments($node->arguments);
-			return "echo $arguments, NL;";
+			return "echo $arguments, LF;";
 		}
 		else {
-			return 'echo NL;';
+			return 'echo LF;';
 		}
 	}
 }

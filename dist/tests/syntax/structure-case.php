@@ -14,7 +14,7 @@ try {
 			switch ($num) {
 				case $b:
 					$b = $num * 5;
-					echo $b, NL;
+					echo $b, LF;
 					break;
 				case 1:
 				case 2:
@@ -23,17 +23,17 @@ try {
 					break 2;
 
 				default:
-					echo 'not matched.', NL;
+					echo 'not matched.', LF;
 					break;
 			}
 			break;
 		case 10:
 		case 100:
-			echo $num, NL;
+			echo $num, LF;
 			break;
 		default:
 			if ($num > 10) {
-				echo 'num is greater than 10.', NL;
+				echo 'num is greater than 10.', LF;
 			}
 	}
 }
@@ -41,7 +41,7 @@ catch (\Exception $ex) {
 	// no any
 }
 finally {
-	echo 'finally!', NL;
+	echo 'finally!', LF;
 }
 // ---------
 

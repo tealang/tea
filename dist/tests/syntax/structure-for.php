@@ -10,7 +10,7 @@ $arr = [
 ];
 
 foreach (range(0, 9) as $val) {
-	echo $val, NL;
+	echo $val, LF;
 }
 
 if ($arr && count($arr) > 0) {
@@ -28,11 +28,11 @@ else {
 if (0 <= 9) {
 	for ($i = 0; $i <= 9; $i += 1) {
 		$i + 3;
-		echo $i, NL;
+		echo $i, LF;
 	}
 }
 else {
-	echo 'no loops', NL;
+	echo 'no loops', LF;
 }
 
 try {
@@ -40,7 +40,7 @@ try {
 	$__tmp1 = 0 + 5;
 	if ($__tmp0 >= $__tmp1) {
 		for ($i = $__tmp0; $i >= $__tmp1; $i -= 2) {
-			echo $i, NL;
+			echo $i, LF;
 		}
 	}
 	elseif ($arr) {

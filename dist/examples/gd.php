@@ -31,7 +31,7 @@ const BOX_WIDTH = 629;
 $tmp_path = dirname(__DIR__, 2) . '/tmp/';
 $fontfile = $tmp_path . 'SourceHanSansSC-Regular.otf';
 if (!file_exists($fontfile)) {
-	echo "The font file '{$fontfile}' not found.\nPlease download it and put to path {$fontfile}", NL;
+	echo "The font file '{$fontfile}' not found.\nPlease download it and put to path {$fontfile}", LF;
 	exit;
 }
 
@@ -53,10 +53,10 @@ $result = imagepng($image, $target_image_file);
 imagedestroy($image);
 
 if ($result) {
-	echo 'Image ' . $target_image_file . ' generated.', NL;
+	echo 'Image ' . $target_image_file . ' generated.', LF;
 }
 else {
-	echo 'Image ' . $target_image_file . ' generate failure.', NL;
+	echo 'Image ' . $target_image_file . ' generate failure.', LF;
 }
 // ---------
 

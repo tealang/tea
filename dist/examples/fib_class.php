@@ -51,11 +51,11 @@ class Fib implements IFib {
 $fib = new Fib(9);
 try {
 	while ($fib->has_next()) {
-		echo $fib->get_next(), NL;
+		echo $fib->get_next(), LF;
 	}
 }
 catch (\Exception $ex) {
-	echo $ex->getMessage(), NL;
+	echo $ex->getMessage(), LF;
 }
 // ---------
 

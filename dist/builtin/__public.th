@@ -2,7 +2,7 @@
 
 #unit tea/builtin
 
-public NL String = "\n"
+public LF String = "\n"
 public __DIR__ String
 public __FILE__ String
 public __LINE__ UInt
@@ -248,7 +248,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	masked map(callback Callable) Array
 	masked reduce(callback Callable, initial Any = #default)
 	masked filter(callback Callable) Array
-	masked join(glue String = NL) String
+	masked join(glue String = LF) String
 	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) String
 }
 
@@ -259,7 +259,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	masked has_key(key Any) Bool
 	masked has_value(val Any) Bool
 	masked find(val Any) String
-	masked join(glue String = NL) String
+	masked join(glue String = LF) String
 	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) String
 }
 

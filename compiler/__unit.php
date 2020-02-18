@@ -13,10 +13,10 @@ require __DIR__ . '/constants.php';
 
 const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
-const NL = "\n";
+const LF = "\n";
 
 function halt(string $msg) {
-	echo NL, $msg, NL, NL;
+	echo LF, $msg, LF, LF;
 	exit;
 }
 
@@ -29,16 +29,16 @@ function println(string ...$contents) {
 		echo $content;
 	}
 
-	echo NL;
+	echo LF;
 }
 
 function dump(...$args) {
-	echo NL;
+	echo LF;
 	$dumper = new Dumper(['unit', 'program']);
 	foreach ($args as $arg) {
 		$str = $dumper->stringing($arg, 0);
 		$str = str_replace('Tea\\', '', $str);
-		echo $str, NL;
+		echo $str, LF;
 	}
 }
 

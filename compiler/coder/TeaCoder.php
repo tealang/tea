@@ -39,7 +39,7 @@ class TeaCoder
 
 	const NONE = 'none';
 
-	const PROGRAM_HEADER = NL;
+	const PROGRAM_HEADER = LF; // a empty line
 
 	protected const STRING_HOLDER_MARK = "\r\r:%d:";
 
@@ -57,7 +57,7 @@ class TeaCoder
 
 	protected function join_code(array $items)
 	{
-		$code = join(NL, $items);
+		$code = join(LF, $items);
 
 		// for do not indents to string blocks
 		if ($this->string_holder_count) {
@@ -73,7 +73,7 @@ class TeaCoder
 	{
 		$items = [];
 		if ($program->uses) {
-			$items[] = $this->render_uses($program->uses) . NL;
+			$items[] = $this->render_uses($program->uses) . LF;
 		}
 
 		foreach ($program->declarations as $node) {
@@ -99,7 +99,7 @@ class TeaCoder
 		foreach ($program->declarations as $node) {
 			if ($node instanceof ClassLikeDeclaration || $node instanceof IFunctionDeclaration) {
 				$item = $node->render($this);
-				$item === null || $items[] = $item . NL;
+				$item === null || $items[] = $item . LF;
 			}
 		}
 
@@ -113,7 +113,7 @@ class TeaCoder
 			$items[] = $statement->render($this);
 		}
 
-		return join(NL, $items);
+		return join(LF, $items);
 	}
 
 // -----------
@@ -703,7 +703,7 @@ class TeaCoder
 	protected function new_string_placeholder(string $quoted_string)
 	{
 		// do not need holder when have not any new lines
-		if (strpos($quoted_string, NL) === false) {
+		if (strpos($quoted_string, LF) === false) {
 			return $quoted_string;
 		}
 
@@ -827,7 +827,7 @@ class TeaCoder
 	{
 		if ($is_vertical_layout) {
 			$code = $this->indents(join(",\n", $items));
-			$code = NL . $code . NL;
+			$code = LF . $code . LF;
 		}
 		else {
 			$code = join(', ', $items);
@@ -956,7 +956,7 @@ class TeaCoder
 
 	public function render_newline_statement()
 	{
-		return NL;
+		return LF;
 	}
 
 	public function render_use_statement(UseStatement $node)
@@ -1205,9 +1205,9 @@ class TeaCoder
 	{
 		$body = trim(join($items));
 
-		$code = $this->begin_tag() . NL;
+		$code = $this->begin_tag() . LF;
 		$code .= $this->indents($body === '' ? '// no any' : $body);
-		$code .= NL . $this->end_tag($label);
+		$code .= LF . $this->end_tag($label);
 
 		return $code;
 	}
@@ -1222,10 +1222,10 @@ class TeaCoder
 			}
 
 			if ($node->leading !== null) {
-				$items[] = $node->leading . $item . NL;
+				$items[] = $node->leading . $item . LF;
 			}
 			else {
-				$items[] = $item . NL;
+				$items[] = $item . LF;
 			}
 		}
 
@@ -1262,7 +1262,7 @@ class TeaCoder
 	{
 		$indents = str_repeat(static::INDENT, $number);
 
-		if (strpos($contents, NL) === false) {
+		if (strpos($contents, LF) === false) {
 			return $indents . $contents;
 		}
 
@@ -1281,7 +1281,7 @@ class TeaCoder
 
 	protected function new_paragraph(string $contents)
 	{
-		return NL . $contents . NL;
+		return LF . $contents . LF;
 	}
 
 	protected function generate_temp_variable_name()

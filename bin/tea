@@ -48,7 +48,7 @@ try {
 		halt(USAGE);
 	}
 
-	echo NL;
+	echo LF;
 	$realpath = FileHelper::normalize_path($realpath . DS);
 	$compiler = new Compiler($realpath);
 	$count = $compiler->make();
@@ -57,5 +57,5 @@ try {
 }
 catch (\Exception $e) {
 	halt($e->getMessage());
-	// echo $e->getTraceAsString(), NL, NL;
+	// echo $e->getTraceAsString(), LF, LF;
 }

@@ -11,10 +11,10 @@ try {
 	// no any
 }
 catch (\Exception $ex) {
-	echo $ex->getMessage(), NL;
+	echo $ex->getMessage(), LF;
 }
 finally {
-	echo 'do finally', NL;
+	echo 'do finally', LF;
 }
 
 try {
@@ -26,7 +26,7 @@ try {
 	}
 }
 catch (\Exception $ex) {
-	echo $ex->getMessage(), NL;
+	echo $ex->getMessage(), LF;
 }
 finally {
 	// no any
@@ -40,7 +40,7 @@ try {
 	}
 }
 catch (\ErrorException $ex) {
-	echo $ex->getMessage(), NL;
+	echo $ex->getMessage(), LF;
 }
 finally {
 	// no any

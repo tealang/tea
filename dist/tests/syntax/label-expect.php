@@ -16,7 +16,7 @@ foreach ($items as $k => $v) {
 return '<section>
 	<h1>' . $title . '</h1>
 	<ul>
-		' . implode(NL, $list) . '
+		' . implode(LF, $list) . '
 	</ul>
 </section>';
 // ---------

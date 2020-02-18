@@ -2,7 +2,7 @@
 const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
 #public
-const NL = "\n";
+const LF = "\n";
 
 function uintval($val): int {
 	return uint_ensure((int)$val);

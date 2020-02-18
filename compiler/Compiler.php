@@ -209,7 +209,7 @@ class Compiler
 			$this->normal_programs[] = $this->parse_program($file);
 		}
 
-		self::echo_success(count($this->normal_programs) . ' programs parsed success.' . NL);
+		self::echo_success(count($this->normal_programs) . ' programs parsed success.' . LF);
 	}
 
 	private function render_all()
@@ -280,7 +280,7 @@ class Compiler
 
 	private function check_ast()
 	{
-		self::echo_start('Checking AST...', NL);
+		self::echo_start('Checking AST...', LF);
 
 		// check depends units first
 		foreach ($this->unit->use_units as $dep_unit) {
@@ -290,14 +290,14 @@ class Compiler
 		// check current unit
 		$this->check_ast_for_unit($this->unit);
 
-		self::echo_success(count($this->unit->programs) . ' programs checked.' . NL);
+		self::echo_success(count($this->unit->programs) . ' programs checked.' . LF);
 	}
 
 	private function check_ast_for_unit(Unit $unit)
 	{
 		$checker = $unit->get_checker();
 		foreach ($unit->programs as $program) {
-			self::echo_start(" - {$program->file}", NL);
+			self::echo_start(" - {$program->file}", LF);
 			$checker->check_program($program);
 		}
 	}
@@ -552,6 +552,6 @@ class Compiler
 
 	private static function echo_success(string $message = 'success.')
 	{
-		echo $message, NL;
+		echo $message, LF;
 	}
 }

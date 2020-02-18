@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-const SPLIT_PATTERN = '/(\s|\{|\}|\(|\)|\[|\]|\'|\"|\,|\.=|\.|\$|\\\|\/\*|\*\/|\/\/|\/>|\/=|\/|\;|\+=|---|-->|->|-=|--|-|~|=>|<=|>=|>>=|<<=|>>|<<|<|>|===|\!==|\!=|\!|==|\*=|%=|&=|\|=|\^=|\?\?=|=|@|#|&|:)/';
+const TEA_TOKENS_SPLIT_PATTERN = '/(\s|\{|\}|\(|\)|\[|\]|\'|\"|\,|\.=|\.|\$|\\\|\/\*|\*\/|\/\/|\/>|\/=|\/|\;|\+=|---|-->|->|-=|--|-|~|=>|<=|>=|>>=|<<=|>>|<<|<|>|===|\!==|\!=|\!|==|\*=|%=|&=|\|=|\^=|\?\?=|=|@|#|&|:)/';
 
 trait TeaTokenTrait
 {
@@ -21,7 +21,7 @@ trait TeaTokenTrait
 
 	protected function tokenize(string $code)
 	{
-		$items = preg_split(SPLIT_PATTERN, $code, null, PREG_SPLIT_DELIM_CAPTURE);
+		$items = preg_split(TEA_TOKENS_SPLIT_PATTERN, $code, null, PREG_SPLIT_DELIM_CAPTURE);
 
 		$this->line2pos[] = $real_pos = 0;
 
@@ -31,7 +31,7 @@ trait TeaTokenTrait
 				continue;
 			}
 
-			if ($item === NL) {
+			if ($item === LF) {
 				$this->line2pos[] = $real_pos;
 			}
 
@@ -78,8 +78,8 @@ trait TeaTokenTrait
 
 	protected function skip_current_line()
 	{
-		$this->scan_to_token(NL);
-		$this->scan_token(); // skip NL
+		$this->scan_to_token(LF);
+		$this->scan_token(); // skip LF
 	}
 
 	// the ':'
@@ -165,7 +165,7 @@ trait TeaTokenTrait
 	{
 		$pos = $this->pos;
 		$token = $this->get_token_ignore_space($pos);
-		if ($token === NL) {
+		if ($token === LF) {
 			$token = $this->get_token_ignore_space($pos);
 		}
 
@@ -234,7 +234,7 @@ trait TeaTokenTrait
 			return $this->scan_string_component();
 		}
 
-		// if ($token === NL) {
+		// if ($token === LF) {
 		// 	$this->current_line++;
 		// }
 
@@ -251,7 +251,7 @@ trait TeaTokenTrait
 			return $this->scan_token();
 		}
 
-		// if ($token === NL) {
+		// if ($token === LF) {
 		// 	$this->current_line++;
 		// }
 
@@ -265,7 +265,7 @@ trait TeaTokenTrait
 
 	protected function skip_inline_comment()
 	{
-		return $this->scan_to_token(NL);
+		return $this->scan_to_token(LF);
 	}
 
 	protected function skip_comments()
@@ -337,7 +337,7 @@ trait TeaTokenTrait
 		$i = $this->pos;
 		while ($i < $this->tokens_count) {
 			$token = $this->tokens[$i];
-			if ($token === NL) {
+			if ($token === LF) {
 				return false;
 			}
 
@@ -348,7 +348,7 @@ trait TeaTokenTrait
 
 			$i++;
 			if ($token === _SLASH) {
-				$rest_inline = $this->get_to_token(NL, $i);
+				$rest_inline = $this->get_to_token(LF, $i);
 				return !preg_match('/^\s+[a-z0-9_\-\!\~\$\'\"]/i', $rest_inline);
 			}
 		}
@@ -421,7 +421,7 @@ trait TeaTokenTrait
 		$this->expect_token_ignore_space(_BLOCK_BEGIN);
 
 		// skip current empty line
-		if ($this->get_token_ignore_space() === NL) {
+		if ($this->get_token_ignore_space() === LF) {
 			$this->scan_token_ignore_space();
 		}
 	}
@@ -434,7 +434,7 @@ trait TeaTokenTrait
 	protected function expect_statement_end()
 	{
 		$token = $this->get_token_ignore_space();
-		if ($token === NL) {
+		if ($token === LF) {
 			$this->scan_token_ignore_space();
 		}
 		elseif ($token === _BLOCK_END || $token === null) {
@@ -442,20 +442,20 @@ trait TeaTokenTrait
 		}
 		elseif ($token === _SEMICOLON) {
 			$this->scan_token_ignore_space();
-			if ($this->get_token_ignore_space() === NL) {
+			if ($this->get_token_ignore_space() === LF) {
 				$this->scan_token_ignore_space();
 			}
 		}
 		elseif ($token === _INLINE_COMMENT_MARK) {
 			$this->scan_token_ignore_space(); // skip the _INLINE_COMMENT_MARK
-			$this->scan_to_token(NL); // ignore the inline comment
-			$this->scan_token_ignore_space(); // skip the NL
+			$this->scan_to_token(LF); // ignore the inline comment
+			$this->scan_token_ignore_space(); // skip the LF
 		}
 		elseif ($token === _COMMENTS_OPEN) {
 			$this->scan_token_ignore_space(); // skip the _COMMENTS_OPEN
 			$this->scan_to_token(_COMMENTS_CLOSE); // ignore the comments
 			$this->scan_token(); // skip the _COMMENTS_CLOSE
-			$this->scan_token_ignore_space(); // skip the NL
+			$this->scan_token_ignore_space(); // skip the LF
 		}
 		else {
 			$this->scan_token_ignore_space();
@@ -474,7 +474,7 @@ trait TeaTokenTrait
 
 		$tmp = '';
 		for ($pos; $pos >= 0; $pos--) {
-			if (!isset($this->tokens[$pos]) || $this->tokens[$pos] === NL) {
+			if (!isset($this->tokens[$pos]) || $this->tokens[$pos] === LF) {
 				break;
 			}
 

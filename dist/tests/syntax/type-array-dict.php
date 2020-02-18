@@ -20,7 +20,7 @@ $arr = [];
 array_push($arr, [1, 2, 3]);
 array_push($arr, "hello");
 
-echo array_pop($arr), NL;
+echo array_pop($arr), LF;
 
 $arr1 = [1, 2, 3];
 $arr2 = [4, 5, 6];
@@ -47,7 +47,7 @@ $dict2 = [
 ];
 
 foreach ($dict1 as $key => $val) {
-	echo '<span>' . $key . ': ' . $val . '</span>', NL;
+	echo '<span>' . $key . ': ' . $val . '</span>', LF;
 }
 
 $users = [

@@ -4,11 +4,11 @@ namespace tea\tests\syntax;
 require_once __DIR__ . '/__unit.php';
 
 // ---------
-echo NL;
+echo LF;
 
 $str = ' a string';
 
-echo 'abc', 'efg', '123', NL;
+echo 'abc', 'efg', '123', LF;
 
 echo 'abc', $str;
 // ---------

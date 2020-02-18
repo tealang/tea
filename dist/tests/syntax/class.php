@@ -40,7 +40,7 @@ class Test1 extends BaseClass implements IDemo {
 	}
 
 	public static function static_method() {
-		echo Test1::CONST1, NL;
+		echo Test1::CONST1, LF;
 	}
 }
 
@@ -72,7 +72,7 @@ class Test3 implements ITest {
 #internal
 class Test4 {
 	public static function fx(ITest $it) {
-		echo $it->f1(), NL;
+		echo $it->f1(), LF;
 	}
 }
 
@@ -215,11 +215,11 @@ class Test5 {
 
 // ---------
 $t1 = new Test1('some');
-echo $t1->get_class_name('Unknow'), NL;
+echo $t1->get_class_name('Unknow'), LF;
 
 $t2 = new Test2();
 $t2->set_t1($t1);
-echo $t2->call_t1_fn(), NL;
+echo $t2->call_t1_fn(), LF;
 
 $a = null;
 $a = new Test3();

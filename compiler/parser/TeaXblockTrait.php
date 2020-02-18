@@ -256,7 +256,7 @@ trait TeaXBlockTrait
 	protected function strip_previous_spaces(string $string, string $block_previous_spaces)
 	{
 		if (strpos($string, $block_previous_spaces) !== false) {
-			return str_replace(NL . $block_previous_spaces, NL, $string);
+			return str_replace(LF . $block_previous_spaces, LF, $string);
 		}
 
 		return $string;

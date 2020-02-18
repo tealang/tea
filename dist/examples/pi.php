@@ -19,9 +19,9 @@ while ($tmp > MIN_FLOAT) {
 	$b += 2;
 }
 
-echo "Computed PI value: {$computed_pi}", NL;
-echo "PHP constant M_PI value: " . M_PI, NL;
-echo "PHP function pi() value: " . pi(), NL;
+echo "Computed PI value: {$computed_pi}", LF;
+echo "PHP constant M_PI value: " . M_PI, LF;
+echo "PHP function pi() value: " . pi(), LF;
 // ---------
 
 // program end

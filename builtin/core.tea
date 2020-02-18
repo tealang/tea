@@ -5,7 +5,7 @@ The builtin libs for Tea
 @copyright YJ Technology Ltd. All rights reserved.
 ---
 
-public NL = "\n"
+public LF = "\n"
 
 #php isset(expr Any) Bool
 #php empty(expr Any) Bool
@@ -279,7 +279,7 @@ internal IBaseType {
 	// callback(item) Bool
 	masked filter(callback Callable) => array_filter(this, callback)
 
-	masked join(glue String = NL) => implode(glue, this)
+	masked join(glue String = LF) => implode(glue, this)
 	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) => json_encode(this, flags)
 }
 
@@ -295,7 +295,7 @@ internal IBaseType {
 
 	// masked remove(key String) => unset(this[key])
 
-	masked join(glue String = NL) => implode(glue, this)
+	masked join(glue String = LF) => implode(glue, this)
 	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) => json_encode(this, flags)
 }
 

@@ -6,7 +6,7 @@ require_once __DIR__ . '/__unit.php';
 // ---------
 $str = '\'abc123\'';
 $match_count = preg_match('/^\\\'[a-z0-9]+\'$/i', $str);
-echo $match_count, NL;
+echo $match_count, LF;
 
 $regex = '/[\s\|,]/';
 $result0 = regex_match($regex, 'ab cd|e,f');

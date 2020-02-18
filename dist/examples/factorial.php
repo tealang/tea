@@ -15,7 +15,7 @@ function factorial(int $n): int {
 const NUM = 10;
 
 // ---------
-echo NUM . '! = ' . factorial(NUM), NL;
+echo NUM . '! = ' . factorial(NUM), LF;
 // ---------
 
 // program end
