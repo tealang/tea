@@ -48,8 +48,8 @@ class TypeFactory
 	static $_iview_symbol;
 
 	// for check Iterable type accepts
-	static $_iterator_interface_symbol;
-	static $_generator_interface_symbol;
+	static $_iiterator_symbol;
+	static $_igenerator_symbol;
 
 	private static $type_map = [];
 
@@ -87,7 +87,7 @@ class TypeFactory
 			return true;
 		}
 
-		return $type->symbol->declaration->is_same_or_based_with_symbol(self::$_iterator_interface_symbol);
+		return $type->symbol->declaration->is_same_or_based_with_symbol(self::$_iiterator_symbol);
 	}
 
 	static function is_dict_key_directly_supported_type(?IType $type)
@@ -132,8 +132,8 @@ class TypeFactory
 		}
 
 		static::$_iview_symbol = $unit->symbols['IView'];
-		static::$_iterator_interface_symbol = $unit->symbols['IIterator'];
-		static::$_generator_interface_symbol = $unit->symbols['IGenerator'];
+		static::$_iiterator_symbol = $unit->symbols['IIterator'];
+		static::$_igenerator_symbol = $unit->symbols['IGenerator'];
 	}
 
 	static function exists_type(string $name): bool
