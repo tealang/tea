@@ -13,42 +13,13 @@ const SPLIT_PATTERN = '/(\s|\{|\}|\(|\)|\[|\]|\'|\"|\,|\.=|\.|\$|\\\|\/\*|\*\/|\
 
 trait TeaTokenTrait
 {
-	public $pos = -1;
+	protected $pos = -1;
+	protected $line2pos = [];
 
 	protected $tokens = 0;
 	protected $tokens_count = 0;
-	protected $current_token;
 
-	protected $current_line = 1;
-
-	protected $line2pos = [];
-
-	public $errors = [];
-
-	protected function init_with_file()
-	{
-		if (strpos($this->file, 'FilterGroup.tea')) {
-			$this->debug = true;
-		}
-
-		$code = file_get_contents($this->file);
-		if ($code === false) {
-			throw new \ErrorException("File '$this->file' to parse load failed.");
-		}
-
-		$this->init_with_code($code);
-	}
-
-	protected function init_with_code(string $code)
-	{
-		$this->pos = -1;
-		$this->current_line = 1;
-		$this->current_token = null;
-
-		$this->split_tokens($code);
-	}
-
-	protected function split_tokens(string $code)
+	protected function tokenize(string $code)
 	{
 		$items = preg_split(SPLIT_PATTERN, $code, null, PREG_SPLIT_DELIM_CAPTURE);
 
@@ -70,6 +41,11 @@ trait TeaTokenTrait
 
 		$this->tokens = $tokens;
 		$this->tokens_count = count($tokens);
+	}
+
+	protected function get_current_token()
+	{
+		return $this->tokens[$this->pos] ?? null;
 	}
 
 	protected function get_line_by_pos(int $pos)
@@ -252,7 +228,7 @@ trait TeaTokenTrait
 	protected function scan_string_component()
 	{
 		$this->pos++;
-		$token = $this->current_token = $this->tokens[$this->pos] ?? null;
+		$token = $this->tokens[$this->pos] ?? null;
 
 		if ($token === _NOTHING) {
 			return $this->scan_string_component();
@@ -269,7 +245,7 @@ trait TeaTokenTrait
 	protected function scan_token()
 	{
 		$this->pos++;
-		$token = $this->current_token = $this->tokens[$this->pos] ?? null;
+		$token = $this->tokens[$this->pos] ?? null;
 
 		if ($token === _CR) {
 			return $this->scan_token();
@@ -524,7 +500,7 @@ trait TeaTokenTrait
 	public function new_unexpect_exception(string $token = null, int $trace_start = 1)
 	{
 		if ($token === null) {
-			$token = $this->current_token;
+			$token = $this->tokens[$this->pos] ?? $this->tokens[$this->pos - 1];
 		}
 
 		return $this->new_exception("Unexpect token '$token'", $trace_start);

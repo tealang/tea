@@ -56,7 +56,7 @@ class ASTFactory
 	{
 		$this->unit = $unit;
 
-		// 设置预置常量
+		// the constant 'UNIT_PATH'
 		$declaration = new ConstantDeclaration(_PUBLIC, _UNIT_PATH, TypeFactory::$_string, null);
 		$this->unit_path_symbol = new Symbol($declaration);
 
@@ -340,6 +340,8 @@ class ASTFactory
 		$this->parser = $parser;
 
 		$program = new Program($file, $this->unit);
+		$program->parser = $parser;
+
 		$program->main_function = new MainFunctionBlock();
 		$program->main_function->program = $program;
 

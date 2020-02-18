@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class TeaParser
+class TeaParser extends BaseParser
 {
 	use TeaTokenTrait, TeaStringTrait, TeaXBlockTrait, TeaSharpTrait, TeaDocsTrait;
 
@@ -17,36 +17,13 @@ class TeaParser
 
 	protected $is_declare_mode = false;
 
-	protected $file;
-
-	protected $program;
-
 	protected $root_statements;
-
-	public function __construct(ASTFactory $factory)
-	{
-		$this->factory = $factory;
-	}
-
-	public function parse(string $file, string $code = null)
-	{
-		$this->file = $file;
-
-		if ($code === null) {
-			$this->init_with_file();
-		}
-		else {
-			$this->init_with_code($code);
-		}
-
-		return $this->scan_program();
-	}
 
 	protected function scan_program()
 	{
-		$this->program = $program = $this->factory->create_program($this->file, $this);
+		$program = $this->factory->create_program($this->file, $this);
 
-		// default to main for main.tea
+		// set to main program when file name is main.tea
 		if ($program->name === _MAIN) {
 			$this->factory->set_as_main_program();
 		}
@@ -62,6 +39,7 @@ class TeaParser
 			}
 		}
 
+		// end the main function
 		$this->factory->end_block();
 
 		// set statements to main function when has any onload executings
@@ -72,7 +50,7 @@ class TeaParser
 			$program->main_function = null;
 		}
 
-		return $program;
+		$this->program = $program;
 	}
 
 	protected function read_root_statement($leading = null, Docs $docs = null)
@@ -552,7 +530,7 @@ class TeaParser
 		}
 		elseif ($keyword === _INLINE_COMMENT_MARK) {
 			$current_pos = $this->pos;
-			$current_line = $this->current_line;
+			// $current_line = $this->current_line;
 
 			$this->scan_token_ignore_empty(); // skip the //
 			$this->skip_inline_comment(); //  skip the comment
@@ -561,7 +539,7 @@ class TeaParser
 			// Avoid of ignoring empty lines
 			if ($result === null) {
 				$this->pos = $current_pos;
-				$this->current_line = $current_line;
+				// $this->current_line = $current_line;
 			}
 
 			return;
@@ -963,6 +941,10 @@ class TeaParser
 	protected function read_prefix_operation(OperatorSymbol $operator)
 	{
 		$expression = $this->read_expression($operator);
+		if ($expression === null) {
+			throw $this->new_unexpect_exception();
+		}
+
 		return new PrefixOperation($operator, $expression);
 	}
 
@@ -1356,7 +1338,7 @@ class TeaParser
 		}
 		elseif ($token === _INLINE_COMMENT_MARK) {
 			$current_pos = $this->pos;
-			$current_line = $this->current_line;
+			// $current_line = $this->current_line;
 
 			$this->scan_token_ignore_empty(); // skip the //
 			$this->skip_inline_comment(); //  skip the comment
@@ -1365,7 +1347,7 @@ class TeaParser
 			// Avoid of ignoring empty lines
 			if ($continue_combination === $expression) {
 				$this->pos = $current_pos;
-				$this->current_line = $current_line;
+				// $this->current_line = $current_line;
 			}
 
 			return $continue_combination;

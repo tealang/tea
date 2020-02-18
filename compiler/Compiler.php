@@ -206,7 +206,7 @@ class Compiler
 		// parse all program files
 		$program_files = $this->get_program_files();
 		foreach ($program_files as $file) {
-			$this->normal_programs[] = $this->parse_file($file);
+			$this->normal_programs[] = $this->parse_program($file);
 		}
 
 		self::echo_success(count($this->normal_programs) . ' programs parsed success.' . NL);
@@ -308,7 +308,7 @@ class Compiler
 		if (!$this->target_is_builtin) {
 			self::echo_start('Loading builtins...');
 
-			$program = $this->parse_file(static::BUILTIN_PATH . 'core.tea');
+			$program = $this->parse_program(static::BUILTIN_PATH . 'core.tea');
 			$program->unit = null;
 
 			$this->builtin_symbols = $program->symbols;
@@ -523,22 +523,16 @@ class Compiler
 		return $file_path;
 	}
 
-	private function parse_file(string $file)
+	private function parse_program(string $file)
 	{
-		$parser = new TeaParser($this->ast_factory);
-		$program = $parser->parse($file);
-		$program->parser = $parser;
-
-		return $program;
+		$parser = new TeaParser($this->ast_factory, $file);
+		return $parser->get_program_ast();
 	}
 
-	private function parse_header(string $file_path, ASTFactory $ast_factory)
+	private function parse_header(string $file, ASTFactory $ast_factory)
 	{
-		$parser = new HeaderParser($ast_factory);
-		$program = $parser->parse($file_path);
-		$program->parser = $parser;
-
-		return $program;
+		$parser = new HeaderParser($ast_factory, $file);
+		return $parser->get_program_ast();
 	}
 
 	private function get_unit_dist_path(string $unit_dir_name)

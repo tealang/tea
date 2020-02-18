@@ -77,8 +77,10 @@ trait TeaXBlockTrait
 
 		$attributes = $this->read_xtag_attributes();
 
+		$current_token = $this->get_current_token();
+
 		// xtag end
-		if ($this->current_token === _XTAG_SELF_END) {
+		if ($current_token === _XTAG_SELF_END) {
 			return new XBlockElement($real_tag ?? $tag, $attributes);
 		}
 
@@ -88,7 +90,7 @@ trait TeaXBlockTrait
 		}
 
 		// expect xtag head close
-		if ($this->current_token !== _XTAG_CLOSE) {
+		if ($current_token !== _XTAG_CLOSE) {
 			throw $this->new_unexpect_exception();
 		}
 
