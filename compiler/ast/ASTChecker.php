@@ -593,54 +593,54 @@ class ASTChecker
 		}
 	}
 
-	private function assert_classlike_member_declaration(IClassMemberDeclaration $definition, IClassMemberDeclaration $protocol)
+	private function assert_classlike_member_declaration(IClassMemberDeclaration $node, IClassMemberDeclaration $protocol)
 	{
 		// do not need check for construct
-		if ($definition->name === _CONSTRUCT) {
+		if ($node->name === _CONSTRUCT) {
 			return;
 		}
 
 		// the hint type
-		if (!$this->is_strict_compatible_types($protocol->type, $definition->type)) {
-			$defined_return_type = $this->get_type_name($definition->type);
+		if (!$this->is_strict_compatible_types($protocol->type, $node->type)) {
+			$defined_return_type = $this->get_type_name($node->type);
 			$protocol_return_type = $this->get_type_name($protocol->type);
 
-			throw $this->new_syntax_error("Type '{$defined_return_type}' in '{$definition->super_block->name}.{$definition->name}' must be compatible with '$protocol_return_type' in interface '{$protocol->super_block->name}.{$protocol->name}'", $definition->super_block);
+			throw $this->new_syntax_error("Type '{$defined_return_type}' in '{$node->super_block->name}.{$node->name}' must be compatible with '$protocol_return_type' in interface '{$protocol->super_block->name}.{$protocol->name}'", $node->super_block);
 		}
 
 		if ($protocol instanceof FunctionDeclaration) {
-			if (!$definition instanceof FunctionDeclaration) {
-				throw $this->new_syntax_error("Kind of definition '{$definition->super_block->name}.{$definition->name}' must be compatible with '{$protocol->super_block->name}.{$protocol->name}'.");
+			if (!$node instanceof FunctionDeclaration) {
+				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatible with '{$protocol->super_block->name}.{$protocol->name}'.", $node);
 			}
 
-			$this->assert_classlike_method_parameters($definition, $protocol);
+			$this->assert_classlike_method_parameters($node, $protocol);
 		}
 		elseif ($protocol instanceof PropertyDeclaration) {
-			if (!$definition instanceof PropertyDeclaration) {
-				throw $this->new_syntax_error("Kind of definition '{$definition->super_block->name}.{$definition->name}' must be compatible with '{$protocol->super_block->name}.{$protocol->name}'.");
+			if (!$node instanceof PropertyDeclaration) {
+				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatible with '{$protocol->super_block->name}.{$protocol->name}'.", $node);
 			}
 		}
 		elseif ($protocol instanceof ClassConstantDeclaration) {
-			throw $this->new_syntax_error("Cannot override constant '{$protocol->super_block->name}.{$protocol->name}' in '{$definition->super_block->name}'.");
+			throw $this->new_syntax_error("Cannot override constant '{$protocol->super_block->name}.{$protocol->name}' in '{$node->super_block->name}'.", $node);
 		}
 	}
 
-	private function assert_classlike_method_parameters(FunctionDeclaration $definition, FunctionDeclaration $protocol)
+	private function assert_classlike_method_parameters(FunctionDeclaration $node, FunctionDeclaration $protocol)
 	{
 		if ($protocol->parameters === null && $protocol->parameters === null) {
 			return;
 		}
 
 		// the parameters count
-		if (count($protocol->parameters) !== count($definition->parameters)) {
-			throw $this->new_syntax_error("Parameters of '{$definition->super_block->name}.{$definition->name}' must be compatible with '{$protocol->super_block->name}.{$protocol->name}'", $definition->super_block);
+		if (count($protocol->parameters) !== count($node->parameters)) {
+			throw $this->new_syntax_error("Parameters of '{$node->super_block->name}.{$node->name}' must be compatible with '{$protocol->super_block->name}.{$protocol->name}'", $node->super_block);
 		}
 
 		// the parameter types
 		foreach ($protocol->parameters as $idx => $protocol_param) {
-			$definition_param = $definition->parameters[$idx];
-			if (!$this->is_strict_compatible_types($protocol_param->type, $definition_param->type)) {
-				throw $this->new_syntax_error("Type of parameter {$idx} in '{$definition->super_block->name}.{$definition->name}' must be compatible with '{$protocol->super_block->name}.{$protocol->name}'", $definition->super_block);
+			$node_param = $node->parameters[$idx];
+			if (!$this->is_strict_compatible_types($protocol_param->type, $node_param->type)) {
+				throw $this->new_syntax_error("Type of parameter {$idx} in '{$node->super_block->name}.{$node->name}' must be compatible with '{$protocol->super_block->name}.{$protocol->name}'", $node->super_block);
 			}
 		}
 	}
@@ -1495,7 +1495,7 @@ class ASTChecker
 			$param_name = $parameter->name;
 			$symbol = $node->symbols[$param_name] ?? $this->find_symbol_by_name($param_name);
 			if ($symbol === null) {
-				throw $including->parser->new_ast_check_error("Expected var '{$param_name}' to #include({$node->target}).", $node, 1);
+				throw $including->unit->new_syntax_error("Expected var '{$param_name}' to #include({$node->target}).", $node);
 				// throw $including_unit->get_checker()->new_syntax_error("Expect var '{$param_name}' for #include({$node->target}) not found in program file '{$this->program->name}'.", $node);
 			}
 		}
@@ -2367,7 +2367,22 @@ class ASTChecker
 
 	protected function new_syntax_error($message, $node = null)
 	{
-		return $this->program->parser->new_ast_check_error($message, $node, 1);
+		if ($node->pos) {
+			$addition = $this->program->parser->get_error_message_with_pos($node->pos);
+		}
+		else {
+			$addition = get_class($node);
+			if (isset($node->name)) {
+				$addition .= " of '$node->name'";
+			}
+
+			$addition = "Error near $addition.";
+		}
+
+		$message = "Syntax check error: {$message}\n{$addition}";
+		DEBUG && $message .= "\nTraces:\n" . get_traces();
+
+		return new \Exception($message);
 	}
 
 	static function get_declaration_name(IDeclaration $declaration)

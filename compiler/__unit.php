@@ -83,6 +83,29 @@ function process_cli_options(array $argv, array $allow_list = []) {
 	return $opts;
 }
 
+function get_traces(int $trace_start = 0) {
+	$traces = '';
+	$trace_items = debug_backtrace();
+	$len = count($trace_items) - 1;
+	for ($i = $trace_start + 1; $i < $len; $i++) {
+		$item = $trace_items[$i];
+
+		$args = [];
+		foreach ($item['args'] as $arg) {
+			$args[] = json_encode($arg, JSON_UNESCAPED_UNICODE);
+		}
+
+		$traces .= sprintf("%s:%d \t%s(%s)\n",
+			$item['file'],
+			$item['line'],
+			$item['function'],
+			join(', ', $args)
+		);
+	}
+
+	return $traces;
+}
+
 // Please do not modify the following contents
 # --- generates ---
 const __AUTOLOADS = [

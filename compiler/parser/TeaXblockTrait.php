@@ -16,13 +16,11 @@ const _LEAF_TAGS = [
 	'wbr', 'col', 'embed', 'param', 'source', 'track', 'area', 'keygen'
 ];
 
-const _VIRTUAL_TAG = 'vtag';
-
 trait TeaXBlockTrait
 {
 	protected function read_xblock()
 	{
-		$block_previous_spaces = $this->get_previous_inline_spaces();
+		$block_previous_spaces = $this->get_inline_heading_spaces();
 
 		$token = $this->scan_token();
 		if (!TeaHelper::is_xtag_name($token)) {

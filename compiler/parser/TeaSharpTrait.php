@@ -55,7 +55,7 @@ trait TeaSharpTrait
 
 		$declaration = $this->factory->create_builtin_type_class_declaration($name);
 		if ($declaration === null) {
-			throw $this->new_exception("'$name' not a builtin type, cannot use the #tea label.");
+			throw $this->new_parse_error("'$name' not a builtin type, cannot use the #tea label.");
 		}
 
 		$this->read_rest_for_classlike_declaration($declaration);
@@ -85,7 +85,7 @@ trait TeaSharpTrait
 				$origin_name = $name;
 				$name = $this->scan_token_ignore_space();
 				if (!TeaHelper::is_classlike_name($name)) {
-					throw $this->new_exception("Invalid class/interface name.");
+					throw $this->new_parse_error("Invalid class/interface name.");
 				}
 			}
 
@@ -104,7 +104,7 @@ trait TeaSharpTrait
 			$name = $this->expect_identifier_token();
 			$type = $this->try_read_type_identifier();
 			if (!$type) {
-				throw $this->new_exception("Expected type for declared super variable '$name'.");
+				throw $this->new_parse_error("Expected type for declared super variable '$name'.");
 			}
 
 			$declaration = $this->factory->create_super_variable_declaration($name, $type, null);
@@ -181,7 +181,7 @@ trait TeaSharpTrait
 	private function read_unit_declaration()
 	{
 		if (!static::IS_IN_HEADER) {
-			throw $this->new_exception("The '#unit' statements can only be used in the __unit.th or __public.th files.");
+			throw $this->new_parse_error("The '#unit' statements can only be used in the __unit.th or __public.th files.");
 		}
 
 		$this->read_unit_namespace();
@@ -193,7 +193,7 @@ trait TeaSharpTrait
 		// try read options for unit
 		while ($key = $this->read_object_key()) {
 			if (!in_array($key, _UNIT_OPTIONAL_KEYS, true)) {
-				throw $this->new_exception("Invalid option key '$key' for unit definition.");
+				throw $this->new_parse_error("Invalid option key '$key' for unit definition.");
 			}
 
 			$this->expect_token_ignore_space(_COLON);
@@ -230,19 +230,19 @@ trait TeaSharpTrait
 		while ($this->skip_token(_SLASH)) {
 			$token = $this->scan_token();
 			if (!TeaHelper::is_subnamespace_name($token)) {
-				throw $this->new_exception("Invalid subnamespace name.");
+				throw $this->new_parse_error("Invalid subnamespace name.");
 			}
 
 			$names[] = $token;
 		}
 
 		if (empty($names) && !TeaHelper::is_subnamespace_name($domain)) {
-			throw $this->new_exception("Invalid namespace name.");
+			throw $this->new_parse_error("Invalid namespace name.");
 		}
 
 		array_unshift($names, $domain);
 		if (count($names) > _MAX_NS_LEVELS) {
-			throw $this->new_exception(sprintf("It's too many namespace levels, the max levels is %d.", _MAX_NS_LEVELS));
+			throw $this->new_parse_error(sprintf("It's too many namespace levels, the max levels is %d.", _MAX_NS_LEVELS));
 		}
 
 		return $this->factory->create_namespace_identifier($names);
@@ -271,7 +271,7 @@ trait TeaSharpTrait
 	private function read_use_statement()
 	{
 		if (!static::IS_IN_HEADER) {
-			throw $this->new_exception("The '#use' statements can only be used in the __unit.th or __public.th files.");
+			throw $this->new_parse_error("The '#use' statements can only be used in the __unit.th or __public.th files.");
 		}
 
 		$ns = $this->read_namespace_identifier();
@@ -283,7 +283,7 @@ trait TeaSharpTrait
 			$this->factory->create_use_statement($ns, $targets);
 		}
 		else {
-			throw $this->new_exception("Expected the use targets {...}.");
+			throw $this->new_parse_error("Expected the use targets {...}.");
 		// 	$this->factory->create_use_statement($ns);
 		}
 	}
@@ -299,7 +299,7 @@ trait TeaSharpTrait
 			if ($this->skip_token_ignore_space(_AS)) {
 				$alias = $this->scan_token_ignore_empty();
 				if (!TeaHelper::is_identifier_name($alias)) {
-					throw $this->new_exception("Invalid name format token '$alias' for the use statement.");
+					throw $this->new_parse_error("Invalid name format token '$alias' for the use statement.");
 				}
 
 				// $targets[$token] = $alias;

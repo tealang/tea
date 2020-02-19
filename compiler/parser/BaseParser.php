@@ -13,15 +13,34 @@ abstract class BaseParser
 {
 	protected $file;
 
+	/**
+	 * @var Program
+	 */
 	protected $program;
+
+	// current token position
+	protected $pos = -1;
+
+	/**
+	 * @var int[:]
+	 */
+	protected $line2pos = [];
+
+	/**
+	 * @var array
+	 */
+	protected $tokens;
+
+	// the total tokens
+	protected $tokens_count = 0;
 
 	public function __construct(ASTFactory $factory, string $file)
 	{
 		$this->factory = $factory;
 		$this->file = $file;
 
-		$code = $this->load_file($file);
-		$this->tokenize($code);
+		$source = $this->read_file($file);
+		$this->tokenize($source);
 
 		$this->scan_program();
 	}
@@ -31,17 +50,41 @@ abstract class BaseParser
 		return $this->program;
 	}
 
-	protected function load_file(string $file)
+	protected function read_file(string $file)
 	{
-		$code = file_get_contents($file);
-		if ($code === false) {
+		$source = file_get_contents($file);
+		if ($source === false) {
 			throw new \ErrorException("File '$file' to parse load failed.");
 		}
 
-		return $code;
+		return $source;
 	}
 
-	abstract protected function tokenize(string $code);
+	abstract protected function tokenize(string $source);
 
 	abstract protected function scan_program();
+
+	public function new_parse_error(string $message, int $trace_start = 0)
+	{
+		$addition = $this->get_error_message_with_pos($this->pos);
+		$message = "\nSyntax parse error: {$message}\n{$addition}";
+		DEBUG && $message .= "\nTraces:\n" . get_traces($trace_start);
+
+		return new \Exception($message);
+	}
+
+	public function get_error_message_with_pos(int $pos)
+	{
+		$code = $this->get_previous_inline($pos);
+		$line = $this->get_line_by_pos($pos);
+
+		$message = "{$this->file}:{$line}";
+		$message .= "\n--->" . ltrim($code) . "<---\n";
+
+		return $message;
+	}
+
+	abstract protected function get_previous_inline(int $pos): string;
+
+	abstract protected function get_line_by_pos(int $pos): int;
 }

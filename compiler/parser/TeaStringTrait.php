@@ -35,7 +35,7 @@ trait TeaStringTrait
 			}
 		}
 
-		throw $this->new_exception("Missed the close quote mark ($quote_mark).");
+		throw $this->new_parse_error("Missed the close quote mark ($quote_mark).");
 	}
 
 	protected function read_single_quoted_expression()
@@ -117,7 +117,7 @@ trait TeaStringTrait
 			$string .= $token;
 		}
 
-		throw $this->new_exception("Missed the quote close mark ($quote_mark).");
+		throw $this->new_parse_error("Missed the quote close mark ($quote_mark).");
 	}
 
 	protected function read_instring_sharp_expression()

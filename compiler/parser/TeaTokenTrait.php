@@ -13,15 +13,9 @@ const TEA_TOKENS_SPLIT_PATTERN = '/(\s|\{|\}|\(|\)|\[|\]|\'|\"|\,|\.=|\.|\$|\\\|
 
 trait TeaTokenTrait
 {
-	protected $pos = -1;
-	protected $line2pos = [];
-
-	protected $tokens = 0;
-	protected $tokens_count = 0;
-
-	protected function tokenize(string $code)
+	protected function tokenize(string $source)
 	{
-		$items = preg_split(TEA_TOKENS_SPLIT_PATTERN, $code, null, PREG_SPLIT_DELIM_CAPTURE);
+		$items = preg_split(TEA_TOKENS_SPLIT_PATTERN, $source, null, PREG_SPLIT_DELIM_CAPTURE);
 
 		$this->line2pos[] = $real_pos = 0;
 
@@ -48,7 +42,7 @@ trait TeaTokenTrait
 		return $this->tokens[$this->pos] ?? null;
 	}
 
-	protected function get_line_by_pos(int $pos)
+	protected function get_line_by_pos(int $pos): int
 	{
 		$idx = 0;
 		$end = count($this->line2pos);
@@ -360,7 +354,7 @@ trait TeaTokenTrait
 	{
 		$next = $this->scan_token();
 		if ($next !== $token) {
-			throw $this->new_exception("Unexpected token '$next', or missed token '$token'", 1);
+			throw $this->new_parse_error("Unexpected token '$next', or missed token '$token'", 1);
 		}
 
 		return $next;
@@ -370,7 +364,7 @@ trait TeaTokenTrait
 	{
 		$next = $this->scan_token_ignore_space();
 		if ($next !== $token) {
-			throw $this->new_exception("Unexpected token '$next', or missed token '$token'", 1);
+			throw $this->new_parse_error("Unexpected token '$next', or missed token '$token'", 1);
 		}
 
 		return $next;
@@ -380,7 +374,7 @@ trait TeaTokenTrait
 	{
 		$next = $this->scan_token_ignore_empty();
 		if ($next !== $token) {
-			throw $this->new_exception("Unexpected token '$next', or missed token '$token'", 1);
+			throw $this->new_parse_error("Unexpected token '$next', or missed token '$token'", 1);
 		}
 
 		return $next;
@@ -390,7 +384,7 @@ trait TeaTokenTrait
 	{
 		$token = $this->scan_token();
 		if (!TeaHelper::is_space_tab_nl($token)) {
-			throw $this->new_exception($message ?? "Expect a space, but suplied '$token'", 1);
+			throw $this->new_parse_error($message ?? "Expect a space, but suplied '$token'", 1);
 		}
 
 		return $token;
@@ -403,7 +397,7 @@ trait TeaTokenTrait
 			return $token;
 		}
 
-		throw $this->new_exception("Invalid identifier token '{$token}'", 1);
+		throw $this->new_parse_error("Invalid identifier token '{$token}'", 1);
 	}
 
 	protected function expect_identifier_token_ignore_space()
@@ -413,7 +407,7 @@ trait TeaTokenTrait
 			return $token;
 		}
 
-		throw $this->new_exception("Invalid identifier token '{$token}'", 1);
+		throw $this->new_parse_error("Invalid identifier token '{$token}'", 1);
 	}
 
 	protected function expect_block_begin()
@@ -459,7 +453,7 @@ trait TeaTokenTrait
 		}
 		else {
 			$this->scan_token_ignore_space();
-			throw $this->new_exception("Unexpect token '$token' in statement");
+			throw $this->new_parse_error("Unexpect token '$token' in statement");
 		}
 	}
 
@@ -468,7 +462,7 @@ trait TeaTokenTrait
 		// echo sprintf("- %s\n", $token);
 	}
 
-	protected function get_previous_inline(int $pos = null)
+	protected function get_previous_inline(int $pos = null): string
 	{
 		if ($pos === null) $pos = $this->pos;
 
@@ -484,7 +478,7 @@ trait TeaTokenTrait
 		return $tmp;
 	}
 
-	protected function get_previous_inline_spaces(int $pos = null)
+	protected function get_inline_heading_spaces(int $pos = null)
 	{
 		$string = $this->get_previous_inline($pos);
 
@@ -497,76 +491,13 @@ trait TeaTokenTrait
 
 // -----
 
-	public function new_unexpect_exception(string $token = null, int $trace_start = 1)
+	public function new_unexpect_exception(string $token = null)
 	{
 		if ($token === null) {
 			$token = $this->tokens[$this->pos] ?? $this->tokens[$this->pos - 1];
 		}
 
-		return $this->new_exception("Unexpect token '$token'", $trace_start);
-	}
-
-	public function new_ast_check_error(string $message, Node $node = null, int $trace_start = 0)
-	{
-		if ($node) {
-			if ($node->pos) {
-				return $this->new_exception($message, $trace_start + 1, $node->pos, 'checking');
-			}
-
-			$addition = get_class($node);
-			if (isset($node->name)) {
-				$addition .= " of '$node->name'";
-			}
-
-			$message .= "\nError near $addition.";
-		}
-
-		DEBUG && $message .= "\nTraces:\n" . $this->get_traces($trace_start);
-
-		throw new \Exception('Syntax error: ' . $message);
-	}
-
-	public function new_exception(string $message, int $trace_start = 0, int $token_pos = null, string $kind = 'parsing')
-	{
-		if ($token_pos === null) {
-			$token_pos = $this->pos;
-		}
-
-		$code = $this->get_previous_inline($token_pos);
-
-		$line = $this->get_line_by_pos($token_pos);
-
-		$message = "Syntax error: {$message}\nError on {$kind} {$this->file}:{$line}";
-		$message .= "\n--->" . ltrim($code) . "<---\n";
-
-		DEBUG && $message .= "\nTraces:\n" . $this->get_traces($trace_start);
-
-		return new \Exception($message);
-	}
-
-	public function get_traces(int $trace_start = 0)
-	{
-		$traces = '';
-
-		$trace_items = debug_backtrace();
-		$len = count($trace_items) - 1;
-		for ($i = $trace_start + 1; $i < $len; $i++) {
-			$item = $trace_items[$i];
-
-			$args = [];
-			foreach ($item['args'] as $arg) {
-				$args[] = json_encode($arg, JSON_UNESCAPED_UNICODE);
-			}
-
-			$traces .= sprintf("%s:%d \t%s(%s)\n",
-				$item['file'],
-				$item['line'],
-				$item['function'],
-				join(', ', $args)
-			);
-		}
-
-		return $traces;
+		return $this->new_parse_error("Unexpect token '$token'", 1);
 	}
 }
 

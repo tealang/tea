@@ -827,9 +827,9 @@ class PHPCoder extends TeaCoder
 		$code = join(' . ', $items);
 
 		// remove the virtual tag
-		if (substr($code, 0, 5) === '<vtag>') {
-			$code = substr($code, 5, -11);
-		}
+		// if (substr($code, 0, 5) === '<vtag>') {
+		// 	$code = substr($code, 5, -11);
+		// }
 
 		if (strpos($code, "\t\n")) {
 			$code = preg_replace('/\t+\n/', '', $code);

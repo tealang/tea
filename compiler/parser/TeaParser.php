@@ -163,7 +163,7 @@ class TeaParser extends BaseParser
 	protected function read_assignment($assignalbe)
 	{
 		if (!$assignalbe instanceof IAssignable) {
-			throw $this->new_exception("Assignment cannot put in any expression.");
+			throw $this->new_parse_error("Assignment cannot put in any expression.");
 		}
 
 		$operator = $this->scan_token_ignore_empty();
@@ -175,7 +175,7 @@ class TeaParser extends BaseParser
 	protected function assert_not_reserveds_word($token)
 	{
 		if (TeaHelper::is_normal_reserveds($token)) {
-			throw $this->new_exception("'$token' is a reserveds word, cannot use for a class/function/constant/variable name.");
+			throw $this->new_parse_error("'$token' is a reserveds word, cannot use for a class/function/constant/variable name.");
 		}
 	}
 
@@ -259,7 +259,7 @@ class TeaParser extends BaseParser
 	protected function read_constant_declaration(string $name, string $modifier = null)
 	{
 		if ($this->root_statements) {
-			throw $this->new_exception("Please define the constants at header of the program.");
+			throw $this->new_parse_error("Please define the constants at header of the program.");
 		}
 
 		$type = $this->try_read_type_identifier();
@@ -354,7 +354,7 @@ class TeaParser extends BaseParser
 
 		$args = $this->read_inline_arguments();
 		if (!$args) {
-			throw $this->new_exception("Required arguments for print.");
+			throw $this->new_parse_error("Required arguments for print.");
 		}
 
 		$node = new EchoStatement(...$args);
@@ -399,7 +399,7 @@ class TeaParser extends BaseParser
 
 		$condition = $this->read_expression_inline();
 		if ($condition === null) {
-			throw $this->new_exception("Required condition expression after 'when' keyword.");
+			throw $this->new_parse_error("Required condition expression after 'when' keyword.");
 		}
 
 		$statement->condition = $condition;
@@ -485,7 +485,7 @@ class TeaParser extends BaseParser
 
 		$argument = $this->read_expression_inline();
 		if ($argument === null) {
-			throw $this->new_exception("Required an Exception argument.");
+			throw $this->new_parse_error("Required an Exception argument.");
 		}
 
 		$statement = new ThrowStatement($argument);
@@ -570,7 +570,7 @@ class TeaParser extends BaseParser
 
 			$var_name = $this->scan_token_ignore_space();
 			if (!TeaHelper::is_declarable_variable_name($var_name)) {
-				throw $this->new_exception("Invalid variable name '{$var_name}'", 1);
+				throw $this->new_parse_error("Invalid variable name '{$var_name}'", 1);
 			}
 
 			$type = $this->try_read_classlike_identifier();
@@ -719,12 +719,12 @@ class TeaParser extends BaseParser
 		if ($this->skip_token_ignore_space(_STEP)) {
 			$step = $this->scan_token_ignore_space();
 			if (!TeaHelper::is_uint_number($step)) {
-				throw $this->new_exception('Required unsigned int literal value for "step" in for-to/for-downto statement.');
+				throw $this->new_parse_error('Required unsigned int literal value for "step" in for-to/for-downto statement.');
 			}
 
 			$step = intval($step);
 			if ($step === 0) {
-				throw $this->new_exception('"step" cannot set to 0.');
+				throw $this->new_parse_error('"step" cannot set to 0.');
 			}
 		}
 
@@ -925,7 +925,7 @@ class TeaParser extends BaseParser
 			return new VariableIdentifier($token);
 		}
 
-		throw $this->new_exception("Invalid variable name '{$token}'", 1);
+		throw $this->new_parse_error("Invalid variable name '{$token}'", 1);
 	}
 
 	protected function read_super_variable_identifier()
@@ -935,7 +935,7 @@ class TeaParser extends BaseParser
 			return new VariableIdentifier($token);
 		}
 
-		throw $this->new_exception("Invalid super-variable name '{$token}'", 1);
+		throw $this->new_parse_error("Invalid super-variable name '{$token}'", 1);
 	}
 
 	protected function read_prefix_operation(OperatorSymbol $operator)
@@ -1027,7 +1027,7 @@ class TeaParser extends BaseParser
 	protected function read_number_with(string $token, string $base_type)
 	{
 		if ($token[-1] === _UNDERSCORE) {
-			throw $this->new_exception("Separator '_' can not put at the end of numeric literals.");
+			throw $this->new_parse_error("Separator '_' can not put at the end of numeric literals.");
 		}
 
 		if ($base_type === _BASE_DECIMAL) {
@@ -1115,7 +1115,7 @@ class TeaParser extends BaseParser
 			$this->expect_space("Missed space char after '?'.");
 			$then = $this->read_expression();
 			if ($then instanceof ConditionalExpression) {
-				throw $this->new_exception("Required () for compound conditional expressions");
+				throw $this->new_parse_error("Required () for compound conditional expressions");
 			}
 
 			$this->expect_token_ignore_empty(_COLON);
@@ -1123,7 +1123,7 @@ class TeaParser extends BaseParser
 
 		$else = $this->read_expression();
 		if ($else instanceof ConditionalExpression) {
-			throw $this->new_exception("Required () for compound conditional expressions");
+			throw $this->new_parse_error("Required () for compound conditional expressions");
 		}
 
 		return new ConditionalExpression($test, $then, $else);
@@ -1294,7 +1294,7 @@ class TeaParser extends BaseParser
 			$this->scan_token_ignore_space();
 		}
 		elseif (!$arrow_is_optional) {
-			throw $this->new_exception("Unexpected token '$next', or missed token '=>'.");
+			throw $this->new_parse_error("Unexpected token '$next', or missed token '=>'.");
 		}
 
 		$block = $this->factory->create_lambda_expression($return_type, $parameters);
@@ -1355,7 +1355,7 @@ class TeaParser extends BaseParser
 
 		if ($expression instanceof ArrayElementAssignment) {
 			if ($prev_operator) {
-				throw $this->new_exception("ArrayElementAssignment cannot use in BinaryOperation.");
+				throw $this->new_parse_error("ArrayElementAssignment cannot use in BinaryOperation.");
 			}
 
 			return $expression;
@@ -1563,14 +1563,14 @@ class TeaParser extends BaseParser
 			if ($item instanceof PlainIdentifier && $this->skip_colon()) {
 				// the labeled argument
 				if (isset($items[$item->name])) {
-					throw $this->new_exception("Argument label '{$item->name}' has be assigned.");
+					throw $this->new_parse_error("Argument label '{$item->name}' has be assigned.");
 				}
 				else {
 					$items[$item->name] = $this->read_expression();
 				}
 			}
 			elseif ($has_label) {
-				throw $this->new_exception("This argument need a label, because of the prevent has labeled.");
+				throw $this->new_parse_error("This argument need a label, because of the prevent has labeled.");
 			}
 			else {
 				$items[] = $item;
@@ -1685,7 +1685,7 @@ class TeaParser extends BaseParser
 		}
 
 		if (!$baseds) {
-			throw $this->new_exception("Based class or interfaces expected.");
+			throw $this->new_parse_error("Based class or interfaces expected.");
 		}
 
 		return $baseds;
@@ -1701,7 +1701,7 @@ class TeaParser extends BaseParser
 		$this->scan_token_ignore_empty();
 
 		if (!$this->is_in_tea_declaration && TypeFactory::exists_type($token)) {
-			throw $this->new_exception("Cannot use type '$token' as a class/interface.");
+			throw $this->new_parse_error("Cannot use type '$token' as a class/interface.");
 		}
 
 		// return $this->read_classlike_identifier($token);
@@ -1726,7 +1726,7 @@ class TeaParser extends BaseParser
 	// 	// }
 
 	// 	// if ($this->skip_token(_DOT)) {
-	// 	// 	throw $this->new_exception("Namespaces that exceed two levels not supported.");
+	// 	// 	throw $this->new_parse_error("Namespaces that exceed two levels not supported.");
 	// 	// }
 
 	// 	return $this->factory->create_classlike_identifier($ns, $name);
@@ -1769,7 +1769,7 @@ class TeaParser extends BaseParser
 		$i = 0;
 		while ($this->skip_token(_DOT)) {
 			if ($i === _MAX_STRUCT_DIMENSIONS) {
-				throw $this->new_exception('The dimensions of Array/Dict exceeds, the max is ' . _MAX_STRUCT_DIMENSIONS);
+				throw $this->new_parse_error('The dimensions of Array/Dict exceeds, the max is ' . _MAX_STRUCT_DIMENSIONS);
 			}
 
 			$kind = $this->scan_token();
@@ -1798,7 +1798,7 @@ class TeaParser extends BaseParser
 		$i = 0;
 		while ($this->skip_token(_BRACKET_OPEN)) {
 			if ($i === _MAX_STRUCT_DIMENSIONS) {
-				throw $this->new_exception('The dimensions of Array/Dict exceeds, the max is ' . _MAX_STRUCT_DIMENSIONS);
+				throw $this->new_parse_error('The dimensions of Array/Dict exceeds, the max is ' . _MAX_STRUCT_DIMENSIONS);
 			}
 
 			if ($this->skip_token(_COLON)) {
@@ -1829,11 +1829,11 @@ class TeaParser extends BaseParser
 		if ($this->skip_token_ignore_space(_COLLECT)) {
 			$target_type = $this->scan_token_ignore_space();
 			if ($target_type !== _ARRAY) {
-				throw $this->new_exception("The target type for collector should be 'Array'.");
+				throw $this->new_parse_error("The target type for collector should be 'Array'.");
 			}
 
 			if ($type === TypeFactory::$_string || $type === TypeFactory::$_any) {
-				throw $this->new_exception("The type to collect do not supported String or Any.");
+				throw $this->new_parse_error("The type to collect do not supported String or Any.");
 			}
 
 			$type = TypeFactory::create_collector_type($type);
@@ -1927,10 +1927,10 @@ class TeaParser extends BaseParser
 			$value = $this->read_literal_expression();
 		}
 		elseif (!$this->is_declare_mode) {
-			throw $this->new_exception('Expected value assign expression.');
+			throw $this->new_parse_error('Expected value assign expression.');
 		}
 		elseif (!$type) {
-			throw $this->new_exception('Expected type expression.');
+			throw $this->new_parse_error('Expected type expression.');
 		}
 		else {
 			$value = null;
@@ -1987,7 +1987,7 @@ class TeaParser extends BaseParser
 			$declaration->is_static = $static;
 		}
 		else {
-			throw $this->new_exception('"{" missed for define method.');
+			throw $this->new_parse_error('"{" missed for define method.');
 		}
 
 		return $declaration;
@@ -2099,7 +2099,7 @@ class TeaParser extends BaseParser
 
 		if ($is_referenced) {
 			if ($value && $value !== ASTFactory::$default_value_marker) {
-				throw $this->new_exception("Cannot set a default value for the referenced parameter.");
+				throw $this->new_parse_error("Cannot set a default value for the referenced parameter.");
 			}
 
 			$parameter->is_referenced = $is_referenced;

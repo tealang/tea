@@ -82,7 +82,7 @@ trait TeaDocsTrait
 		// is not found the end mark of docs?
 		if ($this->pos >= $this->tokens_count) {
 			$line = $this->get_line_by_pos($opened_pos);
-			throw $this->new_exception("The close mark of Docs which opened on line {$line} not found.");
+			throw $this->new_parse_error("The close mark of Docs which opened on line {$line} not found.");
 		}
 
 		$this->expect_statement_end();
@@ -99,7 +99,7 @@ trait TeaDocsTrait
 			$content = substr(rtrim($content), $left_spaces_len);
 		}
 		else {
-			throw $this->new_exception("The indents should be same to the indents of Docs begin mark.");
+			throw $this->new_parse_error("The indents should be same to the indents of Docs begin mark.");
 		}
 
 		return $content;

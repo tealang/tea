@@ -96,11 +96,11 @@ class HeaderParser extends TeaParser
 			$this->assert_not_reserveds_word($name);
 		}
 		elseif (isset($namepath)) {
-			throw $this->new_exception("Required the 'as' keyword to alias to a new name without dots.");
+			throw $this->new_parse_error("Required the 'as' keyword to alias to a new name without dots.");
 		}
 
 		if (!TeaHelper::is_classlike_name($name)) {
-			throw $this->new_exception("Invalid class/interface name.");
+			throw $this->new_parse_error("Invalid class/interface name.");
 		}
 
 		// class or interface
@@ -134,7 +134,7 @@ class HeaderParser extends TeaParser
 			$value = $this->read_literal_expression();
 		}
 		elseif (!$type) {
-			throw $this->new_exception('Expected type or value assign expression for define constant.');
+			throw $this->new_parse_error('Expected type or value assign expression for define constant.');
 		}
 		else {
 			$value = null;
