@@ -567,16 +567,16 @@ class ASTFactory
 		return $block;
 	}
 
-	public function create_case_block(IExpression $argument)
+	public function create_when_block(IExpression $argument)
 	{
-		$block = new CaseBlock($argument);
+		$block = new WhenBlock($argument);
 		$this->enter_block($block);
 		return $block;
 	}
 
-	public function create_case_branch_block(IExpression $rule)
+	public function create_when_branch_block(IExpression $rule)
 	{
-		$block = new CaseBranch($rule);
+		$block = new WhenBranch($rule);
 		$this->enter_block($block);
 		return $block;
 	}

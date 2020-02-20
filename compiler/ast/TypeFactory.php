@@ -109,7 +109,7 @@ class TypeFactory
 			|| $type === self::$_any;
 	}
 
-	static function is_case_testable_type(?IType $type)
+	static function is_when_testable_type(?IType $type)
 	{
 		return $type === self::$_int
 			|| $type === self::$_uint

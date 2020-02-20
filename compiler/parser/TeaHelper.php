@@ -23,7 +23,7 @@ class TeaHelper
 
 	const STRUCTURE_KEYS = [
 		_VAR,
-		_IF, _CASE, _FOR, _WHILE, _TRY, // _LOOP
+		_IF, _WHEN, _FOR, _WHILE, _TRY, // _LOOP
 		_ECHO, _PRINT, _RETURN, _EXIT, _BREAK, _CONTINUE, _THROW,
 	];
 

@@ -110,7 +110,7 @@ trait TeaSharpTrait
 			$declaration = $this->factory->create_super_variable_declaration($name, $type, null);
 		}
 		else {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		return $declaration;
@@ -137,7 +137,7 @@ trait TeaSharpTrait
 		$value = null;
 
 		if (!TeaHelper::is_declarable_variable_name($name) && $name !== _THIS) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		$next = $this->get_token_ignore_empty();
@@ -171,8 +171,11 @@ trait TeaSharpTrait
 		// elseif ($next === _LOOP) {
 		// 	$block = $this->read_loop_block($label);
 		// }
-		elseif ($next === _CASE) {
-			$block = $this->read_case_block($label);
+		elseif ($next === _WHEN) {
+			$block = $this->read_when_block($label);
+		}
+		else {
+			throw $this->new_unexpected_error();
 		}
 
 		return $block;
@@ -200,7 +203,7 @@ trait TeaSharpTrait
 
 			$expr = $this->read_expression();
 			if ($expr === null || !$expr instanceof ILiteral) {
-				throw $this->new_unexpect_error();
+				throw $this->new_unexpected_error();
 			}
 
 			// set to unit
@@ -252,14 +255,14 @@ trait TeaSharpTrait
 	{
 		$token = $this->scan_token_ignore_space();
 		if (!TeaHelper::is_domain_component($token)) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		$components[] = $token;
 		while ($this->skip_token(_DOT)) {
 			$token = $this->scan_token();
 			if (!TeaHelper::is_domain_component($token)) {
-				throw $this->new_unexpect_error();
+				throw $this->new_unexpected_error();
 			}
 
 			$components[] = $token;
@@ -385,7 +388,7 @@ trait TeaSharpTrait
 				break;
 
 			default:
-				throw $this->new_unexpect_error();
+				throw $this->new_unexpected_error();
 		}
 
 		return $expression;

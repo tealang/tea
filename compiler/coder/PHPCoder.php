@@ -592,17 +592,17 @@ class PHPCoder extends TeaCoder
 
 // ---
 
-	public function render_case_block(CaseBlock $node)
+	public function render_when_block(WhenBlock $node)
 	{
 		$test = $node->test->render($this);
 
 		$branches = [];
 		foreach ($node->branches as $branch) {
-			$branches[] = $this->render_case_branch($branch);
+			$branches[] = $this->render_when_branch($branch);
 		}
 
 		if ($node->else) {
-			$branches[] = $this->render_else_for_case_block($node->else);
+			$branches[] = $this->render_else_for_when_block($node->else);
 		}
 
 		$branches = $this->indents(join(LF, $branches));
@@ -615,10 +615,10 @@ class PHPCoder extends TeaCoder
 		return $code;
 	}
 
-	protected function render_else_for_case_block(IElseBlock $node)
+	protected function render_else_for_when_block(IElseBlock $node)
 	{
 		if ($node instanceof ElseBlock) {
-			$body = $this->render_case_branch_body($node->body);
+			$body = $this->render_when_branch_body($node->body);
 		}
 		else {
 			// that should be ElseIfBlock
@@ -636,7 +636,7 @@ class PHPCoder extends TeaCoder
 		return "default:\n{$body}";
 	}
 
-	protected function render_case_branch(CaseBranch $node)
+	protected function render_when_branch(WhenBranch $node)
 	{
 		$codes = [];
 		if ($node->rule instanceof ExpressionList) {
@@ -650,12 +650,12 @@ class PHPCoder extends TeaCoder
 			$codes[] = "case {$expr}:";
 		}
 
-		$codes[] = $this->render_case_branch_body($node->body);
+		$codes[] = $this->render_when_branch_body($node->body);
 
 		return join(LF, $codes);
 	}
 
-	protected function render_case_branch_body(array $nodes)
+	protected function render_when_branch_body(array $nodes)
 	{
 		$items = [];
 		foreach ($nodes as $node) {
@@ -1480,7 +1480,7 @@ class PHPCoder extends TeaCoder
 		return "(include UNIT_PATH . '{$expr->target}.php')";
 	}
 
-	protected function render_with_when_condition(PostConditionAbleStatement $node, string $code)
+	protected function render_with_post_condition(PostConditionAbleStatement $node, string $code)
 	{
 		return sprintf("if (%s) {\n\t%s\n}", $node->condition->render($this), $code);
 	}
@@ -1491,7 +1491,7 @@ class PHPCoder extends TeaCoder
 		$code = 'break' . $argument . static::STATEMENT_TERMINATOR;
 
 		if ($node->condition) {
-			$code = $this->render_with_when_condition($node, $code);
+			$code = $this->render_with_post_condition($node, $code);
 		}
 
 		return $code;
@@ -1503,7 +1503,7 @@ class PHPCoder extends TeaCoder
 		$code = 'continue' . $argument . static::STATEMENT_TERMINATOR;
 
 		if ($node->condition) {
-			$code = $this->render_with_when_condition($node, $code);
+			$code = $this->render_with_post_condition($node, $code);
 		}
 
 		return $code;

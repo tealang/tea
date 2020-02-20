@@ -81,8 +81,8 @@ trait TeaDocsTrait
 
 		// is not found the end mark of docs?
 		if ($this->pos >= $this->tokens_count) {
-			$line = $this->get_line_by_pos($opened_pos);
-			throw $this->new_parse_error("The close mark of Docs which opened on line {$line} not found.");
+			$line = $this->get_line_number($opened_pos);
+			throw $this->new_parse_error("The close mark of Docs which opened in line {$line} not found.");
 		}
 
 		$this->expect_statement_end();

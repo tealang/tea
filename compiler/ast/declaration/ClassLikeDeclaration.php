@@ -15,6 +15,8 @@ class ClassLikeDeclaration extends RootDeclaration implements IMemberDeclaration
 
 	public $modifier;
 
+	public $is_abstract;
+
 	public $ns;
 
 	public $origin_name;

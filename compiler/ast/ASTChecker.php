@@ -713,10 +713,10 @@ class ASTChecker
 		return $except_type;
 	}
 
-	private function infer_case_block(CaseBlock $node): ?IType
+	private function infer_when_block(WhenBlock $node): ?IType
 	{
 		$testing_type = $this->infer_expression($node->test);
-		if (!TypeFactory::is_case_testable_type($testing_type)) {
+		if (!TypeFactory::is_when_testable_type($testing_type)) {
 			throw $this->new_syntax_error("The testing expression for case-statement should be String/Int/UInt.", $node->test);
 		}
 
@@ -899,7 +899,7 @@ class ASTChecker
 				$this->check_exit_statement($node);
 			case BreakStatement::KIND:
 			case ContinueStatement::KIND:
-				$node->condition && $this->check_when_clause($node);
+				$node->condition && $this->check_condition_clause($node);
 				break;
 
 			case IfBlock::KIND:
@@ -920,8 +920,8 @@ class ASTChecker
 			case TryBlock::KIND:
 				return $this->infer_try_block($node);
 
-			case CaseBlock::KIND:
-				return $this->infer_case_block($node);
+			case WhenBlock::KIND:
+				return $this->infer_when_block($node);
 
 			case UseStatement::KIND:
 				break;
@@ -953,13 +953,13 @@ class ASTChecker
 	private function check_throw_statement(ThrowStatement $node)
 	{
 		$this->infer_expression($node->argument);
-		$node->condition && $this->check_when_clause($node);
+		$node->condition && $this->check_condition_clause($node);
 	}
 
 	private function infer_return_statement(ReturnStatement $node)
 	{
 		$infered_type = $node->argument ? $this->infer_expression($node->argument) : null;
-		$node->condition && $this->check_when_clause($node);
+		$node->condition && $this->check_condition_clause($node);
 
 		return $infered_type;
 	}
@@ -967,10 +967,10 @@ class ASTChecker
 	private function check_exit_statement(ExitStatement $node)
 	{
 		$node->argument === null || $this->expect_infered_type($node->argument, TypeFactory::$_uint, TypeFactory::$_int);
-		$node->condition && $this->check_when_clause($node);
+		$node->condition && $this->check_condition_clause($node);
 	}
 
-	private function check_when_clause(PostConditionAbleStatement $node)
+	private function check_condition_clause(PostConditionAbleStatement $node)
 	{
 		$this->infer_expression($node->condition);
 	}

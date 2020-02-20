@@ -107,7 +107,7 @@ class TeaParser extends BaseParser
 		return $node;
 	}
 
-	protected function read_normal_statement($leading = null, Docs $docs = null, bool $is_in_case_branch = false)
+	protected function read_normal_statement($leading = null, Docs $docs = null, bool $is_in_when_branch = false)
 	{
 		if ($this->get_token_ignore_space() === _BLOCK_END) {
 			return null;
@@ -115,7 +115,7 @@ class TeaParser extends BaseParser
 
 		$token = $this->scan_token_ignore_space();
 		if ($token === LF) {
-			return $this->read_normal_statement(LF, null, $is_in_case_branch);
+			return $this->read_normal_statement(LF, null, $is_in_when_branch);
 		}
 		elseif ($token === _SEMICOLON || $token === null) {
 			return null;
@@ -128,11 +128,11 @@ class TeaParser extends BaseParser
 		}
 		elseif ($token === _DOCS_MARK) {
 			$docs = $this->read_docs();
-			return $this->read_normal_statement($leading, $docs, $is_in_case_branch);
+			return $this->read_normal_statement($leading, $docs, $is_in_when_branch);
 		}
 		elseif ($token === _INLINE_COMMENT_MARK) {
 			$this->skip_current_line();
-			return $this->read_normal_statement($leading, $docs, $is_in_case_branch);
+			return $this->read_normal_statement($leading, $docs, $is_in_when_branch);
 		}
 		elseif (TeaHelper::is_structure_key($token)) {
 			$node = $this->read_structure($token);
@@ -143,7 +143,7 @@ class TeaParser extends BaseParser
 				$node = $this->read_assignment($node);
 			}
 			elseif ($node instanceof IExpression) {
-				if ($is_in_case_branch && in_array($this->get_token_ignore_space(), [_COLON, _COMMA])) {
+				if ($is_in_when_branch && in_array($this->get_token_ignore_space(), [_COLON, _COMMA])) {
 					return $node;
 				}
 
@@ -201,7 +201,7 @@ class TeaParser extends BaseParser
 			return $this->read_constant_declaration($token, $modifier);
 		}
 
-		throw $this->new_unexpect_error();
+		throw $this->new_unexpected_error();
 	}
 
 	protected function read_function_declaration(string $name, ?string $modifier)
@@ -288,8 +288,8 @@ class TeaParser extends BaseParser
 				$node = $this->read_if_block();
 				break;
 			// do not supported now
-			case _CASE:
-				$node = $this->read_case_block();
+			case _WHEN:
+				$node = $this->read_when_block();
 				break;
 			case _FOR:
 				$node = $this->read_for_block();
@@ -316,7 +316,7 @@ class TeaParser extends BaseParser
 				$node = $this->read_exit_declaration();
 				break;
 			default:
-				throw $this->new_unexpect_error();
+				throw $this->new_unexpected_error();
 		}
 
 		return $node;
@@ -329,7 +329,7 @@ class TeaParser extends BaseParser
 		// the declaration options
 		$name = $this->scan_token_ignore_space();
 		if (!TeaHelper::is_function_name($name)) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		$parameters = $this->get_token() === _PAREN_OPEN
@@ -391,7 +391,7 @@ class TeaParser extends BaseParser
 		return $this->factory->create_variable_declaration($name, $type, $value);
 	}
 
-	protected function try_attach_when_post_condition(PostConditionAbleStatement $statement)
+	protected function try_attach_post_condition(PostConditionAbleStatement $statement)
 	{
 		if (!$this->skip_token_ignore_space(_WHEN)) {
 			return;
@@ -423,7 +423,7 @@ class TeaParser extends BaseParser
 
 		$statement = new ContinueStatement();
 		$this->try_attach_goto_label($statement, true);
-		$this->try_attach_when_post_condition($statement);
+		$this->try_attach_post_condition($statement);
 
 		return $statement;
 	}
@@ -436,7 +436,7 @@ class TeaParser extends BaseParser
 
 		$statement = new BreakStatement();
 		$this->try_attach_goto_label($statement);
-		$this->try_attach_when_post_condition($statement);
+		$this->try_attach_post_condition($statement);
 
 		return $statement;
 	}
@@ -455,7 +455,7 @@ class TeaParser extends BaseParser
 		}
 
 		$statement = new ExitStatement($argument);
-		$this->try_attach_when_post_condition($statement);
+		$this->try_attach_post_condition($statement);
 
 		return $statement;
 	}
@@ -474,7 +474,7 @@ class TeaParser extends BaseParser
 		}
 
 		$statement = new ReturnStatement($argument);
-		$this->try_attach_when_post_condition($statement);
+		$this->try_attach_post_condition($statement);
 
 		return $statement;
 	}
@@ -489,7 +489,7 @@ class TeaParser extends BaseParser
 		}
 
 		$statement = new ThrowStatement($argument);
-		$this->try_attach_when_post_condition($statement);
+		$this->try_attach_post_condition($statement);
 
 		return $statement;
 	}
@@ -597,16 +597,16 @@ class TeaParser extends BaseParser
 		$master_block->set_except_block($sub_block);
 	}
 
-	protected function read_case_block(string $label = null)
+	protected function read_when_block(string $label = null)
 	{
 		// case test-expression { branches }
 
 		$argument = $this->read_expression();
 
-		$master_block = $this->factory->create_case_block($argument);
+		$master_block = $this->factory->create_when_block($argument);
 		$master_block->label = $label;
 
-		$branches = $this->read_case_branches();
+		$branches = $this->read_when_branches();
 		$master_block->set_branches(...$branches);
 
 		$this->try_attach_else_block($master_block);
@@ -615,14 +615,14 @@ class TeaParser extends BaseParser
 		return $master_block;
 	}
 
-	protected function read_case_branches()
+	protected function read_when_branches()
 	{
 		$this->expect_block_begin();
 
 		// the rule expression of first branch
 		$rule_expr = $this->read_expression();
 		if (!$rule_expr) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		// read branches
@@ -635,7 +635,7 @@ class TeaParser extends BaseParser
 
 			$this->expect_token_ignore_space(_COLON);
 
-			$case_branch = $this->factory->create_case_branch_block($rule_expr);
+			$when_branch = $this->factory->create_when_branch_block($rule_expr);
 
 			$next_rule_expr = null;
 			$statements = [];
@@ -649,8 +649,8 @@ class TeaParser extends BaseParser
 				}
 			}
 
-			$case_branch->set_body_with_statements(...$statements);
-			$branches[] = $case_branch;
+			$when_branch->set_body_with_statements(...$statements);
+			$branches[] = $when_branch;
 			$rule_expr = $next_rule_expr;
 		}
 
@@ -665,7 +665,7 @@ class TeaParser extends BaseParser
 		while ($this->skip_token_ignore_space(_COMMA)) {
 			$expression = $this->read_expression();
 			if ($expression === null) {
-				throw $this->new_unexpect_error();
+				throw $this->new_unexpected_error();
 			}
 
 			$list[] = $expression;
@@ -711,7 +711,7 @@ class TeaParser extends BaseParser
 
 		$mode = $this->scan_token_ignore_space();
 		if ($mode !== _TO && $mode !== _DOWNTO) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		$end = $this->read_expression();
@@ -761,7 +761,7 @@ class TeaParser extends BaseParser
 		$do_the_first = false;
 		if ($this->skip_token_ignore_space(_IS)) {
 			if (!$this->skip_token_ignore_space('first') || !$this->skip_token_ignore_space(_OR)) {
-				throw $this->new_unexpect_error();
+				throw $this->new_unexpected_error();
 			}
 
 			$do_the_first = true;
@@ -776,7 +776,7 @@ class TeaParser extends BaseParser
 		if ($do_the_first) {
 			$master_block->do_the_first = true;
 			if ($this->skip_token_ignore_empty(_ELSE) || $this->skip_token_ignore_empty(_ELSEIF)) {
-				throw $this->new_unexpect_error();
+				throw $this->new_unexpected_error();
 			}
 		}
 		// else { // do not support else/elseif in while-block
@@ -851,14 +851,14 @@ class TeaParser extends BaseParser
 			case _SHARP:
 				$expression = $this->read_sharp_expression_with($this->scan_token());
 				if ($expression === null) {
-					throw $this->new_unexpect_error();
+					throw $this->new_unexpected_error();
 				}
 				break;
 
 			case _YIELD:
 				$argument = $this->read_expression();
 				if ($argument === null) {
-					throw $this->new_unexpect_error();
+					throw $this->new_unexpected_error();
 				}
 
 				return $this->factory->create_yield_expression($argument);
@@ -909,7 +909,7 @@ class TeaParser extends BaseParser
 					break;
 				}
 
-				throw $this->new_unexpect_error();
+				throw $this->new_unexpected_error();
 		}
 
 		$expression->pos = $this->pos;
@@ -942,7 +942,7 @@ class TeaParser extends BaseParser
 	{
 		$expression = $this->read_expression($operator);
 		if ($expression === null) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		return new PrefixOperation($operator, $expression);
@@ -963,7 +963,7 @@ class TeaParser extends BaseParser
 			return $this->read_lambda_for_parentheses($expression);
 		}
 		else {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		// lambda, (0 or 1 parameter) => { ... }
@@ -971,7 +971,7 @@ class TeaParser extends BaseParser
 			$parameters = [];
 			if ($expression) {
 				if (!isset($expression->name)) {
-					throw $this->new_unexpect_error();
+					throw $this->new_unexpected_error();
 				}
 
 				$parameters[] = $this->create_parameter($expression->name);
@@ -981,7 +981,7 @@ class TeaParser extends BaseParser
 		}
 
 		if ($expression === null) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		return new Parentheses($expression);
@@ -990,7 +990,7 @@ class TeaParser extends BaseParser
 	protected function read_lambda_for_parentheses(PlainIdentifier $readed_identifier)
 	{
 		if (!TeaHelper::is_declarable_variable_name($readed_identifier->name)) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		// lambda: (param1, ...) => {}
@@ -1035,7 +1035,7 @@ class TeaParser extends BaseParser
 			if ($this->skip_token(_DOT)) {
 				$fractional_part = $this->scan_token();
 				if (!preg_match('/^[0-9_]+(e\+?[0-9_]*)?$/i', $fractional_part)) {
-					throw $this->new_unexpect_error();
+					throw $this->new_unexpected_error();
 				}
 
 				$token .= _DOT . $fractional_part; // the real type number
@@ -1069,7 +1069,7 @@ class TeaParser extends BaseParser
 
 		$exp = $this->scan_token();
 		if (!is_numeric($exp)) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		return new FloatLiteral($prefix . $exp);
@@ -1156,7 +1156,7 @@ class TeaParser extends BaseParser
 
 			$expr = $this->read_expression();
 			if ($expr === null) {
-				throw $this->new_unexpect_error();
+				throw $this->new_unexpected_error();
 			}
 
 			if (!$expr instanceof ILiteral) {
@@ -1185,7 +1185,7 @@ class TeaParser extends BaseParser
 		$this->scan_token_ignore_empty();
 
 		if (!TeaHelper::is_declarable_variable_name($token)) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		return $token;
@@ -1278,7 +1278,7 @@ class TeaParser extends BaseParser
 			}
 
 			if ($this->scan_token() !== _COLON) {
-				throw $this->new_unexpect_error();
+				throw $this->new_unexpected_error();
 			}
 		}
 
@@ -1371,7 +1371,7 @@ class TeaParser extends BaseParser
 
 		$member = $this->scan_token();
 		if (!TeaHelper::is_identifier_name($member)) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		$expression = $this->factory->create_accessing_identifier($master, $member);
@@ -1404,7 +1404,7 @@ class TeaParser extends BaseParser
 
 		$value = $this->read_expression();
 		if ($value === null) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		return new ArrayElementAssignment($master, null, $value);
@@ -1423,7 +1423,7 @@ class TeaParser extends BaseParser
 		}
 		elseif (!$handler instanceof Identifiable) {
 			$this->scan_token_ignore_space(); // 将语法错误定位到下一个token
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		$this->skip_token(_PAREN_OPEN);
@@ -1469,7 +1469,7 @@ class TeaParser extends BaseParser
 	{
 		$name = $this->scan_token_ignore_empty();
 		if (!TeaHelper::is_declarable_variable_name($name)) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		if ($this->skip_colon()) {
@@ -1522,7 +1522,7 @@ class TeaParser extends BaseParser
 			$this->scan_token_ignore_empty(); // skip the operator
 			$as_type = $this->try_read_type_identifier($operator);
 			if ($as_type === null) {
-				throw $this->new_unexpect_error();
+				throw $this->new_unexpected_error();
 			}
 
  			$expression = new AsOperation($expression, $as_type);
@@ -1783,7 +1783,7 @@ class TeaParser extends BaseParser
 				$type = TypeFactory::create_meta_type($type);
 			}
 			else {
-				throw $this->new_unexpect_error();
+				throw $this->new_unexpected_error();
 			}
 
 			$i++;
@@ -1809,7 +1809,7 @@ class TeaParser extends BaseParser
 			}
 
 			if (!$this->skip_token(_BRACKET_CLOSE)) {
-				throw $this->new_unexpect_error();
+				throw $this->new_unexpected_error();
 			}
 
 			$i++;
@@ -1897,7 +1897,7 @@ class TeaParser extends BaseParser
 			return $this->read_class_member_declaration($leading, $docs, $modifier, $static);
 		}
 		else {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		$this->expect_statement_end();
@@ -2022,7 +2022,7 @@ class TeaParser extends BaseParser
 		}
 
 		if (!TeaHelper::is_function_name($name)) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		$parameters = $this->read_parameters_with_parentheses();
@@ -2077,7 +2077,7 @@ class TeaParser extends BaseParser
 		}
 
 		if (!TeaHelper::is_declarable_variable_name($name)) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		$next = $this->get_token_ignore_space();

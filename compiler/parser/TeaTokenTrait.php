@@ -37,12 +37,12 @@ trait TeaTokenTrait
 		$this->tokens_count = count($tokens);
 	}
 
-	protected function get_current_token()
+	protected function get_current_token_string()
 	{
 		return $this->tokens[$this->pos] ?? null;
 	}
 
-	protected function get_line_by_pos(int $pos): int
+	protected function get_line_number(int $pos): int
 	{
 		$idx = 0;
 		$end = count($this->line2pos);
@@ -228,10 +228,6 @@ trait TeaTokenTrait
 			return $this->scan_string_component();
 		}
 
-		// if ($token === LF) {
-		// 	$this->current_line++;
-		// }
-
 		return $token;
 	}
 
@@ -244,10 +240,6 @@ trait TeaTokenTrait
 		if ($token === _CR) {
 			return $this->scan_token();
 		}
-
-		// if ($token === LF) {
-		// 	$this->current_line++;
-		// }
 
 		if ($token === _COMMENTS_OPEN && !$this->is_in_comment_block) {
 			$this->skip_comments();

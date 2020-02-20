@@ -41,7 +41,7 @@ class HeaderParser extends TeaParser
 			$node = $this->read_declaration_with_modifier($token);
 		}
 		else {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		$this->expect_statement_end();
@@ -106,7 +106,7 @@ class HeaderParser extends TeaParser
 		// class or interface
 		$declaration = $this->try_read_classlike_declaration($name, $modifier);
 		if (!$declaration) {
-			throw $this->new_unexpect_error();
+			throw $this->new_unexpected_error();
 		}
 
 		if (isset($origin_name)) {

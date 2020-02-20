@@ -1107,7 +1107,7 @@ class TeaCoder
 		}
 	}
 
-	protected function render_with_when_condition(PostConditionAbleStatement $node, string $code)
+	protected function render_with_post_condition(PostConditionAbleStatement $node, string $code)
 	{
 		return $code . ' when ' . $node->condition->render($this);
 	}
@@ -1118,7 +1118,7 @@ class TeaCoder
 		$code = 'break' . $argument;
 
 		if ($node->condition) {
-			$code = $this->render_with_when_condition($node, $code);
+			$code = $this->render_with_post_condition($node, $code);
 		}
 
 		return $code;
@@ -1130,7 +1130,7 @@ class TeaCoder
 		$code = 'continue' . $argument;
 
 		if ($node->condition) {
-			$code = $this->render_with_when_condition($node, $code);
+			$code = $this->render_with_post_condition($node, $code);
 		}
 
 		return $code;
@@ -1142,7 +1142,7 @@ class TeaCoder
 		$code = $statement . static::STATEMENT_TERMINATOR;
 
 		if ($node->condition) {
-			$code = $this->render_with_when_condition($node, $code);
+			$code = $this->render_with_post_condition($node, $code);
 		}
 
 		return $code;
@@ -1153,7 +1153,7 @@ class TeaCoder
 		$code = "throw " . $node->argument->render($this) . static::STATEMENT_TERMINATOR;
 
 		if ($node->condition) {
-			$code = $this->render_with_when_condition($node, $code);
+			$code = $this->render_with_post_condition($node, $code);
 		}
 
 		return $code;
@@ -1165,7 +1165,7 @@ class TeaCoder
 		$code = 'exit' . $argument . static::STATEMENT_TERMINATOR;
 
 		if ($node->condition) {
-			$code = $this->render_with_when_condition($node, $code);
+			$code = $this->render_with_post_condition($node, $code);
 		}
 
 		return $code;
