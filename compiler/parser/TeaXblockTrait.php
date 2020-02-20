@@ -20,11 +20,11 @@ trait TeaXBlockTrait
 {
 	protected function read_xblock()
 	{
-		$block_previous_spaces = $this->get_inline_heading_spaces();
+		$block_previous_spaces = $this->get_heading_spaces_inline();
 
 		$token = $this->scan_token();
 		if (!TeaHelper::is_xtag_name($token)) {
-			throw $this->new_unexpect_exception($token);
+			throw $this->new_unexpect_error();
 		}
 
 		$items[] = $this->try_read_xtag($token, $block_previous_spaces);
@@ -51,7 +51,7 @@ trait TeaXBlockTrait
 	protected function try_read_xtag(?string $tag, string $block_previous_spaces)
 	{
 		if (!TeaHelper::is_xtag_name($tag)) {
-			throw $this->new_unexpect_exception($token);
+			throw $this->new_unexpect_error();
 		}
 
 		return $this->read_xtag($tag, $block_previous_spaces);
@@ -71,12 +71,12 @@ trait TeaXBlockTrait
 		// eg. <item=$name>...</item>
 		if ($this->skip_token_ignore_space(_ASSIGN)) {
 			if (!$this->skip_token_ignore_space(_DOLLAR)) {
-				throw $this->new_unexpect_exception();
+				throw $this->new_unexpect_error();
 			}
 
 			$tag_expression = $this->try_read_dollar_interpolation();
 			if ($tag_expression === null) {
-				throw $this->new_unexpect_exception();
+				throw $this->new_unexpect_error();
 			}
 		}
 
@@ -96,7 +96,7 @@ trait TeaXBlockTrait
 
 		// expect xtag head close
 		if ($current_token !== _XTAG_CLOSE) {
-			throw $this->new_unexpect_exception();
+			throw $this->new_unexpect_error();
 		}
 
 		$children = $this->read_xtag_children($tag, $block_previous_spaces);
@@ -152,7 +152,7 @@ trait TeaXBlockTrait
 		}
 
 		// close not found
-		throw $this->new_unexpect_exception($token);
+		throw $this->new_unexpect_error($token);
 	}
 
 	protected function read_xtag_children(string $tag, $block_previous_spaces)
@@ -179,7 +179,7 @@ trait TeaXBlockTrait
 					elseif ($next === _SLASH) { // the </
 						if ($this->scan_token() !== $tag) {
 							// a wrong close tag
-							throw $this->new_unexpect_exception($token);
+							throw $this->new_unexpect_error();
 						}
 
 						$this->expect_token_ignore_empty(_XTAG_CLOSE); // the >
@@ -188,7 +188,7 @@ trait TeaXBlockTrait
 						return $this->strip_previous_spaces_for_items($items, $block_previous_spaces);
 					}
 					else {
-						throw $this->new_unexpect_exception($next);
+						throw $this->new_unexpect_error();
 					}
 
 					break;
@@ -224,7 +224,7 @@ trait TeaXBlockTrait
 		}
 
 		// the close not found
-		throw $this->new_unexpect_exception($token);
+		throw $this->new_unexpect_error();
 	}
 
 	protected function strip_previous_spaces_for_items(array $items, string $block_previous_spaces)

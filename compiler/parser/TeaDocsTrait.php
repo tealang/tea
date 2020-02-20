@@ -15,7 +15,7 @@ trait TeaDocsTrait
 	{
 		$opened_pos = $this->pos;
 
-		$left_spaces = $this->get_previous_inline($this->pos - 1);
+		$left_spaces = $this->get_previous_code_inline($this->pos - 1);
 
 		$token = $this->scan_token_ignore_space();
 		if ($token === LF) {
@@ -62,7 +62,7 @@ trait TeaDocsTrait
 
 		$tmp = '';
 		while (($token = $this->scan_string_component()) !== null) {
-			if ($token === _DOCS_MARK && $this->get_previous_inline($this->pos - 1) === $left_spaces) {
+			if ($token === _DOCS_MARK && $this->get_previous_code_inline($this->pos - 1) === $left_spaces) {
 				if ($tmp !== _NOTHING) $items[] = $tmp;
 				break;
 			}

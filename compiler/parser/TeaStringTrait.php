@@ -116,7 +116,7 @@ trait TeaStringTrait
 	{
 		$expression = $this->read_expression();
 		if (!$expression) {
-			throw $this->new_unexpect_exception();
+			throw $this->new_unexpect_error();
 		}
 
 		$this->expect_block_end();

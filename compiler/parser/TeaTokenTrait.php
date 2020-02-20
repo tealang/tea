@@ -462,7 +462,7 @@ trait TeaTokenTrait
 		// echo sprintf("- %s\n", $token);
 	}
 
-	protected function get_previous_inline(int $pos = null): string
+	protected function get_previous_code_inline(int $pos = null): string
 	{
 		if ($pos === null) $pos = $this->pos;
 
@@ -478,26 +478,15 @@ trait TeaTokenTrait
 		return $tmp;
 	}
 
-	protected function get_inline_heading_spaces(int $pos = null)
+	protected function get_heading_spaces_inline(int $pos = null)
 	{
-		$string = $this->get_previous_inline($pos);
+		$string = $this->get_previous_code_inline($pos);
 
 		if (preg_match('/^\s+/', $string, $matches)) {
 			return $matches[0];
 		}
 
 		return '';
-	}
-
-// -----
-
-	public function new_unexpect_exception(string $token = null)
-	{
-		if ($token === null) {
-			$token = $this->tokens[$this->pos] ?? $this->tokens[$this->pos - 1];
-		}
-
-		return $this->new_parse_error("Unexpect token '$token'", 1);
 	}
 }
 

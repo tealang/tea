@@ -110,7 +110,7 @@ trait TeaSharpTrait
 			$declaration = $this->factory->create_super_variable_declaration($name, $type, null);
 		}
 		else {
-			throw $this->new_unexpect_exception();
+			throw $this->new_unexpect_error();
 		}
 
 		return $declaration;
@@ -137,7 +137,7 @@ trait TeaSharpTrait
 		$value = null;
 
 		if (!TeaHelper::is_declarable_variable_name($name) && $name !== _THIS) {
-			throw $this->new_unexpect_exception();
+			throw $this->new_unexpect_error();
 		}
 
 		$next = $this->get_token_ignore_empty();
@@ -200,7 +200,7 @@ trait TeaSharpTrait
 
 			$expr = $this->read_expression();
 			if ($expr === null || !$expr instanceof ILiteral) {
-				throw $this->new_unexpect_exception();
+				throw $this->new_unexpect_error();
 			}
 
 			// set to unit
@@ -252,14 +252,14 @@ trait TeaSharpTrait
 	{
 		$token = $this->scan_token_ignore_space();
 		if (!TeaHelper::is_domain_component($token)) {
-			throw $this->new_unexpect_exception();
+			throw $this->new_unexpect_error();
 		}
 
 		$components[] = $token;
 		while ($this->skip_token(_DOT)) {
 			$token = $this->scan_token();
 			if (!TeaHelper::is_domain_component($token)) {
-				throw $this->new_unexpect_exception();
+				throw $this->new_unexpect_error();
 			}
 
 			$components[] = $token;
@@ -385,7 +385,7 @@ trait TeaSharpTrait
 				break;
 
 			default:
-				throw $this->new_unexpect_exception();
+				throw $this->new_unexpect_error();
 		}
 
 		return $expression;

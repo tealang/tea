@@ -73,9 +73,15 @@ abstract class BaseParser
 		return new \Exception($message);
 	}
 
+	public function new_unexpect_error()
+	{
+		$token = $this->get_current_token();
+		return $this->new_parse_error("Unexpect token '$token'", 1);
+	}
+
 	public function get_error_message_with_pos(int $pos)
 	{
-		$code = $this->get_previous_inline($pos);
+		$code = $this->get_previous_code_inline($pos);
 		$line = $this->get_line_by_pos($pos);
 
 		$message = "{$this->file}:{$line}";
@@ -84,7 +90,7 @@ abstract class BaseParser
 		return $message;
 	}
 
-	abstract protected function get_previous_inline(int $pos): string;
+	abstract protected function get_previous_code_inline(int $pos): string;
 
 	abstract protected function get_line_by_pos(int $pos): int;
 }
