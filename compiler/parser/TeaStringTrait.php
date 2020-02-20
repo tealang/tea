@@ -85,25 +85,17 @@ trait TeaStringTrait
 				return $items;
 			}
 			elseif ($token === _DOLLAR) {
-				if ($this->get_token() === _BLOCK_BEGIN) {
-					$expression = $this->read_dollar_block_expression();
-					if (!$expression) {
-						continue; // just a empty expression
-					}
-				}
-				else {
-					$expression = $this->try_read_identifier_expression();
-					if (!$expression) {
-						$string .= $token;
-						continue;
-					}
+				$expression = $this->try_read_dollar_interpolation();
+				if ($expression === null) {
+					$string .= $token;
+					continue;
 				}
 
 				static::collect_and_reset_temp($items, $string, $expression);
 				continue;
 			}
 			elseif ($token === _SHARP && $this->skip_token(_BLOCK_BEGIN)) {
-				$expression = $this->read_instring_sharp_expression();
+				$expression = $this->read_sharp_interpolation();
 				if ($expression) {
 					static::collect_and_reset_temp($items, $string, $expression);
 				}
@@ -120,7 +112,7 @@ trait TeaStringTrait
 		throw $this->new_parse_error("Missed the quote close mark ($quote_mark).");
 	}
 
-	protected function read_instring_sharp_expression()
+	protected function read_sharp_interpolation()
 	{
 		$expression = $this->read_expression();
 		if (!$expression) {
@@ -131,7 +123,27 @@ trait TeaStringTrait
 		return new HTMLEscapeExpression($expression);
 	}
 
-	protected function try_read_identifier_expression(Identifiable $master = null): ?Identifiable
+	protected function try_read_dollar_interpolation(): ?IExpression
+	{
+		if ($this->get_token() === _BLOCK_BEGIN) {
+			$this->scan_token(); // skip {
+
+			$expression = $this->read_expression();
+			if ($expression === null) {
+				throw $this->new_parse_error("Required an expression in \${}.");
+			}
+
+			$this->expect_block_end();
+		}
+		else {
+			// without {}
+			$expression = $this->try_read_dollar_identifier();
+		}
+
+		return $expression;
+	}
+
+	protected function try_read_dollar_identifier(): ?Identifiable
 	{
 		$token = $this->get_token();
 		if (!TeaHelper::is_identifier_name($token)) {
@@ -140,36 +152,28 @@ trait TeaStringTrait
 
 		$this->scan_token();
 
-		if ($master) {
-			$identifer = $this->factory->create_accessing_identifier($master, $token);
-		}
-		else {
-			$identifer = $this->factory->create_identifier($token);
-		}
-
-		if ($this->get_token() === _DOT) {
+		$next = $this->get_token();
+		if ($next === _DOT) {
 			$temp_pos = $this->pos;
-			$this->scan_token(); // skip the dot
-			$new_identifer = $this->try_read_identifier_expression($identifer);
-			if ($new_identifer === null) {
-				$this->pos = $temp_pos;
+			$this->scan_token(); // temp skip the dot
+
+			$next = $this->get_token();
+			if (TeaHelper::is_identifier_name($next)) {
+				$this->scan_token();
+				throw $this->new_parse_error('The member accessing interpolations required \'${}\'.');
 			}
-			else {
-				$identifer = $new_identifer;
-			}
+
+			$this->pos = $temp_pos;
+		}
+		elseif ($next === _BRACKET_OPEN) {
+			$this->scan_token();
+			throw $this->new_parse_error('The key accessing interpolations required \'${}\'.');
 		}
 
+		$identifer = $this->factory->create_identifier($token);
 		$identifer->pos = $this->pos;
+
 		return $identifer;
-	}
-
-	protected function read_dollar_block_expression(): ?IExpression
-	{
-		$this->scan_token(); // skip {
-		$expression = $this->read_expression();
-		$this->expect_block_end();
-
-		return $expression;
 	}
 
 	protected static function collect_and_reset_temp(array &$items, string &$string, IExpression $expression)

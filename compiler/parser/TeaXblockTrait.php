@@ -69,8 +69,15 @@ trait TeaXBlockTrait
 
 		// support the variable tag name
 		// eg. <item=$name>...</item>
-		if ($this->skip_token_ignore_space(_ASSIGN) && $this->skip_token_ignore_space(_DOLLAR)) {
-			$real_tag = $this->try_read_identifier_expression();
+		if ($this->skip_token_ignore_space(_ASSIGN)) {
+			if (!$this->skip_token_ignore_space(_DOLLAR)) {
+				throw $this->new_unexpect_exception();
+			}
+
+			$tag_expression = $this->try_read_dollar_interpolation();
+			if ($tag_expression === null) {
+				throw $this->new_unexpect_exception();
+			}
 		}
 
 		$attributes = $this->read_xtag_attributes();
@@ -79,12 +86,12 @@ trait TeaXBlockTrait
 
 		// xtag end
 		if ($current_token === _XTAG_SELF_END) {
-			return new XBlockElement($real_tag ?? $tag, $attributes);
+			return new XBlockElement($tag_expression ?? $tag, $attributes);
 		}
 
 		// no children
 		if (in_array(strtolower($tag), _LEAF_TAGS, true)) {
-			return new XBlockLeaf($real_tag ?? $tag, $attributes);
+			return new XBlockLeaf($tag_expression ?? $tag, $attributes);
 		}
 
 		// expect xtag head close
@@ -94,7 +101,7 @@ trait TeaXBlockTrait
 
 		$children = $this->read_xtag_children($tag, $block_previous_spaces);
 
-		return new XBlockElement($real_tag ?? $tag, $attributes, $children);
+		return new XBlockElement($tag_expression ?? $tag, $attributes, $children);
 	}
 
 	protected function read_xcomment_block(string $block_previous_spaces)
@@ -122,23 +129,15 @@ trait TeaXBlockTrait
 			}
 
 			if ($token === _SHARP && $this->skip_token(_BLOCK_BEGIN)) {
-				$expression = $this->read_instring_sharp_expression();
+				$expression = $this->read_sharp_interpolation();
 				static::collect_and_reset_temp($items, $string, $expression);
 				continue;
 			}
 			elseif ($token === _DOLLAR) {
-				if ($this->get_token() === _BLOCK_BEGIN) {
-					$expression = $this->read_dollar_block_expression();
-					if (!$expression) {
-						continue; // just a empty expression
-					}
-				}
-				else {
-					$expression = $this->try_read_identifier_expression();
-					if (!$expression) {
-						$string .= $token;
-						continue;
-					}
+				$expression = $this->try_read_dollar_interpolation();
+				if ($expression === null) {
+					$string .= $token;
+					continue;
 				}
 
 				static::collect_and_reset_temp($items, $string, $expression);
@@ -196,7 +195,7 @@ trait TeaXBlockTrait
 
 				case _SHARP:
 					if ($this->skip_token(_BLOCK_BEGIN)) {
-						$expression = $this->read_instring_sharp_expression();
+						$expression = $this->read_sharp_interpolation();
 						static::collect_and_reset_temp($items, $string, $expression);
 					}
 					else {
@@ -205,18 +204,10 @@ trait TeaXBlockTrait
 					break;
 
 				case _DOLLAR:
-					if ($this->get_token() === _BLOCK_BEGIN) {
-						$expression = $this->read_dollar_block_expression();
-						if (!$expression) {
-							break;
-						}
-					}
-					else {
-						$expression = $this->try_read_identifier_expression();
-						if (!$expression) {
-							$string .= $token;
-							break;
-						}
+					$expression = $this->try_read_dollar_interpolation();
+					if ($expression === null) {
+						$string .= $token;
+						break;
 					}
 
 					static::collect_and_reset_temp($items, $string, $expression);

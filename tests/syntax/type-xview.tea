@@ -73,7 +73,7 @@ public DemoList: BaseView {
 			}
 		}
 
-		return <vtag=$this.tag id="$this.name">
+		return <vtag=${this.tag} id="${this.name}">
 			${this.title == "abc" ? <h1>#{this.title concat 123}</h1> : none}
 			<i></i>
 			<cells>
