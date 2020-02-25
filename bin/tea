@@ -18,10 +18,12 @@ define('LOG_PATH', BASE_PATH . 'log/');
 const DEBUG = false;
 
 const KEY_INIT = 'init';
-const OPTION_KEYS = [KEY_INIT];
+const KEY_SCANPHP = 'scanphp';
+const OPTION_KEYS = [KEY_INIT, KEY_SCANPHP];
 
 const USAGE = 'Usage: tea tea/tests/syntax
-Usage: tea --init myproject/hello';
+Usage: tea --init myproject/hello
+Usage: tea --scanphp myproject/a-php-unit';
 
 require BASE_PATH . 'compiler/__unit.php';
 
@@ -39,6 +41,13 @@ try {
 		$init = new TeaInitializer($target);
 		$init->process();
 		halt("Init '$target' success.");
+	}
+
+	// scan php
+	if (isset($opts[KEY_SCANPHP])) {
+		$init = new PHPScanner($target);
+		$init->scan();
+		halt("Scan '$target' success.");
 	}
 
 	// compile

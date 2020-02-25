@@ -47,9 +47,9 @@ $var1 = '<div>' . '<script>' . '</div>';
 'string${abc}';
 "string\${abc}";
 
-htmlspecialchars("string{$abc}\n", ENT_QUOTES);
-htmlspecialchars('string', ENT_QUOTES);
-htmlspecialchars('string<br>' . $abc, ENT_QUOTES);
+html_encode("string{$abc}\n");
+html_encode('string');
+html_encode('string<br>' . $abc);
 
 'A' . $abc . 'BC\n';
 

@@ -163,6 +163,18 @@ public array_last_index(array Array) UInt {
 #php json_decode(data, assoc Bool = false, depth UInt = 512, flags Int = 0) Dict
 #php date(format String, timestamp Int = #default) String
 
+#php ENT_QUOTES Int
+#php htmlspecialchars(string, flags Int = #default, encoding String = #default, double_encode = #default) String
+#php htmlspecialchars_decode(string, flags Int = #default) String
+
+public html_encode(string, flags = ENT_QUOTES) {
+	return htmlspecialchars(string, flags)
+}
+
+public html_decode(string, flags = ENT_QUOTES) {
+	return htmlspecialchars_decode(string, flags)
+}
+
 // regex
 #php PREG_SPLIT_DELIM_CAPTURE Int
 #php preg_match(regex Regex, subject String, &matches Array = #default, flags Int = #default, offset Int = #default) Bool
@@ -234,7 +246,6 @@ internal IBaseType {
 	// other
 	masked explode(delimiter String) => explode(delimiter, this)
 	masked replace(search String, replacement String) => _str_replace(this, search, replacement)
-	masked json_decode() => json_decode(this, true)
 }
 
 #tea Float: IBaseType {
@@ -280,7 +291,6 @@ internal IBaseType {
 	masked filter(callback Callable) => array_filter(this, callback)
 
 	masked join(glue String = LF) => implode(glue, this)
-	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) => json_encode(this, flags)
 }
 
 #tea Dict {
@@ -296,7 +306,6 @@ internal IBaseType {
 	// masked remove(key String) => unset(this[key])
 
 	masked join(glue String = LF) => implode(glue, this)
-	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) => json_encode(this, flags)
 }
 
 #tea Regex {

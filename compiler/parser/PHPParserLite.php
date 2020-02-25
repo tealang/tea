@@ -713,3 +713,5 @@ class PHPParserLite extends BaseParser
 		}
 	}
 }
+
+// end

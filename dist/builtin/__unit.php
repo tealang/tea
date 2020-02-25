@@ -58,6 +58,14 @@ function array_last_index(array $array): int {
 	return count($array) - 1;
 }
 
+function html_encode($string, int $flags = ENT_QUOTES): string {
+	return htmlspecialchars($string, $flags);
+}
+
+function html_decode($string, int $flags = ENT_QUOTES): string {
+	return htmlspecialchars_decode($string, $flags);
+}
+
 function regex_test(string $regex, string $subject): bool {
 	return preg_match($regex, $subject) ? true : false;
 }

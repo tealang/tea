@@ -23,9 +23,9 @@ class FileHelper
 
 	public static function mkdir(string $dir)
 	{
-		$result = mkdir($dir, 0777, true);
+		$result = mkdir($dir, 0755, true);
 		if (!$result) {
-			throw Exception::file("Create dir failed.", $dir);
+			throw new \Exception("Create dir '$dir' failed.");
 		}
 	}
 

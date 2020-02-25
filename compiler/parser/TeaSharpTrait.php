@@ -333,18 +333,18 @@ trait TeaSharpTrait
 			case _INCLUDE:
 				return $this->read_include_expression();
 
-			case _SINGLE_QUOTE:
-				$expression = $this->read_single_quoted_expression();
-				return new HTMLEscapeExpression($expression);
+			// case _SINGLE_QUOTE:
+			// 	$expression = $this->read_single_quoted_expression();
+			// 	return new HTMLEscapeExpression($expression);
 
-			case _DOUBLE_QUOTE:
-				$expression = $this->read_double_quoted_expression();
-				return new HTMLEscapeExpression($expression);
+			// case _DOUBLE_QUOTE:
+			// 	$expression = $this->read_double_quoted_expression();
+			// 	return new HTMLEscapeExpression($expression);
 
-			case _PAREN_OPEN:
-				$expression = $this->read_expression();
-				$this->expect_token_ignore_empty(_PAREN_CLOSE);
-				return new HTMLEscapeExpression($expression);
+			// case _PAREN_OPEN:
+			// 	$expression = $this->read_expression();
+			// 	$this->expect_token_ignore_empty(_PAREN_CLOSE);
+			// 	return new HTMLEscapeExpression($expression);
 
 			case _TEXT:
 				return $this->read_string_literal();
@@ -356,7 +356,8 @@ trait TeaSharpTrait
 
 	protected function read_include_expression()
 	{
-		$this->expect_token_ignore_empty(_PAREN_OPEN);
+		$this->expect_token(_PAREN_OPEN);
+		$this->expect_token(_SINGLE_QUOTE);
 
 		$name = '';
 		while (($token = $this->get_token()) !== null) {
@@ -369,7 +370,8 @@ trait TeaSharpTrait
 			}
 		}
 
-		$this->expect_token_ignore_empty(_PAREN_CLOSE);
+		$this->expect_token(_SINGLE_QUOTE);
+		$this->expect_token(_PAREN_CLOSE);
 
 		return $this->factory->create_include_expression($name);
 	}

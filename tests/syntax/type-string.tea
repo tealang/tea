@@ -46,9 +46,9 @@ var1 = <div>${'<script>'}</div>
 #text 'string${abc}';
 #text "string${abc}"
 
-#"string${abc}\n"
-#'string'
-#('string<br>' concat abc)
+html_encode("string${abc}\n")
+html_encode('string')
+html_encode('string<br>' concat abc)
 
 'A${abc}BC\n'
 

@@ -11,6 +11,7 @@ public __FUNCTION__ UInt
 public FILE_APPEND Int
 public LOCK_EX Int
 public JSON_UNESCAPED_UNICODE Int
+public ENT_QUOTES Int
 public PREG_SPLIT_DELIM_CAPTURE Int
 
 #php isset(expr Any) Bool
@@ -161,6 +162,14 @@ public array_last_index(array Array) UInt
 
 #php date(format String, timestamp Int = #default) String
 
+#php htmlspecialchars(string Any, flags Int = #default, encoding String = #default, double_encode Any = #default) String
+
+#php htmlspecialchars_decode(string Any, flags Int = #default) String
+
+public html_encode(string Any, flags Int = ENT_QUOTES) String
+
+public html_decode(string Any, flags Int = ENT_QUOTES) String
+
 #php preg_match(regex Regex, subject String, &matches Array = #default, flags Int = #default, offset Int = #default) Bool
 
 #php preg_match_all(regex Regex, subject String, &matches Array = #default, flags Int = #default, offset Int = #default) Bool
@@ -210,7 +219,6 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	masked rune_upper() String
 	masked explode(delimiter String) Array
 	masked replace(search String, replacement String) String
-	masked json_decode() Dict
 }
 
 #tea Float: IBaseType {
@@ -249,7 +257,6 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	masked reduce(callback Callable, initial Any = #default)
 	masked filter(callback Callable) Array
 	masked join(glue String = LF) String
-	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) String
 }
 
 #tea Dict {
@@ -260,7 +267,6 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	masked has_value(val Any) Bool
 	masked find(val Any) String
 	masked join(glue String = LF) String
-	masked json_encode(flags Int = JSON_UNESCAPED_UNICODE) String
 }
 
 #tea Regex {
