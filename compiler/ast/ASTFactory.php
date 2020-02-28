@@ -309,7 +309,7 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_property(?string $modifier, string $name, ?IType $type, ?IExpression $value)
+	public function create_property_declaration(?string $modifier, string $name, ?IType $type, ?IExpression $value)
 	{
 		$declaration = new PropertyDeclaration($modifier, $name, $type, $value);
 		$this->append_class_member($declaration);
@@ -452,7 +452,7 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function declare_method(?string $modifier, string $name, ?IType $type, array $parameters, ?array $callbacks)
+	public function declare_method(?string $modifier, string $name, ?IType $type, array $parameters, array $callbacks = null)
 	{
 		$declaration = new FunctionDeclaration($modifier, $name, $type, $parameters);
 		$this->append_class_member($declaration);
@@ -465,7 +465,7 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_method_block(?string $modifier, string $name, ?IType $type, array $parameters, ?array $callbacks)
+	public function create_method_block(?string $modifier, string $name, ?IType $type, array $parameters, array $callbacks = null)
 	{
 		$declaration = new FunctionBlock($modifier, $name, $type, $parameters);
 		$this->append_class_member($declaration);
@@ -479,7 +479,7 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_function_block(?string $modifier, string $name, ?IType $type, array $parameters, ?array $callbacks)
+	public function create_function_block(?string $modifier, string $name, ?IType $type, array $parameters, array $callbacks = null)
 	{
 		$this->check_global_modifier($modifier, 'function');
 
@@ -497,7 +497,7 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function declare_function(?string $modifier, string $name, ?IType $type, array $parameters, ?array $callbacks)
+	public function declare_function(?string $modifier, string $name, ?IType $type, array $parameters, array $callbacks = null)
 	{
 		$this->check_global_modifier($modifier, 'function');
 

@@ -1964,7 +1964,7 @@ class TeaParser extends BaseParser
 			$value = $this->read_literal_expression();
 		}
 
-		$declaration = $this->factory->create_property($modifier, $name, $type, $value);
+		$declaration = $this->factory->create_property_declaration($modifier, $name, $type, $value);
 		$declaration->is_static = $static;
 
 		return $declaration;

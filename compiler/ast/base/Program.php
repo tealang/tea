@@ -43,7 +43,9 @@ class Program extends Node
 
 	public $unit;
 
-	public $checked; // set true when checked by ASTChecker
+	public $is_dynamic = false; // for dynamic programs, eg. PHP scripts
+
+	public $is_checked = false; // set true when has checked by ASTChecker
 
 	public function __construct(string $file, Unit $unit)
 	{

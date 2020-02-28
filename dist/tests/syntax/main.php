@@ -25,6 +25,13 @@ class TeaDemoClass {
 }
 
 // ---------
+$caller = 'The caller in main.tea';
+
+echo "\n***Test for call with mixed programming:", LF;
+$result1 = (new PHPClassInMixed1($caller))->get_message();
+$result2 = php_get_num() + 1;
+var_dump($result1, $result2);
+
 echo "\n***Test for class call:", LF;
 $php_class_demo_object = new PHPClassDemo();
 echo $php_class_demo_object->get_class_name('main1'), LF;
@@ -41,7 +48,7 @@ var_dump($items);
 echo "\n***Test for include:", LF;
 $title = 'include from main1.tea';
 $result = (include UNIT_PATH . 'label-expect.php');
-echo $result, LF;
+var_dump($result);
 
 echo "\n***Test for int/uint convert:", LF;
 echo "'-123abc' convert to int: ", intval('-123abc'), LF;

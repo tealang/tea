@@ -25,6 +25,12 @@ class PHPParserLite extends BaseParser
 		'callable' => _CALLABLE,
 	];
 
+	const METHOD_MAP = [
+		'__construct' => _CONSTRUCT,
+		'__destruct' => _DESTRUCT,
+		'__toString' => 'to_string',
+	];
+
 	protected function tokenize(string $source)
 	{
 		$this->tokens = token_get_all($source);
@@ -40,6 +46,7 @@ class PHPParserLite extends BaseParser
 		// exit;
 
 		$program = $this->factory->create_program($this->file, $this);
+		$program->is_dynamic = true;
 
 		while ($this->pos + 1 < $this->tokens_count) {
 			$item = $this->read_root_statement();
@@ -71,20 +78,20 @@ class PHPParserLite extends BaseParser
 
 		switch ($token[0]) {
 			case T_CLASS:
-				$node = $this->read_class();
+				$node = $this->read_class_declaration();
 				break;
 
 			case T_ABSTRACT:
 				$this->expect_typed_token(T_CLASS);
-				$node = $this->read_class(true);
+				$node = $this->read_class_declaration(true);
 				break;
 
 			case T_INTERFACE:
-				$node = $this->read_interface();
+				$node = $this->read_interface_declaration();
 				break;
 
 			case T_FUNCTION:
-				$node = $this->read_function_declaration(null, $doc);
+				$node = $this->read_function_declaration($doc);
 				break;
 
 			case T_CONST:
@@ -103,46 +110,44 @@ class PHPParserLite extends BaseParser
 		return $node;
 	}
 
-	private function read_interface()
+	private function read_interface_declaration()
 	{
 		$name = $this->expect_identifier_token();
 
-		$extends = null;
+		$declaration = $this->factory->create_interface_declaration($name, null);
 		if ($this->skip_typed_token(T_EXTENDS)) {
-			$extends = $this->expect_identifier_token();
+			$declaration->baseds = $this->expect_identifier_token();
 		}
 
 		$this->expect_block_begin();
 
-		$members = [];
-		while ($member = $this->read_interface_member()) {
-			$members[] = $member;
-		}
+		while ($this->read_interface_member());
 
 		$this->expect_block_end();
-
-		$declaration = new InterfaceDeclaration(null, $name);
-		$declaration->baseds = $extends;
-		$declaration->members = $members;
+		$this->factory->end_class();
 
 		return $declaration;
 	}
 
-	private function read_class(bool $is_abstract = false)
+	private function read_class_declaration(bool $is_abstract = false)
 	{
 		$name = $this->expect_identifier_token();
 
-		$extends = null;
+
+		$declaration = $this->factory->create_class_declaration($name, null);
+		$declaration->is_abstract = $is_abstract;
+
 		if ($this->skip_typed_token(T_EXTENDS)) {
-			$extends = $this->expect_identifier_token();
+			$declaration->inherits = $this->expect_identifier_token();
 		}
 
-		$implements = [];
 		if ($this->skip_typed_token(T_IMPLEMENTS)) {
 			do {
 				$implements[] = $this->expect_identifier_token();
 			}
 			while ($this->skip_char_token(_COMMA));
+
+			$declaration->baseds = $implements;
 		}
 
 		$this->expect_block_begin();
@@ -157,18 +162,10 @@ class PHPParserLite extends BaseParser
 			$this->expect_statement_end();
 		}
 
-		$members = [];
-		while ($member = $this->read_class_member()) {
-			$members[] = $member;
-		}
+		while ($this->read_class_member());
 
 		$this->expect_block_end();
-
-		$declaration = new ClassDeclaration(null, $name);
-		$declaration->is_abstract = $is_abstract;
-		$declaration->inherits = $extends;
-		$declaration->baseds = $implements;
-		$declaration->members = $members;
+		$this->factory->end_class();
 
 		return $declaration;
 	}
@@ -210,7 +207,7 @@ class PHPParserLite extends BaseParser
 				$declaration = $this->read_class_constant_declaration($modifier, $doc);
 				break;
 			case T_FUNCTION:
-				$declaration = $this->read_function_declaration($modifier, $doc, true);
+				$declaration = $this->read_method_declaration($modifier, $doc, true);
 				break;
 
 			default:
@@ -268,7 +265,7 @@ class PHPParserLite extends BaseParser
 				break;
 
 			case T_FUNCTION:
-				$declaration = $this->read_function_declaration($modifier, $doc);
+				$declaration = $this->read_method_declaration($modifier, $doc);
 				break;
 
 			default:
@@ -288,7 +285,7 @@ class PHPParserLite extends BaseParser
 		$type = $this->read_constant_type($doc);
 		$this->expect_statement_end();
 
-		return new ConstantDeclaration(null, $name, $type, null);
+		return $this->factory->create_constant_declaration(null, $name, $type, null);
 	}
 
 	private function read_class_constant_declaration(?string $modifier, ?string $doc)
@@ -298,7 +295,7 @@ class PHPParserLite extends BaseParser
 		$type = $this->read_constant_type($doc);
 		$this->expect_statement_end();
 
-		return new ClassConstantDeclaration($modifier, $name, $type, null);
+		return $this->factory->create_class_constant_declaration($modifier, $name, $type, null);
 	}
 
 	private function read_constant_type(?string $doc)
@@ -383,7 +380,7 @@ class PHPParserLite extends BaseParser
 		$type = null;
 		if ($token[0] === T_STRING) {
 			// it must be a type name
-			$type = $this->create_type_identifier($token[0]);
+			$type = $this->create_type_identifier($token[1]);
 
 			// scan the next token
 			$token = $this->scan_typed_token_ignore_empty();
@@ -398,41 +395,63 @@ class PHPParserLite extends BaseParser
 
 		$name = ltrim($token[1], '$');
 
-		$value = null;
 		if ($this->skip_char_token(_ASSIGN)) {
 			$this->try_detatch_type_and_skip_value();
 		}
 
 		$this->expect_statement_end();
 
-		return new PropertyDeclaration($modifier, $name, $type, null);
+		return $this->factory->create_property_declaration($modifier, $name, $type, null);
 	}
 
-	private function read_function_declaration(string $modifier = null, ?string $doc, bool $is_interface = false)
+	private function read_method_declaration(string $modifier = null, ?string $doc, bool $is_interface = false)
 	{
 		$name = $this->expect_identifier_token();
-
-		$this->expect_char_token(_PAREN_OPEN);
 		$parameters = $this->read_parameters();
-		$this->expect_char_token(_PAREN_CLOSE);
+		$type = $this->try_read_function_return_type();
 
-		$type = null;
-		if ($this->skip_char_token(_COLON)) {
-			$type = $this->read_type_identifier();
+		if (isset(static::METHOD_MAP[$name])) {
+			$name = static::METHOD_MAP[$name];
 		}
+
+		$declaration = $this->factory->declare_method($modifier, $name, $type, $parameters);
 
 		if ($is_interface) {
 			$this->expect_statement_end();
 		}
 		else {
-			$this->read_block();
+			$this->read_function_block();
 		}
 
-		return new FunctionDeclaration($modifier, $name, $type, $parameters);
+		return $declaration;
+	}
+
+	private function read_function_declaration(?string $doc, bool $is_interface = false)
+	{
+		$name = $this->expect_identifier_token();
+		$parameters = $this->read_parameters();
+		$type = $this->try_read_function_return_type();
+
+		$declaration = $this->factory->declare_function(null, $name, $type, $parameters);
+		$this->read_function_block();
+
+		return $declaration;
+	}
+
+	private function try_read_function_return_type()
+	{
+		$type = null;
+		if ($this->skip_char_token(_COLON)) {
+			$type = $this->read_type_identifier();
+		}
+
+		return $type;
 	}
 
 	private function read_parameters()
 	{
+		$this->expect_char_token(_PAREN_OPEN);
+
 		$items = [];
 		while (($token = $this->get_token_ignore_empty()) !== null) {
 			if ($token === _PAREN_CLOSE) {
@@ -443,7 +462,7 @@ class PHPParserLite extends BaseParser
 
 			$type = null;
 			if ($token[0] === T_STRING) {
-				$type = $this->create_type_identifier($token[0]);
+				$type = $this->create_type_identifier($token[1]);
 				$token = $this->scan_token_ignore_empty();
 			}
 
@@ -466,7 +485,15 @@ class PHPParserLite extends BaseParser
 			}
 		}
 
+		$this->expect_char_token(_PAREN_CLOSE);
+
 		return $items;
+	}
+
+	private function read_function_block()
+	{
+		$this->read_block();
+		$this->factory->end_block();
 	}
 
 	private function read_block()

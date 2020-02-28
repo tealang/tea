@@ -39,7 +39,7 @@ trait DeclarationTrait {
 	 */
 	public $symbol;
 
-	public $checked = false; // set true when checked by ASTChecker
+	public $is_checked = false; // set true when checked by ASTChecker
 
 	// public or used by other programs
 	public $is_unit_level = false;

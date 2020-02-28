@@ -36,8 +36,8 @@ class ASTChecker
 
 	public function check_program(Program $program)
 	{
-		if ($program->checked) return;
-		$program->checked = true;
+		if ($program->is_checked) return;
+		$program->is_checked = true;
 
 		$this->program = $program;
 
@@ -61,7 +61,7 @@ class ASTChecker
 
 	private function check_declaration(IDeclaration $node)
 	{
-		if ($node->checked) {
+		if ($node->is_checked) {
 			return $node;
 		}
 
@@ -137,7 +137,7 @@ class ASTChecker
 
 	private function check_constant_declaration(ConstantDeclaration $node)
 	{
-		$node->checked = true;
+		$node->is_checked = true;
 		$value = $node->value;
 
 		// no value, it should be declare mode
@@ -207,7 +207,7 @@ class ASTChecker
 
 	private function check_variable_declaration(VariableDeclaration $node)
 	{
-		$node->checked = true;
+		$node->is_checked = true;
 
 		$infered_type = $node->value ? $this->infer_expression($node->value) : null;
 
@@ -234,7 +234,7 @@ class ASTChecker
 	private function check_parameters_for_node($node)
 	{
 		foreach ($node->parameters as $parameter) {
-			$parameter->checked = true;
+			$parameter->is_checked = true;
 			$infered_type = $parameter->value ? $this->infer_expression($parameter->value) : null;
 
 			if ($parameter->type) {
@@ -251,7 +251,7 @@ class ASTChecker
 
 	private function check_callback_protocol(CallbackProtocol $node)
 	{
-		$node->checked = true;
+		$node->is_checked = true;
 
 		if ($node->type) {
 			$this->check_type($node->type);
@@ -331,7 +331,7 @@ class ASTChecker
 
 	private function check_expect_declaration(ExpectDeclaration $node)
 	{
-		$this->checked = true;
+		$this->is_checked = true;
 		$this->check_parameters_for_node($node);
 	}
 
@@ -392,8 +392,8 @@ class ASTChecker
 
 	private function check_function_block(FunctionBlock $node)
 	{
-		if ($node->checked) return;
-		$node->checked = true;
+		if ($node->is_checked) return;
+		$node->is_checked = true;
 
 		// // create _THIS / _SUPER symbols for static method
 		// if ($node->is_static) {
@@ -418,8 +418,8 @@ class ASTChecker
 
 	private function check_function_declaration(FunctionDeclaration $node)
 	{
-		if ($node->checked) return;
-		$node->checked = true;
+		if ($node->is_checked) return;
+		$node->is_checked = true;
 
 		$this->check_parameters_for_callable_declaration($node);
 
@@ -475,8 +475,8 @@ class ASTChecker
 
 	private function check_classlike_declaration(ClassLikeDeclaration $node)
 	{
-		if ($node->checked) return;
-		$node->checked = true;
+		if ($node->is_checked) return;
+		$node->is_checked = true;
 
 		// 当前是类时，包括继承的类，或实现的接口
 		// 当前是接口时，包括继承的接口
@@ -1447,7 +1447,7 @@ class ASTChecker
 
 	private function check_callable_type(CallableType $node)
 	{
-		$node->checked = true;
+		$node->is_checked = true;
 
 		if ($node->type) {
 			$this->check_type($node->type);
@@ -1978,7 +1978,7 @@ class ASTChecker
 			if ($symbol->declaration instanceof UseDeclaration) {
 				$symbol->declaration = $this->require_declaration_for_use($symbol->declaration);
 			}
-			elseif (!$symbol->declaration->checked) {
+			elseif (!$symbol->declaration->is_checked) {
 				$this->check_declaration($symbol->declaration);
 			}
 		}
@@ -2145,7 +2145,7 @@ class ASTChecker
 		// find in self
 		$declaration = $classlike->members[$member_name] ?? null;
 		if ($declaration) {
-			if (!$declaration->checked) {
+			if (!$declaration->is_checked) {
 				// switch to target program
 				$temp_program = $this->program;
 				$this->program = $classlike->program;
@@ -2293,7 +2293,7 @@ class ASTChecker
 			}
 
 			$target = $symbol->declaration;
-			if (!$target->checked) {
+			if (!$target->is_checked) {
 				$target->program->unit->get_checker()->check_declaration($target);
 			}
 

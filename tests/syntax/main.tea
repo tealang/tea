@@ -17,6 +17,13 @@ internal TeaDemoClass {
 	}
 }
 
+var caller = 'The caller in main.tea'
+
+echo "\n***Test for call with mixed programming:"
+result1 = PHPClassInMixed1(caller).get_message()
+result2 = php_get_num() + 1
+var_dump(result1, result2)
+
 echo "\n***Test for class call:"
 var php_class_demo_object = PHPClassDemo()
 echo php_class_demo_object.get_class_name('main1')
@@ -32,8 +39,8 @@ var_dump(items)
 
 echo "\n***Test for include:"
 var title = 'include from main1.tea' // used in included file
-var result = #include(''label-expect'')
-echo result
+result = #include('label-expect')
+var_dump(result)
 
 echo "\n***Test for int/uint convert:"
 echo "'-123abc' convert to int: ", '-123abc'.int() // -123

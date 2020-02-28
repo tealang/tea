@@ -11,10 +11,10 @@ namespace Tea;
 
 use Exception;
 
+const TEA_EXT_NAME = 'tea', PHP_EXT_NAME = 'php';
+
 class Compiler
 {
-	const FILE_EXTENSION = 'tea';
-
 	const UNIT_HEADER_NAME = '__unit.th';
 
 	const PUBLIC_HEADER_NAME = '__public.th';
@@ -58,6 +58,16 @@ class Compiler
 	private $normal_programs = [];
 
 	/**
+	 * @var string
+	 */
+	private $tea_program_files = [];
+
+	/**
+	 * @var string
+	 */
+	private $php_program_files = [];
+
+	/**
 	 * the instance of current Unit
 	 * @var Unit
 	 */
@@ -78,14 +88,18 @@ class Compiler
 	private $autoloads_map = [];
 
 	// current unit is builtin-libs unit or not?
-	private $target_is_builtin = false;
+	// private $target_is_builtin = false;
 
 	public function __construct(string $unit_path)
 	{
 		ASTFactory::init_ast_system();
 
 		$this->init_unit($unit_path);
-		$this->load_builtins();
+
+		// when not on build the builtins unit
+		if (!self::check_is_builtin_unit($unit_path)) {
+			$this->load_builtins();
+		}
 	}
 
 	public static function is_framework_internal_namespaces(NamespaceIdentifier $ns)
@@ -105,7 +119,7 @@ class Compiler
 		$this->ast_factory = new ASTFactory($this->unit);
 
 		// parse header file
-		$this->header_program = $this->parse_header($this->header_file_path, $this->ast_factory);
+		$this->header_program = $this->parse_tea_header($this->header_file_path, $this->ast_factory);
 
 		// check #unit is defined
 		if (!$this->unit->ns) {
@@ -113,14 +127,14 @@ class Compiler
 		}
 
 		$this->set_paths($this->unit, $unit_path);
-
-		$this->target_is_builtin = self::check_is_builtin_unit($unit_path);
 	}
+
+	private const CASE_REGARDLESS_OS_LIST = ['Darwin', 'Windows', 'WINNT', 'WIN32'];
 
 	private static function check_is_builtin_unit(string $unit_path)
 	{
-		// 部分系统的目录名不区分大小写
-		if (in_array(PHP_OS, ['Darwin', 'Windows', 'WINNT', 'WIN32'])) {
+		// some OS are Case regardless
+		if (in_array(PHP_OS, self::CASE_REGARDLESS_OS_LIST)) {
 			$result = strtolower(static::BUILTIN_PATH) === strtolower($unit_path);
 		}
 		else {
@@ -174,7 +188,7 @@ class Compiler
 		TypeFactory::set_symbols($this->unit);
 
 		$this->load_dependences($this->unit);
-		$this->check_global_uses();
+
 		$this->check_ast();
 
 		// for faster processing the operations
@@ -188,10 +202,10 @@ class Compiler
 			$this->unit_dist_ns_prefix = $this->unit->dist_ns_uri . PHPCoder::NS_SEPARATOR;
 		}
 
-		// render all programs
+		// render programs
 		$this->render_all();
 
-		// all constants and functions would be render to __unit.php
+		// the global constants and functions would be render to __unit.php
 		$this->render_unit_header($header_coder);
 
 		$this->render_public_declarations();
@@ -203,78 +217,71 @@ class Compiler
 	{
 		self::echo_start('Parsing programs...');
 
-		// parse all program files
-		$program_files = $this->get_program_files();
-		foreach ($program_files as $file) {
-			$this->normal_programs[] = $this->parse_program($file);
+		$this->scan_program_files();
+
+		// parse PHP program files
+		foreach ($this->php_program_files as $file) {
+			$this->parse_php_program($file);
 		}
 
-		self::echo_success(count($this->normal_programs) . ' programs parsed success.' . LF);
-	}
-
-	private function render_all()
-	{
-		self::echo_start('Rendering programs...');
-
-		foreach ($this->normal_programs as $program) {
-			$dist_file_path = $this->render_program($program);
-			$this->collect_autoloads_map($program, $dist_file_path);
+		// parse Tea program files
+		foreach ($this->tea_program_files as $file) {
+			$this->normal_programs[] = $this->parse_tea_program($file);
 		}
 
-		self::echo_success(count($this->normal_programs) . ' programs rendered success.');
+		// check the global uses
+		foreach ($this->unit->programs as $program) {
+			$this->process_program_uses($program);
+		}
+
+		self::echo_success(count($this->normal_programs) . ' Tea programs parsed success.' . LF);
 	}
 
-	private function check_global_uses()
+	private function process_program_uses(Program $program)
 	{
 		// for auto add use statement to dist codes
 
-		foreach ($this->unit->programs as $program) {
-			$uses = [];
-			foreach ($program->defer_check_identifiers as $identifier) {
-				if (isset($program->symbols[$identifier->name])) {
-					continue;
-				}
-
-				if ($identifier->name === 'this') {
-					dump($identifier); exit;
-				}
-
-				$symbol = $this->unit->symbols[$identifier->name] ?? null;
-				if (!$symbol) {
-					continue;
-				}
-
-				if ($symbol->declaration instanceof ClassLikeDeclaration && $symbol->declaration->label === _PHP) {
-					// the declarations with #php
-					$uses[$symbol->name] = new UseStatement(new NamespaceIdentifier([$symbol->name]));
-				}
-				// elseif ($symbol->declaration instanceof NamespaceDeclaration) {
-				// 	// it should be a use statement in __unit
-				// 	$uses[$symbol->name] = new UseStatement(new NamespaceIdentifier([$symbol->name]));
-				// }
-				elseif ($symbol->declaration instanceof UseDeclaration) {
-					// it should be a use statement in __unit
-
-					$use = $symbol->declaration;
-
-					$uri = $use->ns->uri;
-					if ($use->target_name) {
-						$uri .= '!'; // just to differentiate, avoid conflict with no targets use statements
-					}
-
-					// URI相同的将合并到一条
-					if (!isset($uses[$uri])) {
-						$uses[$uri] = new UseStatement($use->ns);
-					}
-
-					$uses[$uri]->targets[] = $use;
-				}
+		$uses = [];
+		foreach ($program->defer_check_identifiers as $identifier) {
+			if (isset($program->symbols[$identifier->name])) {
+				continue;
 			}
 
-			// auto add use statement to programs
-			if ($uses) {
-				$program->uses = array_merge($program->uses, array_values($uses));
+			$symbol = $this->unit->symbols[$identifier->name] ?? null;
+			if (!$symbol) {
+				continue;
 			}
+
+			if ($symbol->declaration instanceof ClassLikeDeclaration && $symbol->declaration->label === _PHP) {
+				// the declarations with #php
+				$uses[$symbol->name] = new UseStatement(new NamespaceIdentifier([$symbol->name]));
+			}
+			// elseif ($symbol->declaration instanceof NamespaceDeclaration) {
+			// 	// it should be a use statement in __unit
+			// 	$uses[$symbol->name] = new UseStatement(new NamespaceIdentifier([$symbol->name]));
+			// }
+			elseif ($symbol->declaration instanceof UseDeclaration) {
+				// it should be a use statement in __unit
+
+				$use = $symbol->declaration;
+
+				$uri = $use->ns->uri;
+				if ($use->target_name) {
+					$uri .= '!'; // just to differentiate, avoid conflict with no targets use statements
+				}
+
+				// URI相同的将合并到一条
+				if (!isset($uses[$uri])) {
+					$uses[$uri] = new UseStatement($use->ns);
+				}
+
+				$uses[$uri]->targets[] = $use;
+			}
+		}
+
+		// auto add use statement to programs
+		if ($uses) {
+			$program->uses = array_merge($program->uses, array_values($uses));
 		}
 	}
 
@@ -290,13 +297,17 @@ class Compiler
 		// check current unit
 		$this->check_ast_for_unit($this->unit);
 
-		self::echo_success(count($this->unit->programs) . ' programs checked.' . LF);
+		self::echo_success('Tea programs checked.' . LF);
 	}
 
 	private function check_ast_for_unit(Unit $unit)
 	{
 		$checker = $unit->get_checker();
 		foreach ($unit->programs as $program) {
+			if ($program->is_dynamic) {
+				continue;
+			}
+
 			self::echo_start(" - {$program->file}", LF);
 			$checker->check_program($program);
 		}
@@ -304,17 +315,14 @@ class Compiler
 
 	private function load_builtins()
 	{
-		// when not on build the builtins unit
-		if (!$this->target_is_builtin) {
-			self::echo_start('Loading builtins...');
+		self::echo_start('Loading builtins...');
 
-			$program = $this->parse_program(static::BUILTIN_PATH . 'core.tea');
-			$program->unit = null;
+		$program = $this->parse_tea_program(static::BUILTIN_PATH . 'core.tea');
+		$program->unit = null;
 
-			$this->builtin_symbols = $program->symbols;
+		$this->builtin_symbols = $program->symbols;
 
-			self::echo_success();
-		}
+		self::echo_success();
 	}
 
 	private function load_dependences(Unit $unit)
@@ -347,7 +355,7 @@ class Compiler
 		$unit->symbols = $this->builtin_symbols;
 
 		$ast_factory = new ASTFactory($unit);
-		$this->parse_header($public_file_path, $ast_factory);
+		$this->parse_tea_header($public_file_path, $ast_factory);
 
 		// 递归载入依赖
 		$this->load_dependences($unit);
@@ -427,6 +435,55 @@ class Compiler
 		return false;
 	}
 
+	private function render_all()
+	{
+		self::echo_start('Rendering programs...');
+
+		foreach ($this->normal_programs as $program) {
+			$dist_file_path = $this->render_program($program);
+			$this->collect_autoloads_map($program, $dist_file_path);
+		}
+
+		self::echo_success(count($this->normal_programs) . ' programs rendered success.');
+	}
+
+	private function render_unit_header(PHPCoder $coder)
+	{
+		$dist_file_path = $this->get_dist_file_path('__unit');
+		$this->collect_autoloads_map($this->header_program, $dist_file_path);
+
+		$dist_code = $coder->render_unit_header_program($this->header_program, $this->normal_programs);
+
+		// the autoloads for classes
+		$dist_code .= PHPLoaderMaker::render_autoloads_code($this->autoloads_map, _UNIT_PATH);
+
+		file_put_contents($dist_file_path, $dist_code);
+		return $dist_file_path;
+	}
+
+	private function render_program(Program $program)
+	{
+		$dest_file = $this->get_dist_file_path($program->name);
+
+		$coder = new PHPCoder();
+		$dist_code = $coder->render_program($program);
+
+		file_put_contents($dest_file, $dist_code);
+		return $dest_file;
+	}
+
+	private function get_dist_file_path(string $name)
+	{
+		$file_path = $this->unit_dist_path . $name . '.php';
+
+		$dir_path = dirname($file_path);
+		if (!is_dir($dir_path)) {
+			FileHelper::mkdir($dir_path);
+		}
+
+		return $file_path;
+	}
+
 	private function render_public_declarations()
 	{
 		self::echo_start('Rendering public...');
@@ -468,70 +525,39 @@ class Compiler
 		}
 	}
 
-	private function get_program_files()
+	private function scan_program_files()
 	{
 		$file_iterator = FileHelper::get_iterator($this->unit_path);
 
 		foreach ($file_iterator as $path => $object) {
-			if ($object->getExtension() !== static::FILE_EXTENSION) {
-				continue;
+			$ext = $object->getExtension();
+			if ($ext === TEA_EXT_NAME) {
+				$this->tea_program_files[] = $path;
 			}
-
-			$files[] = $path;
+			elseif ($ext === PHP_EXT_NAME) {
+				$this->php_program_files[] = $path;
+			}
 		}
 
 		// 排序以保障在所有情况下顺序一致
-		sort($files);
-
-		return $files;
+		sort($this->tea_program_files);
 	}
 
-	private function render_unit_header(PHPCoder $coder)
+	private function parse_tea_header(string $file, ASTFactory $ast_factory)
 	{
-		$dist_file_path = $this->get_dist_file_path('__unit');
-		$this->collect_autoloads_map($this->header_program, $dist_file_path);
-
-		$dist_code = $coder->render_unit_header_program($this->header_program, $this->normal_programs);
-
-		// the autoloads for classes
-		$dist_code .= PHPLoaderMaker::render_autoloads_code($this->autoloads_map, _UNIT_PATH);
-
-		file_put_contents($dist_file_path, $dist_code);
-		return $dist_file_path;
+		$parser = new HeaderParser($ast_factory, $file);
+		return $parser->get_program_ast();
 	}
 
-	private function render_program(Program $program)
-	{
-		$dest_file = $this->get_dist_file_path($program->name);
-
-		$coder = new PHPCoder();
-		$dist_code = $coder->render_program($program);
-
-		file_put_contents($dest_file, $dist_code);
-		return $dest_file;
-	}
-
-	private function get_dist_file_path(string $name)
-	{
-		$file_path = $this->unit_dist_path . $name . '.php';
-
-		$dir_path = dirname($file_path);
-		if (!is_dir($dir_path)) {
-			FileHelper::mkdir($dir_path);
-		}
-
-		return $file_path;
-	}
-
-	private function parse_program(string $file)
+	private function parse_tea_program(string $file)
 	{
 		$parser = new TeaParser($this->ast_factory, $file);
 		return $parser->get_program_ast();
 	}
 
-	private function parse_header(string $file, ASTFactory $ast_factory)
+	private function parse_php_program(string $file)
 	{
-		$parser = new HeaderParser($ast_factory, $file);
+		$parser = new PHPParserLite($this->ast_factory, $file);
 		return $parser->get_program_ast();
 	}
 
