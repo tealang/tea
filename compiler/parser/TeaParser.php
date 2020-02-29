@@ -756,11 +756,11 @@ class TeaParser extends BaseParser
 	protected function read_while_block(string $label = null)
 	{
 		// while test_expression {}
-		// while is first or test_expression {}
+		// while #first or test_expression {}
 
 		$do_the_first = false;
-		if ($this->skip_token_ignore_space(_IS)) {
-			if (!$this->skip_token_ignore_space('first') || !$this->skip_token_ignore_space(_OR)) {
+		if ($this->skip_token_ignore_space(_SHARP)) {
+			if (!$this->skip_token_ignore_space(_FIRST) || !$this->skip_token_ignore_space(_OR)) {
 				throw $this->new_unexpected_error();
 			}
 

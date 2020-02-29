@@ -2,6 +2,7 @@
 // normal while
 i = 0
 while i < 10 {
+	// the post-condition
 	continue when i == 5
 	i += 1
 }
@@ -9,8 +10,8 @@ catch ex {
 	//
 }
 
-// do-while
-while is first or i > 5 {
+// allways do the first loop
+while #first or i > 5 {
 	i -= 1
 	break
 }

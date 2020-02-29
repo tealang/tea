@@ -160,6 +160,10 @@ trait TeaSharpTrait
 			return new NormalStatement($expression);
 		}
 
+		if (TeaHelper::is_normal_reserveds($label)) {
+			throw $this->new_parse_error("Cannot use a reserveds keyword '$label' as a label name.");
+		}
+
 		// labeled block
 		$next = $this->scan_token_ignore_empty();
 		if ($next === _FOR) {

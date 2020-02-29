@@ -25,6 +25,7 @@ const
 	_MAIN = 'main', _EXPECT = 'expect', _INCLUDE = 'include',
 	_TEXT = 'text', _DEFAULT = 'default',
 	_ASYNC = 'async', _AWAIT = 'await',
+	_FIRST = 'first',
 
 	// builtin types
 	_VOID = 'Void', _NONE = 'None', _ANY = 'Any',
