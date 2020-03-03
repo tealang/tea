@@ -43,6 +43,8 @@ class TeaCoder
 
 	protected const STRING_HOLDER_MARK = "\r\r:%d:";
 
+	protected $program;
+
 	protected $temp_name_index = 0;
 
 	private $string_holder_count = 0;
@@ -51,6 +53,7 @@ class TeaCoder
 
 	public function render_program(Program $program)
 	{
+		$this->program = $program;
 		$items = $this->render_program_statements($program);
 		return $this->join_code($items);
 	}
@@ -972,7 +975,7 @@ class TeaCoder
 		return $code . static::STATEMENT_TERMINATOR;
 	}
 
-	protected static function generate_use_targets(array $targets)
+	protected function generate_use_targets(array $targets)
 	{
 		$items = [];
 		foreach ($targets as $target) {

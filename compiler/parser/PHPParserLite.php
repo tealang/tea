@@ -31,13 +31,7 @@ class PHPParserLite extends BaseParser
 		'__toString' => 'to_string',
 	];
 
-	protected function tokenize(string $source)
-	{
-		$this->tokens = token_get_all($source);
-		$this->tokens_count = count($this->tokens);
-	}
-
-	protected function scan_program()
+	public function read_program(): Program
 	{
 		// while ($this->pos + 1 < $this->tokens_count) {
 		// 	$this->pos++;
@@ -45,22 +39,27 @@ class PHPParserLite extends BaseParser
 		// }
 		// exit;
 
-		$program = $this->factory->create_program($this->file, $this);
-		$program->is_dynamic = true;
+		$this->program->is_dynamic = true;
 
 		while ($this->pos + 1 < $this->tokens_count) {
 			$item = $this->read_root_statement();
 			if ($item instanceof IRootDeclaration) {
-				$program->append_declaration($item);
+				$this->program->append_declaration($item);
 			}
 		}
 
 		// end the main function
 		$this->factory->end_block();
 
-		$program->main_function = null;
+		$this->program->main_function = null;
 
-		$this->program = $program;
+		return $this->program;
+	}
+
+	protected function tokenize(string $source)
+	{
+		$this->tokens = token_get_all($source);
+		$this->tokens_count = count($this->tokens);
 	}
 
 	private function read_root_statement()
@@ -688,7 +687,7 @@ class PHPParserLite extends BaseParser
 		}
 
 		while ($pos < $this->tokens_count) {
-			if (is_array($this->tokens[$pos])) {
+			if (is_array($this->tokens[$pos]) || $pos <= 0) {
 				break;
 			}
 			else {

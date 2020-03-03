@@ -335,12 +335,24 @@ class ASTFactory
 
 // ---
 
+	public function set_current_program(Program $program)
+	{
+		$this->parser = $program->parser;
+		$this->program = $program;
+		$this->set_to_main_function();
+	}
+
 	public function create_program(string $file, BaseParser $parser)
 	{
 		$this->parser = $parser;
 
 		$program = new Program($file, $this->unit);
 		$program->parser = $parser;
+
+		// check name is in used
+		if (isset($this->unit->programs[$program->name])) {
+			throw new Exception("Error: Program name '{$program->name}' has been used, please rename the file '{$program->file}'");
+		}
 
 		$program->main_function = new MainFunctionBlock();
 		$program->main_function->program = $program;

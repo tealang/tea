@@ -4,7 +4,7 @@ namespace tea\docs;
 use Exception;
 use ErrorException;
 
-require_once __DIR__ . '/__unit.php';
+require_once __DIR__ . '/__public.php';
 
 function demo_function1(string $message) {
 	echo 'this function can only be called by local unit', LF;

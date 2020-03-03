@@ -29,7 +29,8 @@ trait TeaSharpTrait
 				return $this->read_use_statement();
 
 			case _UNIT:
-				return $this->read_unit_declaration();
+				$this->read_unit_declaration();
+				return null;
 
 			case _EXPECT:
 				return $this->read_expect_declaration();
@@ -185,18 +186,23 @@ trait TeaSharpTrait
 		return $block;
 	}
 
-	private function read_unit_declaration()
+	protected function read_unit_declaration()
 	{
 		if (!static::IS_IN_HEADER) {
 			throw $this->new_parse_error("The '#unit' statements can only be used in the __unit.th or __public.th files.");
 		}
 
-		$this->read_unit_namespace();
+		$namespace = $this->read_namespace_identifier();
+		$this->factory->set_namespace($namespace);
 
-		if (!$this->skip_token_ignore_space(_BRACE_OPEN)) {
-			return;
+		if ($this->skip_token_ignore_space(_BRACE_OPEN)) {
+			$this->read_unit_options();
+			$this->expect_token_ignore_empty(_BRACE_CLOSE);
 		}
+	}
 
+	private function read_unit_options()
+	{
 		// try read options for unit
 		while ($key = $this->read_object_key()) {
 			if (!in_array($key, _UNIT_OPTIONAL_KEYS, true)) {
@@ -217,19 +223,9 @@ trait TeaSharpTrait
 				break;
 			}
 		}
-
-		$this->expect_token_ignore_empty(_BRACE_CLOSE);
 	}
 
-	private function read_unit_namespace()
-	{
-		$namespace = $this->read_namespace_identifier();
-		$this->factory->set_namespace($namespace);
-
-		return null;
-	}
-
-	private function read_namespace_identifier()
+	protected function read_namespace_identifier()
 	{
 		$domain = $this->read_domain_name();
 

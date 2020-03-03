@@ -13,6 +13,32 @@ class HeaderParser extends TeaParser
 {
 	const IS_IN_HEADER = true;
 
+	// public function read_program(): Program
+	// {
+	// 	$this->factory->set_current_program($this->program);
+	// 	return parent::read_program();
+	// }
+
+	// public function read_unit_namespace(): NamespaceIdentifier
+	// {
+	// 	$token = $this->scan_token_ignore_empty();
+	// 	if ($token === _DOCS_MARK) {
+	// 		$docs = $this->read_docs();
+	// 		$token = $this->scan_token_ignore_empty();
+	// 	}
+
+	// 	if ($token !== _SHARP) {
+	// 		throw $this->new_parse_error("Expected a Unit declaration.");
+	// 	}
+
+	// 	$this->expect_token(_UNIT);
+	// 	$ns = $this->read_namespace_identifier();
+
+	// 	$this->pos = -1; // reset
+
+	// 	return $ns;
+	// }
+
 	protected function read_root_statement($leading = null, Docs $docs = null)
 	{
 		$token = $this->scan_token_ignore_space();

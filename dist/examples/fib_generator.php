@@ -1,7 +1,7 @@
 <?php
 namespace tea\examples;
 
-require_once __DIR__ . '/__unit.php';
+require_once __DIR__ . '/__public.php';
 
 function fib_generator(int $num = 9): \Generator {
 	$c = null;

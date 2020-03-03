@@ -110,6 +110,7 @@ function get_traces(int $trace_start = 0) {
 # --- generates ---
 const __AUTOLOADS = [
 	'Tea\Compiler' => 'Compiler.php',
+	'Tea\Exception' => 'Exception.php',
 	'Tea\ASTChecker' => 'ast/ASTChecker.php',
 	'Tea\UnexpectNode' => 'ast/ASTChecker.php',
 	'Tea\ASTFactory' => 'ast/ASTFactory.php',

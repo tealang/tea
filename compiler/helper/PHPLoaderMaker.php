@@ -11,7 +11,7 @@ namespace Tea;
 
 class PHPLoaderMaker
 {
-	const LOADER_FILE = '__unit.php';
+	const LOADER_FILE = '__public.php';
 
 	const GENERATES_TAG = '# --- generates ---';
 

@@ -3,7 +3,7 @@ namespace tea\tests\syntax;
 
 use tea\tests\PHPDemoUnit\{ BaseInterface };
 
-require_once __DIR__ . '/__unit.php';
+require_once __DIR__ . '/__public.php';
 
 #internal
 interface IDemo extends BaseInterface {

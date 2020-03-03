@@ -1,7 +1,7 @@
 <?php
 namespace tea\examples;
 
-require_once __DIR__ . '/__unit.php';
+require_once __DIR__ . '/__public.php';
 
 function draw_text($image, string $text, int $size, int $color, string $fontfile, int $h_offset = 0, bool $is_handstand = false) {
 	$w = imagesx($image);

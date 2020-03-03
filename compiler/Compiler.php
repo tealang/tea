@@ -11,15 +11,14 @@ namespace Tea;
 
 use Exception;
 
-const TEA_EXT_NAME = 'tea', PHP_EXT_NAME = 'php';
+const TEA_EXT_NAME = 'tea', TEA_HEADER_EXT_NAME = 'th', PHP_EXT_NAME = 'php',
+	UNIT_HEADER_NAME = '__unit', PUBLIC_HEADER_NAME = '__public';
 
 class Compiler
 {
-	const UNIT_HEADER_NAME = '__unit.th';
-
-	const PUBLIC_HEADER_NAME = '__public.th';
-
 	const BUILTIN_PATH = BASE_PATH . 'builtin/';
+
+	const BUILTIN_PROGRAM = self::BUILTIN_PATH . 'core.tea';
 
 	// the special namespaces for some framework
 	const FRAMEWORK_INTERNAL_NAMESPACES = ['App', 'Model', 'Lib'];
@@ -109,24 +108,16 @@ class Compiler
 
 	private function init_unit(string $unit_path)
 	{
-		$this->header_file_path = $unit_path . self::UNIT_HEADER_NAME;
+		$this->header_file_path = $unit_path . self::get_header_name(UNIT_HEADER_NAME);
 		if (!file_exists($this->header_file_path)) {
-			throw new Exception(self::UNIT_HEADER_NAME . " not found in path: $unit_path");
+			throw new Exception("The Unit header file '{$this->header_file_path}' not found.");
 		}
 
 		// init unit
 		$this->unit = new Unit($unit_path);
 		$this->ast_factory = new ASTFactory($this->unit);
 
-		// parse header file
-		$this->header_program = $this->parse_tea_header($this->header_file_path, $this->ast_factory);
-
-		// check #unit is defined
-		if (!$this->unit->ns) {
-			throw new Exception("#unit declaration not found in header file: " . self::UNIT_HEADER_NAME);
-		}
-
-		$this->set_paths($this->unit, $unit_path);
+		$this->unit_path = $unit_path;
 	}
 
 	private const CASE_REGARDLESS_OS_LIST = ['Darwin', 'Windows', 'WINNT', 'WIN32'];
@@ -135,22 +126,22 @@ class Compiler
 	{
 		// some OS are Case regardless
 		if (in_array(PHP_OS, self::CASE_REGARDLESS_OS_LIST)) {
-			$result = strtolower(static::BUILTIN_PATH) === strtolower($unit_path);
+			$result = strtolower(self::BUILTIN_PATH) === strtolower($unit_path);
 		}
 		else {
-			$result = static::BUILTIN_PATH === $unit_path;
+			$result = self::BUILTIN_PATH === $unit_path;
 		}
 
 		return $result;
 	}
 
-	private function set_paths(Unit $unit, string $unit_path)
+	private function set_paths(NamespaceIdentifier $ns)
 	{
-		$reversed_ns_names = array_reverse($unit->ns->names);
+		$reversed_ns_names = array_reverse($ns->names);
 
 		$dir_names = [];
 
-		$checking_path = $unit_path;
+		$checking_path = $this->unit_path;
 		foreach ($reversed_ns_names as $ns_name) {
 			$dir_name = basename($checking_path);
 			if ($ns_name !== $dir_name && strtolower($ns_name) !== $dir_name) {
@@ -162,7 +153,7 @@ class Compiler
 			array_unshift($dir_names, $dir_name);
 		}
 
-		if (self::is_framework_internal_namespaces($unit->ns)) {
+		if (self::is_framework_internal_namespaces($ns)) {
 			// 框架内部名称空间，其base_path应为往上一级
 			$this->base_path = $checking_path . DS;
 			$this->super_path = dirname($checking_path) . DS;
@@ -172,8 +163,6 @@ class Compiler
 			$this->base_path = $checking_path . DS . $dir_name . DS;
 			$this->super_path = $checking_path . DS;
 		}
-
-		$this->unit_path = $unit_path;
 
 		$unit_dir = join(DS, $dir_names);
 		$this->unit_dist_path = $this->get_unit_dist_path($unit_dir);
@@ -205,12 +194,31 @@ class Compiler
 		// render programs
 		$this->render_all();
 
-		// the global constants and functions would be render to __unit.php
+		// the global constants and functions would be render to the loading file
 		$this->render_unit_header($header_coder);
 
 		$this->render_public_declarations();
 
 		return count($this->normal_programs);
+	}
+
+	private function parse_unit_header()
+	{
+		// parse header file
+		// $this->header_parser = new HeaderParser($this->ast_factory, $this->header_file_path);
+		$this->header_program = $this->parse_tea_header($this->header_file_path, $this->ast_factory);
+
+		// $ns = $this->header_parser->read_unit_namespace();
+
+		// parse Tea header
+		// $this->header_program = $this->header_parser->read_program();
+
+		// check #unit is defined
+		if (!$this->unit->ns) {
+			throw new Exception("#unit declaration not found in Unit header file: {$this->header_file_path}");
+		}
+
+		$this->set_paths($this->unit->ns);
 	}
 
 	private function parse_programs()
@@ -223,6 +231,8 @@ class Compiler
 		foreach ($this->php_program_files as $file) {
 			$this->parse_php_program($file);
 		}
+
+		$this->parse_unit_header();
 
 		// parse Tea program files
 		foreach ($this->tea_program_files as $file) {
@@ -317,7 +327,7 @@ class Compiler
 	{
 		self::echo_start('Loading builtins...');
 
-		$program = $this->parse_tea_program(static::BUILTIN_PATH . 'core.tea');
+		$program = $this->parse_tea_program(self::BUILTIN_PROGRAM);
 		$program->unit = null;
 
 		$this->builtin_symbols = $program->symbols;
@@ -344,13 +354,13 @@ class Compiler
 
 		$unit_dir = $this->find_unit_public_dir($ns);
 		$unit_path = $this->super_path . $unit_dir . DS;
-		$public_file_path = $unit_path . self::PUBLIC_HEADER_NAME;
+		$public_file_path = $unit_path . self::get_header_name(PUBLIC_HEADER_NAME);
 
 		$unit = new Unit($unit_path);
 		$this->units_pool[$uri] = $unit; // add to pool, so do not need to reload
 
 		// for render require_once statments
-		$unit->loading_file = $unit_dir . '/__unit.php';
+		$unit->loading_file = $unit_dir . '/' . PUBLIC_HEADER_NAME . '.' . PHP_EXT_NAME;
 
 		$unit->symbols = $this->builtin_symbols;
 
@@ -425,7 +435,7 @@ class Compiler
 		}
 
 		// check public file
-		$unit_public_file = $path . self::PUBLIC_HEADER_NAME;
+		$unit_public_file = $path . self::get_header_name(PUBLIC_HEADER_NAME);
 		if (file_exists($unit_public_file)) {
 			// use the real dir names for render
 			return join(DS, $real_names);
@@ -449,7 +459,7 @@ class Compiler
 
 	private function render_unit_header(PHPCoder $coder)
 	{
-		$dist_file_path = $this->get_dist_file_path('__unit');
+		$dist_file_path = $this->get_dist_file_path(PUBLIC_HEADER_NAME);
 		$this->collect_autoloads_map($this->header_program, $dist_file_path);
 
 		$dist_code = $coder->render_unit_header_program($this->header_program, $this->normal_programs);
@@ -486,9 +496,9 @@ class Compiler
 
 	private function render_public_declarations()
 	{
-		self::echo_start('Rendering public...');
+		self::echo_start('Rendering public declarations...');
 
-		$program = new Program('__public', $this->unit);
+		$program = new Program(PUBLIC_HEADER_NAME, $this->unit);
 
 		foreach ($this->unit->symbols as $symbol) {
 			if (isset($symbol->declaration->modifier)
@@ -500,7 +510,7 @@ class Compiler
 
 		$code = $program->render(new PublicCoder());
 
-		$file = $this->unit_dist_path . static::PUBLIC_HEADER_NAME;
+		$file = $this->unit_dist_path . self::get_header_name(PUBLIC_HEADER_NAME);
 		file_put_contents($file, $code);
 
 		$count = count($program->declarations);
@@ -546,19 +556,19 @@ class Compiler
 	private function parse_tea_header(string $file, ASTFactory $ast_factory)
 	{
 		$parser = new HeaderParser($ast_factory, $file);
-		return $parser->get_program_ast();
+		return $parser->read_program();
 	}
 
 	private function parse_tea_program(string $file)
 	{
 		$parser = new TeaParser($this->ast_factory, $file);
-		return $parser->get_program_ast();
+		return $parser->read_program();
 	}
 
 	private function parse_php_program(string $file)
 	{
 		$parser = new PHPParserLite($this->ast_factory, $file);
-		return $parser->get_program_ast();
+		return $parser->read_program();
 	}
 
 	private function get_unit_dist_path(string $unit_dir_name)
@@ -569,6 +579,11 @@ class Compiler
 		}
 
 		return $dist_path . DS . $unit_dir_name . DS;
+	}
+
+	private static function get_header_name(string $name)
+	{
+		return $name . '.' . TEA_HEADER_EXT_NAME;
 	}
 
 	private static function echo_start(string $message, string $ending = "\t")

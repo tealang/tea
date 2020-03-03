@@ -1,7 +1,7 @@
 <?php
 namespace tea\tests\syntax;
 
-require_once __DIR__ . '/__unit.php';
+require_once __DIR__ . '/__public.php';
 
 // ---------
 $arr = [

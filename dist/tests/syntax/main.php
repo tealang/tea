@@ -3,7 +3,7 @@ namespace tea\tests\syntax;
 
 use tea\tests\PHPDemoUnit\{ NS1\Demo as PHPClassDemo, function php_function_demo, const PHP_CONST_DEMO };
 
-require_once __DIR__ . '/__unit.php';
+require_once __DIR__ . '/__public.php';
 
 #internal
 class TeaDemoClass {

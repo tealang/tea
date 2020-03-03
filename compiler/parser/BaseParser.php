@@ -42,13 +42,20 @@ abstract class BaseParser
 		$source = $this->read_file($file);
 		$this->tokenize($source);
 
-		$this->scan_program();
+		$this->program = $this->factory->create_program($this->file, $this);
+
+		// set to main program when file name is main.tea
+		if ($this->program->name === _MAIN) {
+			$this->factory->set_as_main_program();
+		}
 	}
 
-	public function get_program_ast()
-	{
-		return $this->program;
-	}
+	// public function get_program_ast()
+	// {
+	// 	return $this->program;
+	// }
+
+	abstract public function read_program(): Program;
 
 	protected function read_file(string $file)
 	{
@@ -61,8 +68,6 @@ abstract class BaseParser
 	}
 
 	abstract protected function tokenize(string $source);
-
-	abstract protected function scan_program();
 
 	public function new_parse_error(string $message, int $trace_start = 0)
 	{

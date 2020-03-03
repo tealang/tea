@@ -85,6 +85,8 @@ class PHPCoder extends TeaCoder
 
 	public function render_unit_header_program(Program $header_program, array $normal_programs)
 	{
+		$this->program = $header_program;
+
 		$unit = $header_program->unit;
 
 		$items = $this->render_heading_statements($header_program);
@@ -110,7 +112,7 @@ class PHPCoder extends TeaCoder
 
 			// load the builtins
 			if ($unit->as_main_unit) {
-				$items[] = "require_once \$super_path . 'tea/dist/builtin/__unit.php'; // the builtins";
+				$items[] = "require_once \$super_path . 'tea/dist/builtin/__public.php'; // the builtins";
 			}
 
 			// load the foriegn units
@@ -131,7 +133,7 @@ class PHPCoder extends TeaCoder
 		$constants = [];
 		$functions = [];
 		foreach ($normal_programs as $program) {
-			// render the Unit level functions & constants to __unit.php
+			// render the Unit level functions & constants to __public.php
 			foreach ($program->declarations as $declaration) {
 				if (!$declaration->is_unit_level) {
 					continue;
@@ -189,11 +191,11 @@ class PHPCoder extends TeaCoder
 			$levels = $program->unit->count_subdirectory_levels_for_file($program->file);
 			if ($levels) {
 				// 在Unit子目录中
-				$items[] = "require_once dirname(__DIR__, {$levels}) . '/__unit.php';" . LF;
+				$items[] = "require_once dirname(__DIR__, {$levels}) . '/__public.php';" . LF;
 			}
 			else {
 				// 在Unit根目录中
-				$items[] = "require_once __DIR__ . '/__unit.php';" . LF;
+				$items[] = "require_once __DIR__ . '/__public.php';" . LF;
 			}
 		}
 
@@ -206,7 +208,7 @@ class PHPCoder extends TeaCoder
 
 		// 生成定义，使用了trait的类，必须放在文件的前面，否则执行时提示找不到
 		foreach ($program->declarations as $node) {
-			// 常量和函数都生成到了__unit.php中
+			// 常量和函数都生成到了__public.php中
 			if (!$node->is_unit_level || $node instanceof ClassLikeDeclaration) {
 				$item = $node->render($this);
 				$item === null || $items[] = $item . LF;
@@ -225,7 +227,7 @@ class PHPCoder extends TeaCoder
 		return $items;
 	}
 
-	protected static function generate_use_targets(array $targets)
+	protected function generate_use_targets(array $targets)
 	{
 		$items = [];
 		foreach ($targets as $target) {
@@ -241,17 +243,19 @@ class PHPCoder extends TeaCoder
 				$item = $target->target_name;
 			}
 
-			if ($target->source_declaration instanceof ClassLikeDeclaration) {
+			$declaration = $target->source_declaration;
+			if ($declaration instanceof ClassLikeDeclaration) {
 				// do not do anything
 			}
-			elseif ($target->source_declaration instanceof FunctionDeclaration) {
+			elseif ($declaration instanceof FunctionDeclaration) {
 				$item = "function $item";
 			}
-			elseif ($target->source_declaration instanceof ConstantDeclaration) {
+			elseif ($declaration instanceof ConstantDeclaration) {
 				$item = "const $item";
 			}
 			else {
-				throw new Exception("Whats the matter!");
+				$kind = $target::KIND;
+				throw new Exception("Unknow use target kind '$kind'.");
 			}
 
 			$items[] = $item;

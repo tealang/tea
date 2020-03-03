@@ -3,7 +3,7 @@ namespace tea\tests\syntax;
 
 use tea\tests\xview\{ BaseView };
 
-require_once __DIR__ . '/__unit.php';
+require_once __DIR__ . '/__public.php';
 
 #internal
 class Cell extends BaseView {

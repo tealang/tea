@@ -4,7 +4,7 @@ namespace tea\tests\syntax;
 use ErrorException;
 use Exception;
 
-require_once __DIR__ . '/__unit.php';
+require_once __DIR__ . '/__public.php';
 
 #internal
 const PI = 3.1415926;

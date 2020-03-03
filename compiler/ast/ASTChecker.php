@@ -1496,7 +1496,6 @@ class ASTChecker
 			$symbol = $node->symbols[$param_name] ?? $this->find_symbol_by_name($param_name);
 			if ($symbol === null) {
 				throw $including->unit->new_syntax_error("Expected var '{$param_name}' to #include({$node->target}).", $node);
-				// throw $including_unit->get_checker()->new_syntax_error("Expect var '{$param_name}' for #include({$node->target}) not found in program file '{$this->program->name}'.", $node);
 			}
 		}
 

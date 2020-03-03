@@ -4,7 +4,7 @@ namespace tea\tests\syntax;
 use Exception;
 use ErrorException;
 
-require_once __DIR__ . '/__unit.php';
+require_once __DIR__ . '/__public.php';
 
 // ---------
 try {

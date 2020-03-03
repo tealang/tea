@@ -17,18 +17,12 @@ class TeaParser extends BaseParser
 
 	protected $is_declare_mode = false;
 
-	protected $root_statements;
+	protected $root_statements = [];
 
-	protected function scan_program()
+	public function read_program(): Program
 	{
-		$program = $this->factory->create_program($this->file, $this);
+		$program = $this->program;
 
-		// set to main program when file name is main.tea
-		if ($program->name === _MAIN) {
-			$this->factory->set_as_main_program();
-		}
-
-		$this->root_statements = [];
 		while ($this->pos < $this->tokens_count) {
 			$item = $this->read_root_statement();
 			if ($item instanceof IRootDeclaration) {
@@ -50,7 +44,7 @@ class TeaParser extends BaseParser
 			$program->main_function = null;
 		}
 
-		$this->program = $program;
+		return $program;
 	}
 
 	protected function read_root_statement($leading = null, Docs $docs = null)
@@ -420,6 +414,7 @@ class TeaParser extends BaseParser
 	{
 		// continue
 		// continue #goto_label
+		// continue #goto_label when condition-expression
 
 		$statement = new ContinueStatement();
 		$this->try_attach_goto_label($statement, true);
