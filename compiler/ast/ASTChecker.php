@@ -1291,7 +1291,8 @@ class ASTChecker
 		$cast_type = $node->right;
 
 		if (!$cast_type instanceof IType) {
-			throw $this->new_syntax_error("Invalid 'is' expression '{$node->right->name}'.", $node);
+			$kind = $node->right::KIND;
+			throw $this->new_syntax_error("Invalid 'is' expression '{$kind}'.", $node);
 		}
 
 		return $cast_type;

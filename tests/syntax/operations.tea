@@ -18,6 +18,10 @@ if str_from_float is String {
 	echo '${str_from_float} is String'
 }
 
+if uint_num is not String {
+	echo '${uint_num} is not a String'
+}
+
 // math
 num = 3
 result = -num * PI ** 2 - 12
@@ -38,6 +42,7 @@ l1 = not num < 0 and num != 3
 // is match
 1 is Int   // true
 2 is UInt  // true
+1 is not Int // false
 ErrorException('demo') is Exception  // true
 
 a = 1

@@ -892,8 +892,9 @@ class TeaCoder
 	{
 		$left = $this->render_expression($node->left);
 		$right = $node->right->render($this);
+		$operator = $node->is_not ? 'is not' : 'is';
 
-		return "$left is $right";
+		return "$left $operator $right";
 	}
 
 	public function render_reference_operation(ReferenceOperation $node)

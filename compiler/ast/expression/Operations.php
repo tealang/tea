@@ -32,11 +32,14 @@ class IsOperation extends BaseBinaryOperation
 {
 	const KIND = 'is_operation';
 
-	public function __construct(IExpression $left, IExpression $right)
+	public $is_not;
+
+	public function __construct(IExpression $left, IExpression $right, bool $is_not)
 	{
 		$this->operator = OperatorFactory::$_is;
 		$this->left = $left;
 		$this->right = $right;
+		$this->is_not = $is_not;
 	}
 }
 

@@ -122,7 +122,7 @@ class Compiler
 
 	private static function check_is_builtin_unit(string $unit_path)
 	{
-		// some OS are Case regardless
+		// some Operation Systems are Case regardless
 		if (in_array(PHP_OS, self::CASE_REGARDLESS_OS_LIST)) {
 			$result = strtolower(self::BUILTIN_PATH) === strtolower($unit_path);
 		}

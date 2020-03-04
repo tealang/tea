@@ -1364,11 +1364,17 @@ class PHPCoder extends TeaCoder
 				$type_name = 'uint';
 			}
 
-			return "is_{$type_name}($left)";
+			$code = "is_{$type_name}($left)";
 		}
 		else {
-			return "{$left} instanceof {$node->right->name}";
+			$code = "{$left} instanceof {$node->right->name}";
 		}
+
+		if ($node->is_not) {
+			$code = '!' . $code;
+		}
+
+		return $code;
 	}
 
 	public function render_prefix_operation(IExpression $node)

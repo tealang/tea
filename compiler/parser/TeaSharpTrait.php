@@ -189,7 +189,7 @@ trait TeaSharpTrait
 	protected function read_unit_declaration()
 	{
 		if (!static::IS_IN_HEADER) {
-			throw $this->new_parse_error("The '#unit' statements can only be used in the __unit.th or __public.th files.");
+			throw $this->new_parse_error("The '#unit' label could not be used at here.");
 		}
 
 		$namespace = $this->read_namespace_identifier();

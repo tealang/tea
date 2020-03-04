@@ -1524,8 +1524,9 @@ class TeaParser extends BaseParser
 		}
 		elseif ($operator === OperatorFactory::$_is) {
 			$this->scan_token_ignore_empty(); // skip the operator
+			$is_not = $this->skip_token_ignore_space(_NOT);
 			$right_expression = $this->read_expression($operator);
-			$expression = new IsOperation($expression, $right_expression);
+			$expression = new IsOperation($expression, $right_expression, $is_not);
 		}
 		elseif ($operator === OperatorFactory::$_conditional) {
 			$this->scan_token_ignore_empty(); // skip the operator

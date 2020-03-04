@@ -26,6 +26,10 @@ if (is_string($str_from_float)) {
 	echo $str_from_float . ' is String', LF;
 }
 
+if (!is_string($uint_num)) {
+	echo $uint_num . ' is not a String', LF;
+}
+
 $num = 3;
 $result = -$num * PI ** 2 - 12;
 
@@ -41,6 +45,7 @@ $l1 = !($num < 0) && $num != 3;
 
 is_int(1);
 is_uint(2);
+!is_int(1);
 new \ErrorException('demo') instanceof Exception;
 
 $a = 1;
