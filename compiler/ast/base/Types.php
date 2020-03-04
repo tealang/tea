@@ -9,8 +9,6 @@
 
 namespace Tea;
 
-use Exception;
-
 interface IType {}
 
 trait SubValuedTrait {

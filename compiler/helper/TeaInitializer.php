@@ -1,8 +1,6 @@
 <?php
 namespace Tea;
 
-use Exception;
-
 class TeaInitializer
 {
 	private $uri;

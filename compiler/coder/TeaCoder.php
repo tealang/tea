@@ -9,8 +9,6 @@
 
 namespace Tea;
 
-use Exception;
-
 class TeaCoder
 {
 	const INDENT = "\t";

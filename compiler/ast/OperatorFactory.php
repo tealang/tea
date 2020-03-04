@@ -9,8 +9,6 @@
 
 namespace Tea;
 
-use Exception;
-
 const _PREFIX_OP_PRECEDENCES = [
 	_NEGATION => 2, _BITWISE_NOT => 2, _REFERENCE => 2,
 	_NOT => 8,

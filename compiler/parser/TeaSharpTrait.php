@@ -166,7 +166,7 @@ trait TeaSharpTrait
 		}
 
 		// labeled block
-		$next = $this->scan_token_ignore_empty();
+		$next = $this->scan_token_ignore_space();
 		if ($next === _FOR) {
 			$block = $this->read_for_block($label);
 		}
@@ -180,7 +180,7 @@ trait TeaSharpTrait
 			$block = $this->read_when_block($label);
 		}
 		else {
-			throw $this->new_unexpected_error();
+			throw $this->new_parse_error("Expected a inline statement after label #{$label}.");
 		}
 
 		return $block;

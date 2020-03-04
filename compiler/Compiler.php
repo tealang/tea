@@ -9,8 +9,6 @@
 
 namespace Tea;
 
-use Exception;
-
 const TEA_EXT_NAME = 'tea', TEA_HEADER_EXT_NAME = 'th', PHP_EXT_NAME = 'php',
 	UNIT_HEADER_NAME = '__unit', PUBLIC_HEADER_NAME = '__public';
 
@@ -205,13 +203,7 @@ class Compiler
 	private function parse_unit_header()
 	{
 		// parse header file
-		// $this->header_parser = new HeaderParser($this->ast_factory, $this->header_file_path);
 		$this->header_program = $this->parse_tea_header($this->header_file_path, $this->ast_factory);
-
-		// $ns = $this->header_parser->read_unit_namespace();
-
-		// parse Tea header
-		// $this->header_program = $this->header_parser->read_program();
 
 		// check #unit is defined
 		if (!$this->unit->ns) {
@@ -468,7 +460,6 @@ class Compiler
 		$dist_code .= PHPLoaderMaker::render_autoloads_code($this->autoloads_map, _UNIT_PATH);
 
 		file_put_contents($dist_file_path, $dist_code);
-		return $dist_file_path;
 	}
 
 	private function render_program(Program $program)

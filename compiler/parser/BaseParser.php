@@ -86,6 +86,11 @@ abstract class BaseParser
 
 	public function get_error_message_with_pos(int $pos)
 	{
+		$token = $this->get_current_token_string();
+		if ($token === LF) {
+			$pos--;
+		}
+
 		$code = $this->get_previous_code_inline($pos);
 		$line = $this->get_line_number($pos);
 
