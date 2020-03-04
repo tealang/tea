@@ -22,9 +22,9 @@ trait FunctionLikeTrait
 
 	public $fixed_body;
 
-	public $auto_declarations = [];
+	// public $auto_declarations = [];
 
-	public $checking; // set true when on checking by ASTChecker
+	public $is_checking; // set true when on checking by ASTChecker
 
 	function set_body_with_expression(IExpression $expression)
 	{

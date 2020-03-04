@@ -19,7 +19,7 @@ class CallbackProtocol extends Node implements ICallableDeclaration, IVariableDe
 
 	public $parameters;
 
-	public $checking;
+	public $is_checking;
 
 	public function __construct(bool $async, string $name, ?IType $type, ParameterDeclaration ...$parameters)
 	{

@@ -30,6 +30,12 @@ if (!is_string($uint_num)) {
 	echo $uint_num . ' is not a String', LF;
 }
 
+$str_for_find = 'abc123';
+$found = _strpos($str_for_find, 'abc', 0);
+if (is_void($found)) {
+	echo '"abc" has not be found in ' . $str_for_find, LF;
+}
+
 $num = 3;
 $result = -$num * PI ** 2 - 12;
 

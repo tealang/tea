@@ -240,7 +240,7 @@ class ASTFactory
 			}
 			else {
 				// symbol has not declared
-				$this->auto_declare_to_assigning_identifier($assignable);
+				$this->auto_declare_for_assigning_identifier($assignable);
 
 				// remove from check list
 				$this->remove_defer_check($this->enclosing, $assignable);
@@ -260,7 +260,7 @@ class ASTFactory
 		return $assignment;
 	}
 
-	private function auto_declare_to_assigning_identifier(IExpression $identifier)
+	private function auto_declare_for_assigning_identifier(IExpression $identifier)
 	{
 		if (!TeaHelper::is_declarable_variable_name($identifier->name)) {
 			throw $this->parser->new_parse_error("Identifier '$identifier->name' not a valid variable name.");
@@ -268,7 +268,7 @@ class ASTFactory
 
 		$declaration = new VariableDeclaration($identifier->name, null, null, true);
 		$declaration->block = $this->block;
-		$this->enclosing->auto_declarations[$identifier->name] = $declaration;
+		// $this->enclosing->auto_declarations[$identifier->name] = $declaration;
 
 		// link to symbol
 		$identifier->symbol = $this->create_local_symbol($declaration);

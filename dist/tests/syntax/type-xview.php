@@ -30,8 +30,6 @@ class DemoList extends BaseView {
 	public $cells = [];
 
 	public function __construct(string $name, string $title = '', array $items = [], callable $each = null, callable $error = null) {
-		$cell = null;
-
 		$this->items = $items;
 
 		if ($each) {

@@ -2049,11 +2049,11 @@ class ASTChecker
 
 	private function check_callable_declaration(ICallableDeclaration $node)
 	{
-		if ($node->checking) {
+		if ($node->is_checking) {
 			throw $this->new_syntax_error("Function '{$node->name}' has a circular checking, needs a return type.", $node);
 		}
 
-		$node->checking = true;
+		$node->is_checking = true;
 
 		switch ($node::KIND) {
 			case FunctionBlock::KIND:

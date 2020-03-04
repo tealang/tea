@@ -22,6 +22,12 @@ if uint_num is not String {
 	echo '${uint_num} is not a String'
 }
 
+str_for_find = 'abc123'
+found = str_for_find.find('abc')
+if found is Void {
+	echo '"abc" has not be found in $str_for_find'
+}
+
 // math
 num = 3
 result = -num * PI ** 2 - 12

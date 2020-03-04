@@ -432,15 +432,16 @@ class PHPCoder extends TeaCoder
 		$body = $node->fixed_body ?? $node->body;
 
 		$items = [];
-		if ($node->auto_declarations) {
-			foreach ($node->auto_declarations as $declar) {
-				if (!$declar->block instanceof IEnclosingBlock) {
-					$items[] = static::VAR_DECLARE_PREFIX . "{$declar->name} = null;\n";
-				}
-			}
 
-			$items[] = LF;
-		}
+		// if ($node->auto_declarations) {
+		// 	foreach ($node->auto_declarations as $declar) {
+		// 		if (!$declar->block instanceof IEnclosingBlock) {
+		// 			$items[] = static::VAR_DECLARE_PREFIX . "{$declar->name} = null;\n";
+		// 		}
+		// 	}
+
+		// 	$items[] = LF;
+		// }
 
 		if (is_array($body)) {
 			$tmp_items = $this->render_block_nodes($body);
