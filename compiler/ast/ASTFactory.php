@@ -290,7 +290,7 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_constant_declaration(?string $modifier, string $name, ?BaseType $type, ?IExpression $value)
+	public function create_constant_declaration(string $modifier, string $name, ?BaseType $type, ?IExpression $value)
 	{
 		$this->check_global_modifier($modifier, 'non class member constant');
 

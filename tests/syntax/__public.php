@@ -7,8 +7,8 @@ use tea\tests\PHPDemoUnit\{ BaseInterface, NS1\Demo as PHPClassDemo, const PHP_C
 const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
 $super_path = dirname(__DIR__, 4) . DIRECTORY_SEPARATOR; // the workspace/vendor path
-require_once $super_path . 'tea/dist/builtin/__public.php'; // the builtins
-require_once $super_path . 'tea/dist/tests/xview/__public.php';
+require_once $super_path . 'tea/builtin/dist/__public.php'; // the builtins
+require_once $super_path . 'tea/tests/xview/dist/__public.php';
 require_once $super_path . 'tea/tests/PHPDemoUnit/__public.php';
 
 function fn0($str) {

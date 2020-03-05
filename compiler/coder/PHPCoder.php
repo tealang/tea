@@ -112,7 +112,7 @@ class PHPCoder extends TeaCoder
 
 			// load the builtins
 			if ($unit->as_main_unit) {
-				$items[] = "require_once \$super_path . 'tea/dist/builtin/__public.php'; // the builtins";
+				$items[] = "require_once \$super_path . 'tea/builtin/dist/__public.php'; // the builtins";
 			}
 
 			// load the foriegn units

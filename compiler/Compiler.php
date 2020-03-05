@@ -246,31 +246,35 @@ class Compiler
 			$this->super_path = $checking_path . DS;
 		}
 
+		// {unit-path}/dist/
+		$this->unit_dist_path = $this->unit_path . DIST_DIR_NAME . DS;
+
 		// set the dist path
 		if ($this->native_program_files) {
-			$this->unit_dist_path = $this->unit_path . DIST_DIR_NAME . DS;
+			// mixed programming mode
 			$this->unit_dist_path_len = strlen($this->unit_path);
 			$this->unit_public_file = $this->unit_path . self::PUBLIC_HEADER_FILE_NAME;
 			$this->unit_dist_loader_file = $this->unit_path . self::PUBLIC_LOADER_FILE_NAME;
 		}
 		else {
-			$this->unit_dist_path = $this->find_unit_dist_path(join(DS, $dir_names));
+			// normal mode
+			// $this->unit_dist_path = $this->find_unit_dist_path(join(DS, $dir_names));
 			$this->unit_dist_path_len = strlen($this->unit_dist_path);
 			$this->unit_public_file = $this->unit_dist_path . self::PUBLIC_HEADER_FILE_NAME;
 			$this->unit_dist_loader_file = $this->get_dist_file_path(PUBLIC_HEADER_NAME);
 		}
 	}
 
-	private function find_unit_dist_path(string $dir)
-	{
-		// check project dist dir
-		$project_dist_path = $this->base_path . DIST_DIR_NAME;
-		if (!is_dir($project_dist_path)) {
-			throw new Exception("The project dist dir '{$project_dist_path}' not found.");
-		}
+	// private function find_unit_dist_path(string $dir)
+	// {
+	// 	// check project dist dir
+	// 	$project_dist_path = $this->base_path . DIST_DIR_NAME;
+	// 	if (!is_dir($project_dist_path)) {
+	// 		throw new Exception("The project dist dir '{$project_dist_path}' not found.");
+	// 	}
 
-		return $project_dist_path . DS . $dir . DS;
-	}
+	// 	return $project_dist_path . DS . $dir . DS;
+	// }
 
 	private function process_program_uses(Program $program)
 	{
@@ -416,9 +420,10 @@ class Compiler
 		}
 
 		// find in dist directory
-		$first_name = $dir_names[0];
-		$dir_names[0] = DIST_DIR_NAME;
-		array_unshift($dir_names, $first_name);
+		// $first_name = $dir_names[0];
+		// $dir_names[0] = DIST_DIR_NAME;
+		// array_unshift($dir_names, $first_name);
+		$dir_names[] = DIST_DIR_NAME;
 
 		$unit_dir = $this->find_public_file_dir_with_names($dir_names, $try_paths);
 		if ($unit_dir !== false) {
@@ -591,10 +596,12 @@ class Compiler
 
 			$ext_pos = strrpos($item, '.');
 			if (!$ext_pos) {
-				return;
+				continue;
 			}
 
 			$ext_name = substr($item, $ext_pos + 1);
+
+			// we not care the upper-case ext-names
 			if ($ext_name === TEA_EXT_NAME) {
 				$this->normal_program_files[] = $item;
 			}
