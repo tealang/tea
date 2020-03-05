@@ -2,6 +2,14 @@
 
 #unit tea/tests/syntax
 
+public php_get_num() Int
+
+public PHPClassInMixed1 {
+	private caller String
+	public construct(caller String)
+	public get_message() String
+}
+
 public fn0(str Any)
 
 public xrange(start Int, stop Int, step UInt = 1) IGenerator

@@ -48,9 +48,7 @@ class ClassLikeDeclaration extends RootDeclaration implements IMemberDeclaration
 	 * The symbols for current class instance
 	 * used for this, super
 	 */
-	public $symbols = [];
-
-	// public $member_symbols = []; // constants, properties, methods
+	// public $symbols = [];
 
 	public $super_block; // aways none
 

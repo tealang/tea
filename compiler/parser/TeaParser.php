@@ -278,10 +278,23 @@ class TeaParser extends BaseParser
 			case _PRINT:
 				$node = $this->read_print_statement();
 				break;
+
+			case _BREAK:
+				$node = $this->read_break_statement();
+				break;
+			case _CONTINUE:
+				$node = $this->read_continue_statement();
+				break;
+			case _THROW:
+				$node = $this->read_throw_statement();
+				break;
+			case _EXIT:
+				$node = $this->read_exit_declaration();
+				break;
+
 			case _IF:
 				$node = $this->read_if_block();
 				break;
-			// do not supported now
 			case _WHEN:
 				$node = $this->read_when_block();
 				break;
@@ -293,22 +306,11 @@ class TeaParser extends BaseParser
 				break;
 			// case _LOOP:
 			// 	$node = $this->read_loop_block();
-				break;
+			// 	break;
 			case _TRY:
 				$node = $this->read_try_block();
 				break;
-			case _THROW:
-				$node = $this->read_throw_statement();
-				break;
-			case _CONTINUE:
-				$node = $this->read_continue_statement();
-				break;
-			case _BREAK:
-				$node = $this->read_break_statement();
-				break;
-			case _EXIT:
-				$node = $this->read_exit_declaration();
-				break;
+
 			default:
 				throw $this->new_unexpected_error();
 		}

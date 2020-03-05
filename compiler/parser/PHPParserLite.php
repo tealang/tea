@@ -95,12 +95,22 @@ class PHPParserLite extends BaseParser
 
 			case T_CONST:
 				$node = $this->read_constant_declaration($doc);
+
+				// for 'const A, B, C;' style
+				while ($this->skip_char_token(_COMMA)) {
+					$this->program->append_declaration($node);
+					$node = $this->read_constant_declaration();
+				}
+
 				break;
 
 			case T_NAMESPACE:
 				$node = $this->read_namespace();
 				break;
 
+			case T_USE:
+				$this->skip_to_char_token(_SEMICOLON);
+				// unbreak
 			// we do not care the others
 			default:
 				$node = null;
@@ -113,7 +123,7 @@ class PHPParserLite extends BaseParser
 	{
 		$name = $this->expect_identifier_token();
 
-		$declaration = $this->factory->create_interface_declaration($name, null);
+		$declaration = $this->factory->create_interface_declaration($name, _PUBLIC);
 		if ($this->skip_typed_token(T_EXTENDS)) {
 			$declaration->baseds = $this->expect_identifier_token();
 		}
@@ -133,7 +143,7 @@ class PHPParserLite extends BaseParser
 		$name = $this->expect_identifier_token();
 
 
-		$declaration = $this->factory->create_class_declaration($name, null);
+		$declaration = $this->factory->create_class_declaration($name, _PUBLIC);
 		$declaration->is_abstract = $is_abstract;
 
 		if ($this->skip_typed_token(T_EXTENDS)) {
@@ -284,7 +294,7 @@ class PHPParserLite extends BaseParser
 		$type = $this->read_constant_type($doc);
 		$this->expect_statement_end();
 
-		return $this->factory->create_constant_declaration(null, $name, $type, null);
+		return $this->factory->create_constant_declaration(_PUBLIC, $name, $type, null);
 	}
 
 	private function read_class_constant_declaration(?string $modifier, ?string $doc)
@@ -413,7 +423,7 @@ class PHPParserLite extends BaseParser
 			$name = static::METHOD_MAP[$name];
 		}
 
-		$declaration = $this->factory->declare_method($modifier, $name, $type, $parameters);
+		$declaration = $this->factory->declare_method($modifier ?? _PUBLIC, $name, $type, $parameters);
 
 		if ($is_interface) {
 			$this->expect_statement_end();
@@ -431,7 +441,7 @@ class PHPParserLite extends BaseParser
 		$parameters = $this->read_parameters();
 		$type = $this->try_read_function_return_type();
 
-		$declaration = $this->factory->declare_function(null, $name, $type, $parameters);
+		$declaration = $this->factory->declare_function(_PUBLIC, $name, $type, $parameters);
 		$this->read_function_block();
 
 		return $declaration;
@@ -594,6 +604,17 @@ class PHPParserLite extends BaseParser
 		$token = $this->scan_token_ignore_empty();
 		$this->assert_identifier_token($token);
 		return $token[1];
+	}
+
+	private function skip_to_char_token(string $char)
+	{
+		while (($token = $this->scan_token()) !== null) {
+			if ($token === $char) {
+				return;
+			}
+		}
+
+		throw $this->new_parse_error("Expected token \"$char\".");
 	}
 
 	private function skip_char_token(string $char)

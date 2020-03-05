@@ -328,19 +328,9 @@ class ASTFactory
 		$declaration->super_block = $this->class;
 
 		$declaration->symbol = new Symbol($declaration);
-
-		// add to class symbols
-		// $this->class->member_symbols[$name] = new Symbol($declaration);
 	}
 
 // ---
-
-	public function set_current_program(Program $program)
-	{
-		$this->parser = $program->parser;
-		$this->program = $program;
-		$this->set_to_main_function();
-	}
 
 	public function create_program(string $file, BaseParser $parser)
 	{
@@ -406,9 +396,9 @@ class ASTFactory
 	/**
 	 * @param $name string
 	 */
-	public function create_class_declaration(string $name, ?string $modifier)
+	public function create_class_declaration(string $name, string $modifier)
 	{
-		$modifier && $this->check_global_modifier($modifier, 'class');
+		$this->check_global_modifier($modifier, 'class');
 
 		$declaration = new ClassDeclaration($modifier, $name);
 		$this->process_classlike_declaration_and_create_symbol($declaration);
@@ -416,9 +406,9 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_interface_declaration(string $name, ?string $modifier)
+	public function create_interface_declaration(string $name, string $modifier)
 	{
-		$modifier && $this->check_global_modifier($modifier, 'interface');
+		$this->check_global_modifier($modifier, 'interface');
 
 		$declaration = new InterfaceDeclaration($modifier, $name);
 		$this->process_classlike_declaration_and_create_symbol($declaration);
@@ -491,7 +481,7 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_function_block(?string $modifier, string $name, ?IType $type, array $parameters, array $callbacks = null)
+	public function create_function_block(string $modifier, string $name, ?IType $type, array $parameters, array $callbacks = null)
 	{
 		$this->check_global_modifier($modifier, 'function');
 
@@ -509,7 +499,7 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function declare_function(?string $modifier, string $name, ?IType $type, array $parameters, array $callbacks = null)
+	public function declare_function(string $modifier, string $name, ?IType $type, array $parameters, array $callbacks = null)
 	{
 		$this->check_global_modifier($modifier, 'function');
 
