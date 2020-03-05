@@ -2,13 +2,13 @@
 
 #unit tea/tests/syntax
 
-public php_get_num() Int
-
 public PHPClassInMixed1 {
 	private caller String
 	public construct(caller String)
 	public get_message() String
 }
+
+public php_get_num() Int
 
 public fn0(str Any)
 

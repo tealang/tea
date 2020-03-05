@@ -19,6 +19,12 @@ class Compiler
 
 	const BUILTIN_PROGRAM = self::BUILTIN_PATH . 'core.tea';
 
+	const UNIT_HEADER_FILE_NAME = UNIT_HEADER_NAME . '.' . TEA_HEADER_EXT_NAME;
+
+	const PUBLIC_HEADER_FILE_NAME = PUBLIC_HEADER_NAME . '.' . TEA_HEADER_EXT_NAME;
+
+	const PUBLIC_LOADER_FILE_NAME = PUBLIC_HEADER_NAME . '.' . PHP_EXT_NAME;
+
 	// the special namespaces for some framework
 	const FRAMEWORK_INTERNAL_NAMESPACES = ['App', 'Model', 'Lib'];
 
@@ -116,7 +122,7 @@ class Compiler
 
 	private function init_unit(string $unit_path)
 	{
-		$this->header_file_path = $unit_path . self::get_header_name(UNIT_HEADER_NAME);
+		$this->header_file_path = $unit_path . self::UNIT_HEADER_FILE_NAME;
 		if (!file_exists($this->header_file_path)) {
 			throw new Exception("The Unit header file '{$this->header_file_path}' not found.");
 		}
@@ -143,9 +149,9 @@ class Compiler
 		return $result;
 	}
 
-	public function make(string $target_file = null)
+	public function make()
 	{
-		$this->scan_program_files();
+		$this->scan_program_files($this->unit_path);
 
 		$this->parse_unit_header();
 
@@ -244,13 +250,13 @@ class Compiler
 		if ($this->native_program_files) {
 			$this->unit_dist_path = $this->unit_path . DIST_DIR_NAME . DS;
 			$this->unit_dist_path_len = strlen($this->unit_path);
-			$this->unit_public_file = $this->unit_path . self::get_header_name(PUBLIC_HEADER_NAME);
-			$this->unit_dist_loader_file = $this->unit_path . PUBLIC_HEADER_NAME . '.php';
+			$this->unit_public_file = $this->unit_path . self::PUBLIC_HEADER_FILE_NAME;
+			$this->unit_dist_loader_file = $this->unit_path . self::PUBLIC_LOADER_FILE_NAME;
 		}
 		else {
 			$this->unit_dist_path = $this->find_unit_dist_path(join(DS, $dir_names));
 			$this->unit_dist_path_len = strlen($this->unit_dist_path);
-			$this->unit_public_file = $this->unit_dist_path . self::get_header_name(PUBLIC_HEADER_NAME);
+			$this->unit_public_file = $this->unit_dist_path . self::PUBLIC_HEADER_FILE_NAME;
 			$this->unit_dist_loader_file = $this->get_dist_file_path(PUBLIC_HEADER_NAME);
 		}
 	}
@@ -373,13 +379,13 @@ class Compiler
 
 		$unit_dir = $this->find_unit_public_dir($ns);
 		$unit_path = $this->super_path . $unit_dir . DS;
-		$unit_public_file = $unit_path . self::get_header_name(PUBLIC_HEADER_NAME);
+		$unit_public_file = $unit_path . self::PUBLIC_HEADER_FILE_NAME;
 
 		$unit = new Unit($unit_path);
 		$this->units_pool[$uri] = $unit; // add to pool, so do not need to reload
 
 		// for render require_once statments
-		$unit->loading_file = $unit_dir . '/' . PUBLIC_HEADER_NAME . '.' . PHP_EXT_NAME;
+		$unit->loading_file = $unit_dir . '/' . self::PUBLIC_LOADER_FILE_NAME;
 
 		$unit->symbols = $this->builtin_symbols;
 
@@ -454,7 +460,7 @@ class Compiler
 		}
 
 		// check public file
-		$unit_public_file = $path . self::get_header_name(PUBLIC_HEADER_NAME);
+		$unit_public_file = $path . self::PUBLIC_HEADER_FILE_NAME;
 		if (file_exists($unit_public_file)) {
 			// use the real dir names for render
 			return join(DS, $real_names);
@@ -505,7 +511,7 @@ class Compiler
 
 	private function get_dist_file_path(string $name)
 	{
-		$file_path = $this->unit_dist_path . $name . '.php';
+		$file_path = $this->unit_dist_path . $name . '.' . PHP_EXT_NAME;
 
 		$dir_path = dirname($file_path);
 		if (!is_dir($dir_path)) {
@@ -538,7 +544,7 @@ class Compiler
 		self::echo_success("$count declarations rendered success.");
 	}
 
-	private function collect_autoloads_map(Program $program, string $dist_file_path, string $name_prefix = '')
+	private function collect_autoloads_map(Program $program, string $dist_file_path, string $name_prefix = null)
 	{
 		$dist_file_path = substr($dist_file_path, $this->unit_dist_path_len);
 
@@ -556,26 +562,49 @@ class Compiler
 		}
 	}
 
-	private function scan_program_files()
+	const SCAN_SKIP_ITEMS = ['.', '..', 'dist', 'bin', '__public.php'];
+	private function scan_program_files(string $path, int $levels = 0)
 	{
-		$file_iterator = FileHelper::get_iterator($this->unit_path);
+		$items = scandir($path);
 
-		foreach ($file_iterator as $path => $object) {
-			if (strpos($path, '/dist/') || strpos($path, '__public')) {
-				continue;
-			}
-
-			$ext = $object->getExtension();
-			if ($ext === TEA_EXT_NAME) {
-				$this->normal_program_files[] = $path;
-			}
-			elseif ($ext === PHP_EXT_NAME) {
-				$this->native_program_files[] = $path;
+		if ($levels) {
+			// check is a sub-unit
+			if (array_search(self::UNIT_HEADER_FILE_NAME, $items) !== false
+				|| array_search(self::PUBLIC_HEADER_FILE_NAME, $items) !== false) {
+				echo "\nWarring: The sub-diretory '$path' has be ignored, because of it has '__unit.th' or '__public.th'.\n\n";
+				return; // ignore these sub-unit
 			}
 		}
 
-		// 排序以保障在所有情况下顺序一致
-		sort($this->normal_program_files);
+		foreach ($items as $item) {
+			if (in_array($item, self::SCAN_SKIP_ITEMS, true)) {
+				continue;
+			}
+
+			$item = $path . $item;
+
+			// scan the sub-diretories
+			if (is_dir($item)) {
+				$this->scan_program_files($item . DS, $levels++);
+				continue;
+			}
+
+			$ext_pos = strrpos($item, '.');
+			if (!$ext_pos) {
+				return;
+			}
+
+			$ext_name = substr($item, $ext_pos + 1);
+			if ($ext_name === TEA_EXT_NAME) {
+				$this->normal_program_files[] = $item;
+			}
+			elseif ($ext_name === PHP_EXT_NAME) {
+				$this->native_program_files[] = $item;
+			}
+			else {
+				// ignore other files ...
+			}
+		}
 	}
 
 	private function parse_tea_header(string $file, ASTFactory $ast_factory)
@@ -594,11 +623,6 @@ class Compiler
 	{
 		$parser = new PHPParserLite($this->ast_factory, $file);
 		return $parser->read_program();
-	}
-
-	private static function get_header_name(string $name)
-	{
-		return $name . '.' . TEA_HEADER_EXT_NAME;
 	}
 
 	private static function echo_start(string $message, string $ending = "\t")
