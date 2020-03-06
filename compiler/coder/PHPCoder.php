@@ -83,6 +83,8 @@ class PHPCoder extends TeaCoder
 
 	const PROGRAM_HEADER = '<?php';
 
+	public $include_prefix;
+
 	public function render_unit_header_program(Program $header_program, array $normal_programs)
 	{
 		$this->program = $header_program;
@@ -99,30 +101,20 @@ class PHPCoder extends TeaCoder
 
 		// load the dependence units
 		if ($unit->use_units || $unit->as_main_unit) {
-			// 当前Unit的dist目录往上的层数
-			$super_dir_levels = count($unit->ns->names) + 1;
-
-			if (Compiler::is_framework_internal_namespaces($unit->ns)) {
-				$super_dir_levels++;
-			}
-
 			// 由于PHP不支持在const中使用函数表达式，故使用变量替代
 			// 另外，主Unit的super_path和被引用库的可能是不一致的
-			$items[] = "\$super_path = dirname(__DIR__, {$super_dir_levels}) . DIRECTORY_SEPARATOR; // the workspace/vendor path";
+			$items[] = "\$super_path = dirname(__DIR__, {$unit->super_dir_levels}) . DIRECTORY_SEPARATOR; // the workspace/vendor path";
 
 			// load the builtins
 			if ($unit->as_main_unit) {
-				$items[] = "require_once \$super_path . 'tea/builtin/dist/__public.php'; // the builtins";
+				$items[] = sprintf("require_once \$super_path . '%s'; // the builtins", Compiler::BUILTIN_LOADING_FILE);
 			}
 
 			// load the foriegn units
 			foreach ($unit->use_units as $foreign_unit) {
-				// 框架内部名称空间由框架加载
-				if (Compiler::is_framework_internal_namespaces($foreign_unit->ns)) {
-					continue;
+				if ($foreign_unit->required_loading) {
+					$items[] = "require_once \$super_path . '{$foreign_unit->loading_file}';";
 				}
-
-				$items[] = "require_once \$super_path . '{$foreign_unit->loading_file}';";
 			}
 
 			$items[] = '';
@@ -188,15 +180,20 @@ class PHPCoder extends TeaCoder
 		$items = $this->render_heading_statements($program);
 
 		if ($program->as_main_program) {
-			$levels = $program->unit->count_subdirectory_levels_for_file($program->file);
+			$levels = $program->get_subdirectory_levels();
 			if ($levels) {
 				// 在Unit子目录中
-				$items[] = "require_once dirname(__DIR__, {$levels}) . '/__public.php';" . LF;
+				$items[] = "require_once dirname(__DIR__, {$levels}) . '/__public.php';\n";
 			}
 			else {
 				// 在Unit根目录中
-				$items[] = "require_once __DIR__ . '/__public.php';" . LF;
+				$items[] = "require_once __DIR__ . '/__public.php';\n";
 			}
+		}
+
+		// include dependencies
+		foreach ($program->depends_native_programs as $depends_program) {
+			$items[] = "require_once UNIT_PATH . '{$depends_program->name}.php';\n";
 		}
 
 		// foreach ($program->declarations as $node) {
@@ -1147,12 +1144,17 @@ class PHPCoder extends TeaCoder
 
 	public function render_namespace_identifier(NamespaceIdentifier $node)
 	{
+		return static::ns_to_string($node);
+	}
+
+	public static function ns_to_string(NamespaceIdentifier $identifier)
+	{
 		// use root namespace for tea builtins
-		if ($node->uri === _BUILTIN_NS) {
+		if ($identifier->uri === _BUILTIN_NS) {
 			return null;
 		}
 
-		return strtr($node->uri, static::NAMESPACE_REPLACES);
+		return strtr($identifier->uri, static::NAMESPACE_REPLACES);
 	}
 
 	public function render_variable_declaration(VariableDeclaration $node)
@@ -1368,7 +1370,8 @@ class PHPCoder extends TeaCoder
 			$code = "is_{$type_name}($left)";
 		}
 		else {
-			$code = "{$left} instanceof {$node->right->name}";
+			$right = $this->get_classlike_declaration_name($node->right->symbol->declaration);
+			$code = "{$left} instanceof {$right}";
 		}
 
 		if ($node->is_not) {
@@ -1488,7 +1491,14 @@ class PHPCoder extends TeaCoder
 
 	public function render_include_expression(IncludeExpression $expr)
 	{
-		return "(include UNIT_PATH . '{$expr->target}.php')";
+		$path = $this->generate_include_string($expr->target);
+		return "(include $path)";
+	}
+
+	private function generate_include_string(string $name)
+	{
+		$filename = $this->program->unit->include_prefix . $name . '.php';
+		return "UNIT_PATH . '{$filename}'";
 	}
 
 	protected function render_with_post_condition(PostConditionAbleStatement $node, string $code)

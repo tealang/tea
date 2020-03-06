@@ -1,9 +1,6 @@
 <?php
 namespace tea\docs;
 
-use Exception;
-use ErrorException;
-
 require_once __DIR__ . '/__public.php';
 
 function demo_function1(string $message) {
@@ -155,7 +152,7 @@ $ex2 = $ex1;
 is_int(1.1);
 is_int(1);
 is_uint(2);
-new \ErrorException('Some') instanceof Exception;
+new \ErrorException('Some') instanceof \Exception;
 
 $not_result = !($uint_num > 3);
 

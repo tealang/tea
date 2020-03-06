@@ -1,10 +1,7 @@
 <?php
 namespace tea\tests\syntax;
 
-use ErrorException;
-use Exception;
-
-require_once __DIR__ . '/__public.php';
+require_once dirname(__DIR__, 1) . '/__public.php';
 
 #internal
 const PI = 3.1415926;
@@ -52,7 +49,7 @@ $l1 = !($num < 0) && $num != 3;
 is_int(1);
 is_uint(2);
 !is_int(1);
-new \ErrorException('demo') instanceof Exception;
+new \ErrorException('demo') instanceof \Exception;
 
 $a = 1;
 

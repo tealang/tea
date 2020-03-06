@@ -1,8 +1,6 @@
 <?php
 namespace tea\examples;
 
-use Exception;
-
 require_once __DIR__ . '/__public.php';
 
 #internal

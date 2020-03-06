@@ -1,10 +1,7 @@
 <?php
 namespace tea\tests\syntax;
 
-use Exception;
-use ErrorException;
-
-require_once __DIR__ . '/__public.php';
+require_once dirname(__DIR__, 1) . '/__public.php';
 
 // ---------
 try {

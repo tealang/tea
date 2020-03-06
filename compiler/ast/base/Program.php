@@ -43,9 +43,19 @@ class Program extends Node
 
 	public $unit;
 
-	public $is_dynamic = false; // for dynamic programs, eg. PHP scripts
+	/**
+	 * just used for PHP scripts
+	 * @var NamespaceIdentifier
+	 */
+	public $ns;
+
+	public $depends_native_programs = [];
+
+	public $is_native = false; // for native programs, eg. PHP scripts
 
 	public $is_checked = false; // set true when has been checked by ASTChecker
+
+	private $subdirectory_levels;
 
 	public function __construct(string $file, Unit $unit)
 	{
@@ -66,6 +76,29 @@ class Program extends Node
 		}
 
 		$this->defer_check_identifiers = array_merge($this->defer_check_identifiers, $block->defer_check_identifiers);
+	}
+
+	public function append_depends_native_program(Program $program)
+	{
+		$this->depends_native_programs[$program->name] = $program;
+	}
+
+	public function get_subdirectory_levels()
+	{
+		$unit_dir_path = rtrim($this->unit->path, DS);
+		$count_path = dirname($this->file);
+
+		$i = 0;
+		while ($unit_dir_path !== $count_path) {
+			$i++;
+			$count_path = dirname($count_path);
+		}
+
+		if ($this->unit->is_mixed_mode) {
+			$i++;
+		}
+
+		return $i;
 	}
 
 	private function generate_name()

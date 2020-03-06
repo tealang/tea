@@ -293,7 +293,7 @@ public IView {
 	// no any
 }
 
-#php IIterator {
+#php Iterator as IIterator {
 	current() Any
 	key() String
 	next()
@@ -301,7 +301,7 @@ public IView {
 	valid() Bool
 }
 
-#php IGenerator: IIterator {
+#php Generator as IGenerator: IIterator {
 	send(value Any) Any
 	throw(exception Exception)
 }

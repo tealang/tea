@@ -19,6 +19,8 @@ class Compiler
 
 	const BUILTIN_PROGRAM = self::BUILTIN_PATH . 'core.tea';
 
+	const BUILTIN_LOADING_FILE = 'tea/builtin/dist/__public.php';
+
 	const UNIT_HEADER_FILE_NAME = UNIT_HEADER_NAME . '.' . TEA_HEADER_EXT_NAME;
 
 	const PUBLIC_HEADER_FILE_NAME = PUBLIC_HEADER_NAME . '.' . TEA_HEADER_EXT_NAME;
@@ -81,6 +83,11 @@ class Compiler
 	private $native_program_files = [];
 
 	/**
+	 * @var bool
+	 */
+	private $is_mixed_mode = false;
+
+	/**
 	 * the instance of current Unit
 	 * @var Unit
 	 */
@@ -113,11 +120,6 @@ class Compiler
 		if (!self::check_is_builtin_unit($unit_path)) {
 			$this->load_builtins();
 		}
-	}
-
-	public static function is_framework_internal_namespaces(NamespaceIdentifier $ns)
-	{
-		return in_array($ns->names[0], self::FRAMEWORK_INTERNAL_NAMESPACES, true);
 	}
 
 	private function init_unit(string $unit_path)
@@ -153,6 +155,8 @@ class Compiler
 	{
 		$this->scan_program_files($this->unit_path);
 
+		$this->is_mixed_mode = !empty($this->native_program_files);
+
 		$this->parse_unit_header();
 
 		$this->parse_programs();
@@ -164,8 +168,7 @@ class Compiler
 
 		$this->check_ast();
 
-		// for faster processing the operations
-		OperatorFactory::set_render_options(PHPCoder::OPERATOR_MAP, PHPCoder::OPERATOR_PRECEDENCES);
+		$this->prepare_for_render();
 
 		// prepare for render
 		$header_coder = new PHPCoder();
@@ -184,6 +187,30 @@ class Compiler
 		$this->render_public_declarations();
 
 		return count($this->normal_programs);
+	}
+
+	private function prepare_for_render()
+	{
+		// 当前Unit的dist目录往上的层数
+		$super_dir_levels = count($this->unit->ns->names) + 1;
+
+		if (self::is_framework_internal_namespaces($this->unit->ns)) {
+			$super_dir_levels++;
+		}
+
+		if ($this->is_mixed_mode) {
+			// for include expression
+			$this->unit->include_prefix = DIST_DIR_NAME . DS;
+			$this->unit->super_dir_levels = $super_dir_levels - 1;
+
+			$this->unit->is_mixed_mode = true;
+		}
+		else {
+			$this->unit->super_dir_levels = $super_dir_levels;
+		}
+
+		// for faster processing the operations
+		OperatorFactory::set_render_options(PHPCoder::OPERATOR_MAP, PHPCoder::OPERATOR_PRECEDENCES);
 	}
 
 	private function parse_programs()
@@ -250,7 +277,7 @@ class Compiler
 		$this->unit_dist_path = $this->unit_path . DIST_DIR_NAME . DS;
 
 		// set the dist path
-		if ($this->native_program_files) {
+		if ($this->is_mixed_mode) {
 			// mixed programming mode
 			$this->unit_dist_path_len = strlen($this->unit_path);
 			$this->unit_public_file = $this->unit_path . self::PUBLIC_HEADER_FILE_NAME;
@@ -291,30 +318,35 @@ class Compiler
 				continue;
 			}
 
-			if ($symbol->declaration instanceof ClassLikeDeclaration && $symbol->declaration->label === _PHP) {
-				// the declarations with #php
-				$uses[$symbol->name] = new UseStatement(new NamespaceIdentifier([$symbol->name]));
-			}
-			// elseif ($symbol->declaration instanceof NamespaceDeclaration) {
-			// 	// it should be a use statement in __unit
-			// 	$uses[$symbol->name] = new UseStatement(new NamespaceIdentifier([$symbol->name]));
-			// }
-			elseif ($symbol->declaration instanceof UseDeclaration) {
+			$declaration = $symbol->declaration;
+
+			if ($declaration instanceof UseDeclaration) {
 				// it should be a use statement in __unit
 
-				$use = $symbol->declaration;
-
-				$uri = $use->ns->uri;
-				if ($use->target_name) {
+				$uri = $declaration->ns->uri;
+				if ($declaration->target_name) {
 					$uri .= '!'; // just to differentiate, avoid conflict with no targets use statements
 				}
 
 				// URI相同的将合并到一条
 				if (!isset($uses[$uri])) {
-					$uses[$uri] = new UseStatement($use->ns);
+					$uses[$uri] = new UseStatement($declaration->ns);
 				}
 
-				$uses[$uri]->targets[] = $use;
+				$uses[$uri]->targets[] = $declaration;
+			}
+			// elseif ($declaration instanceof ClassLikeDeclaration) {
+			// 	if ($declaration->label === _PHP) {
+			// 		// the declarations with #php
+			// 		$uses[$symbol->name] = new UseStatement(new NamespaceIdentifier([$symbol->name]));
+			// 	}
+			// }
+			// elseif ($declaration instanceof NamespaceDeclaration) {
+			// 	// it should be a use statement in __unit
+			// 	$uses[$symbol->name] = new UseStatement(new NamespaceIdentifier([$symbol->name]));
+			// }
+			elseif ($declaration instanceof FunctionDeclaration && $declaration->program->is_native) {
+				$program->append_depends_native_program($declaration->program);
 			}
 		}
 
@@ -343,7 +375,7 @@ class Compiler
 	{
 		$checker = $unit->get_checker();
 		foreach ($unit->programs as $program) {
-			if ($program->is_dynamic) {
+			if ($program->is_native) {
 				continue;
 			}
 
@@ -368,7 +400,12 @@ class Compiler
 	{
 		foreach ($unit->use_units as $uri => $target) {
 			if (!$target instanceof Unit) {
-				$unit->use_units[$uri] = $this->load_unit($target);
+				$use_unit = $this->load_unit($target);
+
+				// 框架内部名称空间由框架加载
+				$use_unit->required_loading = !self::is_framework_internal_namespaces($use_unit->ns);
+
+				$unit->use_units[$uri] = $use_unit;
 			}
 		}
 	}
@@ -480,7 +517,8 @@ class Compiler
 		self::echo_start('Rendering programs...');
 
 		foreach ($this->native_programs as $program) {
-			$this->collect_autoloads_map($program, $program->file);
+			$ns_prefix = PHPCoder::ns_to_string($program->ns) . PHPCoder::NS_SEPARATOR;
+			$this->collect_autoloads_map($program, $program->file, $ns_prefix);
 		}
 
 		foreach ($this->normal_programs as $program) {
@@ -630,6 +668,11 @@ class Compiler
 	{
 		$parser = new PHPParserLite($this->ast_factory, $file);
 		return $parser->read_program();
+	}
+
+	private static function is_framework_internal_namespaces(NamespaceIdentifier $ns)
+	{
+		return in_array($ns->names[0], self::FRAMEWORK_INTERNAL_NAMESPACES, true);
 	}
 
 	private static function echo_start(string $message, string $ending = "\t")

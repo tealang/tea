@@ -1,7 +1,7 @@
 <?php
 namespace tea\tests\syntax;
 
-require_once __DIR__ . '/__public.php';
+require_once dirname(__DIR__, 1) . '/__public.php';
 
 function fn1(callable $callee) {
 	$unknow_type_value = $callee('hei');

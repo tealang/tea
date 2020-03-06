@@ -43,6 +43,29 @@ class Unit
 	public $use_units = []; // units that used in programs
 
 	/**
+	 * The prefix for render dist inlucde expression
+	 * @var string
+	 */
+	public $include_prefix;
+
+	/**
+	 * The super directories levels for render dist dependencies
+	 * @var int
+	 */
+	public $super_dir_levels;
+
+	/**
+	 * The option for is required to loading when is a foriegn Unit
+	 * @var bool
+	 */
+	public $required_loading;
+
+	/**
+	 * @var bool
+	 */
+	public $is_mixed_mode;
+
+	/**
 	 * @var ASTChecker
 	 */
 	private $checker;
@@ -70,19 +93,5 @@ class Unit
 	public function get_abs_path(string $path)
 	{
 		return substr($path, strlen($this->path));
-	}
-
-	public function count_subdirectory_levels_for_file(string $file_path)
-	{
-		$unit_dir_path = rtrim($this->path, DS);
-		$count_path = dirname($file_path);
-
-		$i = 0;
-		while ($unit_dir_path !== $count_path) {
-			$i++;
-			$count_path = dirname($count_path);
-		}
-
-		return $i;
 	}
 }

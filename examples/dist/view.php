@@ -1,8 +1,6 @@
 <?php
 namespace tea\examples;
 
-use Exception;
-
 #internal
 interface IBaseView {
 	public function __construct(string $id = null);

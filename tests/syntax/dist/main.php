@@ -3,7 +3,9 @@ namespace tea\tests\syntax;
 
 use tea\tests\PHPDemoUnit\{ NS1\Demo as PHPClassDemo, function php_function_demo, const PHP_CONST_DEMO };
 
-require_once __DIR__ . '/__public.php';
+require_once dirname(__DIR__, 1) . '/__public.php';
+
+require_once UNIT_PATH . '_mixed2.php';
 
 #internal
 class TeaDemoClass {
@@ -47,7 +49,7 @@ var_dump($items);
 
 echo "\n***Test for include:", LF;
 $title = 'include from main1.tea';
-$result = (include UNIT_PATH . 'label-expect.php');
+$result = (include UNIT_PATH . 'dist/label-expect.php');
 var_dump($result);
 
 echo "\n***Test for int/uint convert:", LF;

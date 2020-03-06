@@ -9,6 +9,6 @@ class PHPClassInMixed1 {
 	}
 
 	function get_message(): string {
-		return "Hei, $caller";
+		return "Hei, $this->caller";
 	}
 }

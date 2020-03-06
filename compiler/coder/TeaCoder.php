@@ -124,8 +124,11 @@ class TeaCoder
 		if ($node instanceof BuiltinTypeClassDeclaration) {
 			$prefix = _SHARP . 'tea';
 		}
-		elseif ($node->label) {
-			$prefix = _SHARP . $node->label;
+		elseif ($node->label === _PHP) {
+			$prefix = _SHARP . _PHP;
+			if ($node->origin_name) {
+				$prefix .= " $node->origin_name as";
+			}
 		}
 		else {
 			$prefix = $node->modifier ?? _INTERNAL;
