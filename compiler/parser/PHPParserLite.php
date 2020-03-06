@@ -327,14 +327,14 @@ class PHPParserLite extends BaseParser
 			$doc && $type = $this->get_type_in_doc($doc, 'const');
 			if ($type === null) {
 				$this->pos = $temp_pos;
-				throw $this->new_parse_error("Constant required a type hint in it's doc.");
+				throw $this->new_parse_error("Constant required a type hint in it's docs.");
 			}
 		}
 
 		return $type;
 	}
 
-	private function get_type_in_doc(string $doc, string $kind)
+	private function get_type_in_doc(?string $doc, string $kind)
 	{
 		// /**
 		//  * @var int
@@ -410,8 +410,7 @@ class PHPParserLite extends BaseParser
 		else {
 			$type = $this->get_type_in_doc($doc, 'var');
 			if ($type === null) {
-				$this->pos = $temp_pos;
-				throw $this->new_parse_error("Const $name required a type hint '@var string/int/float/bool/...' in it's doc.");
+				throw $this->new_parse_error("Property '{$token[1]}' required a type hint '@var string/int/float/bool/...' in it's docs.");
 			}
 		}
 
@@ -541,8 +540,35 @@ class PHPParserLite extends BaseParser
 
 	private function read_classlike_identifier()
 	{
-		$name = $this->expect_identifier_token();
-		return new ClassLikeIdentifier($name);
+		// \NS1\NS2\Name
+		// NS1\NS2\Name
+
+		$names = [];
+
+		$token = $this->scan_token_ignore_empty();
+
+		if ($token[0] === T_NS_SEPARATOR) {
+			$names[] = _NOTHING;
+			$names[] = $this->expect_identifier_token();
+		}
+		else {
+			$this->assert_identifier_token($token);
+			$names[] = $token;
+		}
+
+		while (($next = $this->get_token()) && $next[0] === T_NS_SEPARATOR) {
+			$this->scan_token();
+			$names[] = $this->expect_identifier_token();
+		}
+
+		$name = array_pop($names);
+		$identifier = new ClassLikeIdentifier($name);
+
+		if ($names) {
+			$identifier->ns = new NamespaceIdentifier($names);
+		}
+
+		return $identifier;
 	}
 
 	private function read_type_identifier()

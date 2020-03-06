@@ -597,7 +597,7 @@ class TeaCoder
 	{
 		$name = $node->name;
 		if ($node->ns) {
-			return $this->render_plain_identifier($node->ns) . static::NS_SEPARATOR . $name;
+			return $this->render_namespace_identifier($node->ns) . static::NS_SEPARATOR . $name;
 		}
 
 		return $name;

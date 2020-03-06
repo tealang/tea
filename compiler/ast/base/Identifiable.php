@@ -128,7 +128,7 @@ class ClassLikeIdentifier extends PlainIdentifier
 		$this->name = $name;
 	}
 
-	public function set_namespace(PlainIdentifier $ns)
+	public function set_namespace(NamespaceIdentifier $ns)
 	{
 		$this->ns = $ns;
 	}
