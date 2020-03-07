@@ -345,7 +345,7 @@ class ASTChecker
 
 			if ($identifier->symbol->declaration instanceof IVariableDeclaration) {
 				if ($identifier->name === _THIS || $identifier->name === _SUPER) {
-					throw $this->new_syntax_error("'this' or 'super' cannot use in lambda functions.", $node);
+					throw $this->new_syntax_error("'{$identifier->name}' cannot use in lambda functions.", $node);
 				}
 
 				// for lambda use in php
@@ -2036,7 +2036,7 @@ class ASTChecker
 				throw $this->new_syntax_error("Cannot use $item as a callable.", $node);
 			}
 		}
-		elseif ($node instanceof ClassIdentifier) {
+		elseif ($node instanceof ClassLikeIdentifier) {
 			$declar = $this->require_classlike_declaration($node);
 		}
 		else {

@@ -1097,7 +1097,7 @@ class PHPCoder extends TeaCoder
 			$name = $this->get_normalized_name($declaration);
 		}
 
-		if (!$node->with_call_or_accessing) {
+		if (!$node->is_call_mode) {
 			if ($declaration instanceof FunctionBlock) {
 				$name = sprintf("'%s%s%s'", $declaration->program->unit->dist_ns_uri, static::NS_SEPARATOR, $name);
 			}

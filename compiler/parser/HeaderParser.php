@@ -147,9 +147,9 @@ class HeaderParser extends TeaParser
 	{
 		$parameters = $this->read_parameters_with_parentheses();
 		$return_type = $this->try_read_return_type_identifier();
-		$callbacks = $this->try_read_callback_protocols();
+		// $callbacks = $this->try_read_callback_protocols();
 
-		$declaration = $this->factory->declare_method($modifier, $name, $return_type, $parameters, $callbacks);
+		$declaration = $this->factory->declare_method($modifier, $name, $return_type, $parameters);
 		$declaration->is_static = $static;
 
 		return $declaration;

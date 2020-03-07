@@ -23,7 +23,7 @@ class CallExpression extends Node implements IExpression
 
 	public function __construct(ICallee $callee, array $arguments)
 	{
-		$callee->with_call_or_accessing = true;
+		$callee->is_call_mode = true;
 
 		$this->callee = $callee;
 		$this->arguments = $arguments;

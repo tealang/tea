@@ -127,12 +127,12 @@ class PHPParserLite extends BaseParser
 
 	private function read_interface_declaration()
 	{
-		$name = $this->expect_identifier_token();
+		$name = $this->expect_identifier_name();
 
 		$declaration = $this->factory->create_interface_declaration($name, _PUBLIC);
 		$declaration->ns = $this->namespace;
 		if ($this->skip_typed_token(T_EXTENDS)) {
-			$declaration->baseds = $this->expect_identifier_token();
+			$declaration->baseds = $this->expect_identifier_name();
 		}
 
 		$this->expect_block_begin();
@@ -147,7 +147,7 @@ class PHPParserLite extends BaseParser
 
 	private function read_class_declaration(bool $is_abstract = false)
 	{
-		$name = $this->expect_identifier_token();
+		$name = $this->expect_identifier_name();
 
 
 		$declaration = $this->factory->create_class_declaration($name, _PUBLIC);
@@ -297,7 +297,7 @@ class PHPParserLite extends BaseParser
 
 	private function read_constant_declaration(?string $doc)
 	{
-		$name = $this->expect_identifier_token();
+		$name = $this->expect_identifier_name();
 		$this->expect_char_token(_ASSIGN);
 		$type = $this->read_constant_value_type_skip($doc);
 		$this->expect_statement_end();
@@ -310,7 +310,7 @@ class PHPParserLite extends BaseParser
 
 	private function read_class_constant_declaration(?string $modifier, ?string $doc)
 	{
-		$name = $this->expect_identifier_token();
+		$name = $this->expect_identifier_name();
 		$this->expect_char_token(_ASSIGN);
 		$type = $this->read_constant_value_type_skip($doc);
 		$this->expect_statement_end();
@@ -428,7 +428,7 @@ class PHPParserLite extends BaseParser
 
 	private function read_method_declaration(string $modifier = null, ?string $doc, bool $is_interface = false)
 	{
-		$name = $this->expect_identifier_token();
+		$name = $this->expect_identifier_name();
 		$parameters = $this->read_parameters();
 		$type = $this->try_read_function_return_type();
 
@@ -450,7 +450,7 @@ class PHPParserLite extends BaseParser
 
 	private function read_function_declaration(?string $doc)
 	{
-		$name = $this->expect_identifier_token();
+		$name = $this->expect_identifier_name();
 		$parameters = $this->read_parameters();
 		$type = $this->try_read_function_return_type();
 
@@ -549,16 +549,16 @@ class PHPParserLite extends BaseParser
 
 		if ($token[0] === T_NS_SEPARATOR) {
 			$names[] = _NOTHING;
-			$names[] = $this->expect_identifier_token();
+			$names[] = $this->expect_identifier_name();
 		}
 		else {
 			$this->assert_identifier_token($token);
-			$names[] = $token;
+			$names[] = $token[1];
 		}
 
 		while (($next = $this->get_token()) && $next[0] === T_NS_SEPARATOR) {
 			$this->scan_token();
-			$names[] = $this->expect_identifier_token();
+			$names[] = $this->expect_identifier_name();
 		}
 
 		$name = array_pop($names);
@@ -573,7 +573,7 @@ class PHPParserLite extends BaseParser
 
 	private function read_type_identifier()
 	{
-		$name = $this->expect_identifier_token();
+		$name = $this->expect_identifier_name();
 		return $this->create_type_identifier($name);
 	}
 
@@ -593,14 +593,14 @@ class PHPParserLite extends BaseParser
 
 	private function read_namespace()
 	{
-		$names[] = $this->expect_identifier_token();
+		$names[] = $this->expect_identifier_name();
 
 		while ($next = $this->scan_token()) {
 			if ($next === _SEMICOLON) {
 				break;
 			}
 			elseif ($next[0] === T_NS_SEPARATOR) {
-				$names[] = $this->expect_identifier_token();
+				$names[] = $this->expect_identifier_name();
 			}
 			else {
 				throw $this->new_unexpected_error();
@@ -642,10 +642,10 @@ class PHPParserLite extends BaseParser
 			throw $this->new_unexpected_error();
 		}
 
-		return $token[1];
+		return $token;
 	}
 
-	private function expect_identifier_token()
+	private function expect_identifier_name()
 	{
 		$token = $this->scan_token_ignore_empty();
 		$this->assert_identifier_token($token);

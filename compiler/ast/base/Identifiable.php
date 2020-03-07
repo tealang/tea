@@ -17,10 +17,10 @@ abstract class Identifiable extends Node implements IExpression, ICallee, IAssig
 
 	/**
 	 * is has any operation like accessing or call
-	 * used for render target code
+	 * use for render the dist code
 	 * @var bool
 	 */
-	public $with_call_or_accessing;
+	public $is_call_mode;
 
 	public function __construct(string $name)
 	{
@@ -53,7 +53,7 @@ class AccessingIdentifier extends Identifiable
 
 	public function __construct(IExpression $master, string $name)
 	{
-		$master->with_call_or_accessing = true;
+		$master->is_call_mode = true;
 
 		$this->master = $master;
 		$this->name = $name;
@@ -71,12 +71,12 @@ class PlainIdentifier extends Identifiable
 		return $identifier;
 	}
 
-	public function to_class_identifier()
-	{
-		$identifier = new ClassIdentifier($this->name);
-		$identifier->symbol = $this->symbol;
-		return $identifier;
-	}
+	// public function to_class_identifier()
+	// {
+	// 	$identifier = new ClassIdentifier($this->name);
+	// 	$identifier->symbol = $this->symbol;
+	// 	return $identifier;
+	// }
 
 	public function is_based_with(IType $type)
 	{
@@ -134,10 +134,10 @@ class ClassLikeIdentifier extends PlainIdentifier
 	}
 }
 
-class ClassIdentifier extends ClassLikeIdentifier
-{
-	const KIND = 'class_identifier';
-}
+// class ClassIdentifier extends ClassLikeIdentifier
+// {
+// 	const KIND = 'class_identifier';
+// }
 
 // class UriIdentifier extends Identifiable
 // {

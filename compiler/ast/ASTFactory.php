@@ -427,7 +427,7 @@ class ASTFactory
 		$symbol = $this->create_global_symbol($declaration);
 
 		// create 'this' symbol
-		$class_identifier = new ClassIdentifier($declaration->name); // as a Type for this
+		$class_identifier = new ClassLikeIdentifier($declaration->name); // as a Type for this
 		$class_identifier->symbol = $symbol;
 		// $declaration->symbols[_THIS] = ASTHelper::create_symbol_this($class_identifier);
 
@@ -440,7 +440,7 @@ class ASTFactory
 		return $symbol;
 	}
 
-	public function create_masked_method_block(string $name, ?IType $type, ?array $parameters, ?array $callbacks)
+	public function create_masked_method_block(string $name, ?IType $type, ?array $parameters, array $callbacks = null)
 	{
 		$declaration = new MaskedDeclaration(_PUBLIC, $name, $type, $parameters);
 		$this->append_class_member($declaration);

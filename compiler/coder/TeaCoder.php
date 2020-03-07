@@ -603,10 +603,10 @@ class TeaCoder
 		return $name;
 	}
 
-	public function render_class_identifier(ClassIdentifier $node)
-	{
-		return $this->render_classlike_identifier($node);
-	}
+	// public function render_class_identifier(ClassIdentifier $node)
+	// {
+	// 	return $this->render_classlike_identifier($node);
+	// }
 
 	public function render_namespace_identifier(NamespaceIdentifier $node)
 	{

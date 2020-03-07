@@ -204,9 +204,9 @@ class TeaParser extends BaseParser
 
 		$parameters = $this->read_parameters_with_parentheses();
 		$return_type = $this->try_read_return_type_identifier();
-		$callbacks = $this->try_read_callback_protocols();
+		// $callbacks = $this->try_read_callback_protocols();
 
-		$declaration = $this->factory->declare_function($modifier, $name, $return_type, $parameters, $callbacks);
+		$declaration = $this->factory->declare_function($modifier, $name, $return_type, $parameters);
 		$declaration->pos = $this->pos;
 
 		$this->factory->end_block();
@@ -220,9 +220,9 @@ class TeaParser extends BaseParser
 
 		$parameters = $this->read_parameters_with_parentheses();
 		$return_type = $this->try_read_return_type_identifier();
-		$callbacks = $this->try_read_callback_protocols();
+		// $callbacks = $this->try_read_callback_protocols();
 
-		$declaration = $this->factory->create_function_block($modifier, $name, $return_type, $parameters, $callbacks);
+		$declaration = $this->factory->create_function_block($modifier, $name, $return_type, $parameters);
 		$declaration->pos = $this->pos;
 
 		$this->read_function_body($declaration);
@@ -333,11 +333,11 @@ class TeaParser extends BaseParser
 			: null;
 
 		$return_type = $this->try_read_return_type_identifier();
-		$callbacks = $this->try_read_callback_protocols();
+		// $callbacks = $this->try_read_callback_protocols();
 
 		$this->expect_token_ignore_empty(_ARROW);
 
-		$masked = $this->factory->create_masked_method_block($name, $return_type, $parameters, $callbacks);
+		$masked = $this->factory->create_masked_method_block($name, $return_type, $parameters);
 		$masked->set_body_with_expression($this->read_expression());
 
 		return $masked;
@@ -1972,16 +1972,16 @@ class TeaParser extends BaseParser
 	{
 		$parameters = $this->read_parameters_with_parentheses();
 		$return_type = $this->try_read_return_type_identifier();
-		$callbacks = $this->try_read_callback_protocols();
+		// $callbacks = $this->try_read_callback_protocols();
 
 		$next = $this->get_token_ignore_empty();
 		if ($next === _BLOCK_BEGIN) {
-			$declaration = $this->factory->create_method_block($modifier, $name, $return_type, $parameters, $callbacks);
+			$declaration = $this->factory->create_method_block($modifier, $name, $return_type, $parameters);
 			$declaration->is_static = $static;
 			$this->read_function_body($declaration);
 		}
 		elseif ($this->is_declare_mode) {
-			$declaration = $this->factory->declare_method($modifier, $name, $return_type, $parameters, $callbacks);
+			$declaration = $this->factory->declare_method($modifier, $name, $return_type, $parameters);
 			$declaration->is_static = $static;
 		}
 		else {
@@ -1991,24 +1991,22 @@ class TeaParser extends BaseParser
 		return $declaration;
 	}
 
-	protected function try_read_callback_protocols()
-	{
-		return null;
+	// protected function try_read_callback_protocols()
+	// {
+	// 	if (!$this->skip_token_ignore_empty(_NOTIFY)) {
+	// 		return null;
+	// 	}
 
-		if (!$this->skip_token_ignore_empty(_NOTIFY)) {
-			return null;
-		}
+	// 	$items = [];
+	// 	while ($item = $this->read_callback_protocol()) {
+	// 		$items[] = $item;
+	// 		if (!$this->skip_token_ignore_empty(_NOTIFY)) {
+	// 			break;
+	// 		}
+	// 	}
 
-		$items = [];
-		while ($item = $this->read_callback_protocol()) {
-			$items[] = $item;
-			if (!$this->skip_token_ignore_empty(_NOTIFY)) {
-				break;
-			}
-		}
-
-		return $items;
-	}
+	// 	return $items;
+	// }
 
 	protected function read_callback_protocol()
 	{
