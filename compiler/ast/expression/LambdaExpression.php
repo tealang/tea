@@ -20,7 +20,7 @@ class LambdaExpression extends BaseBlock implements IEnclosingBlock, ICallableDe
 	 */
 	public $use_variables = [];
 
-	public function __construct(?IType $type, ParameterDeclaration ...$parameters)
+	public function __construct(IType $type = null, array $parameters = null)
 	{
 		$this->type = $type;
 		$this->parameters = $parameters;

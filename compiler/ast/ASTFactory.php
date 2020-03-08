@@ -26,6 +26,8 @@ class ASTFactory
 
 	private $program;
 
+	private $declaration;
+
 	private $class;
 
 	private $function;
@@ -274,62 +276,6 @@ class ASTFactory
 		$identifier->symbol = $this->create_local_symbol($declaration);
 	}
 
-	public function create_super_variable_declaration(string $name, ?IType $type)
-	{
-		$declaration = new SuperVariableDeclaration($name, $type, null, true);
-		$this->create_global_symbol($declaration);
-
-		return $declaration;
-	}
-
-	public function create_variable_declaration(string $name, ?IType $type, IExpression $value = null)
-	{
-		$declaration = new VariableDeclaration($name, $type, $value, true);
-		$this->create_local_symbol($declaration);
-
-		return $declaration;
-	}
-
-	public function create_constant_declaration(string $modifier, string $name, ?BaseType $type, ?IExpression $value)
-	{
-		$this->check_global_modifier($modifier, 'non class member constant');
-
-		$declaration = new ConstantDeclaration($modifier, $name, $type, $value);
-		$symbol = $this->create_global_symbol($declaration);
-		// $this->add_enclosing_symbol($symbol);
-
-		return $declaration;
-	}
-
-	public function create_class_constant_declaration(?string $modifier, string $name, ?BaseType $type, ?IExpression $value)
-	{
-		$declaration = new ClassConstantDeclaration($modifier, $name, $type, $value);
-		$this->append_class_member($declaration);
-
-		return $declaration;
-	}
-
-	public function create_property_declaration(?string $modifier, string $name, ?IType $type, ?IExpression $value)
-	{
-		$declaration = new PropertyDeclaration($modifier, $name, $type, $value);
-		$this->append_class_member($declaration);
-
-		return $declaration;
-	}
-
-	private function append_class_member(IClassMemberDeclaration $declaration)
-	{
-		$name = $declaration->name;
-
-		if (!$this->class->append_member($declaration)) {
-			throw $this->parser->new_parse_error("Class member '{$name}' of '{$this->class->name}' has duplicated.");
-		}
-
-		$declaration->super_block = $this->class;
-
-		$declaration->symbol = new Symbol($declaration);
-	}
-
 // ---
 
 	public function create_program(string $file, BaseParser $parser)
@@ -350,7 +296,7 @@ class ASTFactory
 		$this->program = $program;
 		$this->unit->programs[$program->name] = $program;
 
-		$this->set_to_main_function();
+		$this->set_main_function();
 
 		return $program;
 	}
@@ -385,7 +331,8 @@ class ASTFactory
 		}
 
 		$declaration = new BuiltinTypeClassDeclaration(_PUBLIC, $name);
-		$symbol = $this->process_classlike_declaration_and_create_symbol($declaration);
+		$this->begin_class($declaration);
+		$symbol = $this->create_class_symbol($declaration);
 
 		// bind to type
 		$type_identifier->symbol = $symbol;
@@ -401,7 +348,8 @@ class ASTFactory
 		$this->check_global_modifier($modifier, 'class');
 
 		$declaration = new ClassDeclaration($modifier, $name);
-		$this->process_classlike_declaration_and_create_symbol($declaration);
+		$this->begin_class($declaration);
+		$this->create_class_symbol($declaration);
 
 		return $declaration;
 	}
@@ -411,19 +359,15 @@ class ASTFactory
 		$this->check_global_modifier($modifier, 'interface');
 
 		$declaration = new InterfaceDeclaration($modifier, $name);
-		$this->process_classlike_declaration_and_create_symbol($declaration);
+		$this->begin_class($declaration);
+		$this->create_class_symbol($declaration);
 
 		return $declaration;
 	}
 
-	public function process_classlike_declaration_and_create_symbol(ClassLikeDeclaration $declaration)
+	public function create_class_symbol(ClassLikeDeclaration $declaration)
 	{
-		$declaration->program = $this->program;
-		$declaration->unit = $this->unit;
-
-		$this->class = $this->block = $declaration;
-		$this->function = $this->enclosing = null;
-
+		// create symbol
 		$symbol = $this->create_global_symbol($declaration);
 
 		// create 'this' symbol
@@ -440,12 +384,23 @@ class ASTFactory
 		return $symbol;
 	}
 
-	public function create_masked_declaration(string $name, ?IType $type, ?array $parameters)
+	public function set_enclosing_parameters(array $parameters)
 	{
-		$declaration = new MaskedDeclaration(_PUBLIC, $name, $type, $parameters);
-		$this->append_class_member($declaration);
+		foreach ($parameters as $parameter) {
+			$symbol = new Symbol($parameter);
+			$this->add_enclosing_symbol($symbol);
+		}
 
-		$this->init_enclosing($declaration);
+		$this->enclosing->parameters = $parameters;
+	}
+
+	public function create_masked_declaration(string $name)
+	{
+		$declaration = new MaskedDeclaration(_PUBLIC, $name);
+		$this->begin_class_member($declaration);
+
+		$this->declaration = $declaration;
+		$this->enclosing = $declaration;
 		$this->function = $declaration;
 		$this->block = $declaration;
 
@@ -463,29 +418,21 @@ class ASTFactory
 	// 	return $declaration;
 	// }
 
-	public function create_method_declaration(?string $modifier, string $name, ?IType $type, array $parameters)
+	public function create_method_declaration(?string $modifier, string $name)
 	{
-		$declaration = new FunctionDeclaration($modifier, $name, $type, $parameters);
-		$this->append_class_member($declaration);
-
-		$this->enter_block($declaration);
-		$this->init_enclosing($declaration);
-		$this->function = $declaration;
+		$declaration = new FunctionDeclaration($modifier, $name);
+		$this->begin_class_member($declaration);
 
 		return $declaration;
 	}
 
-	public function create_function_declaration(string $modifier, string $name, ?IType $type, array $parameters)
+	public function create_function_declaration(string $modifier, string $name)
 	{
 		$this->check_global_modifier($modifier, 'function');
 
-		$declaration = new FunctionDeclaration($modifier, $name, $type, $parameters);
+		$declaration = new FunctionDeclaration($modifier, $name);
 
-		$this->function = $declaration;
-		$this->init_enclosing($declaration);
-		$this->block = $declaration;
-		// do not need enter_block() here
-
+		$this->begin_root_declaration($declaration);
 		$this->create_global_symbol($declaration);
 
 		return $declaration;
@@ -504,12 +451,60 @@ class ASTFactory
 	// 	return $declaration;
 	// }
 
-	public function create_lambda_expression(?IType $type, array $parameters)
+	public function create_property_declaration(?string $modifier, string $name)
 	{
-		$block = new LambdaExpression($type, ...$parameters);
+		$declaration = new PropertyDeclaration($modifier, $name);
+		$this->begin_class_member($declaration);
 
-		$this->init_enclosing($block);
-		$this->enter_block($block);
+		return $declaration;
+	}
+
+	public function create_class_constant_declaration(?string $modifier, string $name)
+	{
+		$declaration = new ClassConstantDeclaration($modifier, $name);
+		$this->begin_class_member($declaration);
+
+		return $declaration;
+	}
+
+	public function create_constant_declaration(string $modifier, string $name)
+	{
+		$this->check_global_modifier($modifier, 'non class member constant');
+
+		$declaration = new ConstantDeclaration($modifier, $name);
+
+		$this->begin_root_declaration($declaration);
+		$symbol = $this->create_global_symbol($declaration);
+		// $this->add_enclosing_symbol($symbol);
+
+		return $declaration;
+	}
+
+	public function create_super_variable_declaration(string $name, IType $type = null)
+	{
+		$declaration = new SuperVariableDeclaration($name, $type, null, true);
+
+		$this->begin_root_declaration($declaration);
+		$this->create_global_symbol($declaration);
+
+		return $declaration;
+	}
+
+	public function create_variable_declaration(string $name, IType $type = null, IExpression $value = null)
+	{
+		$declaration = new VariableDeclaration($name, $type, $value, true);
+		$this->create_local_symbol($declaration);
+
+		return $declaration;
+	}
+
+	public function create_lambda_expression(IType $type = null, array $parameters)
+	{
+		$block = new LambdaExpression($type, $parameters);
+
+		$this->enclosing = $block;
+		$this->begin_block($block);
+		$this->set_enclosing_parameters($parameters);
 
 		return $block;
 	}
@@ -517,28 +512,28 @@ class ASTFactory
 	public function create_if_block(IExpression $test)
 	{
 		$block = new IfBlock($test);
-		$this->enter_block($block);
+		$this->begin_block($block);
 		return $block;
 	}
 
 	public function create_elseif_block(IExpression $test)
 	{
 		$block = new ElseIfBlock($test);
-		$this->enter_block($block);
+		$this->begin_block($block);
 		return $block;
 	}
 
 	public function create_else_block()
 	{
 		$block = new ElseBlock();
-		$this->enter_block($block);
+		$this->begin_block($block);
 		return $block;
 	}
 
 	public function create_try_block()
 	{
 		$block = new TryBlock();
-		$this->enter_block($block);
+		$this->begin_block($block);
 		return $block;
 	}
 
@@ -549,28 +544,28 @@ class ASTFactory
 		$block = new CatchBlock($var_declaration);
 		$block->symbols[$var_name] = new Symbol($var_declaration);
 
-		$this->enter_block($block);
+		$this->begin_block($block);
 		return $block;
 	}
 
 	public function create_finally_block()
 	{
 		$block = new FinallyBlock();
-		$this->enter_block($block);
+		$this->begin_block($block);
 		return $block;
 	}
 
 	public function create_when_block(IExpression $argument)
 	{
 		$block = new WhenBlock($argument);
-		$this->enter_block($block);
+		$this->begin_block($block);
 		return $block;
 	}
 
 	public function create_when_branch_block(IExpression $rule)
 	{
 		$block = new WhenBranch($rule);
-		$this->enter_block($block);
+		$this->begin_block($block);
 		return $block;
 	}
 
@@ -613,6 +608,7 @@ class ASTFactory
 	public function create_forin_block(IExpression $iterable, ?VariableIdentifier $key_var, VariableIdentifier $value_var)
 	{
 		$block = new ForInBlock($iterable, $key_var, $value_var);
+		$this->begin_block($block);
 
 		if ($key_var) {
 			$key_declaration = new VariableDeclaration($key_var->name, TypeFactory::$_string);
@@ -622,74 +618,129 @@ class ASTFactory
 		$value_declaration = new VariableDeclaration($value_var->name, TypeFactory::$_any);
 		$block->symbols[$value_var->name] = $value_var->symbol = new Symbol($value_declaration);
 
-		$this->enter_block($block);
 		return $block;
 	}
 
 	public function create_forto_block(VariableIdentifier $value_var, IExpression $start, IExpression $end, ?int $step)
 	{
 		$block = new ForToBlock($value_var, $start, $end, $step);
+		$this->begin_block($block);
 
 		$value_declaration = new VariableDeclaration($value_var->name, TypeFactory::$_any);
 		$block->symbols[$value_var->name] = $value_var->symbol = new Symbol($value_declaration);
 
-		$this->enter_block($block);
 		return $block;
 	}
 
 	public function create_while_block($condition)
 	{
 		$block = new WhileBlock($condition);
-		$this->enter_block($block);
+		$this->begin_block($block);
 		return $block;
 	}
 
 	public function create_loop_block()
 	{
 		$block = new LoopBlock();
-		$this->enter_block($block);
+		$this->begin_block($block);
 		return $block;
 	}
 
-	private function enter_block(BaseBlock $block)
+// --------
+
+	public function end_program()
+	{
+		$this->program->append_defer_check_identifiers($this->function);
+		$this->program = null;
+		$this->declaration = null;
+		$this->block = $this->function = $this->enclosing = null;
+	}
+
+	public function begin_class(ClassLikeDeclaration $declaration)
+	{
+		$this->class = $declaration;
+		$this->declaration = $declaration;
+		$this->block = $this->function = $this->enclosing = null;
+	}
+
+	public function end_class()
+	{
+		$this->program->append_defer_check_identifiers($this->declaration);
+		$this->class = null;
+		$this->set_main_function();
+	}
+
+	public function begin_class_member(IClassMemberDeclaration $declaration)
+	{
+		$declaration->symbol = new Symbol($declaration);
+		if (!$this->class->append_member($declaration)) {
+			throw $this->parser->new_parse_error("Class member '{$declaration->name}' of '{$this->class->name}' has duplicated.");
+		}
+
+		if ($declaration instanceof FunctionDeclaration) {
+			$this->block = $declaration;
+			$this->enclosing = $declaration;
+			$this->function = $declaration;
+		}
+
+		$declaration->super_block = $this->class;
+		$this->declaration = $declaration;
+	}
+
+	public function end_class_member()
+	{
+		$this->program->append_defer_check_identifiers($this->declaration);
+		$this->declaration = $this->class;
+		$this->enclosing = null;
+		$this->function = null;
+	}
+
+	public function begin_root_declaration(IRootDeclaration $declaration)
+	{
+		$this->declaration = $declaration;
+
+		if ($declaration instanceof FunctionDeclaration) {
+			$this->block = $declaration;
+			$this->enclosing = $declaration;
+			$this->function = $declaration;
+		}
+	}
+
+	public function end_root_declaration()
+	{
+		$this->program->append_defer_check_identifiers($this->declaration);
+		$this->set_main_function();
+	}
+
+	public function begin_block(BaseBlock $block)
 	{
 		$block->super_block = $this->block;
 		$this->block = $block;
-	}
-
-	private function set_to_main_function()
-	{
-		$this->function = $this->enclosing = $this->block = $this->program->main_function;
 	}
 
 	public function end_block()
 	{
 		$block = $this->block;
 
-		if ($block instanceof FunctionDeclaration) {
-			$this->program->append_defer_check_for_block($block);
-		}
-
 		if ($block->super_block) {
 			$this->block = $block->super_block;
 			if ($block instanceof LambdaExpression) {
-				$this->enclosing = $this->get_enclosing($block);
+				$this->enclosing = $this->find_super_enclosing($block);
 			}
 		}
 		else {
-			$this->set_to_main_function();
+			$this->set_main_function();
 		}
 
 		return $block;
 	}
 
-	public function end_class()
+	private function set_main_function()
 	{
-		$this->class = null;
-		$this->set_to_main_function();
+		$this->function = $this->enclosing = $this->block = $this->program->main_function;
 	}
 
-	private static function get_enclosing(BaseBlock $block)
+	private static function find_super_enclosing(BaseBlock $block)
 	{
 		$block= $block->super_block;
 		if (!$block || $block instanceof IEnclosingBlock) {
@@ -700,7 +751,7 @@ class ASTFactory
 			return null;
 		}
 
-		return self::get_enclosing($block);
+		return self::find_super_enclosing($block);
 	}
 
 	const GLOBAL_MODIFIERS = [_PUBLIC, _INTERNAL];
@@ -774,25 +825,6 @@ class ASTFactory
 		return null;
 	}
 
-	private function init_enclosing($block)
-	{
-		$this->enclosing = $block;
-
-		if ($block->parameters) {
-			foreach ($block->parameters as $parameter) {
-				$symbol = new Symbol($parameter);
-				$this->add_enclosing_symbol($symbol);
-			}
-		}
-
-		// if (!empty($block->callbacks)) {
-		// 	foreach ($block->callbacks as $parameter) {
-		// 		$symbol = new Symbol($parameter);
-		// 		$this->add_enclosing_symbol($symbol);
-		// 	}
-		// }
-	}
-
 	// create symbol, and add to current block
 	private function create_local_symbol(IDeclaration $declaration)
 	{
@@ -839,56 +871,56 @@ class ASTFactory
 		return $symbol;
 	}
 
-	private function create_global_symbol_with_namepath(array $namepath, IDeclaration $declaration)
-	{
-		$declaration->program = $this->program;
-		$symbol = new Symbol($declaration);
+	// private function create_global_symbol_with_namepath(array $namepath, IDeclaration $declaration)
+	// {
+	// 	$declaration->program = $this->program;
+	// 	$symbol = new Symbol($declaration);
 
-		$ns_name = array_shift($namepath);
-		$ns_symbol = $this->unit->symbols[$ns_name] ?? null;
+	// 	$ns_name = array_shift($namepath);
+	// 	$ns_symbol = $this->unit->symbols[$ns_name] ?? null;
 
-		if ($ns_symbol) {
-			// maybe already used as a class
-			if (!$ns_symbol instanceof NamespaceSymbol) {
-				throw $this->parser->new_parse_error("'$ns_name' is already in use, cannot reuse to declare {$declaration->name}.");
-			}
-		}
-		else {
-			$ns_symbol = $this->create_symbol_for_ns($ns_name);
-			$this->add_unit_symbol($ns_symbol);
-		}
+	// 	if ($ns_symbol) {
+	// 		// maybe already used as a class
+	// 		if (!$ns_symbol instanceof NamespaceSymbol) {
+	// 			throw $this->parser->new_parse_error("'$ns_name' is already in use, cannot reuse to declare {$declaration->name}.");
+	// 		}
+	// 	}
+	// 	else {
+	// 		$ns_symbol = $this->create_symbol_for_ns($ns_name);
+	// 		$this->add_unit_symbol($ns_symbol);
+	// 	}
 
-		foreach ($namepath as $sub_ns_name) {
-			$ns_symbol = $this->find_or_create_subsymbol_for_ns($ns_symbol, $sub_ns_name);
-		}
+	// 	foreach ($namepath as $sub_ns_name) {
+	// 		$ns_symbol = $this->find_or_create_subsymbol_for_ns($ns_symbol, $sub_ns_name);
+	// 	}
 
-		// add as a sub-symbol for check
-		$ns_symbol->declaration->symbols[$symbol->name] = $symbol;
+	// 	// add as a sub-symbol for check
+	// 	$ns_symbol->declaration->symbols[$symbol->name] = $symbol;
 
-		return $symbol;
-	}
+	// 	return $symbol;
+	// }
 
-	private function create_symbol_for_ns(string $ns_name)
-	{
-		$declaration = new NamespaceDeclaration($ns_name);
-		return new NamespaceSymbol($declaration);
-	}
+	// private function create_symbol_for_ns(string $ns_name)
+	// {
+	// 	$declaration = new NamespaceDeclaration($ns_name);
+	// 	return new NamespaceSymbol($declaration);
+	// }
 
-	private function find_or_create_subsymbol_for_ns(NamespaceSymbol $super_symbol, string $sub_ns_name)
-	{
-		$sub_ns_symbol = $super_symbol->declaration->symbols[$sub_ns_name] ?? null;
-		if ($sub_ns_symbol) {
-			if (!$sub_ns_symbol instanceof NamespaceSymbol) {
-				throw $this->parser->new_parse_error("'$sub_ns_name' is already in use, cannot reuse to declare a namespace.");
-			}
-		}
-		else {
-			$sub_ns_symbol = $this->create_symbol_for_ns($sub_ns_name);
-			$super_symbol->declaration->symbols[$sub_ns_name] = $sub_ns_symbol;
-		}
+	// private function find_or_create_subsymbol_for_ns(NamespaceSymbol $super_symbol, string $sub_ns_name)
+	// {
+	// 	$sub_ns_symbol = $super_symbol->declaration->symbols[$sub_ns_name] ?? null;
+	// 	if ($sub_ns_symbol) {
+	// 		if (!$sub_ns_symbol instanceof NamespaceSymbol) {
+	// 			throw $this->parser->new_parse_error("'$sub_ns_name' is already in use, cannot reuse to declare a namespace.");
+	// 		}
+	// 	}
+	// 	else {
+	// 		$sub_ns_symbol = $this->create_symbol_for_ns($sub_ns_name);
+	// 		$super_symbol->declaration->symbols[$sub_ns_name] = $sub_ns_symbol;
+	// 	}
 
-		return $sub_ns_symbol;
-	}
+	// 	return $sub_ns_symbol;
+	// }
 
 	private function add_unit_symbol(Symbol $symbol)
 	{

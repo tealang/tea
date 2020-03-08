@@ -69,12 +69,12 @@ class HeaderParser extends TeaParser
 		elseif (TeaHelper::is_strict_less_function_name($name)) {
 			// function
 			$this->assert_not_reserveds_word($name);
-			return $this->read_function_declaration($name, $modifier);
+			return $this->read_function_declaration($name, $modifier, true);
 		}
-		elseif (TeaHelper::is_constant_name($name) && ($type = $this->try_read_type_identifier()) ) {
-			// constant
-			$this->assert_not_reserveds_word($name);
-			return $this->factory->create_constant_declaration($modifier, $name, $type, null);
+		elseif (TeaHelper::is_constant_name($name)) {
+			if ($next !== _BLOCK_BEGIN && $next !== _COLON && $next !== _AS) {
+				return $this->read_constant_declaration_without_value($name, $modifier);
+			}
 		}
 
 		// the alias feature
@@ -128,29 +128,30 @@ class HeaderParser extends TeaParser
 
 	protected function read_class_constant_declaration(string $name, ?string $modifier)
 	{
-		$type = $this->try_read_type_identifier();
+		$declaration = $this->factory->create_class_constant_declaration($modifier, $name);
+
+		$declaration->type = $this->try_read_type_identifier();
 
 		if ($this->skip_token_ignore_space(_ASSIGN)) {
-			$value = $this->read_literal_expression();
+			$declaration->value = $this->read_literal_expression();
 		}
-		elseif (!$type) {
+		elseif (!$declaration->type) {
 			throw $this->new_parse_error('Expected type or value assign expression for define constant.');
 		}
-		else {
-			$value = null;
-		}
 
-		return $this->factory->create_class_constant_declaration($modifier, $name, $type, $value);
+		return $declaration;
 	}
 
 	protected function read_method_declaration(string $name, ?string $modifier, bool $static)
 	{
-		$parameters = $this->read_parameters_with_parentheses();
-		$return_type = $this->try_read_return_type_identifier();
-		// $callbacks = $this->try_read_callback_protocols();
-
-		$declaration = $this->factory->create_method_declaration($modifier, $name, $return_type, $parameters);
+		$declaration = $this->factory->create_method_declaration($modifier, $name);
+		$declaration->pos = $this->pos;
 		$declaration->is_static = $static;
+
+		$parameters = $this->read_parameters_with_parentheses();
+		$this->factory->set_enclosing_parameters($parameters);
+
+		$declaration->type = $this->try_read_return_type_identifier();
 
 		return $declaration;
 	}

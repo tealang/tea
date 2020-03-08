@@ -33,8 +33,7 @@ class TeaParser extends BaseParser
 			}
 		}
 
-		// end the main function
-		$this->factory->end_block();
+		$this->factory->end_program();
 
 		// set statements to main function when has any onload executings
 		if ($this->root_statements) {
@@ -180,7 +179,7 @@ class TeaParser extends BaseParser
 		$this->assert_not_reserveds_word($token);
 
 		if (TeaHelper::is_function_name($token)) {
-			return $this->read_function_definition($token, $modifier);
+			return $this->read_function_declaration($token, $modifier);
 		}
 
 		if (TeaHelper::is_classlike_name($token)) {
@@ -198,44 +197,35 @@ class TeaParser extends BaseParser
 		throw $this->new_unexpected_error();
 	}
 
-	protected function read_function_declaration(string $name, ?string $modifier)
+	protected function read_function_declaration(string $name, ?string $modifier, bool $declare_mode = false)
 	{
-		// func1(arg0 String, arg1 Int = 0) // no body
+		// func1(arg0 String, arg1 Int = 0) // declare mode has no body
+		// func1(arg0 String, arg1 Int = 0) { ... } // normal mode required body
 
-		$parameters = $this->read_parameters_with_parentheses();
-		$return_type = $this->try_read_return_type_identifier();
-		// $callbacks = $this->try_read_callback_protocols();
-
-		$declaration = $this->factory->create_function_declaration($modifier, $name, $return_type, $parameters);
+		$declaration = $this->factory->create_function_declaration($modifier, $name);
 		$declaration->pos = $this->pos;
 
+		$parameters = $this->read_parameters_with_parentheses();
+		$this->factory->set_enclosing_parameters($parameters);
+
+		$declaration->type = $this->try_read_return_type_identifier();
+
+		if (!$declare_mode) {
+			$this->read_body_statements($declaration);
+		}
+
+		$this->factory->end_root_declaration();
+
+		return $declaration;
+	}
+
+	protected function read_block_body(BaseBlock $block)
+	{
+		$this->read_body_statements($block);
 		$this->factory->end_block();
-
-		return $declaration;
 	}
 
-	protected function read_function_definition(string $name, ?string $modifier)
-	{
-		// func1(arg0 String, arg1 Int = 0) { ... }
-
-		$parameters = $this->read_parameters_with_parentheses();
-		$return_type = $this->try_read_return_type_identifier();
-		// $callbacks = $this->try_read_callback_protocols();
-
-		$declaration = $this->factory->create_function_declaration($modifier, $name, $return_type, $parameters);
-		$declaration->pos = $this->pos;
-
-		$this->read_function_body($declaration);
-
-		return $declaration;
-	}
-
-	protected function read_function_body(FunctionDeclaration $function)
-	{
-		$this->read_statements_for_block($function);
-	}
-
-	protected function read_statements_for_block(BaseBlock $block)
+	protected function read_body_statements(BaseBlock $block)
 	{
 		$this->expect_block_begin();
 
@@ -245,7 +235,6 @@ class TeaParser extends BaseParser
 		}
 
 		$this->expect_block_end();
-		$this->factory->end_block();
 
 		$block->set_body_with_statements(...$items);
 	}
@@ -256,11 +245,36 @@ class TeaParser extends BaseParser
 			throw $this->new_parse_error("Please define the constants at header of the program.");
 		}
 
-		$type = $this->try_read_type_identifier();
-		$this->expect_token_ignore_space(_ASSIGN);
-		$value = $this->read_expression();
+		$declaration = $this->read_constant_declaration_header($name, $modifier);
 
-		return $this->factory->create_constant_declaration($modifier, $name, $type, $value);
+		$this->expect_token_ignore_space(_ASSIGN);
+		$declaration->value = $this->read_expression();
+
+		$this->factory->end_root_declaration();
+
+		return $declaration;
+	}
+
+	protected function read_constant_declaration_without_value(string $name, string $modifier = null)
+	{
+		$this->assert_not_reserveds_word($name);
+
+		$declaration = $this->read_constant_declaration_header($name, $modifier);
+		if (!$declaration->type) {
+			$this->new_unexpected_error();
+		}
+
+		$this->factory->end_root_declaration();
+
+		return $declaration;
+	}
+
+	protected function read_constant_declaration_header(string $name, string $modifier = null)
+	{
+		$declaration = $this->factory->create_constant_declaration($modifier, $name);
+		$declaration->pos = $this->pos;
+		$declaration->type = $this->try_read_type_identifier();
+		return $declaration;
 	}
 
 	protected function read_structure(string $type)
@@ -328,19 +342,21 @@ class TeaParser extends BaseParser
 			throw $this->new_unexpected_error();
 		}
 
-		$parameters = $this->get_token() === _PAREN_OPEN
-			? $this->read_parameters_with_parentheses()
-			: null;
+		$declaration = $this->factory->create_masked_declaration($name);
+		$declaration->pos = $this->pos;
 
-		$return_type = $this->try_read_return_type_identifier();
-		// $callbacks = $this->try_read_callback_protocols();
+		if ($this->get_token() === _PAREN_OPEN) {
+			$parameters = $this->read_parameters_with_parentheses();
+			$this->factory->set_enclosing_parameters($parameters);
+		}
+
+		$declaration->type = $this->try_read_return_type_identifier();
 
 		$this->expect_token_ignore_empty(_ARROW);
 
-		$masked = $this->factory->create_masked_declaration($name, $return_type, $parameters);
-		$masked->set_body_with_expression($this->read_expression());
+		$declaration->set_body_with_expression($this->read_expression());
 
-		return $masked;
+		return $declaration;
 	}
 
 	protected function read_print_statement()
@@ -497,7 +513,7 @@ class TeaParser extends BaseParser
 
 		$test = $this->read_expression();
 		$master_block = $this->factory->create_if_block($test);
-		$this->read_statements_for_block($master_block);
+		$this->read_block_body($master_block);
 
 		$this->try_attach_else_block($master_block);
 		$this->try_attach_except_block($master_block);
@@ -512,7 +528,7 @@ class TeaParser extends BaseParser
 		if ($keyword === _ELSE) {
 			$this->scan_token_ignore_empty();
 			$sub_block = $this->factory->create_else_block();
-			$this->read_statements_for_block($sub_block);
+			$this->read_block_body($sub_block);
 
 			// else block would be the end
 		}
@@ -520,7 +536,7 @@ class TeaParser extends BaseParser
 			$this->scan_token_ignore_empty();
 			$test = $this->read_expression();
 			$sub_block = $this->factory->create_elseif_block($test);
-			$this->read_statements_for_block($sub_block);
+			$this->read_block_body($sub_block);
 
 			// another else block
 			$this->try_attach_else_block($sub_block);
@@ -551,7 +567,7 @@ class TeaParser extends BaseParser
 	protected function read_try_block()
 	{
 		$master_block = $this->factory->create_try_block();
-		$this->read_statements_for_block($master_block);
+		$this->read_block_body($master_block);
 
 		$this->try_attach_except_block($master_block);
 
@@ -573,7 +589,7 @@ class TeaParser extends BaseParser
 			$type = $this->try_read_classlike_identifier();
 			$sub_block = $this->factory->create_catch_block($var_name, $type);
 
-			$this->read_statements_for_block($sub_block);
+			$this->read_block_body($sub_block);
 
 			// another except block
 			$this->try_attach_except_block($sub_block);
@@ -582,7 +598,7 @@ class TeaParser extends BaseParser
 			$this->scan_token_ignore_empty();
 
 			$sub_block = $this->factory->create_finally_block();
-			$this->read_statements_for_block($sub_block);
+			$this->read_block_body($sub_block);
 
 			// finally block would be the end
 		}
@@ -691,7 +707,7 @@ class TeaParser extends BaseParser
 		}
 
 		$master_block->label = $label;
-		$this->read_statements_for_block($master_block);
+		$this->read_block_body($master_block);
 
 		// the iterable need test at if-block
 		// so need assign to a temp variable on render the target code
@@ -768,7 +784,7 @@ class TeaParser extends BaseParser
 		$master_block = $this->factory->create_while_block($test);
 		$master_block->label = $label;
 
-		$this->read_statements_for_block($master_block);
+		$this->read_block_body($master_block);
 
 		if ($do_the_first) {
 			$master_block->do_the_first = true;
@@ -1298,7 +1314,7 @@ class TeaParser extends BaseParser
 		$block->pos = $this->pos;
 
 		if ($this->get_token_ignore_empty() === _BLOCK_BEGIN) {
-			$this->read_statements_for_block($block);
+			$this->read_block_body($block);
 		}
 		else {
 			$expression = $this->read_expression();
@@ -1919,22 +1935,24 @@ class TeaParser extends BaseParser
 
 	protected function read_class_constant_declaration(string $name, ?string $modifier)
 	{
-		$type = $this->try_read_type_identifier();
+		$declaration = $this->factory->create_class_constant_declaration($modifier, $name);
+		$declaration->pos = $this->pos;
+
+		$declaration->type = $this->try_read_type_identifier();
 
 		if ($this->skip_token_ignore_space(_ASSIGN)) {
-			$value = $this->read_literal_expression();
+			$declaration->value = $this->read_literal_expression();
 		}
 		elseif (!$this->is_declare_mode) {
 			throw $this->new_parse_error('Expected value assign expression.');
 		}
-		elseif (!$type) {
+		elseif (!$declaration->type) {
 			throw $this->new_parse_error('Expected type expression.');
 		}
-		else {
-			$value = null;
-		}
 
-		return $this->factory->create_class_constant_declaration($modifier, $name, $type, $value);
+		$this->factory->end_class_member();
+
+		return $declaration;
 	}
 
 	protected function read_property_declaration(string $name, ?string $modifier, bool $static)
@@ -1944,49 +1962,55 @@ class TeaParser extends BaseParser
 		// prop1 String = 'abcdef'
 		// public prop1 String = 'abcdef'
 
-		$type = null;
-		$value = null;
+		$declaration = $this->factory->create_property_declaration($modifier, $name);
+		$declaration->pos = $this->pos;
 
 		// type or =
 		$token = $this->get_token_ignore_space();
 
 		// the type name
 		if (TeaHelper::is_type_name($token)) {
-			$type = $this->try_read_type_identifier();
+			$declaration->type = $this->try_read_type_identifier();
 			$token = $this->get_token_ignore_space();
 		}
 
 		if ($token === _ASSIGN) {
 			// the assign expression
 			$this->scan_token_ignore_space(); // skip =
-			$value = $this->read_literal_expression();
+			$declaration->value = $this->read_literal_expression();
 		}
 
-		$declaration = $this->factory->create_property_declaration($modifier, $name, $type, $value);
 		$declaration->is_static = $static;
+
+		$this->factory->end_class_member();
 
 		return $declaration;
 	}
 
 	protected function read_method_declaration(string $name, ?string $modifier, bool $static)
 	{
+		$declaration = $this->factory->create_method_declaration($modifier, $name);
+		$declaration->pos = $declaration;
+
+		$declaration->is_static = $static;
+
 		$parameters = $this->read_parameters_with_parentheses();
-		$return_type = $this->try_read_return_type_identifier();
-		// $callbacks = $this->try_read_callback_protocols();
+		$this->factory->set_enclosing_parameters($parameters);
+
+		$declaration->type = $this->try_read_return_type_identifier();
 
 		$next = $this->get_token_ignore_empty();
 		if ($next === _BLOCK_BEGIN) {
-			$declaration = $this->factory->create_method_declaration($modifier, $name, $return_type, $parameters);
-			$declaration->is_static = $static;
-			$this->read_function_body($declaration);
+			$this->read_body_statements($declaration);
 		}
 		elseif ($this->is_declare_mode) {
-			$declaration = $this->factory->create_method_declaration($modifier, $name, $return_type, $parameters);
-			$declaration->is_static = $static;
+			// no any others
 		}
 		else {
 			throw $this->new_parse_error('Method body required.');
 		}
+
+		$this->factory->end_class_member();
 
 		return $declaration;
 	}
@@ -2008,27 +2032,27 @@ class TeaParser extends BaseParser
 	// 	return $items;
 	// }
 
-	protected function read_callback_protocol()
-	{
-		$is_async = false;
-		$name = $this->scan_token_ignore_empty();
-		if ($name === _ASYNC) {
-			$is_async = true;
-			$name = $this->scan_token_ignore_empty();
-		}
+	// protected function read_callback_protocol()
+	// {
+	// 	$is_async = false;
+	// 	$name = $this->scan_token_ignore_empty();
+	// 	if ($name === _ASYNC) {
+	// 		$is_async = true;
+	// 		$name = $this->scan_token_ignore_empty();
+	// 	}
 
-		if (!TeaHelper::is_function_name($name)) {
-			throw $this->new_unexpected_error();
-		}
+	// 	if (!TeaHelper::is_function_name($name)) {
+	// 		throw $this->new_unexpected_error();
+	// 	}
 
-		$parameters = $this->read_parameters_with_parentheses();
-		$return_type = $this->try_read_return_type_identifier();
+	// 	$parameters = $this->read_parameters_with_parentheses();
+	// 	$return_type = $this->try_read_return_type_identifier();
 
-		$node = new CallbackProtocol($is_async, $name, $return_type, ...$parameters);
-		$node->pos = $this->pos;
+	// 	$node = new CallbackProtocol($is_async, $name, $return_type, ...$parameters);
+	// 	$node->pos = $this->pos;
 
-		return $node;
-	}
+	// 	return $node;
+	// }
 
 	protected function read_parameters_with_parentheses()
 	{

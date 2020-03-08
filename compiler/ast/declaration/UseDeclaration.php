@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class UseDeclaration extends Node implements IRootDeclaration, IMemberDeclaration
+class UseDeclaration extends Node implements IMemberDeclaration
 {
 	const KIND = 'use_declaration';
 

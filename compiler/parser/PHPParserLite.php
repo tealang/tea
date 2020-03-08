@@ -53,8 +53,7 @@ class PHPParserLite extends BaseParser
 			}
 		}
 
-		// end the main function
-		$this->factory->end_block();
+		$this->factory->end_program();
 
 		$this->program->main_function = null;
 
@@ -298,12 +297,11 @@ class PHPParserLite extends BaseParser
 	private function read_constant_declaration(?string $doc)
 	{
 		$name = $this->expect_identifier_name();
-		$this->expect_char_token(_ASSIGN);
-		$type = $this->read_constant_value_type_skip($doc);
-		$this->expect_statement_end();
+		$declaration = $this->factory->create_constant_declaration(_PUBLIC, $name);
 
-		$declaration = $this->factory->create_constant_declaration(_PUBLIC, $name, $type, null);
-		$declaration->ns = $this->namespace;
+		$this->expect_char_token(_ASSIGN);
+		$declaration->type = $this->read_constant_value_type_skip($doc);
+		$this->expect_statement_end();
 
 		return $declaration;
 	}
@@ -311,11 +309,13 @@ class PHPParserLite extends BaseParser
 	private function read_class_constant_declaration(?string $modifier, ?string $doc)
 	{
 		$name = $this->expect_identifier_name();
+		$declaration = $this->factory->create_class_constant_declaration($modifier, $name);
+
 		$this->expect_char_token(_ASSIGN);
-		$type = $this->read_constant_value_type_skip($doc);
+		$declaration->type = $this->read_constant_value_type_skip($doc);
 		$this->expect_statement_end();
 
-		return $this->factory->create_class_constant_declaration($modifier, $name, $type, null);
+		return $declaration;
 	}
 
 	private function read_constant_value_type_skip(?string $doc)
@@ -400,21 +400,28 @@ class PHPParserLite extends BaseParser
 
 	private function read_property_declaration(array $token, string $modifier, ?string $doc)
 	{
+		$type_name = null;
 		if ($token[0] === T_STRING) {
-			// it must be a type name
-			$type = $this->create_type_identifier($token[1]);
+			$type_name = $token[1];
 
 			// scan the next token
 			$token = $this->scan_typed_token_ignore_empty();
 		}
-		else {
+
+		$name = ltrim($token[1], '$');
+		$declaration = $this->factory->create_property_declaration($modifier, $name);
+
+		if ($type_name === null) {
 			$type = $this->get_type_in_doc($doc, 'var');
 			if ($type === null) {
 				throw $this->new_parse_error("Property '{$token[1]}' required a type hint '@var string/int/float/bool/...' in it's docs.");
 			}
 		}
+		else {
+			$type = $this->create_type_identifier($type_name);
+		}
 
-		$name = ltrim($token[1], '$');
+		$declaration->type = $type;
 
 		if ($this->skip_char_token(_ASSIGN)) {
 			$this->skip_to_char_token(_SEMICOLON);
@@ -423,20 +430,22 @@ class PHPParserLite extends BaseParser
 			$this->expect_statement_end();
 		}
 
-		return $this->factory->create_property_declaration($modifier, $name, $type, null);
+		return $declaration;
 	}
 
 	private function read_method_declaration(string $modifier = null, ?string $doc, bool $is_interface = false)
 	{
 		$name = $this->expect_identifier_name();
-		$parameters = $this->read_parameters();
-		$type = $this->try_read_function_return_type();
-
 		if (isset(static::METHOD_MAP[$name])) {
 			$name = static::METHOD_MAP[$name];
 		}
 
-		$declaration = $this->factory->create_method_declaration($modifier ?? _PUBLIC, $name, $type, $parameters);
+		$declaration = $this->factory->create_method_declaration($modifier ?? _PUBLIC, $name);
+
+		$parameters = $this->read_parameters();
+		$this->factory->set_enclosing_parameters($parameters);
+
+		$declaration->type = $this->try_read_function_return_type();
 
 		if ($is_interface) {
 			$this->expect_statement_end();
@@ -451,10 +460,15 @@ class PHPParserLite extends BaseParser
 	private function read_function_declaration(?string $doc)
 	{
 		$name = $this->expect_identifier_name();
-		$parameters = $this->read_parameters();
-		$type = $this->try_read_function_return_type();
 
-		$declaration = $this->factory->create_function_declaration(_PUBLIC, $name, $type, $parameters);
+		$declaration = $this->factory->create_function_declaration(_PUBLIC, $name);
+
+		$parameters = $this->read_parameters();
+		$return_type = $this->try_read_function_return_type();
+
+		$this->factory->set_enclosing_parameters($parameters);
+		$declaration->type = $return_type;
+
 		$declaration->ns = $this->namespace;
 		$this->read_function_block();
 

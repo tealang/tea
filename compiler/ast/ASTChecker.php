@@ -1807,9 +1807,9 @@ class ASTChecker
 				$type = TypeFactory::$_callable;
 			// }
 		}
-		elseif ($declaration instanceof NamespaceDeclaration) {
-			$type = TypeFactory::$_namespace;
-		}
+		// elseif ($declaration instanceof NamespaceDeclaration) {
+		// 	$type = TypeFactory::$_namespace;
+		// }
 		else {
 			throw new UnexpectNode($declaration);
 		}
@@ -1834,8 +1834,8 @@ class ASTChecker
 			case ClassDeclaration::KIND:
 				return $member->type;
 
-			case NamespaceDeclaration::KIND:
-				return TypeFactory::$_namespace;
+			// case NamespaceDeclaration::KIND:
+			// 	return TypeFactory::$_namespace;
 
 			default:
 				throw new UnexpectNode($member);
@@ -2094,11 +2094,9 @@ class ASTChecker
 				// let member type to Any on master is Any
 				$this->create_any_symbol_for_accessing_identifier($node);
 			}
-			elseif ($infered_type === TypeFactory::$_namespace) {
-				dump($master);
-				throw new Exception('whats the problem!!!');
-				$this->attach_namespace_member_symbol($master->symbol->declaration, $node);
-			}
+			// elseif ($infered_type === TypeFactory::$_namespace) {
+			// 	$this->attach_namespace_member_symbol($master->symbol->declaration, $node);
+			// }
 			// elseif ($infered_type === TypeFactory::$_class) {
 			elseif ($infered_type instanceof MetaType) { // includes static call for class members
 				$node->symbol = $this->require_class_member_symbol($master->symbol->declaration, $node);
@@ -2187,15 +2185,15 @@ class ASTChecker
 		return $symbol;
 	}
 
-	private function attach_namespace_member_symbol(NamespaceDeclaration $ns_declaration, AccessingIdentifier $node)
-	{
-		$node->symbol = $ns_declaration->symbols[$node->name] ?? null;
-		if (!$node->symbol) {
-			throw $this->new_syntax_error("Symbol '{$node->name}' not found in '{$ns_declaration->name}'.", $node);
-		}
+	// private function attach_namespace_member_symbol(NamespaceDeclaration $ns_declaration, AccessingIdentifier $node)
+	// {
+	// 	$node->symbol = $ns_declaration->symbols[$node->name] ?? null;
+	// 	if (!$node->symbol) {
+	// 		throw $this->new_syntax_error("Symbol '{$node->name}' not found in '{$ns_declaration->name}'.", $node);
+	// 	}
 
-		return $node->symbol;
-	}
+	// 	return $node->symbol;
+	// }
 
 	// includes builtin types, and classes, and namespace
 	private function require_object_declaration(IExpression $node): ClassLikeDeclaration
@@ -2250,19 +2248,19 @@ class ASTChecker
 		return $symbol;
 	}
 
-	private function require_program_of_declaration(IDeclaration $declaration): Program
-	{
-		// just a local variable
-		if (!isset($declaration->program) && !isset($declaration->super_block)) {
-			return $this->program;
-		}
+	// private function require_program_of_declaration(IDeclaration $declaration): Program
+	// {
+	// 	// just a local variable
+	// 	if (!isset($declaration->program) && !isset($declaration->super_block)) {
+	// 		return $this->program;
+	// 	}
 
-		while (!isset($declaration->program)) {
-			$declaration = $declaration->super_block;
-		}
+	// 	while (!isset($declaration->program)) {
+	// 		$declaration = $declaration->super_block;
+	// 	}
 
-		return $declaration->program;
-	}
+	// 	return $declaration->program;
+	// }
 
 	private function require_symbol_for_namespace(NamespaceIdentifier $ns, string $name)
 	{

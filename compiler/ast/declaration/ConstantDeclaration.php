@@ -13,13 +13,13 @@ interface IConstantDeclaration {}
 
 trait IConstantDeclarationTrait
 {
-	use DeclarationTrait;
+	use DeclarationTrait, DeferChecksTrait;
 
 	public $modifier;
 
 	public $value;
 
-	public function __construct(?string $modifier, string $name, ?BaseType $type, ?IExpression $value)
+	public function __construct(?string $modifier, string $name, BaseType $type = null, IExpression $value = null)
 	{
 		if ($modifier !== null && $modifier === _PUBLIC) {
 			$this->is_unit_level = true;

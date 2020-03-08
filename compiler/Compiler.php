@@ -579,7 +579,7 @@ class Compiler
 			}
 		}
 
-		$code = $program->render(new PublicCoder());
+		$code = $program->render(new TeaHeaderCoder());
 
 		file_put_contents($this->unit_public_file, $code);
 

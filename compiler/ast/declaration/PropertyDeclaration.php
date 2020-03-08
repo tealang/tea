@@ -11,7 +11,7 @@ namespace Tea;
 
 class PropertyDeclaration extends Node implements IClassMemberDeclaration, IVariableDeclaration
 {
-	use IVariableDeclarationTrait;
+	use IVariableDeclarationTrait, DeferChecksTrait;
 
 	const KIND = 'property_declaration';
 

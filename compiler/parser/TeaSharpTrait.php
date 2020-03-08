@@ -73,10 +73,9 @@ trait TeaSharpTrait
 		$this->assert_not_reserveds_word($name);
 
 		if (TeaHelper::is_constant_name($name)) {
-			$type = $this->try_read_type_identifier();
-			if ($type) {
-				$declaration = $this->factory->create_constant_declaration(_PUBLIC, $name, $type, null);
-				return $declaration;
+			$next = $this->get_token_ignore_space();
+			if ($next !== _BLOCK_BEGIN && $next !== _COLON && $next !== _AS) {
+				return $this->read_constant_declaration_without_value($name, _PUBLIC);
 			}
 		}
 
@@ -99,7 +98,7 @@ trait TeaSharpTrait
 			}
 		}
 		elseif (TeaHelper::is_strict_less_function_name($name)) {
-			$declaration = $this->read_function_declaration($name, _PUBLIC);
+			$declaration = $this->read_function_declaration($name, _PUBLIC, true);
 		}
 		elseif ($name === _DOLLAR) {
 			$name = $this->expect_identifier_token();

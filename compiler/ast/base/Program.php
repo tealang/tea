@@ -69,13 +69,13 @@ class Program extends Node
 		$this->declarations[(string)$declaration->name] = $declaration;
 	}
 
-	public function append_defer_check_for_block(BaseBlock $block)
+	public function append_defer_check_identifiers(IDeclaration $declaration)
 	{
-		if (!$block->defer_check_identifiers) {
+		if (!$declaration->defer_check_identifiers) {
 			return;
 		}
 
-		$this->defer_check_identifiers = array_merge($this->defer_check_identifiers, $block->defer_check_identifiers);
+		$this->defer_check_identifiers = array_merge($this->defer_check_identifiers, $declaration->defer_check_identifiers);
 	}
 
 	public function append_depends_native_program(Program $program)

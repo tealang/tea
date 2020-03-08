@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class PublicCoder extends TeaCoder
+class TeaHeaderCoder extends TeaCoder
 {
 	const PROGRAM_HEADER = "// the public declarations\n";
 
