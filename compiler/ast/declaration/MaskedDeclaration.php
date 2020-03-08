@@ -14,7 +14,7 @@ namespace Tea;
 // 解决方案：用函数包起来，并且预先将“对象表达式”计算出来存储到局部变量中
 // 为降低实现复杂度，可采用约定mask函数和真函数对应参数顺序强制一致，并且每个参数仅被调用一次
 
-class MaskedDeclaration extends FunctionBlock
+class MaskedDeclaration extends FunctionDeclaration
 {
 	const KIND = 'masked_declaration';
 	public $arguments_map = [];

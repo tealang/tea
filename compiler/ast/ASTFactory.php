@@ -344,7 +344,7 @@ class ASTFactory
 			throw new Exception("Error: Program name '{$program->name}' has been used, please rename the file '{$program->file}'");
 		}
 
-		$program->main_function = new MainFunctionBlock();
+		$program->main_function = new MainFunction();
 		$program->main_function->program = $program;
 
 		$this->program = $program;
@@ -440,12 +440,10 @@ class ASTFactory
 		return $symbol;
 	}
 
-	public function create_masked_method_block(string $name, ?IType $type, ?array $parameters, array $callbacks = null)
+	public function create_masked_declaration(string $name, ?IType $type, ?array $parameters)
 	{
 		$declaration = new MaskedDeclaration(_PUBLIC, $name, $type, $parameters);
 		$this->append_class_member($declaration);
-
-		$callbacks && $declaration->set_callbacks(...$callbacks);
 
 		$this->init_enclosing($declaration);
 		$this->function = $declaration;
@@ -454,25 +452,21 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function declare_method(?string $modifier, string $name, ?IType $type, array $parameters, array $callbacks = null)
+	// public function declare_method(?string $modifier, string $name, ?IType $type, array $parameters)
+	// {
+	// 	$declaration = new FunctionDeclaration($modifier, $name, $type, $parameters);
+	// 	$this->append_class_member($declaration);
+
+	// 	$this->super_block = $this->block;
+	// 	$this->function = $declaration;
+
+	// 	return $declaration;
+	// }
+
+	public function create_method_declaration(?string $modifier, string $name, ?IType $type, array $parameters)
 	{
 		$declaration = new FunctionDeclaration($modifier, $name, $type, $parameters);
 		$this->append_class_member($declaration);
-
-		$callbacks && $declaration->set_callbacks(...$callbacks);
-
-		$this->super_block = $this->block;
-		$this->function = $declaration;
-
-		return $declaration;
-	}
-
-	public function create_method_block(?string $modifier, string $name, ?IType $type, array $parameters, array $callbacks = null)
-	{
-		$declaration = new FunctionBlock($modifier, $name, $type, $parameters);
-		$this->append_class_member($declaration);
-
-		$callbacks && $declaration->set_callbacks(...$callbacks);
 
 		$this->enter_block($declaration);
 		$this->init_enclosing($declaration);
@@ -481,13 +475,11 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_function_block(string $modifier, string $name, ?IType $type, array $parameters, array $callbacks = null)
+	public function create_function_declaration(string $modifier, string $name, ?IType $type, array $parameters)
 	{
 		$this->check_global_modifier($modifier, 'function');
 
-		$declaration = new FunctionBlock($modifier, $name, $type, $parameters);
-
-		$callbacks && $declaration->set_callbacks(...$callbacks);
+		$declaration = new FunctionDeclaration($modifier, $name, $type, $parameters);
 
 		$this->function = $declaration;
 		$this->init_enclosing($declaration);
@@ -499,19 +491,18 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function declare_function(string $modifier, string $name, ?IType $type, array $parameters, array $callbacks = null)
-	{
-		$this->check_global_modifier($modifier, 'function');
+	// public function declare_function(string $modifier, string $name, ?IType $type, array $parameters)
+	// {
+	// 	$this->check_global_modifier($modifier, 'function');
 
-		$declaration = new FunctionDeclaration($modifier, $name, $type, $parameters);
-		$callbacks && $declaration->set_callbacks(...$callbacks);
+	// 	$declaration = new FunctionDeclaration($modifier, $name, $type, $parameters);
 
-		$this->function = $declaration;
-		$this->block = $declaration;
+	// 	$this->function = $declaration;
+	// 	$this->block = $declaration;
 
-		$this->create_global_symbol($declaration);
-		return $declaration;
-	}
+	// 	$this->create_global_symbol($declaration);
+	// 	return $declaration;
+	// }
 
 	public function create_lambda_expression(?IType $type, array $parameters)
 	{

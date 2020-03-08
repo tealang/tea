@@ -65,12 +65,12 @@ class FunctionDeclaration extends BaseBlock implements IEnclosingBlock, IFunctio
 	}
 }
 
-class FunctionBlock extends FunctionDeclaration
-{
-	const KIND = 'function_block';
-}
+// class FunctionBlock extends FunctionDeclaration
+// {
+// 	const KIND = 'function_block';
+// }
 
-class MainFunctionBlock extends FunctionBlock
+class MainFunction extends FunctionDeclaration
 {
 	const KIND = 'main_function';
 

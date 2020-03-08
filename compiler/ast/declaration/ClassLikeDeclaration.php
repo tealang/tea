@@ -146,7 +146,7 @@ class InterfaceDeclaration extends ClassLikeDeclaration
 
 	public function append_member(IClassMemberDeclaration $member)
 	{
-		if ($member instanceof PropertyDeclaration || $member instanceof FunctionBlock) {
+		if ($member instanceof PropertyDeclaration || ($member instanceof FunctionDeclaration && $member->body !== null)) {
 			$this->has_default_implementations = true;
 		}
 

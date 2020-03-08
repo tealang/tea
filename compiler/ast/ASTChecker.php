@@ -69,15 +69,11 @@ class ASTChecker
 		$this->program = $node->program;
 
 		switch ($node::KIND) {
-			case ConstantDeclaration::KIND:
-				$this->check_constant_declaration($node);
-				break;
+			// case FunctionBlock::KIND:
+			// 	$this->check_function_block($node);
+			// 	break;
 
-			case MainFunctionBlock::KIND:
-			case FunctionBlock::KIND:
-				$this->check_function_block($node);
-				break;
-
+			case MainFunction::KIND:
 			case FunctionDeclaration::KIND:
 				$this->check_function_declaration($node);
 				break;
@@ -88,6 +84,10 @@ class ASTChecker
 
 			case InterfaceDeclaration::KIND:
 				$this->check_classlike_declaration($node);
+				break;
+
+			case ConstantDeclaration::KIND:
+				$this->check_constant_declaration($node);
 				break;
 
 			case ExpectDeclaration::KIND:
@@ -109,9 +109,13 @@ class ASTChecker
 	private function check_class_member_declaration(IClassMemberDeclaration $node)
 	{
 		switch ($node::KIND) {
-			case FunctionBlock::KIND:
-				$this->check_function_block($node);
+			case MaskedDeclaration::KIND:
+				$this->check_masked_declaration($node);
 				break;
+
+			// case FunctionBlock::KIND:
+			// 	$this->check_function_block($node);
+			// 	break;
 
 			case FunctionDeclaration::KIND:
 				$this->check_function_declaration($node);
@@ -123,10 +127,6 @@ class ASTChecker
 
 			case ClassConstantDeclaration::KIND:
 				$this->check_class_constant_declaration($node);
-				break;
-
-			case MaskedDeclaration::KIND:
-				$this->check_masked_declaration($node);
 				break;
 
 			default:
@@ -390,21 +390,21 @@ class ASTChecker
 		}
 	}
 
-	private function check_function_block(FunctionBlock $node)
-	{
-		if ($node->is_checked) return;
-		$node->is_checked = true;
+	// private function check_function_block(FunctionBlock $node)
+	// {
+	// 	if ($node->is_checked) return;
+	// 	$node->is_checked = true;
 
-		// // create _THIS / _SUPER symbols for static method
-		// if ($node->is_static) {
-		// 	$this->create_class_symbols_for_static_method($node);
-		// }
+	// 	// // create _THIS / _SUPER symbols for static method
+	// 	// if ($node->is_static) {
+	// 	// 	$this->create_class_symbols_for_static_method($node);
+	// 	// }
 
-		$this->current_function = $node; // for find _SUPER
+	// 	$this->current_function = $node; // for find _SUPER
 
-		$this->check_parameters_for_callable_declaration($node);
-		$this->check_function_body($node);
-	}
+	// 	$this->check_parameters_for_callable_declaration($node);
+	// 	$this->check_function_body($node);
+	// }
 
 	// private function create_class_symbols_for_static_method(FunctionBlock $node)
 	// {
@@ -423,7 +423,11 @@ class ASTChecker
 
 		$this->check_parameters_for_callable_declaration($node);
 
-		if ($node->type) {
+		if ($node->body !== null) {
+			$this->current_function = $node; // for find _SUPER
+			$this->check_function_body($node);
+		}
+		elseif ($node->type) {
 			$this->check_type($node->type, $node);
 		}
 		else {
@@ -431,15 +435,15 @@ class ASTChecker
 		}
 	}
 
-	private function check_function(IFunctionDeclaration $node)
-	{
-		if ($node instanceof FunctionBlock) {
-			$this->check_function_block($node);
-		}
-		else {
-			$this->check_function_declaration($node);
-		}
-	}
+	// private function check_function(IFunctionDeclaration $node)
+	// {
+	// 	if ($node->body !== null) {
+	// 		$this->check_function_block($node);
+	// 	}
+	// 	else {
+	// 		$this->check_function_declaration($node);
+	// 	}
+	// }
 
 	private function check_property_declaration(PropertyDeclaration $node)
 	{
@@ -567,7 +571,7 @@ class ASTChecker
 					$this->assert_classlike_member_declaration($node->actual_members[$name], $member);
 
 					// replace to the default method implementation in interface
-					if ($member instanceof FunctionBlock) {
+					if ($member->body !== null) {
 						$node->actual_members[$name] = $member;
 					}
 				}
@@ -580,15 +584,10 @@ class ASTChecker
 		// 如果是类定义，最后检查是否还有未实现的接口成员
 		if ($node instanceof ClassDeclaration && $node->define_mode) {
 			foreach ($node->actual_members as $name => $member) {
-				if (!$member instanceof FunctionDeclaration
-					|| $member instanceof FunctionBlock
-					|| $member->super_block instanceof ClassDeclaration
-				) {
-					continue;
+				if ($member instanceof FunctionDeclaration && $member->body === null) {
+					$interface = $member->super_block;
+					throw $this->new_syntax_error("Method protocol '{$interface->name}.{$name}' required an implementation in class '{$node->name}'.", $node);
 				}
-
-				$class = $member->super_block;
-				throw $this->new_syntax_error("Method protocol '{$class->name}.{$name}' required an implementation in class '{$node->name}'.", $node);
 			}
 		}
 	}
@@ -1822,7 +1821,7 @@ class ASTChecker
 	{
 		$member = $this->require_accessing_identifier_declaration($node);
 		switch ($member::KIND) {
-			case FunctionBlock::KIND:
+			case FunctionDeclaration::KIND:
 				return TypeFactory::$_callable;
 
 			case MaskedDeclaration::KIND:
@@ -1834,9 +1833,6 @@ class ASTChecker
 			case ClassConstantDeclaration::KIND:
 			case ClassDeclaration::KIND:
 				return $member->type;
-
-			// case ClassDeclaration::KIND:
-			// 	return TypeFactory::$_class;
 
 			case NamespaceDeclaration::KIND:
 				return TypeFactory::$_namespace;
@@ -2056,16 +2052,12 @@ class ASTChecker
 		$node->is_checking = true;
 
 		switch ($node::KIND) {
-			case FunctionBlock::KIND:
-				$this->check_function_block($node);
+			case FunctionDeclaration::KIND:
+				$this->check_function_declaration($node);
 				break;
 
 			case LambdaExpression::KIND:
 				$this->infer_lambda_expression($node);
-				break;
-
-			case FunctionDeclaration::KIND:
-				$this->check_function_declaration($node);
 				break;
 
 			case CallbackProtocol::KIND:
@@ -2086,7 +2078,7 @@ class ASTChecker
 
 			$node->symbol = $this->unit->symbols[$node->name];
 
-			$this->check_function($node->symbol->declaration);
+			$this->check_function_declaration($node->symbol->declaration);
 		}
 
 		return $node->symbol->declaration;

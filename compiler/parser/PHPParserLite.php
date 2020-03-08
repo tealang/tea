@@ -436,7 +436,7 @@ class PHPParserLite extends BaseParser
 			$name = static::METHOD_MAP[$name];
 		}
 
-		$declaration = $this->factory->declare_method($modifier ?? _PUBLIC, $name, $type, $parameters);
+		$declaration = $this->factory->create_method_declaration($modifier ?? _PUBLIC, $name, $type, $parameters);
 
 		if ($is_interface) {
 			$this->expect_statement_end();
@@ -454,7 +454,7 @@ class PHPParserLite extends BaseParser
 		$parameters = $this->read_parameters();
 		$type = $this->try_read_function_return_type();
 
-		$declaration = $this->factory->declare_function(_PUBLIC, $name, $type, $parameters);
+		$declaration = $this->factory->create_function_declaration(_PUBLIC, $name, $type, $parameters);
 		$declaration->ns = $this->namespace;
 		$this->read_function_block();
 

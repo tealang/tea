@@ -88,7 +88,6 @@ function regex_matches(string $regex, string $subject): array {
 # --- generates ---
 const __AUTOLOADS = [
 	'IBaseType' => 'core.php',
-	'IBaseTypeTrait' => 'core.php',
 	'IView' => 'core.php'
 ];
 

@@ -206,7 +206,7 @@ class TeaParser extends BaseParser
 		$return_type = $this->try_read_return_type_identifier();
 		// $callbacks = $this->try_read_callback_protocols();
 
-		$declaration = $this->factory->declare_function($modifier, $name, $return_type, $parameters);
+		$declaration = $this->factory->create_function_declaration($modifier, $name, $return_type, $parameters);
 		$declaration->pos = $this->pos;
 
 		$this->factory->end_block();
@@ -222,7 +222,7 @@ class TeaParser extends BaseParser
 		$return_type = $this->try_read_return_type_identifier();
 		// $callbacks = $this->try_read_callback_protocols();
 
-		$declaration = $this->factory->create_function_block($modifier, $name, $return_type, $parameters);
+		$declaration = $this->factory->create_function_declaration($modifier, $name, $return_type, $parameters);
 		$declaration->pos = $this->pos;
 
 		$this->read_function_body($declaration);
@@ -230,7 +230,7 @@ class TeaParser extends BaseParser
 		return $declaration;
 	}
 
-	protected function read_function_body(FunctionBlock $function)
+	protected function read_function_body(FunctionDeclaration $function)
 	{
 		$this->read_statements_for_block($function);
 	}
@@ -337,7 +337,7 @@ class TeaParser extends BaseParser
 
 		$this->expect_token_ignore_empty(_ARROW);
 
-		$masked = $this->factory->create_masked_method_block($name, $return_type, $parameters);
+		$masked = $this->factory->create_masked_declaration($name, $return_type, $parameters);
 		$masked->set_body_with_expression($this->read_expression());
 
 		return $masked;
@@ -1976,16 +1976,16 @@ class TeaParser extends BaseParser
 
 		$next = $this->get_token_ignore_empty();
 		if ($next === _BLOCK_BEGIN) {
-			$declaration = $this->factory->create_method_block($modifier, $name, $return_type, $parameters);
+			$declaration = $this->factory->create_method_declaration($modifier, $name, $return_type, $parameters);
 			$declaration->is_static = $static;
 			$this->read_function_body($declaration);
 		}
 		elseif ($this->is_declare_mode) {
-			$declaration = $this->factory->declare_method($modifier, $name, $return_type, $parameters);
+			$declaration = $this->factory->create_method_declaration($modifier, $name, $return_type, $parameters);
 			$declaration->is_static = $static;
 		}
 		else {
-			throw $this->new_parse_error('"{" missed for define method.');
+			throw $this->new_parse_error('Method body required.');
 		}
 
 		return $declaration;

@@ -7,10 +7,6 @@ interface IBaseType {
 	public function float(): float;
 }
 
-trait IBaseTypeTrait {
-	// no any
-}
-
 #public
 interface IView {
 	// no any

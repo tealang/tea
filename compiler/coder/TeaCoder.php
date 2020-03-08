@@ -271,23 +271,35 @@ class TeaCoder
 		}
 	}
 
-	public function render_function_declaration(IFunctionDeclaration $node)
+	protected function render_function_protocol(FunctionDeclaration $node)
 	{
 		$header = $this->generate_function_header($node);
 		$parameters = $this->render_parameters($node->parameters);
-		$callbacks = $node->callbacks ? $this->render_callback_protocols($node->callbacks) : '';
+		// $callbacks = $node->callbacks ? $this->render_callback_protocols($node->callbacks) : '';
 		$type = $this->generate_type($node);
 
-		return "{$header}($parameters){$type}{$callbacks}";
+		return "{$header}($parameters){$type}";
 	}
 
-	public function render_function_block(FunctionBlock $node)
+	public function render_function_declaration(FunctionDeclaration $node)
 	{
-		$declaration = $this->render_function_declaration($node);
-		$body = $this->render_enclosing_block($node);
+		$code = $this->render_function_protocol($node);
 
-		return "{$declaration} $body";
+		if ($node->body !== null) {
+			$body = $this->render_enclosing_block($node);
+			$code = $code . ' ' . $body;
+		}
+
+		return $code;
 	}
+
+	// public function render_function_block(FunctionBlock $node)
+	// {
+	// 	$declaration = $this->render_function_protocol($node);
+	// 	$body = $this->render_enclosing_block($node);
+
+	// 	return "{$declaration} $body";
+	// }
 
 	public function render_lambda_expression(IExpression $node)
 	{

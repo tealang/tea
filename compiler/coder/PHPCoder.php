@@ -137,7 +137,7 @@ class PHPCoder extends TeaCoder
 						$constants[] = $item;
 					}
 				}
-				elseif ($declaration instanceof FunctionBlock) {
+				elseif ($declaration instanceof FunctionDeclaration && $declaration->body !== null) {
 					$item = $declaration->render($this);
 					$functions[] = $item . LF;
 				}
@@ -381,13 +381,12 @@ class PHPCoder extends TeaCoder
 		return null;
 	}
 
-	public function render_function_declaration(IFunctionDeclaration $node)
+	public function render_function_declaration(FunctionDeclaration $node)
 	{
-		return null;
-	}
+		if ($node->body === null) {
+			return null;
+		}
 
-	public function render_function_block(FunctionBlock $node)
-	{
 		$header = $this->generate_function_header($node);
 		$parameters = $this->render_function_parameters($node);
 		$body = $this->render_enclosing_block($node);
@@ -400,6 +399,21 @@ class PHPCoder extends TeaCoder
 			return "$header($parameters): $return_type $body";
 		}
 	}
+
+	// public function render_function_block(FunctionDeclaration $node)
+	// {
+	// 	$header = $this->generate_function_header($node);
+	// 	$parameters = $this->render_function_parameters($node);
+	// 	$body = $this->render_enclosing_block($node);
+
+	// 	if ($node->type === null || $node->type === TypeFactory::$_any || $node->type === TypeFactory::$_void) {
+	// 		return "$header($parameters) $body";
+	// 	}
+	// 	else {
+	// 		$return_type = $node->type->render($this);
+	// 		return "$header($parameters): $return_type $body";
+	// 	}
+	// }
 
 	public function render_lambda_expression(IExpression $node)
 	{
@@ -535,17 +549,17 @@ class PHPCoder extends TeaCoder
 
 		// use trait to code the implements
 		if ($node->has_default_implementations) {
-			$members = [];
+			$trait_members = [];
 			foreach ($node->members as $member) {
-				if ($member instanceof FunctionBlock || $member instanceof PropertyDeclaration) {
-					$members[] = $member;
+				if ($member instanceof PropertyDeclaration || ($member instanceof FunctionDeclaration && $member->body !== null)) {
+					$trait_members[] = $member;
 				}
 			}
 
 			$name = $this->get_normalized_name($node);
 			$code .= sprintf("\n\ntrait %s %s",
 				$this->get_interface_trait_name($name),
-				$this->wrap_block_code($this->render_block_nodes($members))
+				$this->wrap_block_code($this->render_block_nodes($trait_members))
 			);
 		}
 
@@ -1098,7 +1112,7 @@ class PHPCoder extends TeaCoder
 		}
 
 		if (!$node->is_call_mode) {
-			if ($declaration instanceof FunctionBlock) {
+			if ($declaration instanceof FunctionDeclaration) {
 				$name = sprintf("'%s%s%s'", $declaration->program->unit->dist_ns_uri, static::NS_SEPARATOR, $name);
 			}
 			elseif ($declaration instanceof ClassLikeDeclaration) {

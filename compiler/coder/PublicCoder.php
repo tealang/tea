@@ -30,9 +30,9 @@ class PublicCoder extends TeaCoder
 		return $code . static::CLASS_MEMBER_TERMINATOR;
 	}
 
-	public function render_function_block(FunctionBlock $node)
+	public function render_function_declaration(FunctionDeclaration $node)
 	{
-		return $this->render_function_declaration($node);
+		return $this->render_function_protocol($node);
 	}
 
 	public function render_masked_declaration(MaskedDeclaration $node)
