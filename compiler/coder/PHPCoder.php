@@ -85,81 +85,48 @@ class PHPCoder extends TeaCoder
 
 	public $include_prefix;
 
-	public function render_unit_header_program(Program $header_program, array $normal_programs)
+	public function render_program(Program $program)
 	{
-		$this->program = $header_program;
-
-		$unit = $header_program->unit;
-
-		$items = $this->render_heading_statements($header_program);
-
-		// the builtin constants
-		$items[] = 'const ' . _UNIT_PATH . ' = __DIR__ . DIRECTORY_SEPARATOR;';
-
-		// put an empty line
-		$items[] = '';
-
-		// load the dependence units
-		if ($unit->use_units || $unit->as_main_unit) {
-			// 由于PHP不支持在const中使用函数表达式，故使用变量替代
-			// 另外，主Unit的super_path和被引用库的可能是不一致的
-			$items[] = "\$super_path = dirname(__DIR__, {$unit->super_dir_levels}) . DIRECTORY_SEPARATOR; // the workspace/vendor path";
-
-			// load the builtins
-			if ($unit->as_main_unit) {
-				$items[] = sprintf("require_once \$super_path . '%s'; // the builtins", Compiler::BUILTIN_LOADING_FILE);
-			}
-
-			// load the foriegn units
-			foreach ($unit->use_units as $foreign_unit) {
-				if ($foreign_unit->required_loading) {
-					$items[] = "require_once \$super_path . '{$foreign_unit->loading_file}';";
-				}
-			}
-
-			$items[] = '';
-		}
-
-		// render constants and function defined in current Unit
-		// because of them can not be autoloaded like classes
-		$constants = [];
-		$functions = [];
-		foreach ($normal_programs as $program) {
-			// render the Unit level functions & constants to __public.php
-			foreach ($program->declarations as $declaration) {
-				if (!$declaration->is_unit_level) {
-					continue;
-				}
-
-				if ($declaration instanceof ConstantDeclaration) {
-					$item = $declaration->render($this);
-					if ($item !== null) {
-						$constants[] = $item;
-					}
-				}
-				elseif ($declaration instanceof FunctionDeclaration && $declaration->body !== null) {
-					$item = $declaration->render($this);
-					$functions[] = $item . LF;
-				}
-			}
-		}
-
-		// put constants at the front
-		if ($constants) {
-			$items = array_merge($items, $constants);
-			$items[] = '';
-		}
-
-		// put functions before the constants
-		if ($functions) {
-			$items = array_merge($items, $functions);
-			$items[] = '';
-		}
-
-		return $this->join_code($items);
+		$this->process_use_statments($program);
+		return parent::render_program($program);
 	}
 
-	private function render_heading_statements(Program $program)
+	protected function process_use_statments(Program $program)
+	{
+		foreach ($program->declarations as $declaration) {
+			$this->collect_use_statements($program, $declaration);
+		}
+
+		$program->main_function && $this->collect_use_statements($program, $program->main_function);
+	}
+
+	protected function collect_use_statements(Program $program, IDeclaration $declaration)
+	{
+		foreach ($declaration->uses as $use) {
+			// it should be a use statement in __unit
+
+			$uri = $use->ns->uri;
+			if ($use->target_name) {
+				$uri .= '!'; // just to differentiate, avoid conflict with no targets use statements
+			}
+
+			// URI相同的将合并到一条
+			if (!isset($program->uses[$uri])) {
+				$program->uses[$uri] = new UseStatement($use->ns);
+			}
+
+			$program->uses[$uri]->append_target($use);
+		}
+
+		foreach ($declaration->defer_check_identifiers as $identifier) {
+			$dependence = $identifier->symbol->declaration;
+			if ($dependence instanceof FunctionDeclaration && $dependence->program->is_native) {
+				$program->append_depends_native_program($dependence->program);
+			}
+		}
+	}
+
+	protected function render_heading_statements(Program $program)
 	{
 		$items = [];
 
@@ -195,13 +162,6 @@ class PHPCoder extends TeaCoder
 		foreach ($program->depends_native_programs as $depends_program) {
 			$items[] = "require_once UNIT_PATH . '{$depends_program->name}.php';\n";
 		}
-
-		// foreach ($program->declarations as $node) {
-		// 	if ($node instanceof ExpectDeclaration) {
-		// 		$item = $node->render($this);
-		// 		$items[] = $item . LF;
-		// 	}
-		// }
 
 		// 生成定义，使用了trait的类，必须放在文件的前面，否则执行时提示找不到
 		foreach ($program->declarations as $node) {

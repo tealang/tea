@@ -41,6 +41,8 @@ class VariableDeclaration extends Node implements IVariableDeclaration, IStateme
 
 class SuperVariableDeclaration extends VariableDeclaration implements IRootDeclaration
 {
+	use DeferChecksTrait;
+
 	const KIND = 'super_variable_declaration';
 
 	public $is_assignable = false;

@@ -69,15 +69,6 @@ class Program extends Node
 		$this->declarations[(string)$declaration->name] = $declaration;
 	}
 
-	public function append_defer_check_identifiers(IDeclaration $declaration)
-	{
-		if (!$declaration->defer_check_identifiers) {
-			return;
-		}
-
-		$this->defer_check_identifiers = array_merge($this->defer_check_identifiers, $declaration->defer_check_identifiers);
-	}
-
 	public function append_depends_native_program(Program $program)
 	{
 		$this->depends_native_programs[$program->name] = $program;

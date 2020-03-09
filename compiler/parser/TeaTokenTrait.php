@@ -299,6 +299,11 @@ trait TeaTokenTrait
 		return $tmp;
 	}
 
+	protected function back(int $num = 1)
+	{
+		$this->pos -= $num;
+	}
+
 	// protected function is_next_token(string ...$tokens)
 	// {
 	// 	$next = $this->get_token();

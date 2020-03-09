@@ -171,7 +171,7 @@ class Compiler
 		$this->prepare_for_render();
 
 		// prepare for render
-		$header_coder = new PHPCoder();
+		$header_coder = new PHPPublicCoder();
 		$this->unit->dist_ns_uri = $header_coder->render_namespace_identifier($this->unit->ns);
 		if ($this->unit->dist_ns_uri) {
 			// use to generate the autoloads classmap
@@ -223,11 +223,6 @@ class Compiler
 
 		foreach ($this->normal_program_files as $file) {
 			$this->normal_programs[] = $this->parse_tea_program($file);
-		}
-
-		// check the global uses
-		foreach ($this->unit->programs as $program) {
-			$this->process_program_uses($program);
 		}
 
 		self::echo_success(count($this->normal_programs) . ' Tea programs parsed success.' . LF);
@@ -303,59 +298,6 @@ class Compiler
 	// 	return $project_dist_path . DS . $dir . DS;
 	// }
 
-	private function process_program_uses(Program $program)
-	{
-		// for auto add use statement to dist codes
-
-		$uses = [];
-		foreach ($program->defer_check_identifiers as $identifier) {
-			if (isset($program->symbols[$identifier->name])) {
-				continue;
-			}
-
-			$symbol = $this->unit->symbols[$identifier->name] ?? null;
-			if (!$symbol) {
-				continue;
-			}
-
-			$declaration = $symbol->declaration;
-
-			if ($declaration instanceof UseDeclaration) {
-				// it should be a use statement in __unit
-
-				$uri = $declaration->ns->uri;
-				if ($declaration->target_name) {
-					$uri .= '!'; // just to differentiate, avoid conflict with no targets use statements
-				}
-
-				// URI相同的将合并到一条
-				if (!isset($uses[$uri])) {
-					$uses[$uri] = new UseStatement($declaration->ns);
-				}
-
-				$uses[$uri]->targets[] = $declaration;
-			}
-			// elseif ($declaration instanceof ClassLikeDeclaration) {
-			// 	if ($declaration->label === _PHP) {
-			// 		// the declarations with #php
-			// 		$uses[$symbol->name] = new UseStatement(new NamespaceIdentifier([$symbol->name]));
-			// 	}
-			// }
-			// elseif ($declaration instanceof NamespaceDeclaration) {
-			// 	// it should be a use statement in __unit
-			// 	$uses[$symbol->name] = new UseStatement(new NamespaceIdentifier([$symbol->name]));
-			// }
-			elseif ($declaration instanceof FunctionDeclaration && $declaration->program->is_native) {
-				$program->append_depends_native_program($declaration->program);
-			}
-		}
-
-		// auto add use statement to programs
-		if ($uses) {
-			$program->uses = array_merge($program->uses, array_values($uses));
-		}
-	}
-
 	private function check_ast()
 	{
 		self::echo_start('Checking AST...', LF);
@@ -374,13 +316,18 @@ class Compiler
 	private function check_ast_for_unit(Unit $unit)
 	{
 		$checker = $unit->get_checker();
-		foreach ($unit->programs as $program) {
-			if ($program->is_native) {
-				continue;
-			}
 
-			self::echo_start(" - {$program->file}", LF);
-			$checker->check_program($program);
+		foreach ($unit->programs as $program) {
+			if (!$program->is_native) {
+				$checker->collect_program_uses($program);
+			}
+		}
+
+		foreach ($unit->programs as $program) {
+			if (!$program->is_native) {
+				self::echo_start(" - {$program->file}", LF);
+				$checker->check_program($program);
+			}
 		}
 	}
 

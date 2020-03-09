@@ -21,4 +21,11 @@ class UseStatement extends BaseStatement
 		$this->ns = $ns;
 		$this->targets = $targets;
 	}
+
+	public function append_target(UseDeclaration $target)
+	{
+		if (!in_array($target, $this->targets, true)) {
+			$this->targets[] = $target;
+		}
+	}
 }

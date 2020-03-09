@@ -271,6 +271,7 @@ const __AUTOLOADS = [
 	'Tea\ThrowStatement' => 'ast/statement/ThrowStatement.php',
 	'Tea\UseStatement' => 'ast/statement/UseStatement.php',
 	'Tea\PHPCoder' => 'coder/PHPCoder.php',
+	'Tea\PHPPublicCoder' => 'coder/PHPPublicCoder.php',
 	'Tea\TeaCoder' => 'coder/TeaCoder.php',
 	'Tea\TeaHeaderCoder' => 'coder/TeaHeaderCoder.php',
 	'Tea\Dumper' => 'helper/Dumper.php',

@@ -814,22 +814,40 @@ class TeaParser extends BaseParser
 		return $this->read_expression();
 	}
 
+	const EXPRESSION_ENDINGS = [null, _PAREN_CLOSE, _BRACKET_CLOSE, _BLOCK_END, _SEMICOLON];
+
 	protected function read_expression(OperatorSymbol $prev_operator = null)
 	{
-		$token = $this->get_token_ignore_empty();
-		if ($token === null || $token === _PAREN_CLOSE || $token === _BRACKET_CLOSE || $token === _BLOCK_END || $token === _SEMICOLON) {
+		$token = $this->scan_token_ignore_empty();
+		if (in_array($token, self::EXPRESSION_ENDINGS, true)) {
+			$this->back();
 			return null;
 		}
 
-		if ($token === _COMMENTS_OPEN) {
-			$this->skip_comments(); // the /* ... */
-			return $this->read_expression($prev_operator);
-		}
-
-		$this->scan_token_ignore_empty();
-
 		$expression = $this->read_expression_with_token($token, $prev_operator);
 		$expression and $expression->pos = $this->pos;
+
+		return $expression;
+	}
+
+	protected function read_argument()
+	{
+		$token = $this->scan_token_ignore_empty();
+		if (in_array($token, self::EXPRESSION_ENDINGS, true)) {
+			$this->back();
+			return null;
+		}
+
+		$label = null;
+		if ($this->skip_colon()) {
+			$label = $token;
+			$token = $this->scan_token_ignore_space();
+		}
+
+		$expression = $this->read_expression_with_token($token);
+		$expression and $expression->pos = $this->pos;
+
+		$expression->label = $label;
 
 		return $expression;
 	}
@@ -983,8 +1001,12 @@ class TeaParser extends BaseParser
 		if ($this->get_token_ignore_space() === _ARROW) {
 			$parameters = [];
 			if ($expression) {
-				if (!isset($expression->name)) {
+				if (!$expression instanceof PlainIdentifier) {
 					throw $this->new_unexpected_error();
+				}
+
+				if ($expression->symbol === null) {
+					$this->factory->remove_defer_check($expression);
 				}
 
 				$parameters[] = $this->create_parameter($expression->name);
@@ -1004,6 +1026,10 @@ class TeaParser extends BaseParser
 	{
 		if (!TeaHelper::is_declarable_variable_name($readed_identifier->name)) {
 			throw $this->new_unexpected_error();
+		}
+
+		if ($readed_identifier->symbol === null) {
+			$this->factory->remove_defer_check($readed_identifier);
 		}
 
 		// lambda: (param1, ...) => {}
@@ -1573,18 +1599,19 @@ class TeaParser extends BaseParser
 	{
 		$has_label = false;
 		$items = [];
-		while ($item = $this->read_expression()) {
-			if ($item instanceof PlainIdentifier && $this->skip_colon()) {
+		while ($item = $this->read_argument()) {
+			if ($item->label !== null) {
 				// the labeled argument
-				if (isset($items[$item->name])) {
-					throw $this->new_parse_error("Argument label '{$item->name}' has be assigned.");
+				if (isset($items[$item->label])) {
+					throw $this->new_parse_error("Parameter '{$item->label}' already has be assigned.");
 				}
 				else {
-					$items[$item->name] = $this->read_expression();
+					$items[$item->label] = $item;
+					$item->label = null;
 				}
 			}
 			elseif ($has_label) {
-				throw $this->new_parse_error("This argument need a label, because of the prevent has labeled.");
+				throw $this->new_parse_error("This argument required a label, because of the prevent has a labeled.");
 			}
 			else {
 				$items[] = $item;

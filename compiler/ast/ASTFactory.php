@@ -126,7 +126,7 @@ class ASTFactory
 	public function create_classlike_identifier(string $name)
 	{
 		$identifier = new ClassLikeIdentifier($name);
-		$this->set_to_defer_check($identifier);
+		$this->set_defer_check($identifier);
 		return $identifier;
 	}
 
@@ -137,7 +137,7 @@ class ASTFactory
 		}
 		else {
 			$identifier = new PlainIdentifier($name);
-			$this->set_to_defer_check($identifier);
+			$this->set_defer_check($identifier);
 		}
 
 		return $identifier;
@@ -208,26 +208,31 @@ class ASTFactory
 		return new YieldExpression($argument);
 	}
 
-	private function set_to_defer_check(Identifiable $identifier)
+	private function set_defer_check(Identifiable $identifier)
 	{
-		if (!$this->seek_symbol_in_function($identifier)) {
-			// add to check list
-			if ($this->function) {
-				$this->function->set_defer_check_identifier($identifier);
-			}
-			else {
-				$this->program->set_defer_check_identifier($identifier);
-			}
+		if (!$this->declaration instanceof FunctionDeclaration) {
+			$this->declaration->set_defer_check_identifier($identifier);
+		}
+		elseif (!$this->seek_symbol_in_function($identifier)) {
+			$this->declaration->set_defer_check_identifier($identifier);
+			// // add to check list
+			// if ($this->function) {
+			// 	$this->function->set_defer_check_identifier($identifier);
+			// }
+			// else {
+			// 	$this->program->set_defer_check_identifier($identifier);
+			// }
 		}
 	}
 
-	private function remove_defer_check(IEnclosingBlock $block, PlainIdentifier $identifier)
+	public function remove_defer_check(PlainIdentifier $identifier)
 	{
+		$block = $this->enclosing;
 		$block->remove_defer_check_identifier($identifier);
 
 		while ($block = $block->super_block) {
 			if ($block instanceof IEnclosingBlock) {
-				$this->remove_defer_check($block, $identifier);
+				$block->remove_defer_check_identifier($identifier);
 			}
 		}
 	}
@@ -245,7 +250,7 @@ class ASTFactory
 				$this->auto_declare_for_assigning_identifier($assignable);
 
 				// remove from check list
-				$this->remove_defer_check($this->enclosing, $assignable);
+				$this->remove_defer_check($assignable);
 			}
 		}
 		elseif ($assignable instanceof AccessingIdentifier || $assignable instanceof KeyAccessing) {
@@ -665,7 +670,7 @@ class ASTFactory
 
 	public function end_class()
 	{
-		$this->program->append_defer_check_identifiers($this->declaration);
+		// $this->program->append_defer_check_identifiers($this->declaration);
 		$this->class = null;
 		$this->set_main_function();
 	}
@@ -689,7 +694,10 @@ class ASTFactory
 
 	public function end_class_member()
 	{
-		$this->program->append_defer_check_identifiers($this->declaration);
+		// $this->program->append_defer_check_identifiers($this->declaration);
+
+		$this->class->append_defer_check_identifiers($this->declaration);
+
 		$this->declaration = $this->class;
 		$this->enclosing = null;
 		$this->function = null;
@@ -708,7 +716,7 @@ class ASTFactory
 
 	public function end_root_declaration()
 	{
-		$this->program->append_defer_check_identifiers($this->declaration);
+		// $this->program->append_defer_check_identifiers($this->declaration);
 		$this->set_main_function();
 	}
 
@@ -737,7 +745,7 @@ class ASTFactory
 
 	private function set_main_function()
 	{
-		$this->function = $this->enclosing = $this->block = $this->program->main_function;
+		$this->declaration = $this->function = $this->enclosing = $this->block = $this->program->main_function;
 	}
 
 	private static function find_super_enclosing(BaseBlock $block)

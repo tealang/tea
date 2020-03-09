@@ -34,6 +34,32 @@ class ASTChecker
 		$this->unit = $unit;
 	}
 
+	public function collect_program_uses(Program $program)
+	{
+		$this->program = $program;
+
+		foreach ($program->declarations as $node) {
+			$this->collect_declaration_uses($node);
+		}
+
+		$program->main_function && $this->collect_declaration_uses($program->main_function);
+	}
+
+	private function collect_declaration_uses(IDeclaration $declaration)
+	{
+		foreach ($declaration->defer_check_identifiers as $identifier) {
+			$symbol = $this->find_symbol_in_program($this->program, $identifier->name);
+			if ($symbol === null) {
+				throw $this->new_syntax_error("Symbol of '{$node->name}' not found.", $node);
+			}
+
+			$dependence = $symbol->declaration;
+			if ($dependence instanceof UseDeclaration) {
+				$declaration->append_use_declaration($dependence);
+			}
+		}
+	}
+
 	public function check_program(Program $program)
 	{
 		if ($program->is_checked) return;
@@ -56,7 +82,7 @@ class ASTChecker
 
 	private function check_use_target(UseDeclaration $node)
 	{
-		$this->require_declaration_for_use($node);
+		$this->attach_source_declaration_for_use($node);
 	}
 
 	private function check_declaration(IDeclaration $node)
@@ -1573,7 +1599,7 @@ class ASTChecker
 	{
 		$src_callee_declar = $node->callee->symbol->declaration;
 
-		// if is a variable, use it's type decalartion
+		// if is a variable, use it's type declaration
 		if ($src_callee_declar instanceof IVariableDeclaration) {
 			$callee_declar = $src_callee_declar->type;
 		}
@@ -1928,7 +1954,7 @@ class ASTChecker
 
 	private function find_symbol_by_name(string $name, Node $node = null)
 	{
-		$symbol = $this->get_symbol_in_program($this->program, $name);
+		$symbol = $this->find_symbol_in_program($this->program, $name);
 
 		// find for 'super'
 		if ($symbol === null && $name === _SUPER) {
@@ -1946,7 +1972,7 @@ class ASTChecker
 		}
 
 		// if ($this->block === null) {
-		// 	$symbol = $this->get_symbol_in_program($this->program, $name);
+		// 	$symbol = $this->find_symbol_in_program($this->program, $name);
 		// }
 		// else {
 		// 	// find in block
@@ -1966,13 +1992,13 @@ class ASTChecker
 		// 	}
 
 		// 	if (!isset($symbol)) {
-		// 		$symbol = $this->get_symbol_in_program($block->program, $name);
+		// 		$symbol = $this->find_symbol_in_program($block->program, $name);
 		// 	}
 		// }
 
 		if ($symbol) {
 			if ($symbol->declaration instanceof UseDeclaration) {
-				$symbol->declaration = $this->require_declaration_for_use($symbol->declaration);
+				$symbol->declaration = $this->attach_source_declaration_for_use($symbol->declaration);
 			}
 			elseif (!$symbol->declaration->is_checked) {
 				$this->check_declaration($symbol->declaration);
@@ -1983,7 +2009,7 @@ class ASTChecker
 		return $symbol;
 	}
 
-	private function get_symbol_in_program(Program $program, string $name)
+	private function find_symbol_in_program(Program $program, string $name)
 	{
 		if (isset($program->symbols[$name])) {
 			$symbol = $program->symbols[$name];
@@ -2222,7 +2248,7 @@ class ASTChecker
 			else {
 				$symbol = $this->require_global_symbol_for_identifier($identifier);
 				if ($symbol->declaration instanceof UseDeclaration) {
-					$symbol->declaration = $this->require_declaration_for_use($symbol->declaration);
+					$symbol->declaration = $this->attach_source_declaration_for_use($symbol->declaration);
 				}
 			}
 
@@ -2272,7 +2298,7 @@ class ASTChecker
 		return $symbol;
 	}
 
-	private function require_declaration_for_use(UseDeclaration $use): IRootDeclaration
+	private function attach_source_declaration_for_use(UseDeclaration $use): IRootDeclaration
 	{
 		if ($use->source_declaration === null) {
 			// find from the target Unit
@@ -2288,6 +2314,7 @@ class ASTChecker
 			}
 
 			$use->source_declaration = $target;
+			$use->is_checked = true;
 		}
 
 		return $use->source_declaration;

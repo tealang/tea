@@ -11,6 +11,8 @@ namespace Tea;
 
 class ExpectDeclaration extends RootDeclaration
 {
+	use DeferChecksTrait;
+
 	const KIND = 'expect_declaration';
 
 	// public $name = '__expect';
