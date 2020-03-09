@@ -11,13 +11,37 @@ namespace Tea;
 
 class PHPPublicCoder extends PHPCoder
 {
+	private $constants = [];
+	private $functions = [];
+
+	public function collect_declarations(array $programs)
+	{
+		foreach ($programs as $program) {
+			foreach ($program->declarations as $node) {
+				if (!$node->is_unit_level) {
+					continue;
+				}
+
+				if ($node instanceof ConstantDeclaration) {
+					$this->constants[] = $node;
+				}
+				elseif ($node instanceof FunctionDeclaration && $node->body !== null) {
+					$this->functions[] = $node;
+				}
+			}
+		}
+	}
+
 	public function render_unit_header_program(Program $header_program, array $normal_programs)
 	{
-		$this->process_use_statments($header_program);
-
 		$this->program = $header_program;
 
 		$unit = $header_program->unit;
+
+		$this->collect_declarations($normal_programs);
+
+		$this->process_use_statments($this->constants);
+		$this->process_use_statments($this->functions);
 
 		$items = $this->render_heading_statements($header_program);
 
@@ -52,24 +76,36 @@ class PHPPublicCoder extends PHPCoder
 		// because of them can not be autoloaded like classes
 		$constants = [];
 		$functions = [];
-		foreach ($normal_programs as $_program) {
-			// render the Unit level functions & constants to __public.php
-			foreach ($_program->declarations as $declaration) {
-				if (!$declaration->is_unit_level) {
-					continue;
-				}
+		// foreach ($normal_programs as $_program) {
+		// 	// render the Unit level functions & constants to __public.php
+		// 	foreach ($_program->declarations as $declaration) {
+		// 		if (!$declaration->is_unit_level) {
+		// 			continue;
+		// 		}
 
-				if ($declaration instanceof ConstantDeclaration) {
-					$item = $declaration->render($this);
-					if ($item !== null) {
-						$constants[] = $item;
-					}
-				}
-				elseif ($declaration instanceof FunctionDeclaration && $declaration->body !== null) {
-					$item = $declaration->render($this);
-					$functions[] = $item . LF;
-				}
+		// 		if ($declaration instanceof ConstantDeclaration) {
+		// 			$item = $declaration->render($this);
+		// 			if ($item !== null) {
+		// 				$constants[] = $item;
+		// 			}
+		// 		}
+		// 		elseif ($declaration instanceof FunctionDeclaration && $declaration->body !== null) {
+		// 			$item = $declaration->render($this);
+		// 			$functions[] = $item . LF;
+		// 		}
+		// 	}
+		// }
+
+		foreach ($this->constants as $node) {
+			$item = $node->render($this);
+			if ($item !== null) {
+				$constants[] = $item;
 			}
+		}
+
+		foreach ($this->functions as $node) {
+			$item = $node->render($this);
+			$functions[] = $item . LF;
 		}
 
 		// put constants at the front

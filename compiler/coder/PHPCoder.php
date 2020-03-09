@@ -85,22 +85,18 @@ class PHPCoder extends TeaCoder
 
 	public $include_prefix;
 
-	public function render_program(Program $program)
-	{
-		$this->process_use_statments($program);
-		return parent::render_program($program);
-	}
+	protected $uses = [];
 
-	protected function process_use_statments(Program $program)
+	protected function process_use_statments(array $declarations)
 	{
-		foreach ($program->declarations as $declaration) {
-			$this->collect_use_statements($program, $declaration);
+		foreach ($declarations as $node) {
+			$this->collect_use_statements($node);
 		}
 
-		$program->main_function && $this->collect_use_statements($program, $program->main_function);
+		$this->program->main_function && $this->collect_use_statements($this->program->main_function);
 	}
 
-	protected function collect_use_statements(Program $program, IDeclaration $declaration)
+	protected function collect_use_statements(IDeclaration $declaration)
 	{
 		foreach ($declaration->uses as $use) {
 			// it should be a use statement in __unit
@@ -111,17 +107,17 @@ class PHPCoder extends TeaCoder
 			}
 
 			// URI相同的将合并到一条
-			if (!isset($program->uses[$uri])) {
-				$program->uses[$uri] = new UseStatement($use->ns);
+			if (!isset($this->uses[$uri])) {
+				$this->uses[$uri] = new UseStatement($use->ns);
 			}
 
-			$program->uses[$uri]->append_target($use);
+			$this->uses[$uri]->append_target($use);
 		}
 
 		foreach ($declaration->defer_check_identifiers as $identifier) {
 			$dependence = $identifier->symbol->declaration;
 			if ($dependence instanceof FunctionDeclaration && $dependence->program->is_native) {
-				$program->append_depends_native_program($dependence->program);
+				$this->program->append_depends_native_program($dependence->program);
 			}
 		}
 	}
@@ -135,8 +131,8 @@ class PHPCoder extends TeaCoder
 			$items[] = "namespace $ns_uri;\n";
 		}
 
-		if ($program->uses) {
-			$items[] = $this->render_uses($program->uses) . LF;
+		if ($this->uses) {
+			$items[] = $this->render_uses($this->uses) . LF;
 		}
 
 		return $items;
@@ -144,6 +140,16 @@ class PHPCoder extends TeaCoder
 
 	protected function render_program_statements(Program $program)
 	{
+		$declarations = [];
+		foreach ($program->declarations as $node) {
+			// 公用常量和函数都生成到了__public.php中
+			if (!$node->is_unit_level || $node instanceof ClassLikeDeclaration) {
+				$declarations[] = $node;
+			}
+		}
+
+		$this->process_use_statments($declarations);
+
 		$items = $this->render_heading_statements($program);
 
 		if ($program->as_main_program) {
@@ -164,12 +170,9 @@ class PHPCoder extends TeaCoder
 		}
 
 		// 生成定义，使用了trait的类，必须放在文件的前面，否则执行时提示找不到
-		foreach ($program->declarations as $node) {
-			// 常量和函数都生成到了__public.php中
-			if (!$node->is_unit_level || $node instanceof ClassLikeDeclaration) {
-				$item = $node->render($this);
-				$item === null || $items[] = $item . LF;
-			}
+		foreach ($declarations as $node) {
+			$item = $node->render($this);
+			$item === null || $items[] = $item . LF;
 		}
 
 		// 生成游离语句

@@ -10,7 +10,7 @@ public PHPClassInMixed1 {
 
 public php_get_num() Int
 
-public fn0(str Any)
+public fn0(str Any) String
 
 public xrange(start Int, stop Int, step UInt = 1) IGenerator
 

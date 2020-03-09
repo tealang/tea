@@ -1,8 +1,7 @@
 <?php
 namespace tea\tests\syntax;
 
-use tea\tests\xview\{ BaseView, IViewDemo };
-use tea\tests\PHPDemoUnit\{ BaseInterface, NS1\Demo as PHPClassDemo, const PHP_CONST_DEMO, function php_function_demo };
+use tea\tests\PHPDemoUnit\{ const PHP_CONST_DEMO };
 
 const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
@@ -11,8 +10,9 @@ require_once $super_path . 'tea/builtin/dist/__public.php'; // the builtins
 require_once $super_path . 'tea/tests/xview/dist/__public.php';
 require_once $super_path . 'tea/tests/PHPDemoUnit/__public.php';
 
-function fn0($str) {
+function fn0($str): string {
 	echo $str, LF;
+	return PHP_CONST_DEMO;
 }
 
 function xrange(int $start, int $stop, int $step = 1): \Generator {
