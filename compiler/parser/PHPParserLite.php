@@ -10,7 +10,7 @@
 namespace Tea;
 
 /**
- * A lite Parser uses to generate __public.th file for PHP programs
+ * A lite Parser uses to supported the Mixed Programming
  */
 class PHPParserLite extends BaseParser
 {
@@ -124,6 +124,34 @@ class PHPParserLite extends BaseParser
 		return $node;
 	}
 
+	const EXPRESSION_ENDINGS = [null, _PAREN_CLOSE, _BRACKET_CLOSE, _BLOCK_END, _SEMICOLON];
+
+	private function read_expression()
+	{
+		// we do not care about the contents, just skip ...
+
+		while (($token = $this->scan_token_ignore_empty()) !== null) {
+			if (is_string($token)) {
+				if (in_array($token, static::EXPRESSION_ENDINGS, true)) {
+					$this->pos--;
+					return null;
+				}
+
+				switch ($token) {
+					case _PAREN_OPEN:
+						$this->read_expression();
+						$this->expect_char_token(_PAREN_CLOSE);
+						break;
+
+					case _BRACKET_OPEN:
+						$this->read_expression();
+						$this->expect_char_token(_BRACKET_CLOSE);
+						break;
+				}
+			}
+		}
+	}
+
 	private function read_interface_declaration()
 	{
 		$name = $this->expect_identifier_name();
@@ -147,7 +175,6 @@ class PHPParserLite extends BaseParser
 	private function read_class_declaration(bool $is_abstract = false)
 	{
 		$name = $this->expect_identifier_name();
-
 
 		$declaration = $this->factory->create_class_declaration($name, _PUBLIC);
 		$declaration->ns = $this->namespace;
@@ -340,7 +367,7 @@ class PHPParserLite extends BaseParser
 		//  * @var int
 		//  */
 
-		if (preg_match('/\n\s+\*\s@' . $kind . '\s+([^\s]+)/', $doc, $match)) {
+		if (preg_match('/\s+\*\s+@' . $kind . '\s+([^\s]+)/', $doc, $match)) {
 			return $this->create_type_identifier($match[1]);
 		}
 

@@ -20,9 +20,6 @@ require BASE_PATH . 'compiler/__public.php';
 // stats start
 UsageTracer::start();
 
-// stats end
-register_shutdown_function(function() { echo join("\t", UsageTracer::end()), LF; });
-
 const DEBUG = false;
 
 const KEY_INIT = 'init';
@@ -59,9 +56,14 @@ try {
 	$compiler = new Compiler($realpath);
 	$count = $compiler->make();
 
-	halt("$count programs compiled.");
+	echo "\n$count programs compiled.\n\n";
 }
 catch (\Exception $e) {
 	halt($e->getMessage());
 	// echo $e->getTraceAsString(), LF, LF;
 }
+
+// stats end
+echo join("\t", UsageTracer::end()), LF;
+
+// end

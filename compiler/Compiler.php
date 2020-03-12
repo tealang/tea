@@ -310,7 +310,7 @@ class Compiler
 		// check current unit
 		$this->check_ast_for_unit($this->unit);
 
-		self::echo_success('Tea programs checked.' . LF);
+		self::echo_success('Tea programs checked success.' . LF);
 	}
 
 	private function check_ast_for_unit(Unit $unit)

@@ -3,6 +3,7 @@
 #unit tea/tests/syntax
 
 public PHPClassInMixed1 {
+	protected PREFIX String
 	private caller String
 	public construct(caller String)
 	public get_message() String

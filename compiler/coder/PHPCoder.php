@@ -363,21 +363,6 @@ class PHPCoder extends TeaCoder
 		}
 	}
 
-	// public function render_function_block(FunctionDeclaration $node)
-	// {
-	// 	$header = $this->generate_function_header($node);
-	// 	$parameters = $this->render_function_parameters($node);
-	// 	$body = $this->render_enclosing_block($node);
-
-	// 	if ($node->type === null || $node->type === TypeFactory::$_any || $node->type === TypeFactory::$_void) {
-	// 		return "$header($parameters) $body";
-	// 	}
-	// 	else {
-	// 		$return_type = $node->type->render($this);
-	// 		return "$header($parameters): $return_type $body";
-	// 	}
-	// }
-
 	public function render_lambda_expression(IExpression $node)
 	{
 		$parameters = $this->render_parameters($node->parameters);
