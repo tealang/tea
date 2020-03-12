@@ -295,7 +295,7 @@ class ASTFactory
 			throw new Exception("Error: Program name '{$program->name}' has been used, please rename the file '{$program->file}'");
 		}
 
-		$program->main_function = new MainFunction();
+		$program->main_function = new FunctionDeclaration(_INTERNAL, '__main', null, []);
 		$program->main_function->program = $program;
 
 		$this->program = $program;
@@ -412,17 +412,6 @@ class ASTFactory
 		return $declaration;
 	}
 
-	// public function declare_method(?string $modifier, string $name, ?IType $type, array $parameters)
-	// {
-	// 	$declaration = new FunctionDeclaration($modifier, $name, $type, $parameters);
-	// 	$this->append_class_member($declaration);
-
-	// 	$this->super_block = $this->block;
-	// 	$this->function = $declaration;
-
-	// 	return $declaration;
-	// }
-
 	public function create_method_declaration(?string $modifier, string $name)
 	{
 		$declaration = new FunctionDeclaration($modifier, $name);
@@ -442,19 +431,6 @@ class ASTFactory
 
 		return $declaration;
 	}
-
-	// public function declare_function(string $modifier, string $name, ?IType $type, array $parameters)
-	// {
-	// 	$this->check_global_modifier($modifier, 'function');
-
-	// 	$declaration = new FunctionDeclaration($modifier, $name, $type, $parameters);
-
-	// 	$this->function = $declaration;
-	// 	$this->block = $declaration;
-
-	// 	$this->create_global_symbol($declaration);
-	// 	return $declaration;
-	// }
 
 	public function create_property_declaration(?string $modifier, string $name)
 	{

@@ -40,7 +40,7 @@ function xrange(int $start, int $stop, int $step = 1): \Generator {
 
 // program end
 
-# --- generates ---
+// autoloads
 const __AUTOLOADS = [
 	'tea\tests\syntax\PHPClassInMixed1' => '_mixed1.php',
 	'tea\tests\syntax\IDemo' => 'dist/class.php',

@@ -65,17 +65,4 @@ class FunctionDeclaration extends BaseBlock implements IEnclosingBlock, IFunctio
 	}
 }
 
-// class FunctionBlock extends FunctionDeclaration
-// {
-// 	const KIND = 'function_block';
-// }
-
-class MainFunction extends FunctionDeclaration
-{
-	const KIND = 'main_function';
-
-	public function __construct()
-	{
-		$this->parameters = [];
-	}
-}
+// end

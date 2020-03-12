@@ -30,7 +30,7 @@ function demo_function_with_callbacks(string $some, callable $success, callable 
 
 // program end
 
-# --- generates ---
+// autoloads
 const __AUTOLOADS = [
 	'tea\docs\IDemo' => 'summary.php',
 	'tea\docs\IDemoTrait' => 'summary.php',

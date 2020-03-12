@@ -85,7 +85,7 @@ function regex_matches(string $regex, string $subject): array {
 
 // program end
 
-# --- generates ---
+// autoloads
 const __AUTOLOADS = [
 	'IBaseType' => 'core.php',
 	'IView' => 'core.php'

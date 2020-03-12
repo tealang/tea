@@ -8,7 +8,7 @@ require_once $super_path . 'tea/builtin/dist/__public.php'; // the builtins
 
 // program end
 
-# --- generates ---
+// autoloads
 const __AUTOLOADS = [
 	'tea\examples\IFib' => 'fib_class.php',
 	'tea\examples\IFibTrait' => 'fib_class.php',

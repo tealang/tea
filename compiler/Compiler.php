@@ -478,12 +478,10 @@ class Compiler
 
 	private function render_unit_header(PHPCoder $coder)
 	{
-		// $this->collect_autoloads_map($this->header_program, $this->unit_dist_loader_file, $this->unit_dist_ns_prefix);
+		$dist_code = $coder->render_public_program($this->header_program, $this->normal_programs);
 
-		$dist_code = $coder->render_unit_header_program($this->header_program, $this->normal_programs);
-
-		// the autoloads for classes
-		$dist_code .= PHPLoaderMaker::render_autoloads_code($this->autoloads_map, _UNIT_PATH);
+		// the autoloads for classes/interfaces/traits
+		$dist_code .= PHPPublicCoder::render_autoloads_code($this->autoloads_map);
 
 		file_put_contents($this->unit_dist_loader_file, $dist_code);
 	}

@@ -5,7 +5,7 @@ const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
 // program end
 
-# --- generates ---
+// autoloads
 const __AUTOLOADS = [
 	'tea\tests\xview\BaseView' => 'BaseView.php',
 	'tea\tests\xview\IViewDemo' => 'IViewDemo.php',
