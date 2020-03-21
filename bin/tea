@@ -20,7 +20,7 @@ require BASE_PATH . 'compiler/__public.php';
 // stats start
 UsageTracer::start();
 
-const DEBUG = false;
+const DEBUG = true;
 
 const KEY_INIT = 'init';
 const OPTION_KEYS = [KEY_INIT];

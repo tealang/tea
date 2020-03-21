@@ -84,7 +84,8 @@ const
 	_TRY = 'try', _CATCH = 'catch', _FINALLY = 'finally',
 	_ECHO = 'echo', _PRINT = 'print',
 	_RETURN = 'return', _EXIT = 'exit', _BREAK = 'break', _CONTINUE = 'continue', _THROW = 'throw',
-	_STATIC = 'static', _MASKED = 'masked', _PUBLIC = 'public', _INTERNAL = 'internal', _PROTECTED = 'protected', _PRIVATE = 'private',
+	_STATIC = 'static', _FINAL = 'final', _MASKED = 'masked',
+	_PUBLIC = 'public', _INTERNAL = 'internal', _PROTECTED = 'protected', _PRIVATE = 'private',
 	_THIS = 'this', _SUPER = 'super', _CONSTRUCT = 'construct', _DESTRUCT = 'destruct';
 
 

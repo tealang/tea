@@ -20,8 +20,8 @@ class TeaInitializer
 		is_dir($unit_dir) or FileHelper::mkdir($unit_dir);
 
 		// create the dist dir
-		$dist_dir = $this->domain . '/dist';
-		is_dir($dist_dir) or FileHelper::mkdir($dist_dir);
+		// $dist_dir = $this->domain . '/dist';
+		// is_dir($dist_dir) or FileHelper::mkdir($dist_dir);
 
 		// the __unit.th
 		$header_file = $unit_dir . '/__unit.th';

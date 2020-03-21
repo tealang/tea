@@ -14,9 +14,9 @@ class UsageTracer
 	{
 		$uses = microtime(true) - self::$tracing[0];
 
-		$items[] = 'time: ' . round($uses, 3) . 's';
-		$items[] = 'mem: ' . self::$tracing[1] . '~' . round(memory_get_usage() / 1024, 1) . 'K';
-		$items[] = 'mem-peak: ' . self::$tracing[2] . '~' . round(memory_get_peak_usage() / 1024, 1) . 'K';
+		$items[] = 'Time: ' . round($uses, 3) . 's';
+		$items[] = 'Memory: ' . self::$tracing[1] . '~' . round(memory_get_usage() / 1024, 1) . 'K';
+		$items[] = 'Memory(peak): ' . self::$tracing[2] . '~' . round(memory_get_peak_usage() / 1024, 1) . 'K';
 
 		return $items;
 	}

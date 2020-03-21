@@ -134,7 +134,8 @@ class PHPParserLite extends BaseParser
 			if (is_string($token)) {
 				if (in_array($token, static::EXPRESSION_ENDINGS, true)) {
 					$this->pos--;
-					return null;
+					$expr = null;
+					break;
 				}
 
 				switch ($token) {
@@ -144,12 +145,29 @@ class PHPParserLite extends BaseParser
 						break;
 
 					case _BRACKET_OPEN:
-						$this->read_expression();
-						$this->expect_char_token(_BRACKET_CLOSE);
+						$expr = $this->read_bracket_expression();
 						break;
 				}
 			}
 		}
+
+		return $expr;
+	}
+
+	private function read_bracket_expression(bool $not_opened = false)
+	{
+		$not_opened && $this->expect_char_token(_BRACKET_OPEN);
+
+		$is_dict = false;
+		while ($expr = $this->read_expression()) {
+			if ($this->skip_char_token('=>')) {
+				$is_dict = true;
+			}
+		}
+
+		$this->expect_char_token(_BRACKET_CLOSE);
+
+		return $is_dict ? new DictExpression([]) : new ArrayExpression([]);
 	}
 
 	private function read_interface_declaration()
@@ -222,7 +240,7 @@ class PHPParserLite extends BaseParser
 			}
 
 			$this->scan_token_ignore_empty();
-			throw $this->new_parse_error();
+			throw $this->new_unexpected_error();
 		}
 
 		$this->scan_token_ignore_empty();
@@ -271,7 +289,7 @@ class PHPParserLite extends BaseParser
 			}
 
 			$this->scan_token_ignore_empty();
-			throw $this->new_parse_error();
+			throw $this->new_unexpected_error();
 		}
 
 		$this->scan_token_ignore_empty();
@@ -327,7 +345,7 @@ class PHPParserLite extends BaseParser
 		$declaration = $this->factory->create_constant_declaration(_PUBLIC, $name);
 
 		$this->expect_char_token(_ASSIGN);
-		$declaration->type = $this->read_constant_value_type_skip($doc);
+		$declaration->type = $this->read_value_type_skip($doc);
 		$this->expect_statement_end();
 
 		return $declaration;
@@ -339,22 +357,22 @@ class PHPParserLite extends BaseParser
 		$declaration = $this->factory->create_class_constant_declaration($modifier, $name);
 
 		$this->expect_char_token(_ASSIGN);
-		$declaration->type = $this->read_constant_value_type_skip($doc);
+		$declaration->type = $this->read_value_type_skip($doc);
 		$this->expect_statement_end();
 
 		return $declaration;
 	}
 
-	private function read_constant_value_type_skip(?string $doc)
+	private function read_value_type_skip(?string $doc, string $doc_kind = 'const')
 	{
 		$temp_pos = $this->pos;
 
-		$type = $this->try_detatch_constant_value_type_and_skip();
+		$type = $this->try_detatch_assign_value_type_and_skip();
 		if ($type === null) {
-			$doc && $type = $this->get_type_in_doc($doc, 'const');
+			$doc && $type = $this->get_type_in_doc($doc, $doc_kind);
 			if ($type === null) {
 				$this->pos = $temp_pos;
-				throw $this->new_parse_error("Constant required a type hint in it's docs.");
+				throw $this->new_parse_error("Required a type hint in the declaration docs.");
 			}
 		}
 
@@ -374,20 +392,27 @@ class PHPParserLite extends BaseParser
 		return null;
 	}
 
-	private function try_detatch_constant_value_type_and_skip()
+	private function try_detatch_assign_value_type_and_skip()
 	{
-		$token = $this->scan_typed_token_ignore_empty();
+		$token = $this->scan_token_ignore_empty();
+		if ($token === _BRACKET_OPEN) {
+			$expr = $this->read_bracket_expression();
+			if ($this->skip_char_token(_SEMICOLON)) {
+				$this->pos--; // back to ;
+				return $expr instanceof ArrayExpression
+					? TypeFactory::$_array
+					: TypeFactory::$_dict;
+			}
+		}
 
 		switch ($token[0]) {
 			case T_STRING:
 				$lower_case = strtolower($token[1]);
-				if ($lower_case === 'true' || $lower_case === 'false') {
+				if ($lower_case === _TRUE || $lower_case === _FALSE) {
 					$type = TypeFactory::$_string;
 				}
 				else {
 					// may be a user defined constant
-					// $this->print_token($token);
-					// throw $this->new_unexpected_error();
 					$type = null;
 				}
 
@@ -411,7 +436,7 @@ class PHPParserLite extends BaseParser
 				break;
 
 			default:
-				$this->print_token($token);
+				// $this->print_token($token);
 				throw $this->new_unexpected_error();
 		}
 
@@ -440,22 +465,25 @@ class PHPParserLite extends BaseParser
 
 		if ($type_name === null) {
 			$type = $this->get_type_in_doc($doc, 'var');
-			if ($type === null) {
-				throw $this->new_parse_error("Property '{$token[1]}' required a type hint '@var string/int/float/bool/...' in it's docs.");
-			}
 		}
 		else {
 			$type = $this->create_type_identifier($type_name);
 		}
 
-		$declaration->type = $type;
-
 		if ($this->skip_char_token(_ASSIGN)) {
-			$this->skip_to_char_token(_SEMICOLON);
+			if ($type) {
+				$this->skip_to_char_token(_SEMICOLON);
+			}
+			else {
+				$type = $this->read_value_type_skip($doc);
+			}
 		}
-		else {
-			$this->expect_statement_end();
+		elseif ($type === null) {
+			throw $this->new_parse_error("Property '{$token[1]}' required a type hint '@var string/int/float/bool/...' in it's docs.");
 		}
+
+		$this->expect_statement_end();
+		$declaration->type = $type;
 
 		return $declaration;
 	}

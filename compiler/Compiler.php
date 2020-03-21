@@ -249,9 +249,9 @@ class Compiler
 		$checking_path = $this->unit_path;
 		foreach ($reversed_ns_names as $ns_name) {
 			$dir_name = basename($checking_path);
-			if ($ns_name !== $dir_name && strtolower($ns_name) !== $dir_name) {
-				throw new Exception("The dir name '$dir_name' did not matched the unit-namespace '$ns_name'.\nPlease rename to '$ns_name', or rename unit-namespace to '$dir_name'.");
-			}
+			// if ($ns_name !== $dir_name && strtolower($ns_name) !== $dir_name) {
+			// 	throw new Exception("The dir name '$dir_name' did not matched the unit-namespace '$ns_name'.\nPlease rename to '$ns_name', or rename unit-namespace to '$dir_name'.");
+			// }
 
 			$checking_path = dirname($checking_path);
 			array_unshift($dir_names, $dir_name);

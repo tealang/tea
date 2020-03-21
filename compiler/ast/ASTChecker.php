@@ -50,7 +50,7 @@ class ASTChecker
 		foreach ($declaration->defer_check_identifiers as $identifier) {
 			$symbol = $this->find_symbol_in_program($this->program, $identifier->name);
 			if ($symbol === null) {
-				throw $this->new_syntax_error("Symbol of '{$node->name}' not found.", $node);
+				throw $this->new_syntax_error("Symbol of '{$identifier->name}' not found.", $identifier);
 			}
 
 			$dependence = $symbol->declaration;
@@ -522,7 +522,7 @@ class ASTChecker
 		foreach ($node->actual_members as $name => $super_class_member) {
 			if (isset($node->members[$name])) {
 				// check super class member declared in current class
-				$this->assert_classlike_member_declaration($node->members[$name], $super_class_member);
+				$this->assert_member_declarations($node->members[$name], $super_class_member);
 			}
 		}
 	}
@@ -535,11 +535,11 @@ class ASTChecker
 			foreach ($interface->actual_members as $name => $member) {
 				if (isset($node->members[$name])) {
 					// check member declared in current class/interface
-					$this->assert_classlike_member_declaration($node->members[$name], $member);
+					$this->assert_member_declarations($node->members[$name], $member, true);
 				}
 				elseif (isset($node->actual_members[$name])) {
 					// check member declared in baseds class/interfaces
-					$this->assert_classlike_member_declaration($node->actual_members[$name], $member);
+					$this->assert_member_declarations($node->actual_members[$name], $member, true);
 
 					// replace to the default method implementation in interface
 					if ($member->body !== null) {
@@ -563,7 +563,7 @@ class ASTChecker
 		}
 	}
 
-	private function assert_classlike_member_declaration(IClassMemberDeclaration $node, IClassMemberDeclaration $protocol)
+	private function assert_member_declarations(IClassMemberDeclaration $node, IClassMemberDeclaration $super, bool $is_interface = false)
 	{
 		// do not need check for construct
 		if ($node->name === _CONSTRUCT) {
@@ -571,27 +571,27 @@ class ASTChecker
 		}
 
 		// the hint type
-		if (!$this->is_strict_compatible_types($protocol->type, $node->type)) {
-			$defined_return_type = $this->get_type_name($node->type);
-			$protocol_return_type = $this->get_type_name($protocol->type);
+		if (!$this->is_strict_compatible_types($super->type, $node->type)) {
+			$node_return_type = $this->get_type_name($node->type);
+			$super_return_type = $this->get_type_name($super->type);
 
-			throw $this->new_syntax_error("Type '{$defined_return_type}' in '{$node->super_block->name}.{$node->name}' must be compatible with '$protocol_return_type' in interface '{$protocol->super_block->name}.{$protocol->name}'", $node->super_block);
+			throw $this->new_syntax_error("Type '{$node_return_type}' in '{$node->super_block->name}.{$node->name}' must be compatible with '$super_return_type' in interface '{$super->super_block->name}.{$super->name}'", $node->super_block);
 		}
 
-		if ($protocol instanceof FunctionDeclaration) {
+		if ($super instanceof FunctionDeclaration) {
 			if (!$node instanceof FunctionDeclaration) {
-				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatible with '{$protocol->super_block->name}.{$protocol->name}'.", $node);
+				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatible with '{$super->super_block->name}.{$super->name}'.", $node);
 			}
 
-			$this->assert_classlike_method_parameters($node, $protocol);
+			$this->assert_classlike_method_parameters($node, $super);
 		}
-		elseif ($protocol instanceof PropertyDeclaration) {
+		elseif ($super instanceof PropertyDeclaration) {
 			if (!$node instanceof PropertyDeclaration) {
-				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatible with '{$protocol->super_block->name}.{$protocol->name}'.", $node);
+				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatible with '{$super->super_block->name}.{$super->name}'.", $node);
 			}
 		}
-		elseif ($protocol instanceof ClassConstantDeclaration) {
-			throw $this->new_syntax_error("Cannot override constant '{$protocol->super_block->name}.{$protocol->name}' in '{$node->super_block->name}'.", $node);
+		elseif ($super instanceof ClassConstantDeclaration && $is_interface) {
+			throw $this->new_syntax_error("Cannot override interface constant '{$super->super_block->name}.{$super->name}' in '{$node->super_block->name}'.", $node);
 		}
 	}
 
@@ -1985,7 +1985,12 @@ class ASTChecker
 			// }
 			// elseif ($infered_type === TypeFactory::$_class) {
 			elseif ($infered_type instanceof MetaType) { // includes static call for class members
-				$node->symbol = $this->require_class_member_symbol($master->symbol->declaration, $node);
+				$declaration = $master->symbol->declaration;
+				if (!$declaration instanceof ClassDeclaration) {
+					$declaration = $declaration->type->value_type->symbol->declaration;
+				}
+
+				$node->symbol = $this->require_class_member_symbol($declaration, $node);
 				if (!$node->symbol->declaration->is_static) {
 					$name = $this->get_declaration_name($node->symbol->declaration);
 					throw $this->new_syntax_error("Invalid to accessing a non-static member '{$name}'", $node);
