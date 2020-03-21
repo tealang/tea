@@ -63,7 +63,7 @@ var users = [
 
 var id2name = [:]
 for user in users {
-	id2name[user['id'] as String] = user['name']
+	id2name[user['id']::String] = user['name']
 }
 
 // array map
@@ -74,13 +74,13 @@ var_dump(mapped)
 
 // array reduce
 var reduced = [1, 2, 3].reduce((carry, item) => {
-	return carry as Int + item as Int
+	return carry::Int + item::Int
 }, 10)
 var_dump(reduced)
 
 // array filter
 var filtered = [0, 1, 2, 3, 4, 5].filter((item) => {
-	if item as Int % 2 == 0 {
+	if item::Int % 2 == 0 {
 		return true
 	}
 })

@@ -64,7 +64,7 @@ class PHPCoder extends TeaCoder
 
 	// 一元和三元运算直接在代码中处理
 	const OPERATOR_PRECEDENCES = [
-		'as' => 1,
+		_DOUBLE_COLON => 1,
 		'**' => 2, 			// 算术运算符
 		'instanceof' => 3, 	// 类型
 		'*' => 4, '/' => 4, '%' => 4, 	// 算术运算符

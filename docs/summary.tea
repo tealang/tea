@@ -61,7 +61,7 @@ any = []
 any = 'abc'
 
 // 将Any类型值转换成String类型
-var any_as_string = any as String
+var any_as_string = any::String
 
 // String
 var str String = 'Unescaped string\n' 	// 单引号字符串，\n\t\r等字符将当作字面字符
@@ -180,12 +180,12 @@ var_without_decared = 123  // 此用例将自动推断成UInt类型
 - Tea语言中不支持“--”、“++”等前置和后置运算符，因考虑其可在子表达式中改变值，易产生难以被发现的问题
 
 	优先级	运算符
-	1	.  ->  ()  []					访问符
-	2	~  -  as						一元运算、类型转换
+	1	. [] () -> ::					成员访问，Array/Dict元素访问，函数调用，回调访问，类型传唤
+	2	~  -  							整数取负，按位取反
 	3	**								幂运算
-	4	* / % << >> &					数学运算、按位左移、按位右移、按位与
-	5	+  -  |  ^  					数学运算、按位或、按位异或
-	6	concat  merge					String/Array连接、Array/Dict按index/key合并
+	4	* / % << >> &					数学运算，按位左移，按位右移，按位与
+	5	+  -  |  ^  					数学运算，按位或，按位异或
+	6	concat  merge					String/Array连接，Array/Dict按index/key合并
 	7	<=> < <= > >= != !== == === is  比较运算
 	8	not 							逻辑非
 	9	and 							逻辑与
@@ -212,15 +212,15 @@ var array_merge = ['A', 'B'] merge ['A1', 'B1'] // result: ['A1', 'B1']
 var dict_merge = ['a': 'A', 'b': 'B'] merge ['a': 'A1', 'c': 'C1'] // result: ['a': 'A1', 'b': 'B', 'c': 'C1']
 
 // as运算符，当用于基础类型时，将进行类型转换
-var uint_from_non_negative_string = '123' as UInt  // okay
-// var uint_from_negative_string = '-123' as UInt  // error
-var str_from_uint = 123 as String
-var str_from_int = -123 as String
-var str_from_float = 123.123 as String
+var uint_from_non_negative_string = '123'::UInt  // okay
+// var uint_from_negative_string = '-123'::UInt  // error
+var str_from_uint = 123::String
+var str_from_int = -123::String
+var str_from_float = 123.123::String
 
 // as运算符，当用于类时，将只被用于编译器类型系统检查处理，而不会进行任何转换
 var ex1 Any
-var ex2 = ex1 as Exception
+var ex2 = ex1::Exception
 
 // is运算符，可用于检查变量是否为某个基础类型，或是否是某个类的实例
 1.1 is Int // false

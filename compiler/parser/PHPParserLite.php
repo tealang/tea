@@ -473,6 +473,7 @@ class PHPParserLite extends BaseParser
 		if ($this->skip_char_token(_ASSIGN)) {
 			if ($type) {
 				$this->skip_to_char_token(_SEMICOLON);
+				$this->pos--;
 			}
 			else {
 				$type = $this->read_value_type_skip($doc);

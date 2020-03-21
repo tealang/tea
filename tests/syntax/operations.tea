@@ -7,12 +7,12 @@ some = 'abc' concat 1 + 2 & 2 * 2 ** 3 / 5 % 6
 var uint_num = 123
 var int_num Int = 123
 
-var int_from_string = '123' as Int
-var uint_from_string = '-123' as UInt
+var int_from_string = '123'::Int
+var uint_from_string = '-123'::UInt
 
-var str_from_uint = 123 as String
-var str_from_int = -123 as String
-var str_from_float = 123.123 as String
+var str_from_uint = 123::String
+var str_from_int = -123::String
+var str_from_float = 123.123::String
 
 if str_from_float is String {
 	echo '${str_from_float} is String'

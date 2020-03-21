@@ -53,17 +53,18 @@ const
 	_SLASH = '/', _BACK_SLASH = '\\',
 	_SHARP = '#', _DOLLAR = '$', _AT = '@', _EXCLAMATION = '!', _UNDERSCORE = '_', _STRIKETHROUGH = '-',
 	_COLON = ':', _COMMA = ',', _SEMICOLON = ';',
-	_AS = 'as', _IS = 'is',
+	_AS = 'as', // for make alias name
+	_IS = 'is', // for check Type
 	_IN = 'in', _TO = 'to', _DOWNTO = 'downto', _STEP = 'step', // just use in the 'for' block
 
 	_REFERENCE = '&',  _NEGATION = '-', // -1, -num
 	_ADDITION = '+', _SUBTRACTION = '-', _MULTIPLICATION = '*', _DIVISION = '/', _REMAINDER = '%', _EXPONENTIATION = '**',
 	_BITWISE_NOT = '~', _BITWISE_AND = '&', _BITWISE_OR = '|', _BITWISE_XOR = '^', //bitwise
 	_CONCAT = 'concat', _MERGE = 'merge',
-	_NOT_EQUAL = '!=',
+	_ASSIGN = '=', _EQUAL = '==', _NOT_EQUAL = '!=', _IDENTICAL = '===', _NOT_IDENTICAL = '!==',
 	_NOT = 'not', _AND = 'and', _OR = 'or', // bool
 	_NONE_COALESCING = '??', _CONDITIONAL = '?',
-	_ASSIGN = '=', _DOT = '.', _NOTIFY = '->', _ARROW = '=>', _RELAY = '==>',
+	_DOT = '.', _NOTIFY = '->', _ARROW = '=>', _RELAY = '==>', _DOUBLE_COLON = '::',
 	_COLLECT = '>>',
 	_SHIFT_LEFT = '<<', _SHIFT_RIGHT = '>>',
 

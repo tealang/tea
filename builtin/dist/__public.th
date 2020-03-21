@@ -152,7 +152,7 @@ public array_last_index(array Array) UInt
 
 #php unset(target Any)
 
-#php array_keys(array Dict) Array
+#php array_keys(array Dict) String.Array
 
 #php array_values(array Dict) Array
 
@@ -261,7 +261,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 
 #tea Dict {
 	masked length UInt
-	masked keys() Array
+	masked keys() String.Array
 	masked values() Array
 	masked has_key(key Any) Bool
 	masked has_value(val Any) Bool

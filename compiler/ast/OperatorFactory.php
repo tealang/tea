@@ -22,7 +22,7 @@ const _BINARY_OP_PRECEDENCES = [
 
 	// L2
 	// _NEGATION => 2, _BITWISE_NOT => 2, // prefix unary
-	_AS => 2, // type cast
+	_DOUBLE_COLON => 2, // type cast
 
 	// L3
 	_EXPONENTIATION => 3, // math
@@ -42,7 +42,7 @@ const _BINARY_OP_PRECEDENCES = [
 
 	// L7 comparisons
 	'<' => 7, '>' => 7, '<=' => 7, '>=' => 7,
-	'==' => 7, '===' => 7, _NOT_EQUAL => 7, '!==' => 7, '<=>' => 7,
+	_EQUAL => 7, _IDENTICAL => 7, _NOT_EQUAL => 7, _NOT_IDENTICAL => 7, '<=>' => 7,
 	_IS => 7, // type / class, and maybe pattern?
 
 	// L8
@@ -129,7 +129,7 @@ class OperatorFactory
 		self::$_dot = self::create_normal_operator_symbol(_DOT);
 		// self::$_notify = self::create_normal_operator_symbol(_NOTIFY);
 
-		self::$_as = self::create_normal_operator_symbol(_AS);
+		self::$_as = self::create_normal_operator_symbol(_DOUBLE_COLON);
 
 		self::$_exponentiation = self::create_normal_operator_symbol(_EXPONENTIATION);
 
@@ -154,11 +154,11 @@ class OperatorFactory
 		self::$_morethan_or_equal = self::create_normal_operator_symbol('>=');
 		self::$_comparison = self::create_normal_operator_symbol('<=>');
 
-		self::$_equal = self::create_normal_operator_symbol('==');
-		self::$_strict_equal = self::create_normal_operator_symbol('===');
+		self::$_equal = self::create_normal_operator_symbol(_EQUAL);
+		self::$_strict_equal = self::create_normal_operator_symbol(_IDENTICAL);
 
 		self::$_not_equal = self::create_normal_operator_symbol(_NOT_EQUAL);
-		self::$_strict_not_equal = self::create_normal_operator_symbol('!==');
+		self::$_strict_not_equal = self::create_normal_operator_symbol(_NOT_IDENTICAL);
 
 		self::$_bitwise_and = self::create_normal_operator_symbol(_BITWISE_AND);
 		self::$_bitwise_xor = self::create_normal_operator_symbol(_BITWISE_XOR);
