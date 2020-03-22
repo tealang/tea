@@ -217,7 +217,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	masked rune_copy(start Int, length UInt = #default) String
 	masked rune_lower() String
 	masked rune_upper() String
-	masked explode(delimiter String) Array
+	masked split(delimiter String) Array
 	masked replace(search String, replacement String) String
 }
 
@@ -248,7 +248,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	masked has_value(val Any) Bool
 	masked find(val Any) Int
 	masked copy(start Int, length UInt = #default) Array
-	masked reverse() Array
+	masked reversed() Array
 	masked unshift(item Any) UInt
 	masked shift() Any
 	masked push(item Any) UInt
@@ -273,8 +273,7 @@ public regex_matches(regex Regex, subject String) String.Array.Array
 	masked test(text String) Bool
 	masked match(text String) String.Array
 	masked matches(text String) String.Array.Array
-	masked split(text String) String.Array
-	masked separate(text String) String.Array
+	masked untie(text String) String.Array
 }
 
 #tea XView {

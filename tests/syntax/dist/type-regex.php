@@ -17,9 +17,6 @@ var_dump($result1);
 
 $result2 = preg_split($regex, 'ab cd|e,f');
 var_dump($result2);
-
-$result3 = preg_split('/([\s\|,])/', 'ab cd|e,f', -1, PREG_SPLIT_DELIM_CAPTURE);
-var_dump($result3);
 // ---------
 
 // program end

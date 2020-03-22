@@ -244,7 +244,7 @@ internal IBaseType {
 	masked rune_upper() => mb_strtoupper(this)
 
 	// other
-	masked explode(delimiter String) => explode(delimiter, this)
+	masked split(delimiter String) => explode(delimiter, this)
 	masked replace(search String, replacement String) => _str_replace(this, search, replacement)
 }
 
@@ -274,7 +274,7 @@ internal IBaseType {
 	masked has_value(val) => in_array(val, this)
 	masked find(val) => _array_search(this, val) // find the index with supported value
 	masked copy(start Int, length UInt = #default) Array => array_slice(this, start, length)
-	masked reverse() Array => array_reverse(this)
+	masked reversed() Array => array_reverse(this)
 
 	masked unshift(item) => array_unshift(this, item)
 	masked shift() => array_shift(this)
@@ -317,11 +317,8 @@ internal IBaseType {
 	// match, returns the all matched items
 	masked matches(text String) String.Array.Array => regex_matches(this, text)
 
-	// split text, returns the splited items
-	masked split(text String) String.Array => preg_split(this, text)
-
-	// split text, returns include splited items and separators
-	masked separate(text String) String.Array => preg_split(this, text, -1, PREG_SPLIT_DELIM_CAPTURE)
+	// use this pattern to untie a text, returns include untied items
+	masked untie(text String) String.Array => preg_split(this, text)
 }
 
 #tea XView {}   // accept IView

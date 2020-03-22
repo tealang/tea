@@ -12,10 +12,6 @@ var_dump(result0)
 result1 = regex.matches('ab cd|e,f') // result: [' ', '|', ',']
 var_dump(result1)
 
-// disincludes the separators
-result2 = regex.split('ab cd|e,f') // result: ['ab', 'cd', 'e', 'f']
+// use the regex to untie a text
+result2 = regex.untie('ab cd|e,f') // result: ['ab', 'cd', 'e', 'f']
 var_dump(result2)
-
-// includes the separators
-result3 = /([\s\|,])/.separate('ab cd|e,f') // result: ['ab', ' ', 'cd', '|', 'e', ',', 'f']
-var_dump(result3)
