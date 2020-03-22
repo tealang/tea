@@ -183,12 +183,12 @@ public html_decode(string, flags = ENT_QUOTES) {
 public regex_test(regex Regex, subject String) Bool {
 	return preg_match(regex, subject) ? true : false
 }
-public regex_match(regex Regex, subject String) String.Array {
+public regex_capture_one(regex Regex, subject String) String.Array {
 	var matches String.Array
 	count = preg_match(regex, subject, matches)
 	return count === 0 ? none : matches
 }
-public regex_matches(regex Regex, subject String) String.Array.Array {
+public regex_capture_all(regex Regex, subject String) String.Array.Array {
 	var matches String.Array.Array
 	count = preg_match_all(regex, subject, matches)
 	return count === 0 ? none : matches
@@ -309,15 +309,16 @@ internal IBaseType {
 }
 
 #tea Regex {
+	// match in target text, returns is matched
 	masked test(text String) Bool => regex_test(this, text)
 
-	// match, returns the first matched item
-	masked match(text String) String.Array => regex_match(this, text)
+	// match in target text, returns the first captured item
+	masked capture_one(text String) String.Array => regex_capture_one(this, text)
 
-	// match, returns the all matched items
-	masked matches(text String) String.Array.Array => regex_matches(this, text)
+	// match in target text, returns the all captured items
+	masked capture_all(text String) String.Array.Array => regex_capture_all(this, text)
 
-	// use this pattern to untie a text, returns include untied items
+	// use this pattern to untie a text, returns the untied items
 	masked untie(text String) String.Array => preg_split(this, text)
 }
 

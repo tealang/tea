@@ -6,10 +6,10 @@ match_count = preg_match(/^\\'[a-z0-9]+\'$/i, str)
 echo match_count  // 0 or 1
 
 regex = /[\s\|,]/
-result0 = regex.match('ab cd|e,f') // result: [' ']
+result0 = regex.capture_one('ab cd|e,f') // result: [' ']
 var_dump(result0)
 
-result1 = regex.matches('ab cd|e,f') // result: [' ', '|', ',']
+result1 = regex.capture_all('ab cd|e,f') // result: [' ', '|', ',']
 var_dump(result1)
 
 // use the regex to untie a text

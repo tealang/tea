@@ -94,8 +94,8 @@ var xview XView = <div>
 
 // 正则表达式
 var regex Regex = /^[a-z0-9'_"]+$/i
-if regex.match('Abc\'123"') !== none {
-	echo 'matched!'
+if regex.capture_one('Abc\'123"') !== none {
+	echo 'captured!'
 }
 
 // 元素类型为Any的数组

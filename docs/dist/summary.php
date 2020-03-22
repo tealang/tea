@@ -100,8 +100,8 @@ $xview = '<div>
 </div>';
 
 $regex = '/^[a-z0-9\'_"]+$/i';
-if (regex_match($regex, 'Abc\'123"') !== null) {
-	echo 'matched!', LF;
+if (regex_capture_one($regex, 'Abc\'123"') !== null) {
+	echo 'captured!', LF;
 }
 
 $any_array = [
