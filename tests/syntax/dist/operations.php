@@ -12,12 +12,16 @@ $some = 'abc' . (1 + (2 & 2) * 2 ** 3 / 5 % 6);
 $uint_num = 123;
 $int_num = 123;
 
-$int_from_string = (int)'123';
-$uint_from_string = uint_ensure((int)'-123');
+$uint_from_string = uint_ensure((int)'123');
 
 $str_from_uint = (string)123;
 $str_from_int = (string)-123;
 $str_from_float = (string)123.123;
+
+$dict = ['a' => 1, 'b' => '100'];
+$val = isset($dict['b']) ? (int)$dict['b'] : 0;
+echo 'Value for ?? expression is: ', LF;
+var_dump($val);
 
 if (is_string($str_from_float)) {
 	echo $str_from_float . ' is String', LF;
@@ -29,7 +33,7 @@ if (!is_string($uint_num)) {
 
 $str_for_find = 'abc123';
 $found = _strpos($str_for_find, 'abc', 0);
-if (is_void($found)) {
+if ($found === -1) {
 	echo '"abc" has not be found in ' . $str_for_find, LF;
 }
 

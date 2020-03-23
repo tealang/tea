@@ -710,7 +710,18 @@ class ASTChecker
 			$infered_types[] = $this->infer_block($branch);
 		}
 
-		return $this->reduce_types($infered_types, $node);
+		$result_type = $this->reduce_types($infered_types, $node);
+
+		if ($node->else) {
+			$else_type = $this->infer_else_block($node->else);
+			$result_type = $this->reduce_types([$result_type, $else_type], $node);
+		}
+
+		if ($node->except) {
+			$result_type = $this->reduce_types_with_except_block($node, $result_type);
+		}
+
+		return $result_type;
 	}
 
 	private function infer_forin_block(ForInBlock $node): ?IType
@@ -1188,7 +1199,8 @@ class ASTChecker
 				throw $this->new_syntax_error("Math operation cannot use for non Int/UInt/Float type values.", $node);
 			}
 
-			if ($left_type === TypeFactory::$_float || $right_type === TypeFactory::$_float) {
+			if ($operator === OperatorFactory::$_division
+				|| $left_type === TypeFactory::$_float || $right_type === TypeFactory::$_float) {
 				return TypeFactory::$_float;
 			}
 
@@ -1997,6 +2009,10 @@ class ASTChecker
 				}
 			}
 			elseif ($infered_type !== null) { // the master would be an object expression
+				if (!$infered_type->symbol) {
+					dump($node);exit;
+					throw $this->new_syntax_error($node);
+				}
 				$node->symbol = $this->require_class_member_symbol($infered_type->symbol->declaration, $node);
 				$node->symbol->declaration->type || $this->check_class_member_declaration($node->symbol->declaration);
 			}

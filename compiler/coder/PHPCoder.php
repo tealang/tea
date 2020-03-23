@@ -1379,6 +1379,12 @@ class PHPCoder extends TeaCoder
 			return "array_replace({$left}, {$right})";
 		}
 
+		// for the ?? operation, eg. expr::String ?? none
+		if ($node->operator === OperatorFactory::$_none_coalescing && $node->left instanceof AsOperation) {
+			$test = $node->left->left->render($this);
+			return "isset($test) ? $left : $right";
+		}
+
 		if ($this->is_need_parentheses_for_left_of_node($node)) {
 			$left = "($left)";
 		}

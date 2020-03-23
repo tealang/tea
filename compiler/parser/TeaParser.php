@@ -1559,12 +1559,24 @@ class TeaParser extends BaseParser
 		// else
 		if ($operator === OperatorFactory::$_as) {
 			$this->scan_token_ignore_empty(); // skip the operator
-			$as_type = $this->try_read_type_identifier($operator);
+
+			if ($this->skip_token(_PAREN_OPEN)) {
+				$as_type = $this->try_read_type_identifier();
+				$this->expect_token(_PAREN_CLOSE);
+			}
+			else {
+				$as_type = $this->try_read_simple_type_identifier();
+			}
+
 			if ($as_type === null) {
 				throw $this->new_unexpected_error();
 			}
 
  			$expression = new AsOperation($expression, $as_type);
+
+ 			if ($this->skip_token(_DOT)) {
+				$expression = $this->read_dot_expression($expression, $prev_operator);
+ 			}
 		}
 		elseif ($operator === OperatorFactory::$_is) {
 			$this->scan_token_ignore_empty(); // skip the operator
@@ -1772,6 +1784,26 @@ class TeaParser extends BaseParser
 
 	// 	return $this->factory->create_classlike_identifier($ns, $name);
 	// }
+
+	protected function try_read_simple_type_identifier()
+	{
+		$token = $this->get_token_ignore_space();
+
+		if ($type = TypeFactory::get_type($token)) {
+			$this->scan_token_ignore_space(); // skip
+		}
+		elseif (TeaHelper::is_identifier_name($token)) {
+			$this->scan_token_ignore_space(); // skip
+			// $type = $this->read_classlike_identifier($token);
+			$type = $this->factory->create_classlike_identifier($token);
+		}
+		else {
+			return null;
+		}
+
+		$type->pos = $this->pos;
+		return $type;
+	}
 
 	protected function try_read_type_identifier()
 	{
