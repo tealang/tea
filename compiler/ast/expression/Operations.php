@@ -16,13 +16,13 @@ abstract class BaseBinaryOperation extends Node implements IExpression
 	public $operator;
 }
 
-class AsOperation extends BaseBinaryOperation
+class CastOperation extends BaseBinaryOperation
 {
-	const KIND = 'as_operation';
+	const KIND = 'cast_operation';
 
 	public function __construct(IExpression $left, IType $right)
 	{
-		$this->operator = OperatorFactory::$_as;
+		$this->operator = OperatorFactory::$_cast;
 		$this->left = $left;
 		$this->right = $right;
 	}

@@ -12,15 +12,18 @@ namespace Tea;
 class TypeFactory
 {
 	const BUILTIN_TYPE_NAMES = [
+		_METATYPE,
+		_UNIONTYPE,
 		_ANY, _VOID, _NONE, // _NONE just a internal type
 		_STRING, _INT, _UINT, _FLOAT, _BOOL, // maybe support Bytes?
 		_ITERABLE, _DICT, _ARRAY, // maybe support Matrix, Tensor?
 		_OBJECT, _XVIEW, _REGEX,
 		_CALLABLE, _NAMESPACE,
-		_METATYPE,
 	];
 
 	static $_metatype;
+
+	static $_uniontype;
 
 	static $_any;
 	static $_none;
@@ -58,6 +61,7 @@ class TypeFactory
 		// init all builtin types
 
 		self::$_metatype = self::create_type(MetaType::class);
+		self::$_uniontype = self::create_type(UnionType::class);
 
 		self::$_void = self::create_type(VoidType::class);
 		self::$_none = self::create_type(NoneType::class);
@@ -85,6 +89,10 @@ class TypeFactory
 	{
 		if ($type === TypeFactory::$_any || $type instanceof IterableType) {
 			return true;
+		}
+
+		if (!$type instanceof PlainIdentifier) {
+			return false;
 		}
 
 		return $type->symbol->declaration->is_same_or_based_with_symbol(self::$_iiterator_symbol);
@@ -146,7 +154,7 @@ class TypeFactory
 		return static::$type_map[$name] ?? null;
 	}
 
-	static function create_type(string $class = BaseType::class)
+	static function create_type(string $class)
 	{
 		$type_object = new $class();
 		static::$type_map[$type_object->name] = $type_object;

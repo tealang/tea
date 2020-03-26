@@ -384,7 +384,7 @@ class ASTChecker
 
 			if ($infered_type !== null) {
 				if (!$node->type->is_accept_type($infered_type)) {
-					throw $this->new_syntax_error("Function '{$node->name}' return type is '{$infered_type->name}', not compatible with the declared '{$node->type->name}'.", $node);
+					throw $this->new_syntax_error("Function '{$node->name}' returns type is '{$infered_type->name}', not compatible with the declared '{$node->type->name}'.", $node);
 				}
 			}
 			elseif (!empty($node->type->is_collect_mode)) {
@@ -710,7 +710,7 @@ class ASTChecker
 			$infered_types[] = $this->infer_block($branch);
 		}
 
-		$result_type = $this->reduce_types($infered_types, $node);
+		$result_type = $infered_types ? $this->reduce_types($infered_types, $node) : null;
 
 		if ($node->else) {
 			$else_type = $this->infer_else_block($node->else);
@@ -729,7 +729,7 @@ class ASTChecker
 		$iterable_type = $this->infer_expression($node->iterable);
 		if (!TypeFactory::is_iterable_type($iterable_type)) {
 			$type_name = self::get_type_name($iterable_type);
-			throw $this->new_syntax_error("Expect a Iterable type, but {$type_name} supplied.", $node->iterable);
+			throw $this->new_syntax_error("Expect a Iterable type, but '{$type_name}' supplied.", $node->iterable);
 		}
 
 		// the key type, default is String
@@ -842,7 +842,7 @@ class ASTChecker
 
 		$this->block = $temp_block;
 
-		return $this->reduce_types($infered_types, $block);
+		return $infered_types ? $this->reduce_types($infered_types, $block) : null;
 	}
 
 	private function infer_statement(IStatement $node): ?IType
@@ -1030,9 +1030,9 @@ class ASTChecker
 			case PlainIdentifier::KIND:
 				$infered_type = $this->infer_plain_identifier($node);
 				break;
-			case BaseType::KIND:
-				$infered_type = $node;
-				break;
+			// case BaseType::KIND:
+			// 	$infered_type = $node;
+			// 	break;
 			case NoneLiteral::KIND:
 				$infered_type = TypeFactory::$_none;
 				break;
@@ -1094,8 +1094,8 @@ class ASTChecker
 			case Parentheses::KIND:
 				$infered_type = $this->infer_expression($node->expression);
 				break;
-			case AsOperation::KIND:
-				$infered_type = $this->infer_as_operation($node);
+			case CastOperation::KIND:
+				$infered_type = $this->infer_cast_operation($node);
 				break;
 			case IsOperation::KIND:
 				$infered_type = $this->infer_is_operation($node);
@@ -1181,7 +1181,8 @@ class ASTChecker
 		// 	return TypeFactory::$_string;
 		// }
 		else {
-			throw $this->new_syntax_error("Cannot use key accessing for type '{$left_type->name}'.", $node);
+			$type_name = $this->get_type_name($left_type);
+			throw $this->new_syntax_error("Cannot use key accessing for type '{$type_name}'.", $node);
 		}
 
 		// the value type
@@ -1251,7 +1252,7 @@ class ASTChecker
 		throw $this->new_syntax_error("Unknow operator: '{$node->operator->sign}'", $node);
 	}
 
-	private function infer_as_operation(AsOperation $node): IType
+	private function infer_cast_operation(CastOperation $node): IType
 	{
 		$this->infer_expression($node->left);
 		$this->check_type($node->right, null);
@@ -1361,7 +1362,7 @@ class ASTChecker
 		return TypeFactory::create_array_type($value_type);
 	}
 
-	private function infer_dict_expression(DictExpression $node): IType
+	private function infer_dict_expression(DictExpression $node, string $name = null): IType
 	{
 		if (!$node->items) {
 			return TypeFactory::$_dict;
@@ -1381,7 +1382,7 @@ class ASTChecker
 				throw $this->new_syntax_error("Invalid key type for Dict.", $item->key);
 			}
 
- 			$infered_value_types[] = $this->infer_expression($item->value);
+			$infered_value_types[] = $this->infer_expression($item->value);
 		}
 
 		$value_type = $this->reduce_types($infered_value_types, $node);
@@ -1422,8 +1423,13 @@ class ASTChecker
 				throw $this->new_syntax_error("Cannot use '$declare_name' as a Type.", $type);
 			}
 		}
+		elseif ($type instanceof UnionType) {
+			foreach ($type->types as $member) {
+				$this->check_type($member);
+			}
+		}
 		else {
-			$kind = $type::KIND;
+			$kind = get_class($type);
 			throw $this->new_syntax_error("Unknow type kind '$kind'.", $type);
 		}
 	}
@@ -1988,7 +1994,7 @@ class ASTChecker
 			$master = $node->master;
 			$infered_type = $this->infer_expression($master);
 
-			if ($infered_type === TypeFactory::$_any) {
+			if ($infered_type === TypeFactory::$_any || $infered_type instanceof UnionType) {
 				// let member type to Any on master is Any
 				$this->create_any_symbol_for_accessing_identifier($node);
 			}
@@ -2009,10 +2015,6 @@ class ASTChecker
 				}
 			}
 			elseif ($infered_type !== null) { // the master would be an object expression
-				if (!$infered_type->symbol) {
-					dump($node);exit;
-					throw $this->new_syntax_error($node);
-				}
 				$node->symbol = $this->require_class_member_symbol($infered_type->symbol->declaration, $node);
 				$node->symbol->declaration->type || $this->check_class_member_declaration($node->symbol->declaration);
 			}
@@ -2214,71 +2216,94 @@ class ASTChecker
 		return $program;
 	}
 
-	private function reduce_types(array $types, Node $node): ?IType
+	private function reduce_types(array $types, $test = null): ?IType
 	{
-		if (!$types) return null;
-
 		$count = count($types);
 
+		$nullable = false;
 		for ($i = 0; $i < $count; $i++) {
 			$result_type = $types[$i];
-			if ($result_type !== null) {
+			if ($result_type === null) {
+				$nullable = true;
+			}
+			else {
 				break;
 			}
 		}
 
 		for ($i = $i + 1; $i < $count; $i++) {
 			$type = $types[$i];
-			if ($type === null || $type === $result_type || $type === TypeFactory::$_none) {
-				continue;
+			if ($type === null) {
+				$nullable = true;
 			}
-
-			if ($type instanceof BaseType) {
-				if ($result_type->is_accept_type($type)) {
-					//
-				}
-				elseif ($type->is_accept_type($result_type)) {
-					$result_type = $type;
-				}
-				else {
-					$result_type = TypeFactory::$_any;
-				}
-
-				continue;
-			}
-
-			if ($type->symbol !== $result_type->symbol) {
-				if ($type->is_based_with($result_type)) {
-					// do nothing
-				}
-				elseif ($type->is_based_with($result_type)) {
-					$result_type = $type;
-				}
-				else {
-					$result_type = TypeFactory::$_any;
-				}
+			else {
+				$result_type = $result_type->unite_type($type);
 			}
 		}
 
 		return $result_type;
+
+		// $is_primitive = $result_type instanceof BaseType;
+
+		// for ($i = $i + 1; $i < $count; $i++) {
+		// 	$type = $types[$i];
+		// 	if ($type === null || $type === TypeFactory::$_none) {
+		// 		$nullable = true;
+		// 		continue;
+		// 	}
+
+		// 	if ($type === $result_type) {
+		// 		continue;
+		// 	}
+
+		// 	// the primitive type
+		// 	if ($is_primitive) {
+		// 		if ($result_type->is_accept_type($type)) {
+		// 			// nothing
+		// 		}
+		// 		elseif ($type->is_accept_type($result_type)) {
+		// 			$result_type = $type;
+		// 		}
+		// 		else {
+		// 			$result_type = TypeFactory::$_any;
+		// 		}
+
+		// 		continue;
+		// 	}
+
+		// 	// the object type
+		// 	if ($type->symbol !== $result_type->symbol) {
+		// 		if ($type->is_based_with($result_type)) {
+		// 			// nothing
+		// 		}
+		// 		elseif ($type->is_based_with($result_type)) {
+		// 			$result_type = $type;
+		// 		}
+		// 		else {
+		// 			$result_type = TypeFactory::$_any;
+		// 		}
+		// 	}
+		// }
+
+		// return $result_type;
 	}
 
-	protected function new_syntax_error($message, $node = null)
+	protected function new_syntax_error($message, $node)
 	{
 		if ($node->pos) {
-			$addition = $this->program->parser->get_error_message_with_pos($node->pos);
+			$place = $this->program->parser->get_error_place_with_pos($node->pos);
 		}
 		else {
-			$addition = get_class($node);
+			$place = get_class($node);
 			if (isset($node->name)) {
-				$addition .= " of '$node->name'";
+				$place .= " of '$node->name'";
 			}
 
-			$addition = "Error near $addition.";
+			$place = "Near $place.";
 		}
 
-		$message = "Syntax check error: {$message}\n{$addition}";
-		DEBUG && $message .= "\nTraces:\n" . get_traces();
+		$message = "Syntax check error:\n{$place}\n{$message}";
+		DEBUG && $message .= "\n\nTraces:\n" . get_traces();
 
 		return new \Exception($message);
 	}
@@ -2315,6 +2340,14 @@ class ASTChecker
 			}
 
 			$name = '(' . join(', ', $args) . ') ' . static::get_type_name($type->type);
+		}
+		elseif ($type instanceof UnionType) {
+			$names = [];
+			foreach ($type->types as $member) {
+				$names[] = static::get_type_name($member);
+			}
+
+			$name = join('|', $names);
 		}
 		else {
 			$name = $type->name;

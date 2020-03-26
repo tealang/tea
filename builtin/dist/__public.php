@@ -58,6 +58,10 @@ function array_last_index(array $array): int {
 	return count($array) - 1;
 }
 
+function dict_get(array $dict, string $key) {
+	return $dict[$key] ?? null;
+}
+
 function html_encode($string, int $flags = ENT_QUOTES): string {
 	return htmlspecialchars($string, $flags);
 }

@@ -185,7 +185,7 @@ trait TeaTokenTrait
 		}
 	}
 
-	protected function get_token_ignore_empty(int &$pos = null)
+	private function get_token_ignore_empty(int &$pos = null)
 	{
 		if ($pos === null) {
 			$pos = $this->pos;
@@ -200,7 +200,7 @@ trait TeaTokenTrait
 		}
 	}
 
-	protected function get_to_token(string $to, int $from = null)
+	private function get_to_token(string $to, int $from = null)
 	{
 		$i = $from ?? $this->pos + 1;
 
@@ -219,7 +219,12 @@ trait TeaTokenTrait
 		return $tmp;
 	}
 
-	protected function scan_string_component()
+	protected function get_to_line_end(int $from = null)
+	{
+		return $this->get_to_token(LF, $from);
+	}
+
+	private function scan_string_component()
 	{
 		$this->pos++;
 		$token = $this->tokens[$this->pos] ?? null;

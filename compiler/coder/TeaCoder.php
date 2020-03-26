@@ -584,6 +584,11 @@ class TeaCoder
 		return $node->name;
 	}
 
+	public function render_union_type_identifier(UnionType $node)
+	{
+		return _ANY;
+	}
+
 	protected function render_callable_type(CallableType $node)
 	{
 		if ($node === TypeFactory::$_callable) {
@@ -886,7 +891,7 @@ class TeaCoder
 	// 	return join(" {$node->operator} ", $items);
 	// }
 
-	public function render_as_operation(AsOperation $node)
+	public function render_cast_operation(CastOperation $node)
 	{
 		$left = $this->render_expression($node->left);
 		$right = $node->right->render($this);

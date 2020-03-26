@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-abstract class Identifiable extends Node implements IExpression, ICallee, IAssignable, IType
+abstract class Identifiable extends Node implements IExpression, ICallee, IAssignable
 {
 	public $name;
 
@@ -60,8 +60,10 @@ class AccessingIdentifier extends Identifiable
 	}
 }
 
-class PlainIdentifier extends Identifiable
+class PlainIdentifier extends Identifiable implements IType
 {
+	use ITypeTrait;
+
 	const KIND = 'plain_identifier';
 
 	public static function create_with_symbol(Symbol $symbol)
@@ -70,13 +72,6 @@ class PlainIdentifier extends Identifiable
 		$identifier->symbol = $symbol;
 		return $identifier;
 	}
-
-	// public function to_class_identifier()
-	// {
-	// 	$identifier = new ClassIdentifier($this->name);
-	// 	$identifier->symbol = $this->symbol;
-	// 	return $identifier;
-	// }
 
 	public function is_based_with(IType $type)
 	{
@@ -91,7 +86,12 @@ class PlainIdentifier extends Identifiable
 		return false;
 	}
 
-	public function is_accept_type(IType $type)
+	public function is_same_or_based_with(IType $type)
+	{
+		return $this->symbol === $type->symbol || $this->is_based_with($type);
+	}
+
+	public function is_accept_single_type(IType $type)
 	{
 		return $type->symbol === $this->symbol || $type === TypeFactory::$_none
 			// for check BuiltinTypeClassDeclaration like String
@@ -99,11 +99,6 @@ class PlainIdentifier extends Identifiable
 			|| $this->symbol->declaration === $type->symbol->declaration
 			|| $type->is_based_with($this)
 		;
-	}
-
-	public function is_same_or_based_with(IType $type)
-	{
-		return $this->symbol === $type->symbol || $this->is_based_with($type);
 	}
 }
 

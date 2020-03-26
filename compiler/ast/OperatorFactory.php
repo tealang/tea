@@ -70,7 +70,7 @@ class OperatorFactory
 	static $_bitwise_not; // eg. ~0 == -1
 	static $_reference;
 
-	static $_as;
+	static $_cast;
 
 	static $_exponentiation;
 
@@ -129,7 +129,7 @@ class OperatorFactory
 		self::$_dot = self::create_normal_operator_symbol(_DOT);
 		// self::$_notify = self::create_normal_operator_symbol(_NOTIFY);
 
-		self::$_as = self::create_normal_operator_symbol(_DOUBLE_COLON);
+		self::$_cast = self::create_normal_operator_symbol(_DOUBLE_COLON);
 
 		self::$_exponentiation = self::create_normal_operator_symbol(_EXPONENTIATION);
 

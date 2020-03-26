@@ -156,6 +156,8 @@ public array_last_index(array Array) UInt
 
 #php array_values(array Dict) Array
 
+public dict_get(dict Dict, key String) Any
+
 #php json_encode(data Any, flags Int = 0, depth UInt = 512) String
 
 #php json_decode(data Any, assoc Bool = false, depth UInt = 512, flags Int = 0) Dict
@@ -181,6 +183,10 @@ public regex_test(regex Regex, subject String) Bool
 public regex_capture_one(regex Regex, subject String) String.Array
 
 public regex_capture_all(regex Regex, subject String) String.Array.Array
+
+#tea UnionType {
+	// no any
+}
 
 #tea MetaType {
 	// no any
@@ -263,7 +269,8 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	masked length UInt
 	masked keys() String.Array
 	masked values() Array
-	masked has_key(key Any) Bool
+	masked get(key String) Any
+	masked has_key(key String) Bool
 	masked has_value(val Any) Bool
 	masked find(val Any) String
 	masked join(glue String = LF) String

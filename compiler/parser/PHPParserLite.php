@@ -817,6 +817,25 @@ class PHPParserLite extends BaseParser
 		return $this->tokens[$this->pos + 1] ?? null;
 	}
 
+	protected function get_to_line_end(int $from = null)
+	{
+		$i = $from ?? $this->pos + 1;
+
+		$tmp = '';
+		while ($i < $this->tokens_count) {
+			$token = $this->tokens[$i];
+			$i++;
+
+			if ($token === LF) {
+				break;
+			}
+
+			$tmp .= is_string($token) ? $token : $token[1];
+		}
+
+		return $tmp;
+	}
+
 	protected function get_line_number(int $pos): int
 	{
 		if ($pos >= $this->tokens_count) {

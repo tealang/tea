@@ -1557,7 +1557,7 @@ class TeaParser extends BaseParser
 		// 	$expression = $this->read_dot_expression($expression, $prev_operator);
 		// }
 		// else
-		if ($operator === OperatorFactory::$_as) {
+		if ($operator === OperatorFactory::$_cast) {
 			$this->scan_token_ignore_empty(); // skip the operator
 
 			if ($this->skip_token(_PAREN_OPEN)) {
@@ -1572,10 +1572,11 @@ class TeaParser extends BaseParser
 				throw $this->new_unexpected_error();
 			}
 
- 			$expression = new AsOperation($expression, $as_type);
+ 			$expression = new CastOperation($expression, $as_type);
 
- 			if ($this->skip_token(_DOT)) {
-				$expression = $this->read_dot_expression($expression, $prev_operator);
+ 			$expression = $this->read_expression_combination($expression, $prev_operator);
+ 			if ($expression instanceof ArrayElementAssignment) {
+ 				return $expression;
  			}
 		}
 		elseif ($operator === OperatorFactory::$_is) {

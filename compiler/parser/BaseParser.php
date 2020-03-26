@@ -71,9 +71,10 @@ abstract class BaseParser
 
 	public function new_parse_error(string $message, int $trace_start = 0)
 	{
-		$addition = $this->get_error_message_with_pos($this->pos);
-		$message = "\nSyntax parse error: {$message}\n{$addition}";
-		DEBUG && $message .= "\nTraces:\n" . get_traces($trace_start);
+		$place = $this->get_error_place_with_pos($this->pos);
+
+		$message = "Syntax parse error:\n{$place}\n{$message}";
+		DEBUG && $message .= "\n\nTraces:\n" . get_traces($trace_start);
 
 		return new \Exception($message);
 	}
@@ -84,21 +85,36 @@ abstract class BaseParser
 		return $this->new_parse_error("Unexpected token '$token'", 1);
 	}
 
-	public function get_error_message_with_pos(int $pos)
+	public function get_error_place_with_pos(int $pos)
 	{
 		$token = $this->get_current_token_string();
 		if ($token === LF) {
 			$pos--;
 		}
 
-		$code = $this->get_previous_code_inline($pos);
 		$line = $this->get_line_number($pos);
-
 		$message = "{$this->file}:{$line}";
-		$message .= "\n--->" . ltrim($code) . "<---\n";
+
+		$code = $this->get_previous_code_inline($pos);
+		if (trim($code) !== '') {
+			$code = self::tab2spaces($code);
+			$pointer_spaces = str_repeat(' ', strlen($code) - 1);
+
+			$after = $this->get_to_line_end($pos + 1);
+			$code .= self::tab2spaces($after);
+
+			$message .= "\n$code\n$pointer_spaces^";
+		}
 
 		return $message;
 	}
+
+	private static function tab2spaces(string $str)
+	{
+		return str_replace("\t", '    ', $str);
+	}
+
+	abstract protected function get_to_line_end(int $from = null);
 
 	abstract protected function get_current_token_string();
 

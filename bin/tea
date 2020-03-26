@@ -59,7 +59,7 @@ try {
 	echo "\n$count programs compiled.\n\n";
 }
 catch (\Exception $e) {
-	halt($e->getMessage());
+	halt(LF . $e->getMessage());
 	// echo $e->getTraceAsString(), LF, LF;
 }
 

@@ -355,12 +355,15 @@ class PHPCoder extends TeaCoder
 		$body = $this->render_enclosing_block($node);
 
 		if ($node->type === null || $node->type === TypeFactory::$_any || $node->type === TypeFactory::$_void) {
-			return "$header($parameters) $body";
+			$return_type = null;
 		}
 		else {
 			$return_type = $node->type->render($this);
-			return "$header($parameters): $return_type $body";
 		}
+
+		return $return_type
+			? "$header($parameters): $return_type $body"
+			: "$header($parameters) $body";
 	}
 
 	public function render_lambda_expression(IExpression $node)
@@ -762,6 +765,20 @@ class PHPCoder extends TeaCoder
 
 // ---
 
+	public function render_array_element_assignment(ArrayElementAssignment $node)
+	{
+		$master = $node->master;
+		if ($master instanceof CastOperation) {
+			$master = $master->left;
+		}
+
+		$master = $master->render($this);
+		$key = $node->key ? $node->key->render($this) : '';
+		$value = $node->value->render($this);
+
+		return "{$master}[{$key}] = {$value}" . static::STATEMENT_TERMINATOR;
+	}
+
 	public function render_html_escape_expression(HTMLEscapeExpression $node)
 	{
 		$expr = $node->expression->render($this);
@@ -1078,6 +1095,11 @@ class PHPCoder extends TeaCoder
 		return static::TYPE_MAP[$node->name] ?? $node->name;
 	}
 
+	public function render_union_type_identifier(UnionType $node)
+	{
+		return static::TYPE_MAP[_ANY];
+	}
+
 	public function render_classlike_identifier(ClassLikeIdentifier $node)
 	{
 		if ($node->ns) {
@@ -1303,7 +1325,7 @@ class PHPCoder extends TeaCoder
 		return '[' . $body . ']';
 	}
 
-	public function render_as_operation(AsOperation $node)
+	public function render_cast_operation(CastOperation $node)
 	{
 		$left = $this->render_expression($node->left);
 
@@ -1380,7 +1402,7 @@ class PHPCoder extends TeaCoder
 		}
 
 		// for the ?? operation, eg. expr::String ?? none
-		if ($node->operator === OperatorFactory::$_none_coalescing && $node->left instanceof AsOperation) {
+		if ($node->operator === OperatorFactory::$_none_coalescing && $node->left instanceof CastOperation) {
 			$test = $node->left->left->render($this);
 			return "isset($test) ? $left : $right";
 		}

@@ -28,6 +28,8 @@ const
 	_FIRST = 'first',
 
 	// builtin types
+	_UNIONTYPE = 'UnionType',
+	_METATYPE = 'MetaType',
 	_VOID = 'Void', _NONE = 'None', _ANY = 'Any',
 	// _SCALAR = 'Scalar',
 	// _BYTES = 'Bytes',
@@ -36,7 +38,7 @@ const
 	_INT = 'Int', _UINT = 'UInt', _FLOAT = 'Float', _BOOL = 'Bool',
 	_ITERABLE = 'Iterable', _DICT = 'Dict', _ARRAY = 'Array', // 'Pair', 'Matrix', 'Tensor'
 	_OBJECT = 'Object', _XVIEW = 'XView', _REGEX = 'Regex',
-	_CALLABLE = 'Callable', _NAMESPACE = 'Namespace', _METATYPE = 'MetaType', // _CLASS = 'Class',
+	_CALLABLE = 'Callable', _NAMESPACE = 'Namespace', // _CLASS = 'Class',
 
 	// dot signs of compound types
 	_DOT_SIGN_ARRAY = 'Array', _DOT_SIGN_DICT = 'Dict', _DOT_SIGN_METATYPE = 'Type',
