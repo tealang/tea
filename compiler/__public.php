@@ -15,6 +15,14 @@ const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
 const LF = "\n";
 
+// array_key_last do not support in PHP 7.2
+if (!function_exists('array_key_last')) {
+	function array_key_last(array $items) {
+		$keys = array_keys($items);
+		return end($keys);
+	}
+}
+
 function halt(string $msg) {
 	echo LF, $msg, LF, LF;
 	exit;

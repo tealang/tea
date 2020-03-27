@@ -44,7 +44,6 @@ class TypeFactory
 	static $_regex;
 
 	static $_callable;
-	// static $_class;
 	static $_namespace;
 
 	// for check XView accepts

@@ -303,9 +303,6 @@ class ASTChecker
 		$parameters_map = [_THIS => $i++];
 
 		$parameters = $node->parameters ?? [];
-		// if ($node->callbacks) {
-		// 	$parameters = array_merge($parameters, $node->callbacks);
-		// }
 
 		foreach ($parameters as $item) {
 			$parameters_map[$item->name] = $i++;
@@ -1429,7 +1426,7 @@ class ASTChecker
 			}
 		}
 		else {
-			$kind = get_class($type);
+			$kind = $type::KIND;
 			throw $this->new_syntax_error("Unknow type kind '$kind'.", $type);
 		}
 	}
@@ -1520,7 +1517,6 @@ class ASTChecker
 			$this->check_call_arguments($node);
 		}
 
-		// if ($declar->type === TypeFactory::$_class && $callee->symbol->declaration instanceof ClassDeclaration) {
 		if ($callee->symbol->declaration instanceof ClassLikeDeclaration) {
 			if (!$callee->symbol->declaration instanceof ClassDeclaration) {
 				throw $this->new_syntax_error("Invalid call for: '{$callee->symbol->declaration->name}'", $node);
@@ -1647,9 +1643,7 @@ class ASTChecker
 
 		// fill the default value when needed
 		if ($used_arg_names) {
-			// $last_idx = array_key_last($normalizeds); // array_key_last do not support in PHP 7.2
-			$idx_list = array_keys($normalizeds);
-			$last_idx = end($idx_list);
+			$last_idx = array_key_last($normalizeds);
 
 			$i = 0;
 			foreach ($parameters as $parameter) {
@@ -2001,7 +1995,6 @@ class ASTChecker
 			// elseif ($infered_type === TypeFactory::$_namespace) {
 			// 	$this->attach_namespace_member_symbol($master->symbol->declaration, $node);
 			// }
-			// elseif ($infered_type === TypeFactory::$_class) {
 			elseif ($infered_type instanceof MetaType) { // includes static call for class members
 				$declaration = $master->symbol->declaration;
 				if (!$declaration instanceof ClassDeclaration) {
@@ -2157,20 +2150,6 @@ class ASTChecker
 		return $symbol;
 	}
 
-	// private function require_program_of_declaration(IDeclaration $declaration): Program
-	// {
-	// 	// just a local variable
-	// 	if (!isset($declaration->program) && !isset($declaration->super_block)) {
-	// 		return $this->program;
-	// 	}
-
-	// 	while (!isset($declaration->program)) {
-	// 		$declaration = $declaration->super_block;
-	// 	}
-
-	// 	return $declaration->program;
-	// }
-
 	private function require_symbol_for_namespace(NamespaceIdentifier $ns, string $name)
 	{
 		$symbol = $this->require_unit($ns)->symbols[$name] ?? null;
@@ -2205,8 +2184,6 @@ class ASTChecker
 
 	private function require_unit(NamespaceIdentifier $ns): Unit
 	{
-		// the __public.th
-
 		$ns_uri = $ns->uri;
 		$program = $this->unit->use_units[$ns_uri] ?? null;
 		if (!$program) {

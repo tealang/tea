@@ -4,10 +4,6 @@ const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 #public
 const LF = "\n";
 
-function uintval($val): int {
-	return uint_ensure((int)$val);
-}
-
 function uint_ensure(int $num): int {
 	if ($num < 0) {
 		throw new \ErrorException('Cannot use ' . $num . ' as a UInt value.');
@@ -91,7 +87,6 @@ function regex_capture_all(string $regex, string $subject): array {
 
 // autoloads
 const __AUTOLOADS = [
-	'IBaseType' => 'core.php',
 	'IView' => 'core.php'
 ];
 

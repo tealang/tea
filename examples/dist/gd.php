@@ -21,7 +21,7 @@ function draw_text($image, string $text, int $size, int $color, string $fontfile
 		$center = ($h + $dy) / 2;
 	}
 
-	imagettftext($image, $size, $angle, intval((($w - $dx) / 2)), intval($center) + $h_offset, $color, $fontfile, $text);
+	imagettftext($image, $size, $angle, (int)(($w - $dx) / 2), (int)$center + $h_offset, $color, $fontfile, $text);
 }
 
 #internal

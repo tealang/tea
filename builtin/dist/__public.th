@@ -46,16 +46,6 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 
 #php file_set_contents(file String, data String, flags Int = #default) UInt
 
-#php strval(val Any) String
-
-#php intval(val Any) Int
-
-#php floatval(val Any) Float
-
-#php boolval(val Any) Bool
-
-public uintval(val Any) UInt
-
 public uint_ensure(num Int) Int
 
 #php is_int(val Any) Bool
@@ -184,11 +174,15 @@ public regex_capture_one(regex Regex, subject String) String.Array
 
 public regex_capture_all(regex Regex, subject String) String.Array.Array
 
-#tea UnionType {
+#tea Any {
 	// no any
 }
 
 #tea MetaType {
+	// no any
+}
+
+#tea UnionType {
 	// no any
 }
 
@@ -200,11 +194,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	// no any
 }
 
-#tea Any {
-	// no any
-}
-
-#tea String: IBaseType {
+#tea String {
 	masked length UInt
 	masked find(str String, offset Int = 0) Int
 	masked find_last(str String, offset Int = 0) Int
@@ -227,25 +217,23 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	masked replace(search String, replacement String) String
 }
 
-#tea Float: IBaseType {
+#tea Float {
 	masked abs() Float
 	masked ceil() Float
 	masked floor() Float
 	masked round(precision UInt = 0) Float
 }
 
-#tea Int: IBaseType {
-	masked uint() UInt
+#tea Int {
 	masked abs() UInt
 }
 
-#tea UInt: IBaseType {
+#tea UInt {
 	// no any
 }
 
 #tea Bool {
-	masked int() Int
-	masked uint() UInt
+	// no any
 }
 
 #tea Array {
@@ -287,15 +275,15 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	// no any
 }
 
-public IView {
-	// no any
-}
-
 #tea Callable {
 	// no any
 }
 
 #tea Iterable {
+	// no any
+}
+
+public IView {
 	// no any
 }
 

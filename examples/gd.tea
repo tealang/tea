@@ -29,7 +29,7 @@ internal draw_text(image, text String, size UInt, color Int, fontfile String, h_
 		center = (h + dy) / 2
 	}
 
-	imagettftext(image, size, angle, ((w - dx) / 2).int(), center.int() + h_offset, color, fontfile, text)
+	imagettftext(image, size, angle, ((w - dx) / 2)::Int, center::Int + h_offset, color, fontfile, text)
 }
 
 internal BOX_WIDTH = 629

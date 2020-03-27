@@ -45,14 +45,14 @@ public LF = "\n"
 #php LOCK_EX Int
 
 // type
-#php strval(val) String
-#php intval(val) Int
-#php floatval(val) Float
-#php boolval(val) Bool
+// #php strval(val) String
+// #php intval(val) Int
+// #php floatval(val) Float
+// #php boolval(val) Bool
 
-public uintval(val) UInt {
-	return val::UInt
-}
+// public uintval(val) UInt {
+// 	return val::UInt
+// }
 
 public uint_ensure(num Int) {
 	if num < 0 {
@@ -209,21 +209,16 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 // 	vclone() Object
 // }
 
-internal IBaseType {
-	masked string() => strval(this)
-	masked int() => intval(this)
-	masked uint() => uintval(this)
-	masked float() => floatval(this)
-}
-
+#tea Any {}
+#tea MetaType {}
 #tea UnionType {}
 
-#tea MetaType {}
+// primitive types
+
 #tea None {}
 #tea Void {}
-#tea Any {}
 
-#tea String: IBaseType {
+#tea String {
 	// process in dist native mode
 	masked length UInt => strlen(this)
 	masked find(str String, offset Int = 0) => _strpos(this, str, offset)
@@ -253,24 +248,20 @@ internal IBaseType {
 	masked replace(search String, replacement String) => _str_replace(this, search, replacement)
 }
 
-#tea Float: IBaseType {
+#tea Float {
 	masked abs() => abs(this)
 	masked ceil() => ceil(this)
 	masked floor() => floor(this)
 	masked round(precision = 0) => round(this, precision)
 }
 
-#tea Int: IBaseType {
-	masked uint() UInt => abs(this)
+#tea Int {
 	masked abs() UInt => abs(this)
 }
 
-#tea UInt: IBaseType {}
+#tea UInt {}
 
-#tea Bool {
-	masked int() Int => intval(this)
-	masked uint() UInt => intval(this)
-}
+#tea Bool {}
 
 #tea Array {
 	masked length UInt => count(this)
@@ -328,12 +319,16 @@ internal IBaseType {
 	masked untie(text String) String.Array => preg_split(this, text)
 }
 
+// primitive types end
+
 #tea XView {}   // accept IView
-public IView {}
 
 #tea Callable {}
 
 #tea Iterable {} // accept IIterator
+
+public IView {}
+
 #php Iterator as IIterator {
 	current() Any
 	key() String
@@ -347,4 +342,4 @@ public IView {}
 	throw(exception Exception)
 }
 
-// end of program
+// end

@@ -52,8 +52,8 @@ $title = 'include from main1.tea';
 $result = (include UNIT_PATH . 'dist/label-expect.php');
 var_dump($result);
 
-echo "\n***Test for int/uint convert:", LF;
-echo "'-123abc' convert to int: ", intval('-123abc'), LF;
+echo "\n***Test for int/uint cast:", LF;
+echo "'-123abc' cast to int: ", (int)'-123abc', LF;
 // ---------
 
 // program end
