@@ -627,7 +627,7 @@ class ASTChecker
 
 		if ($node->else) {
 			$else_type = $this->infer_else_block($node->else);
-			$result_type = $this->reduce_types([$result_type, $else_type], $node);
+			$result_type = $this->reduce_types([$result_type, $else_type]);
 		}
 
 		if ($node->except) {
@@ -647,7 +647,7 @@ class ASTChecker
 
 		if (isset($node->else)) {
 			$else_type = $this->infer_else_block($node->else);
-			$result_type = $this->reduce_types([$result_type, $else_type], $node);
+			$result_type = $this->reduce_types([$result_type, $else_type]);
 		}
 
 		return $result_type;
@@ -674,7 +674,7 @@ class ASTChecker
 	{
 		$except_type = $this->infer_except_block($node->except);
 		if ($previous_type) {
-			return $this->reduce_types([$previous_type, $except_type], $node);
+			return $this->reduce_types([$previous_type, $except_type]);
 		}
 
 		return $except_type;
@@ -707,11 +707,11 @@ class ASTChecker
 			$infered_types[] = $this->infer_block($branch);
 		}
 
-		$result_type = $infered_types ? $this->reduce_types($infered_types, $node) : null;
+		$result_type = $infered_types ? $this->reduce_types($infered_types) : null;
 
 		if ($node->else) {
 			$else_type = $this->infer_else_block($node->else);
-			$result_type = $this->reduce_types([$result_type, $else_type], $node);
+			$result_type = $this->reduce_types([$result_type, $else_type]);
 		}
 
 		if ($node->except) {
@@ -743,7 +743,7 @@ class ASTChecker
 
 		if ($node->else) {
 			$else_type = $this->infer_else_block($node->else);
-			$result_type = $this->reduce_types([$result_type, $else_type], $node);
+			$result_type = $this->reduce_types([$result_type, $else_type]);
 		}
 
 		if ($node->except) {
@@ -767,7 +767,7 @@ class ASTChecker
 
 		if ($node->else) {
 			$else_type = $this->infer_else_block($node->else);
-			$result_type = $this->reduce_types([$result_type, $else_type], $node);
+			$result_type = $this->reduce_types([$result_type, $else_type]);
 		}
 
 		if ($node->except) {
@@ -1214,7 +1214,7 @@ class ASTChecker
 		}
 
 		if ($operator === OperatorFactory::$_none_coalescing) {
-			return $this->reduce_types([$left_type, $right_type], $node);
+			return $this->reduce_types([$left_type, $right_type]);
 		}
 
 		// string or array
@@ -1243,7 +1243,7 @@ class ASTChecker
 		}
 
 		if (OperatorFactory::is_bitwise_operator($operator)) {
-			return $this->reduce_types([$left_type, $right_type], $node);
+			return $this->reduce_types([$left_type, $right_type]);
 		}
 
 		throw $this->new_syntax_error("Unknow operator: '{$node->operator->sign}'", $node);
@@ -1340,7 +1340,7 @@ class ASTChecker
 
 		$else_type = $this->infer_expression($node->else);
 
-		return $this->reduce_types([$then_type, $else_type], $node);
+		return $this->reduce_types([$then_type, $else_type]);
 	}
 
 	private function infer_array_expression(ArrayExpression $node): IType
@@ -1354,7 +1354,7 @@ class ASTChecker
 			$infered_value_types[] = $this->infer_expression($item);
 		}
 
-		$value_type = $this->reduce_types($infered_value_types, $node);
+		$value_type = $this->reduce_types($infered_value_types);
 
 		return TypeFactory::create_array_type($value_type);
 	}
@@ -1382,7 +1382,7 @@ class ASTChecker
 			$infered_value_types[] = $this->infer_expression($item->value);
 		}
 
-		$value_type = $this->reduce_types($infered_value_types, $node);
+		$value_type = $this->reduce_types($infered_value_types);
 
 		return TypeFactory::create_dict_type($value_type);
 	}
@@ -2193,7 +2193,7 @@ class ASTChecker
 		return $program;
 	}
 
-	private function reduce_types(array $types, $test = null): ?IType
+	private function reduce_types(array $types): ?IType
 	{
 		$count = count($types);
 
@@ -2219,50 +2219,6 @@ class ASTChecker
 		}
 
 		return $result_type;
-
-		// $is_primitive = $result_type instanceof BaseType;
-
-		// for ($i = $i + 1; $i < $count; $i++) {
-		// 	$type = $types[$i];
-		// 	if ($type === null || $type === TypeFactory::$_none) {
-		// 		$nullable = true;
-		// 		continue;
-		// 	}
-
-		// 	if ($type === $result_type) {
-		// 		continue;
-		// 	}
-
-		// 	// the primitive type
-		// 	if ($is_primitive) {
-		// 		if ($result_type->is_accept_type($type)) {
-		// 			// nothing
-		// 		}
-		// 		elseif ($type->is_accept_type($result_type)) {
-		// 			$result_type = $type;
-		// 		}
-		// 		else {
-		// 			$result_type = TypeFactory::$_any;
-		// 		}
-
-		// 		continue;
-		// 	}
-
-		// 	// the object type
-		// 	if ($type->symbol !== $result_type->symbol) {
-		// 		if ($type->is_based_with($result_type)) {
-		// 			// nothing
-		// 		}
-		// 		elseif ($type->is_based_with($result_type)) {
-		// 			$result_type = $type;
-		// 		}
-		// 		else {
-		// 			$result_type = TypeFactory::$_any;
-		// 		}
-		// 	}
-		// }
-
-		// return $result_type;
 	}
 
 	protected function new_syntax_error($message, $node)

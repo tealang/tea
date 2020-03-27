@@ -44,16 +44,6 @@ public LF = "\n"
 #php FILE_APPEND Int
 #php LOCK_EX Int
 
-// type
-// #php strval(val) String
-// #php intval(val) Int
-// #php floatval(val) Float
-// #php boolval(val) Bool
-
-// public uintval(val) UInt {
-// 	return val::UInt
-// }
-
 public uint_ensure(num Int) {
 	if num < 0 {
 		throw ErrorException('Cannot use $num as a UInt value.')
@@ -215,8 +205,9 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 
 // primitive types
 
+#tea Void {} // cannot use for value
+
 #tea None {}
-#tea Void {}
 
 #tea String {
 	// process in dist native mode
@@ -305,6 +296,8 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 	masked join(glue String = LF) => implode(glue, this)
 }
 
+// primitive types end
+
 #tea Regex {
 	// match in target text, returns is matched
 	masked test(text String) Bool => regex_test(this, text)
@@ -318,8 +311,6 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 	// use this pattern to untie a text, returns the untied items
 	masked untie(text String) String.Array => preg_split(this, text)
 }
-
-// primitive types end
 
 #tea XView {}   // accept IView
 
