@@ -227,7 +227,7 @@ class TeaParser extends BaseParser
 
 	protected function read_body_statements(BaseBlock $block)
 	{
-		$this->expect_block_begin();
+		$this->expect_block_begin_inline();
 
 		$items = [];
 		while (($item = $this->read_normal_statement()) !== null) {
@@ -630,7 +630,7 @@ class TeaParser extends BaseParser
 
 	protected function read_when_branches()
 	{
-		$this->expect_block_begin();
+		$this->expect_block_begin_inline();
 
 		// the rule expression of first branch
 		$rule_expr = $this->read_expression();
@@ -1582,8 +1582,14 @@ class TeaParser extends BaseParser
 		elseif ($operator === OperatorFactory::$_is) {
 			$this->scan_token_ignore_empty(); // skip the operator
 			$is_not = $this->skip_token_ignore_space(_NOT);
-			$right_expression = $this->read_expression($operator);
-			$expression = new IsOperation($expression, $right_expression, $is_not);
+			// $assert_type = $this->read_expression($operator);
+
+			$assert_type = $this->try_read_type_identifier();
+			if ($assert_type === null) {
+				throw $this->new_parse_error("Expected a type name for the 'is' expression.");
+			}
+
+			$expression = new IsOperation($expression, $assert_type, $is_not);
 		}
 		elseif ($operator === OperatorFactory::$_conditional) {
 			$this->scan_token_ignore_empty(); // skip the operator
@@ -1716,7 +1722,7 @@ class TeaParser extends BaseParser
 			$declaration->set_baseds(...$baseds);
 		}
 
-		$this->expect_block_begin();
+		$this->expect_block_begin_ignore_empty();
 
 		while ($item = $this->read_class_member_declaration());
 

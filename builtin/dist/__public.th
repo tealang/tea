@@ -186,11 +186,11 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	// no any
 }
 
-#tea None {
+#tea Void {
 	// no any
 }
 
-#tea Void {
+#tea None {
 	// no any
 }
 
@@ -266,9 +266,9 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 
 #tea Regex {
 	masked test(text String) Bool
+	masked untie(text String) String.Array
 	masked capture_one(text String) String.Array
 	masked capture_all(text String) String.Array.Array
-	masked untie(text String) String.Array
 }
 
 #tea XView {

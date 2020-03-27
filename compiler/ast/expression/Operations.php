@@ -34,7 +34,7 @@ class IsOperation extends BaseBinaryOperation
 
 	public $is_not;
 
-	public function __construct(IExpression $left, IExpression $right, bool $is_not)
+	public function __construct(IExpression $left, IType $right, bool $is_not)
 	{
 		$this->operator = OperatorFactory::$_is;
 		$this->left = $left;

@@ -412,14 +412,16 @@ trait TeaTokenTrait
 		throw $this->new_parse_error("Invalid identifier token '{$token}'", 1);
 	}
 
-	protected function expect_block_begin()
+	protected function expect_block_begin_ignore_empty()
+	{
+		$this->expect_token_ignore_empty(_BLOCK_BEGIN);
+		$this->skip_token_ignore_space(LF);
+	}
+
+	protected function expect_block_begin_inline()
 	{
 		$this->expect_token_ignore_space(_BLOCK_BEGIN);
-
-		// skip current empty line
-		if ($this->get_token_ignore_space() === LF) {
-			$this->scan_token_ignore_space();
-		}
+		$this->skip_token_ignore_space(LF);
 	}
 
 	protected function expect_block_end()

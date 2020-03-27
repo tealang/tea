@@ -180,7 +180,7 @@ class PHPParserLite extends BaseParser
 			$declaration->baseds = $this->expect_identifier_name();
 		}
 
-		$this->expect_block_begin();
+		$this->expect_block_begin_inline();
 
 		while ($this->read_interface_member());
 
@@ -211,7 +211,7 @@ class PHPParserLite extends BaseParser
 			$declaration->baseds = $implements;
 		}
 
-		$this->expect_block_begin();
+		$this->expect_block_begin_inline();
 
 		$use_traits = [];
 		if ($this->skip_typed_token(T_USE)) {
@@ -590,7 +590,7 @@ class PHPParserLite extends BaseParser
 
 	private function read_block()
 	{
-		$this->expect_block_begin();
+		$this->expect_block_begin_inline();
 
 		// we don't care the contents
 		while (($token = $this->get_token_ignore_empty()) !== null) {
@@ -685,7 +685,7 @@ class PHPParserLite extends BaseParser
 		return $this->expect_char_token(_SEMICOLON);
 	}
 
-	protected function expect_block_begin()
+	protected function expect_block_begin_inline()
 	{
 		return $this->expect_char_token(_BLOCK_BEGIN);
 	}

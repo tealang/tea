@@ -622,8 +622,24 @@ class ASTChecker
 
 	private function infer_if_block(IfBlock $node): ?IType
 	{
-		$this->infer_expression($node->condition);
-		$result_type = $this->infer_block($node);
+		$condition = $node->condition;
+		$this->infer_expression($condition);
+
+		if ($condition instanceof IsOperation && !$condition->is_not) {
+			// set type for asserted
+			$left_declaration = $condition->left->symbol->declaration;
+			$temp_type = $left_declaration->type;
+			$left_declaration->type = $condition->right;
+
+			// it would infer with the asserted type
+			$result_type = $this->infer_block($node);
+
+			// reset to original type
+			$left_declaration->type = $temp_type;
+		}
+		else {
+			$result_type = $this->infer_block($node);
+		}
 
 		if ($node->else) {
 			$else_type = $this->infer_else_block($node->else);
@@ -1178,6 +1194,7 @@ class ASTChecker
 		// 	return TypeFactory::$_string;
 		// }
 		else {
+			dump($left_type);exit;
 			$type_name = $this->get_type_name($left_type);
 			throw $this->new_syntax_error("Cannot use key accessing for type '{$type_name}'.", $node);
 		}
@@ -1266,16 +1283,16 @@ class ASTChecker
 	private function infer_is_operation(IsOperation $node): IType
 	{
 		$this->infer_expression($node->left);
-		$this->infer_expression($node->right);
+		$this->check_type($node->right);
 
-		$cast_type = $node->right;
+		$assert_type = $node->right;
 
-		if (!$cast_type instanceof IType) {
+		if (!$assert_type instanceof IType) {
 			$kind = $node->right::KIND;
 			throw $this->new_syntax_error("Invalid 'is' expression '{$kind}'.", $node);
 		}
 
-		return $cast_type;
+		return $assert_type;
 	}
 
 	// function infer_functional_operation(FunctionalOperation $node): IType
@@ -1329,10 +1346,23 @@ class ASTChecker
 
 	private function infer_conditional_expression(ConditionalExpression $node): IType
 	{
-		$testing_type = $this->infer_expression($node->test);
+		$condition = $node->test;
+		$condition_type = $this->infer_expression($condition);
 
 		if ($node->then === null) {
-			$then_type = $testing_type;
+			$then_type = $condition_type;
+		}
+		elseif ($condition instanceof IsOperation && !$condition->is_not) {
+			// set type for asserted
+			$left_declaration = $condition->left->symbol->declaration;
+			$temp_type = $left_declaration->type;
+			$left_declaration->type = $condition->right;
+
+			// it would infer with the asserted type
+			$then_type = $this->infer_expression($node->then);
+
+			// reset to original type
+			$left_declaration->type = $temp_type;
 		}
 		else {
 			$then_type = $this->infer_expression($node->then);
