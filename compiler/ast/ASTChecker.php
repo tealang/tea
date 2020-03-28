@@ -622,28 +622,11 @@ class ASTChecker
 
 	private function infer_if_block(IfBlock $node): ?IType
 	{
-		$condition = $node->condition;
-		$this->infer_expression($condition);
-
-		if ($condition instanceof IsOperation && !$condition->is_not) {
-			// set type for asserted
-			$left_declaration = $condition->left->symbol->declaration;
-			$temp_type = $left_declaration->type;
-			$left_declaration->type = $condition->right;
-
-			// it would infer with the asserted type
-			$result_type = $this->infer_block($node);
-
-			// reset to original type
-			$left_declaration->type = $temp_type;
+		if ($node->condition instanceof IsOperation) {
+			$result_type = $this->infer_base_if_block_with_assert($node);
 		}
 		else {
-			$result_type = $this->infer_block($node);
-		}
-
-		if ($node->else) {
-			$else_type = $this->infer_else_block($node->else);
-			$result_type = $this->reduce_types([$result_type, $else_type]);
+			$result_type = $this->infer_base_if_block($node);
 		}
 
 		if ($node->except) {
@@ -653,17 +636,83 @@ class ASTChecker
 		return $result_type;
 	}
 
+	protected function infer_base_if_block(BaseIfBlock $node): ?IType
+	{
+		$this->infer_expression($node->condition);
+		$result_type = $this->infer_block($node);
+
+		if ($node->else) {
+			$result_type = $this->reduce_types_with_else_block($node, $result_type);
+		}
+
+		return $result_type;
+	}
+
+	private function infer_base_if_block_with_assert(BaseIfBlock $node): ?IType
+	{
+		$condition = $node->condition;
+		$this->infer_expression($condition);
+
+		$left_declaration = $condition->left->symbol->declaration;
+		$asserted_then_type = null;
+		$asserted_else_type = null;
+
+		$left_original_type = $left_declaration->type;
+		$asserting_type = $condition->right;
+
+		if ($condition->is_not) {
+			if ($left_original_type instanceof UnionType) {
+				$asserted_then_type = $left_original_type->get_members_type_except($asserting_type);
+			}
+
+			$asserted_else_type = $asserting_type;
+		}
+		else {
+			if ($left_original_type instanceof UnionType) {
+				$asserted_else_type = $left_original_type->get_members_type_except($asserting_type);
+			}
+
+			$asserted_then_type = $asserting_type;
+		}
+
+		// it would infer with the asserted then type
+		$asserted_then_type and $left_declaration->type = $asserted_then_type;
+		$result_type = $this->infer_block($node);
+
+		if ($node->else) {
+			// it would infer with the asserted else type
+			$asserted_else_type and $left_declaration->type = $asserted_else_type;
+			$result_type = $this->reduce_types_with_else_block($node, $result_type);
+		}
+
+		// reset to original type
+		$left_declaration->type = $left_original_type;
+
+		return $result_type;
+	}
+
+	protected function reduce_types_with_else_block(IElseAble $node, ?IType $previous_type): ?IType
+	{
+		$infered_type = $this->infer_else_block($node->else);
+		if ($previous_type) {
+			return $this->reduce_types([$previous_type, $infered_type]);
+		}
+
+		return $infered_type;
+	}
+
 	protected function infer_else_block(IElseBlock $node): ?IType
 	{
 		if ($node instanceof ElseIfBlock) {
-			$this->infer_expression($node->condition);
+			if ($node->condition instanceof IsOperation) {
+				$result_type = $this->infer_base_if_block_with_assert($node);
+			}
+			else {
+				$result_type = $this->infer_base_if_block($node);
+			}
 		}
-
-		$result_type = $this->infer_block($node);
-
-		if (isset($node->else)) {
-			$else_type = $this->infer_else_block($node->else);
-			$result_type = $this->reduce_types([$result_type, $else_type]);
+		else {
+			$result_type = $this->infer_block($node);
 		}
 
 		return $result_type;
@@ -688,12 +737,12 @@ class ASTChecker
 
 	private function reduce_types_with_except_block(BaseBlock $node, ?IType $previous_type)
 	{
-		$except_type = $this->infer_except_block($node->except);
+		$infered_type = $this->infer_except_block($node->except);
 		if ($previous_type) {
-			return $this->reduce_types([$previous_type, $except_type]);
+			return $this->reduce_types([$previous_type, $infered_type]);
 		}
 
-		return $except_type;
+		return $infered_type;
 	}
 
 	private function infer_when_block(WhenBlock $node): ?IType
@@ -726,8 +775,7 @@ class ASTChecker
 		$result_type = $infered_types ? $this->reduce_types($infered_types) : null;
 
 		if ($node->else) {
-			$else_type = $this->infer_else_block($node->else);
-			$result_type = $this->reduce_types([$result_type, $else_type]);
+			$result_type = $this->reduce_types_with_else_block($node, $result_type);
 		}
 
 		if ($node->except) {
@@ -758,8 +806,7 @@ class ASTChecker
 		$result_type = $this->infer_block($node);
 
 		if ($node->else) {
-			$else_type = $this->infer_else_block($node->else);
-			$result_type = $this->reduce_types([$result_type, $else_type]);
+			$result_type = $this->reduce_types_with_else_block($node, $result_type);
 		}
 
 		if ($node->except) {
@@ -782,8 +829,7 @@ class ASTChecker
 		$result_type = $this->infer_block($node);
 
 		if ($node->else) {
-			$else_type = $this->infer_else_block($node->else);
-			$result_type = $this->reduce_types([$result_type, $else_type]);
+			$result_type = $this->reduce_types_with_else_block($node, $result_type);
 		}
 
 		if ($node->except) {
@@ -1119,9 +1165,6 @@ class ASTChecker
 			case ConditionalExpression::KIND:
 				$infered_type = $this->infer_conditional_expression($node);
 				break;
-			// case FunctionalOperation::KIND:
-			// 	$infered_type = $this->infer_functional_operation($node);
-			// 	break;
 			case DictExpression::KIND:
 				$infered_type = $this->infer_dict_expression($node);
 				break;
@@ -1194,7 +1237,6 @@ class ASTChecker
 		// 	return TypeFactory::$_string;
 		// }
 		else {
-			dump($left_type);exit;
 			$type_name = $this->get_type_name($left_type);
 			throw $this->new_syntax_error("Cannot use key accessing for type '{$type_name}'.", $node);
 		}
@@ -1238,7 +1280,7 @@ class ASTChecker
 		if ($operator === OperatorFactory::$_concat) {
 			if ($left_type instanceof ArrayType) {
 				$node->is_array_concat = true;
-				$this->assert_type_compatible($left_type, $right_type, $node->right);
+				$this->assert_type_compatible($left_type, $right_type, $node->right, _CONCAT);
 				return $left_type;
 			}
 			elseif ($left_type instanceof DictType) {
@@ -1255,7 +1297,7 @@ class ASTChecker
 				throw $this->new_syntax_error("'merge' operation just support Array/Dict type values.", $node);
 			}
 
-			$this->assert_type_compatible($left_type, $right_type, $node->right);
+			$this->assert_type_compatible($left_type, $right_type, $node->right, _MERGE);
 			return $left_type;
 		}
 
@@ -1295,30 +1337,6 @@ class ASTChecker
 		return $assert_type;
 	}
 
-	// function infer_functional_operation(FunctionalOperation $node): IType
-	// {
-	// 	$has_float = false;
-	// 	foreach ($node->arguments as $argument) {
-	// 		$infered_type = $this->infer_expression($argument);
-	// 		if ($infered_type === TypeFactory::$_float) {
-	// 			$has_float = true;
-	// 		}
-	// 	}
-
-	// 	if (OperatorFactory::is_string_operator($node->operator)) {
-	// 		return TypeFactory::$_string;
-	// 	}
-	// 	elseif (OperatorFactory::is_number_operator($node->operator)) {
-	// 		return $has_float ? TypeFactory::$_float : TypeFactory::$_int;
-	// 	}
-	// 	elseif (OperatorFactory::is_bool_operator($node->operator)) {
-	// 		return TypeFactory::$_bool;
-	// 	}
-	// 	else {
-	// 		throw $this->new_syntax_error("Unknow operator: '{$node->operator->sign}'", $node);
-	// 	}
-	// }
-
 	private function infer_prefix_operation(PrefixOperation $node): IType
 	{
 		$infered_type = $this->infer_expression($node->expression);
@@ -1347,28 +1365,68 @@ class ASTChecker
 	private function infer_conditional_expression(ConditionalExpression $node): IType
 	{
 		$condition = $node->test;
+
+		// infer with type assert
+		if ($condition instanceof IsOperation) {
+			return $this->infer_conditional_expression_with_assert($node);
+		}
+
 		$condition_type = $this->infer_expression($condition);
 
 		if ($node->then === null) {
 			$then_type = $condition_type;
-		}
-		elseif ($condition instanceof IsOperation && !$condition->is_not) {
-			// set type for asserted
-			$left_declaration = $condition->left->symbol->declaration;
-			$temp_type = $left_declaration->type;
-			$left_declaration->type = $condition->right;
-
-			// it would infer with the asserted type
-			$then_type = $this->infer_expression($node->then);
-
-			// reset to original type
-			$left_declaration->type = $temp_type;
 		}
 		else {
 			$then_type = $this->infer_expression($node->then);
 		}
 
 		$else_type = $this->infer_expression($node->else);
+
+		return $this->reduce_types([$then_type, $else_type]);
+	}
+
+	private function infer_conditional_expression_with_assert(ConditionalExpression $node): IType
+	{
+		$condition = $node->test;
+		$condition_type = $this->infer_expression($condition);
+
+		$left_declaration = $condition->left->symbol->declaration;
+		$asserted_then_type = null;
+		$asserted_else_type = null;
+
+		$left_original_type = $left_declaration->type;
+		$asserting_type = $condition->right;
+
+		if ($condition->is_not) {
+			if ($left_original_type instanceof UnionType) {
+				$asserted_then_type = $left_original_type->get_members_type_except($asserting_type);
+			}
+
+			$asserted_else_type = $asserting_type;
+		}
+		else {
+			if ($left_original_type instanceof UnionType) {
+				$asserted_else_type = $left_original_type->get_members_type_except($asserting_type);
+			}
+
+			$asserted_then_type = $asserting_type;
+		}
+
+		if ($node->then === null) {
+			$then_type = $condition_type;
+		}
+		else {
+			// it would infer with the asserted then type
+			$left_declaration->type = $asserted_then_type;
+			$then_type = $this->infer_expression($node->then);
+		}
+
+		// it would infer with the asserted else type
+		$left_declaration->type = $asserted_else_type;
+		$else_type = $this->infer_expression($node->else);
+
+		// reset to original type
+		$left_declaration->type = $left_original_type;
 
 		return $this->reduce_types([$then_type, $else_type]);
 	}
@@ -1704,17 +1762,26 @@ class ASTChecker
 		return $symbol->declaration;
 	}
 
-	private function assert_type_compatible(IType $left, IType $right, Node $value_node)
+	private function check_type_compatible(IType $left, IType $right, Node $value_node)
 	{
-		if (!$left->is_accept_type($right)) {
-			// for [] / [:]
-			if (($value_node instanceof ArrayLiteral || $value_node instanceof DictLiteral) && !$value_node->items) {
-				return;
-			}
+		if ($left->is_accept_type($right)) {
+			return true;
+		}
 
+		// for [] / [:]
+		if (($value_node instanceof ArrayLiteral || $value_node instanceof DictLiteral) && !$value_node->items) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private function assert_type_compatible(IType $left, IType $right, Node $value_node, string $kind = 'assign')
+	{
+		if (!$this->check_type_compatible($left, $right, $value_node)) {
 			$left_type_name = self::get_type_name($left);
 			$right_type_name = self::get_type_name($right);
-			throw $this->new_syntax_error("Types not compatible with '{$left_type_name}' and '{$right_type_name}'.", $value_node);
+			throw $this->new_syntax_error("It's not compatible for type '{$left_type_name}' {$kind} with '{$right_type_name}'.", $value_node);
 		}
 	}
 

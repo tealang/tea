@@ -1,0 +1,43 @@
+#main
+
+dict = [
+	'a': 1,
+	'b': '1',
+	'c': [1]
+]
+
+echo "\nUse conditional expression:"
+
+for key, value in dict {
+	var result = value is Int
+		? value + 2				// 3
+		: (value is String
+			? value concat 2 	// 12
+			: value concat [2]	// [1, 2]
+		)
+
+	echo "Operation result for key '$key' is: "
+	var_dump(result)
+}
+
+echo "\nUse if-elseif-else:"
+
+for key, value in dict {
+	var result Any
+	if value is Int {
+		result = value + 2			// 3
+	}
+	elseif value is String {
+		result = value concat 2		// 12
+	}
+	elseif value is Array {
+		result = value concat [2]		// [1, 2]
+	}
+	else {
+		// would not be happened
+	}
+
+	echo "Operation value for key '$key' is: "
+	var_dump(result)
+}
+

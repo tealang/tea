@@ -163,8 +163,7 @@ class TypeFactory
 
 	static function create_collector_type(IType $value_type)
 	{
-		$type = new ArrayType();
-		$type->value_type = $value_type;
+		$type = new ArrayType($value_type);
 		$type->symbol = static::$_array->symbol;
 		$type->is_collect_mode = true;
 
@@ -173,8 +172,7 @@ class TypeFactory
 
 	static function create_array_type(IType $value_type)
 	{
-		$type = new ArrayType();
-		$type->value_type = $value_type;
+		$type = new ArrayType($value_type);
 		$type->symbol = static::$_array->symbol;
 
 		return $type;
@@ -182,28 +180,32 @@ class TypeFactory
 
 	static function create_dict_type(IType $value_type)
 	{
-		$type = new DictType();
-		$type->value_type = $value_type;
+		$type = new DictType($value_type);
 		$type->symbol = static::$_dict->symbol;
-
-		return $type;
-	}
-
-	static function create_meta_type(IType $value_type)
-	{
-		$type = new MetaType();
-		$type->value_type = $value_type;
-		$type->symbol = static::$_metatype->symbol;
 
 		return $type;
 	}
 
 	static function create_callable_type(?IType $return_type, array $parameters = null)
 	{
-		$type = new CallableType();
-		$type->type = $return_type;
-		$type->parameters = $parameters;
+		$type = new CallableType($return_type, $parameters);
 		$type->symbol = static::$_callable->symbol;
+
+		return $type;
+	}
+
+	static function create_meta_type(IType $value_type)
+	{
+		$type = new MetaType($value_type);
+		$type->symbol = static::$_metatype->symbol;
+
+		return $type;
+	}
+
+	static function create_union_type(array $members)
+	{
+		$type = new UnionType($members);
+		$type->symbol = static::$_uniontype->symbol;
 
 		return $type;
 	}

@@ -867,15 +867,17 @@ class PHPCoder extends TeaCoder
 			return $this->render_masked_accessing_identifier($node);
 		}
 
-		$master = $node->master->render($this);
-
 		$name = $declaration === ASTFactory::$virtual_property_for_any
 			? $node->name
 			: $this->get_normalized_class_member_name($declaration);
 
 		if ($node->master instanceof CallExpression && $node->master->is_class_new()) {
-			// with class new expression
+			// for the class new expression
+			$master = $node->master->render($this);
 			$master = "($master)";
+		}
+		else {
+			$master = $this->render_master_expression($node->master);
 		}
 
 		// 当前已无支持带名称空间访问
@@ -998,7 +1000,7 @@ class PHPCoder extends TeaCoder
 			return $this->render_masked_call($node);
 		}
 
-		$callee = $node->callee->render($this);
+		$callee = $this->render_master_expression($node->callee);
 
 		$arguments = $node->normalized_arguments ?? $node->arguments;
 		$arguments = $this->render_arguments($arguments);
@@ -1159,9 +1161,21 @@ class PHPCoder extends TeaCoder
 		return null;
 	}
 
+	private function render_master_expression(IExpression $expr)
+	{
+		if ($expr instanceof CastOperation) {
+			$code = $this->render_cast_operation($expr, true);
+		}
+		else {
+			$code = $expr->render($this);
+		}
+
+		return $code;
+	}
+
 	public function render_key_accessing(KeyAccessing $node)
 	{
-		$master = $node->left->render($this);
+		$master = $this->render_master_expression($node->left);
 		$key = $node->right->render($this);
 
 		if (isset($node->right->infered_type)) {
@@ -1325,7 +1339,7 @@ class PHPCoder extends TeaCoder
 		return '[' . $body . ']';
 	}
 
-	public function render_cast_operation(CastOperation $node)
+	public function render_cast_operation(CastOperation $node, bool $add_parentheses = false)
 	{
 		$left = $this->render_expression($node->left);
 
@@ -1338,7 +1352,12 @@ class PHPCoder extends TeaCoder
 			return $left; // not to do anything
 		}
 
-		return "($type_name)$left";
+		$code = "($type_name)$left";
+		if ($add_parentheses) {
+			$code = "($code)";
+		}
+
+		return $code;
 	}
 
 	public function render_is_operation(IsOperation $node)
@@ -1383,9 +1402,6 @@ class PHPCoder extends TeaCoder
 
 	public function render_binary_operation(BinaryOperation $node)
 	{
-		// $left = $this->render_expression($node->left);
-		// $right = $this->render_expression($node->right);
-
 		$left = $node->left->render($this);
 		$right = $node->right->render($this);
 
@@ -1473,7 +1489,7 @@ class PHPCoder extends TeaCoder
 
 		$code = $expr->render($this);
 		if ($need_parentheses) {
-			return '(' . $code . ')';
+			$code = '(' . $code . ')';
 		}
 
 		return $code;

@@ -162,7 +162,9 @@ class TeaParser extends BaseParser
 		$operator = $this->scan_token_ignore_empty();
 		$value = $this->read_expression();
 
-		return $this->factory->create_assignment($assignalbe, $value, $operator);
+		$node = $this->factory->create_assignment($assignalbe, $value, $operator);
+
+		return $node;
 	}
 
 	protected function assert_not_reserveds_word($token)
@@ -825,7 +827,6 @@ class TeaParser extends BaseParser
 		}
 
 		$expression = $this->read_expression_with_token($token, $prev_operator);
-		$expression and $expression->pos = $this->pos;
 
 		return $expression;
 	}
@@ -877,6 +878,7 @@ class TeaParser extends BaseParser
 
 			case _XTAG_OPEN:
 				$expression = $this->read_xblock();
+				$expression->pos || $expression->pos = $this->pos;
 				return $expression; // that should be the end of current expression
 
 			case _SHARP:
@@ -892,7 +894,9 @@ class TeaParser extends BaseParser
 					throw $this->new_unexpected_error();
 				}
 
-				return $this->factory->create_yield_expression($argument);
+				$expression = $this->factory->create_yield_expression($argument);
+				$expression->pos || $expression->pos = $this->pos;
+				return $expression;
 
 			default:
 				// maybe a regex
@@ -922,19 +926,10 @@ class TeaParser extends BaseParser
 					break;
 				}
 
-				// // the functional operation
-				// if ($op = OperatorFactory::get_normal_operator_symbol($token) and $this->is_next_space()) {
-				// 	$args = $this->read_inline_arguments();
-				// 	return new FunctionalOperation($op, ...$args);
-				// }
-
 				if (_INLINE_COMMENT_MARK === $token) {
 					$this->skip_inline_comment(); // the // ...
 					return $this->read_expression($prev_operator);
 				}
-				// elseif (_RELAY === $token) {
-				// 	return $this->read_relay_expression();
-				// }
 				elseif (_DOLLAR === $token) {
 					$expression = $this->read_super_variable_identifier();
 					break;
@@ -943,8 +938,13 @@ class TeaParser extends BaseParser
 				throw $this->new_unexpected_error();
 		}
 
-		$expression->pos = $this->pos;
+		$expression->pos || $expression->pos = $this->pos;
 		$expression = $this->read_expression_combination($expression, $prev_operator);
+
+		$expression->pos || $expression->pos = $this->pos;
+		if ($this->get_token_ignore_space() === _INLINE_COMMENT_MARK) {
+			$expression->tailing = $this->skip_inline_comment();
+		}
 
 		return $expression;
 	}
@@ -985,9 +985,9 @@ class TeaParser extends BaseParser
 
 		$expression = $this->read_expression();
 
-		$next = $this->get_token_ignore_space();
+		$next = $this->get_token_ignore_empty();
 		if ($next === _PAREN_CLOSE) {
-			$this->scan_token_ignore_space(); // skip )
+			$this->scan_token_ignore_empty(); // skip )
 		}
 		elseif ($expression instanceof PlainIdentifier) {
 			// lambda, (parameter Type) or (parameter, ...)
@@ -1157,6 +1157,10 @@ class TeaParser extends BaseParser
 				throw $this->new_parse_error("Required () for compound conditional expressions");
 			}
 
+			if ($this->get_token_ignore_empty() === _INLINE_COMMENT_MARK) {
+				$this->skip_inline_comment();
+			}
+
 			$this->expect_token_ignore_empty(_COLON);
 		}
 
@@ -1165,25 +1169,11 @@ class TeaParser extends BaseParser
 			throw $this->new_parse_error("Required () for compound conditional expressions");
 		}
 
-		return new ConditionalExpression($test, $then, $else);
+		$expression = new ConditionalExpression($test, $then, $else);
+		$expression->pos = $else->pos;
+
+		return $expression;
 	}
-
-	// protected function read_relay_expression()
-	// {
-	// 	$argument = $this->read_expression();
-	// 	$this->expect_token_ignore_empty(_COMMA);
-
-	// 	$callees = [];
-	// 	while (($callee = $this->read_expression()) !== null) {
-	// 		$callees[] = $callee;
-
-	// 		if (!$this->skip_comma()) {
-	// 			break;
-	// 		}
-	// 	}
-
-	// 	return new RelayExpression($argument, ...$callees);
-	// }
 
 	protected function read_object_expression()
 	{
@@ -1573,6 +1563,7 @@ class TeaParser extends BaseParser
 			}
 
  			$expression = new CastOperation($expression, $as_type);
+			$expression->pos = $this->pos;
 
  			$expression = $this->read_expression_combination($expression, $prev_operator);
  			if ($expression instanceof ArrayElementAssignment) {
@@ -1590,6 +1581,7 @@ class TeaParser extends BaseParser
 			}
 
 			$expression = new IsOperation($expression, $assert_type, $is_not);
+			$expression->pos = $this->pos;
 		}
 		elseif ($operator === OperatorFactory::$_conditional) {
 			$this->scan_token_ignore_empty(); // skip the operator
@@ -1601,9 +1593,9 @@ class TeaParser extends BaseParser
 			$this->skip_binary_operator_with_space($token);
 			$right_expression = $this->read_expression($operator);
 			$expression = new BinaryOperation($operator, $expression, $right_expression);
+			$expression->pos = $right_expression->pos;
 		}
 
-		$expression->pos = $this->pos;
 		return $this->try_read_operation($expression, $prev_operator);
 	}
 

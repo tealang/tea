@@ -15,14 +15,18 @@ trait SubValuedTrait
 {
 	/**
 	 * the value type
-	 * default to Any when null
+	 * default to Any when is null
 	 * @var IType
 	 */
 	public $value_type;
 
-	public function set_value_type(IType $type) {
-		$this->value_type = $type;
+	public function __construct(IType $value_type = null) {
+		$this->value_type = $value_type;
 	}
+
+	// public function set_value_type(IType $type) {
+	// 	$this->value_type = $type;
+	// }
 
 	public function is_accept_single_type(IType $type) {
 		if ($type === $this || $type === TypeFactory::$_none) {
@@ -49,46 +53,60 @@ trait SubValuedTrait
 
 		return $this->value_type->is_accept_type($type->value_type);
 	}
+
+	public function is_same_with(IType $target) {
+		if ($this->symbol === $target->symbol) {
+			if ($this->value_type === null || $this->value_type->is_same_with($target->value_type ?? TypeFactory::$_any)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 }
 
 trait ITypeTrait
 {
-	public function is_accept_type(IType $type) {
-		if ($type instanceof UnionType) {
+	public function is_accept_type(IType $target) {
+		if ($target instanceof UnionType) {
 			$accept = false;
-			foreach ($type->types as $member) {
-				if ($this->is_accept_single_type($member)) {
+			foreach ($target->types as $target_member) {
+				if ($this->is_accept_single_type($target_member)) {
 					$accept = true;
 					break;
 				}
 			}
 		}
 		else {
-			$accept = $this->is_accept_single_type($type);
+			$accept = $this->is_accept_single_type($target);
 		}
 
 		return $accept;
 	}
 
-	public function unite_type(IType $type): IType {
-		if ($type instanceof UnionType) {
-			$united = $type->add_single_type($this);
+	public function unite_type(IType $target): IType {
+		if ($target instanceof UnionType) {
+			$united = $target->add_single_type($this);
 		}
 		else {
-			if ($this->is_same_with($type)) {
+			if ($this->is_same_with($target)) {
 				$united = $this;
 			}
 			else {
 				$united = new UnionType();
-				$united->types = [$this, $type];
+				$united->types = [$this, $target];
 			}
 		}
 
 		return $united;
 	}
 
-	public function is_same_with(IType $type) {
-		return $this->symbol === $type->symbol;
+	public function is_same_with(IType $target) {
+		return $this->symbol === $target->symbol;
+	}
+
+	public function is_same_or_based_with(IType $target) {
+		return $this->symbol === $target->symbol;
 	}
 }
 
@@ -106,6 +124,10 @@ class UnionType extends Node implements IType
 	public $symbol;
 
 	public $types = [];
+
+	public function __construct(array $types = []) {
+		$this->types = $types;
+	}
 
 	public function unite_type(IType $target): UnionType {
 		if ($target instanceof UnionType) {
@@ -139,6 +161,24 @@ class UnionType extends Node implements IType
 		return $contains;
 	}
 
+	public function get_members_type_except(IType $target) {
+		$items = [];
+		foreach ($this->types as $member) {
+			if (!$member->is_same_or_based_with($target)) {
+				if ($member instanceof UIntType) {
+					dump(get_class($target));exit;
+				}
+				$items[] = $member;
+			}
+		}
+
+		$new_type = count($items) > 1
+			? TypeFactory::create_union_type($items)
+			: $items[0];
+
+		return $new_type;
+	}
+
 	public function is_same_with(IType $target) {
 		if (count($this->types) !== count($target->types)) {
 			return false;
@@ -163,9 +203,9 @@ class UnionType extends Node implements IType
 		return true;
 	}
 
-	public function is_same_or_based_with(IType $type) {
+	public function is_same_or_based_with(IType $target) {
 		foreach ($this->types as $member) {
-			if (!$member->is_same_or_based_with($type)) {
+			if (!$member->is_same_or_based_with($target)) {
 				return false;
 			}
 		}
@@ -205,8 +245,8 @@ class BaseType extends Node implements IType
 		return false;
 	}
 
-	public function is_same_or_based_with(IType $type) {
-		return $this->symbol === $type->symbol;
+	public function is_same_or_based_with(IType $target) {
+		return $this->symbol === $target->symbol;
 	}
 
 	public function is_accept_single_type(IType $type) {
@@ -217,9 +257,16 @@ class BaseType extends Node implements IType
 	}
 }
 
-class MetaType extends BaseType {
+class MetaType extends BaseType
+{
 	use SubValuedTrait;
+
 	public $name = _METATYPE;
+
+	public function is_same_or_based_with(IType $target) {
+		return $this->symbol === $target->symbol
+			&& $this->value_type->is_same_or_based_with($target->value_type);
+	}
 }
 
 class VoidType extends BaseType {
@@ -274,23 +321,33 @@ class IntType extends BaseType {
 class UIntType extends BaseType {
 	// would output int for php
 	public $name = _UINT;
+
+	public function is_same_or_based_with(IType $target) {
+		return $this->symbol === $target->symbol || TypeFactory::$_int->symbol === $target->symbol;
+	}
 }
 
 class BoolType extends BaseType {
 	public $name = _BOOL;
 }
 
-class IterableType extends BaseType {
+class IterableType extends BaseType
+{
 	use SubValuedTrait;
 
 	public $name = _ITERABLE;
 
 	/**
 	 * the key type
-	 * UInt for Array, and String/Int for Dict or classes based on Iterable
+	 * UInt for Array, and String/Int for Dict or classes based on IIterable
 	 * @var UIntType/IntType/StringType
 	 */
-	public $key_type;
+	// public $key_type;
+
+	public function is_same_or_based_with(IType $target) {
+		return ($this->symbol === $target->symbol || $target->symbol === TypeFactory::$_iterable->symbol)
+			&& $this->value_type->is_same_or_based_with($target->value_type);
+	}
 }
 
 class ArrayType extends IterableType {
@@ -304,15 +361,19 @@ class DictType extends IterableType {
 	// public $key_type; // just support String for Dict keys now
 }
 
-class CallableType extends BaseType implements ICallableDeclaration {
+class CallableType extends BaseType implements ICallableDeclaration
+{
 	public $name = _CALLABLE;
 
-	/**
-	 * @var BaseType
-	 */
 	public $type;
 
 	public $parameters = [];
+
+	public function __construct(IType $return_type = null, array $parameters = [])
+	{
+		$this->type = $return_type;
+		$this->parameters = $parameters;
+	}
 
 	public function is_accept_single_type(IType $type)
 	{
@@ -355,8 +416,10 @@ class RegexType extends BaseType {
 	public $name = _REGEX;
 }
 
-class XViewType extends BaseType {
+class XViewType extends BaseType
+{
 	public $name = _XVIEW;
+
 	public function is_accept_single_type(IType $type) {
 		if ($type === $this || $type === TypeFactory::$_none || $type->symbol->declaration === $this->symbol->declaration) {
 			return true;
