@@ -24,21 +24,21 @@ trait SubValuedTrait
 		$this->value_type = $value_type;
 	}
 
-	// public function set_value_type(IType $type) {
-	// 	$this->value_type = $type;
+	// public function set_value_type(IType $target) {
+	// 	$this->value_type = $target;
 	// }
 
-	public function is_accept_single_type(IType $type) {
-		if ($type === $this || $type === TypeFactory::$_none) {
+	public function is_accept_single_type(IType $target) {
+		if ($target === $this || $target === TypeFactory::$_none) {
 			return true;
 		}
 
 		// for the builtin classes
-		if ($type instanceof ClassLikeIdentifier && $this->symbol === $type->symbol) {
+		if ($target instanceof ClassLikeIdentifier && $this->symbol === $target->symbol) {
 			return true;
 		}
 
-		if (!$type instanceof static) {
+		if (!$target instanceof static) {
 			return false;
 		}
 
@@ -47,11 +47,11 @@ trait SubValuedTrait
 			return true;
 		}
 
-		if ($type->value_type === null) {
+		if ($target->value_type === null) {
 			return false;
 		}
 
-		return $this->value_type->is_accept_type($type->value_type);
+		return $this->value_type->is_accept_type($target->value_type);
 	}
 
 	public function is_same_with(IType $target) {
@@ -193,9 +193,9 @@ class UnionType extends Node implements IType
 		return true;
 	}
 
-	public function is_based_with(IType $type) {
+	public function is_based_with(IType $target) {
 		foreach ($this->types as $member) {
-			if (!$member->is_based_with($type)) {
+			if (!$member->is_based_with($target)) {
 				return false;
 			}
 		}
@@ -213,10 +213,10 @@ class UnionType extends Node implements IType
 		return true;
 	}
 
-	public function is_accept_single_type(IType $type) {
+	public function is_accept_single_type(IType $target) {
 		$accept = false;
 		foreach ($this->types as $member) {
-			if ($member->is_accept_type($type)) {
+			if ($member->is_accept_type($target)) {
 				$accept = true;
 				break;
 			}
@@ -241,7 +241,7 @@ class BaseType extends Node implements IType
 
 	public $symbol;
 
-	public function is_based_with(IType $type) {
+	public function is_based_with(IType $target) {
 		return false;
 	}
 
@@ -249,11 +249,11 @@ class BaseType extends Node implements IType
 		return $this->symbol === $target->symbol;
 	}
 
-	public function is_accept_single_type(IType $type) {
-		return $type === $this
-			|| $type === TypeFactory::$_none
-			|| in_array($type->name, static::ACCEPT_TYPES, true)
-			|| $type->symbol->declaration === $this->symbol->declaration;
+	public function is_accept_single_type(IType $target) {
+		return $target === $this
+			|| $target === TypeFactory::$_none
+			|| in_array($target->name, static::ACCEPT_TYPES, true)
+			|| $target->symbol->declaration === $this->symbol->declaration;
 	}
 }
 
@@ -271,21 +271,21 @@ class MetaType extends BaseType
 
 class VoidType extends BaseType {
 	public $name = _VOID;
-	public function is_accept_single_type(IType $type) {
-		return $this === $type;
+	public function is_accept_single_type(IType $target) {
+		return $this === $target;
 	}
 }
 
 class NoneType extends BaseType {
 	public $name = _NONE;
-	public function is_accept_single_type(IType $type) {
+	public function is_accept_single_type(IType $target) {
 		return false;
 	}
 }
 
 class AnyType extends BaseType {
 	public $name = _ANY;
-	public function is_accept_single_type(IType $type) {
+	public function is_accept_single_type(IType $target) {
 		return true;
 	}
 }
@@ -375,13 +375,13 @@ class CallableType extends BaseType implements ICallableDeclaration
 		$this->parameters = $parameters;
 	}
 
-	public function is_accept_single_type(IType $type)
+	public function is_accept_single_type(IType $target)
 	{
-		if ($type === TypeFactory::$_none || $this === TypeFactory::$_callable) {
+		if ($target === TypeFactory::$_none || $this === TypeFactory::$_callable) {
 			return true;
 		}
 
-		if (!$type instanceof static) {
+		if (!$target instanceof static) {
 			return false;
 		}
 
@@ -389,21 +389,21 @@ class CallableType extends BaseType implements ICallableDeclaration
 			return true;
 		}
 
-		if (!$this->type->is_accept_type($type->type)) {
+		if (!$this->type->is_accept_type($target->type)) {
 			return false;
 		}
 
-		if (count($type->parameters) > count($this->parameters)) {
+		if (count($target->parameters) > count($this->parameters)) {
 			return false;
 		}
 
 		foreach ($this->parameters as $key => $protocol_param) {
-			$implement_param = $type->parameters[$key] ?? null;
+			$implement_param = $target->parameters[$key] ?? null;
 			if ($implement_param === null && $protocol_param->value === null) {
 				return false;
 			}
 
-			if (!$this->type->is_accept_type($type->type)) {
+			if (!$this->type->is_accept_type($target->type)) {
 				return false;
 			}
 		}
@@ -420,12 +420,12 @@ class XViewType extends BaseType
 {
 	public $name = _XVIEW;
 
-	public function is_accept_single_type(IType $type) {
-		if ($type === $this || $type === TypeFactory::$_none || $type->symbol->declaration === $this->symbol->declaration) {
+	public function is_accept_single_type(IType $target) {
+		if ($target === $this || $target === TypeFactory::$_none || $target->symbol->declaration === $this->symbol->declaration) {
 			return true;
 		}
 
-		return $type->symbol->declaration->is_same_or_based_with_symbol(TypeFactory::$_iview_symbol);
+		return $target->symbol->declaration->is_same_or_based_with_symbol(TypeFactory::$_iview_symbol);
 	}
 }
 

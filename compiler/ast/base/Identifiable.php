@@ -73,31 +73,31 @@ class PlainIdentifier extends Identifiable implements IType
 		return $identifier;
 	}
 
-	public function is_based_with(IType $type)
+	public function is_based_with(IType $target)
 	{
 		if (!$this->symbol->declaration instanceof ClassLikeDeclaration) {
 			return false;
 		}
 
-		if ($this->symbol->declaration->is_based_with_symbol($type->symbol)) {
+		if ($this->symbol->declaration->is_based_with_symbol($target->symbol)) {
 			return true;
 		}
 
 		return false;
 	}
 
-	public function is_same_or_based_with(IType $type)
+	public function is_same_or_based_with(IType $target)
 	{
-		return $this->symbol === $type->symbol || $this->is_based_with($type);
+		return $this->symbol === $target->symbol || $this->is_based_with($target);
 	}
 
-	public function is_accept_single_type(IType $type)
+	public function is_accept_single_type(IType $target)
 	{
-		return $type->symbol === $this->symbol || $type === TypeFactory::$_none
+		return $target->symbol === $this->symbol || $target === TypeFactory::$_none
 			// for check BuiltinTypeClassDeclaration like String
 			// can not use symbol to compare BuiltinTypeClassDeclaration, because of the symbol maybe 'this'
-			|| $this->symbol->declaration === $type->symbol->declaration
-			|| $type->is_based_with($this)
+			|| $this->symbol->declaration === $target->symbol->declaration
+			|| $target->is_based_with($this)
 		;
 	}
 }
