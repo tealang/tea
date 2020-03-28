@@ -165,9 +165,6 @@ class UnionType extends Node implements IType
 		$items = [];
 		foreach ($this->types as $member) {
 			if (!$member->is_same_or_based_with($target)) {
-				if ($member instanceof UIntType) {
-					dump(get_class($target));exit;
-				}
 				$items[] = $member;
 			}
 		}

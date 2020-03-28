@@ -681,7 +681,7 @@ class ASTChecker
 
 		if ($node->else) {
 			// it would infer with the asserted else type
-			$asserted_else_type and $left_declaration->type = $asserted_else_type;
+			$left_declaration->type = $asserted_else_type ?? $left_original_type;
 			$result_type = $this->reduce_types_with_else_block($node, $result_type);
 		}
 
@@ -1417,12 +1417,12 @@ class ASTChecker
 		}
 		else {
 			// it would infer with the asserted then type
-			$left_declaration->type = $asserted_then_type;
+			$asserted_then_type and $left_declaration->type = $asserted_then_type;
 			$then_type = $this->infer_expression($node->then);
 		}
 
 		// it would infer with the asserted else type
-		$left_declaration->type = $asserted_else_type;
+		$left_declaration->type = $asserted_else_type ?? $left_original_type;
 		$else_type = $this->infer_expression($node->else);
 
 		// reset to original type
@@ -1867,18 +1867,6 @@ class ASTChecker
 		return TypeFactory::$_regex;
 	}
 
-	// function infer_relay_expression(RelayExpression $node): IType
-	// {
-	// 	$this->infer_expression($node->argument);
-
-	// 	$infered_type = null;
-	// 	foreach ($node->callees as $callee) {
-	// 		$infered_type = $this->require_callee_declaration($callee)->type;
-	// 	}
-
-	// 	return $infered_type;
-	// }
-
 	private function infer_escaped_string_interpolation(EscapedStringInterpolation $node): IType
 	{
 		foreach ($node->items as $item) {
@@ -2013,18 +2001,7 @@ class ASTChecker
 				// for Callable type parameters
 			}
 			else {
-				if ($declar instanceof VariableDeclaration) {
-					$type = self::get_type_name($declar->type);
-					$item = "$type variable '$node->name'";
-				}
-				elseif ($declar instanceof ConstantDeclaration) {
-					$item = "constant '$node->name'";
-				}
-				else {
-					$item = "'$node->name'";
-				}
-
-				throw $this->new_syntax_error("Cannot use $item as a callable.", $node);
+				throw $this->new_syntax_error("Invalid callable expression.", $node);
 			}
 		}
 		elseif ($node instanceof ClassLikeIdentifier) {
@@ -2081,18 +2058,23 @@ class ASTChecker
 
 	private function require_accessing_identifier_declaration(AccessingIdentifier $node): IMemberDeclaration
 	{
-		if (!$node->symbol) {
-			$master = $node->master;
-			$infered_type = $this->infer_expression($master);
+		if ($node->symbol) {
+			dump($node->name); exit;
+			return $node->symbol->declaration;
+		}
 
-			if ($infered_type === TypeFactory::$_any || $infered_type instanceof UnionType) {
+		$master = $node->master;
+		$master_type = $this->infer_expression($master);
+
+		if ($master_type instanceof BaseType) {
+			if ($master_type === TypeFactory::$_any) {
 				// let member type to Any on master is Any
 				$this->create_any_symbol_for_accessing_identifier($node);
 			}
-			// elseif ($infered_type === TypeFactory::$_namespace) {
+			// elseif ($master_type === TypeFactory::$_namespace) {
 			// 	$this->attach_namespace_member_symbol($master->symbol->declaration, $node);
 			// }
-			elseif ($infered_type instanceof MetaType) { // includes static call for class members
+			elseif ($master_type instanceof MetaType) { // includes static call for class members
 				$declaration = $master->symbol->declaration;
 				if (!$declaration instanceof ClassDeclaration) {
 					$declaration = $declaration->type->value_type->symbol->declaration;
@@ -2104,13 +2086,18 @@ class ASTChecker
 					throw $this->new_syntax_error("Invalid to accessing a non-static member '{$name}'", $node);
 				}
 			}
-			elseif ($infered_type !== null) { // the master would be an object expression
-				$node->symbol = $this->require_class_member_symbol($infered_type->symbol->declaration, $node);
+			else {
+				$node->symbol = $this->require_class_member_symbol($master_type->symbol->declaration, $node);
 				$node->symbol->declaration->type || $this->check_class_member_declaration($node->symbol->declaration);
 			}
-			else {
-				throw new UnexpectNode($master);
-			}
+		}
+		elseif ($master_type instanceof Identifiable) { // the master would be an object expression
+			$node->symbol = $this->require_class_member_symbol($master_type->symbol->declaration, $node);
+			$node->symbol->declaration->type || $this->check_class_member_declaration($node->symbol->declaration);
+		}
+		else {
+			$type_name = $this->get_type_name($master_type);
+			throw $this->new_syntax_error("Invalid accessable type '$type_name'.", $master);
 		}
 
 		return $node->symbol->declaration;
@@ -2305,10 +2292,18 @@ class ASTChecker
 			}
 		}
 
+		if ($result_type === TypeFactory::$_any) {
+			return TypeFactory::$_any;
+		}
+
 		for ($i = $i + 1; $i < $count; $i++) {
 			$type = $types[$i];
 			if ($type === null) {
 				$nullable = true;
+			}
+			elseif ($type === TypeFactory::$_any) {
+				$result_type = $type;
+				break;
 			}
 			else {
 				$result_type = $result_type->unite_type($type);
