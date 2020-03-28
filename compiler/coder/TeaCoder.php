@@ -78,7 +78,7 @@ class TeaCoder
 		}
 
 		foreach ($program->declarations as $node) {
-			if (!$node instanceof ClassLikeDeclaration && !$node instanceof IFunctionDeclaration) {
+			if (!$node instanceof ClassLikeDeclaration && !$node instanceof FunctionDeclaration) {
 				$simple_item = $node->render($this);
 				$simple_item === null || $items[] = $simple_item;
 			}
@@ -98,7 +98,7 @@ class TeaCoder
 		}
 
 		foreach ($program->declarations as $node) {
-			if ($node instanceof ClassLikeDeclaration || $node instanceof IFunctionDeclaration) {
+			if ($node instanceof ClassLikeDeclaration || $node instanceof FunctionDeclaration) {
 				$item = $node->render($this);
 				$item === null || $items[] = $item . LF;
 			}
@@ -151,7 +151,7 @@ class TeaCoder
 		return $items ? ': ' . join(', ', $items) : '';
 	}
 
-	protected function generate_function_header(IFunctionDeclaration $node)
+	protected function generate_function_header(FunctionDeclaration $node)
 	{
 		if ($node->label) {
 			$items[] = _SHARP . $node->label;

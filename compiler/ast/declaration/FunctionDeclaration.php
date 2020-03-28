@@ -10,13 +10,13 @@
 namespace Tea;
 
 interface IEnclosingBlock {}
-interface IFunctionDeclaration extends ICallableDeclaration, IRootDeclaration, IClassMemberDeclaration {}
+// interface IFunctionDeclaration extends ICallableDeclaration, IRootDeclaration, IClassMemberDeclaration {}
 
 trait FunctionLikeTrait
 {
 	use DeclarationTrait, DeferChecksTrait;
 
-	public $is_static = false;
+	// public $is_static = false;
 
 	public $parameters;
 
@@ -32,13 +32,13 @@ trait FunctionLikeTrait
 	}
 }
 
-class FunctionDeclaration extends BaseBlock implements IEnclosingBlock, IFunctionDeclaration
+class FunctionDeclaration extends BaseBlock implements IEnclosingBlock, ICallableDeclaration, IClassMemberDeclaration, IRootDeclaration
 {
-	use FunctionLikeTrait;
+	use IClassMemberDeclarationTrait, FunctionLikeTrait;
 
 	const KIND = 'function_declaration';
 
-	public $modifier;
+	// public $modifier;
 
 	public $callbacks;
 

@@ -25,6 +25,7 @@ trait IConstantDeclarationTrait
 			$this->is_unit_level = true;
 		}
 
+		$this->is_static = true;
 		$this->modifier = $modifier;
 		$this->name = $name;
 		$this->type = $type;
@@ -46,9 +47,7 @@ class ConstantDeclaration extends RootDeclaration implements IConstantDeclaratio
 
 class ClassConstantDeclaration extends Node implements IConstantDeclaration, IClassMemberDeclaration
 {
-	use IConstantDeclarationTrait;
+	use IClassMemberDeclarationTrait, IConstantDeclarationTrait;
 
 	const KIND = 'class_constant_declaration';
-
-	public $is_static = true;
 }

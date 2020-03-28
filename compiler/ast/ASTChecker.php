@@ -2041,7 +2041,7 @@ class ASTChecker
 		}
 	}
 
-	private function require_function_declaration(PlainIdentifier $node): IFunctionDeclaration
+	private function require_function_declaration(PlainIdentifier $node): FunctionDeclaration
 	{
 		if (!$node->symbol) {
 			if (!isset($this->unit->symbols[$node->name])) {
@@ -2058,11 +2058,6 @@ class ASTChecker
 
 	private function require_accessing_identifier_declaration(AccessingIdentifier $node): IMemberDeclaration
 	{
-		if ($node->symbol) {
-			dump($node->name); exit;
-			return $node->symbol->declaration;
-		}
-
 		$master = $node->master;
 		$master_type = $this->infer_expression($master);
 
@@ -2081,19 +2076,27 @@ class ASTChecker
 				}
 
 				$node->symbol = $this->require_class_member_symbol($declaration, $node);
+
 				if (!$node->symbol->declaration->is_static) {
-					$name = $this->get_declaration_name($node->symbol->declaration);
-					throw $this->new_syntax_error("Invalid to accessing a non-static member '{$name}'", $node);
+					throw $this->new_syntax_error("Invalid to accessing a non-static member.", $node);
+				}
+
+				if (!$node->symbol->declaration->is_accessable($master)) {
+					throw $this->new_syntax_error("Cannot access a internal/private member.", $node);
 				}
 			}
 			else {
 				$node->symbol = $this->require_class_member_symbol($master_type->symbol->declaration, $node);
-				$node->symbol->declaration->type || $this->check_class_member_declaration($node->symbol->declaration);
+				// $node->symbol->declaration->type || $this->check_class_member_declaration($node->symbol->declaration);
 			}
 		}
 		elseif ($master_type instanceof Identifiable) { // the master would be an object expression
 			$node->symbol = $this->require_class_member_symbol($master_type->symbol->declaration, $node);
-			$node->symbol->declaration->type || $this->check_class_member_declaration($node->symbol->declaration);
+			// $node->symbol->declaration->type || $this->check_class_member_declaration($node->symbol->declaration);
+
+			if (!$node->symbol->declaration->is_accessable($master)) {
+				throw $this->new_syntax_error("Cannot access the internal/private members.", $node);
+			}
 		}
 		else {
 			$type_name = $this->get_type_name($master_type);
@@ -2132,7 +2135,6 @@ class ASTChecker
 				$this->program = $temp_program;
 			}
 
-			// return $symbol;
 			return $declaration->symbol;
 		}
 

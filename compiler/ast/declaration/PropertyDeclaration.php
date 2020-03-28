@@ -9,15 +9,27 @@
 
 namespace Tea;
 
-class PropertyDeclaration extends Node implements IClassMemberDeclaration, IVariableDeclaration
+interface IClassMemberDeclaration extends IMemberDeclaration {}
+
+trait IClassMemberDeclarationTrait
 {
-	use IVariableDeclarationTrait, DeferChecksTrait;
-
-	const KIND = 'property_declaration';
-
 	public $modifier;
 
-	public $is_static;
+	public $is_static = false;
+
+	public $super_block;
+
+	public function is_accessable(IExpression $expr) {
+		return ($this->modifier !== _PRIVATE && $this->modifier !== _INTERNAL)
+			|| $expr instanceof PlainIdentifier && $expr->symbol === $this->super_block->this_object_symbol;
+	}
+}
+
+class PropertyDeclaration extends Node implements IClassMemberDeclaration, IVariableDeclaration
+{
+	use IClassMemberDeclarationTrait, IVariableDeclarationTrait, DeferChecksTrait;
+
+	const KIND = 'property_declaration';
 
 	public function __construct(?string $modifier, string $name, IType $type = null, IExpression $value = null)
 	{

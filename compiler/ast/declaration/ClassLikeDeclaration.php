@@ -52,6 +52,8 @@ class ClassLikeDeclaration extends RootDeclaration implements IMemberDeclaration
 
 	public $super_block; // aways none
 
+	public $this_object_symbol;
+
 	/**
 	 * @var Program
 	 */

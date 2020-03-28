@@ -253,7 +253,7 @@ class PHPCoder extends TeaCoder
 		return $code;
 	}
 
-	protected function generate_function_header(IFunctionDeclaration $node)
+	protected function generate_function_header(FunctionDeclaration $node)
 	{
 		$modifier = '';
 		if ($node->super_block) {
