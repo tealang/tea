@@ -596,7 +596,7 @@ class ASTFactory
 			$block->symbols[$key_var->name] = $key_var->symbol = new Symbol($key_declaration);
 		}
 
-		$value_declaration = new NonReassignableVarDeclaration($value_var->name, TypeFactory::$_any);
+		$value_declaration = new FinalVariableDeclaration($value_var->name, TypeFactory::$_any);
 		$block->symbols[$value_var->name] = $value_var->symbol = new Symbol($value_declaration);
 
 		return $block;
@@ -607,7 +607,7 @@ class ASTFactory
 		$block = new ForToBlock($value_var, $start, $end, $step);
 		$this->begin_block($block);
 
-		$value_declaration = new NonReassignableVarDeclaration($value_var->name, TypeFactory::$_any);
+		$value_declaration = new FinalVariableDeclaration($value_var->name, TypeFactory::$_any);
 		$block->symbols[$value_var->name] = $value_var->symbol = new Symbol($value_declaration);
 
 		return $block;

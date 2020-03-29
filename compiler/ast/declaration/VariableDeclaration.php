@@ -36,7 +36,7 @@ class VariableDeclaration extends BaseVariableDeclaration implements IVariableDe
 	public $block; // defined in which block?
 }
 
-class NonReassignableVarDeclaration extends VariableDeclaration
+class FinalVariableDeclaration extends VariableDeclaration
 {
 	public $is_reassignable = false;
 }
@@ -58,6 +58,5 @@ class ParameterDeclaration extends BaseVariableDeclaration implements IVariableD
 {
 	const KIND = 'parameter_declaration';
 	public $is_value_mutable = false;
-	// public $is_referenced;
 }
 
