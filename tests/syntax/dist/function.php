@@ -7,8 +7,8 @@ function fn1(callable $callee) {
 	$unknow_type_value = $callee('hei');
 }
 
-function fn2(int &$n) {
-	$n += 1;
+function fn2(array &$dict) {
+	$dict['num'] += 1;
 }
 
 #internal
@@ -31,15 +31,9 @@ fn1(function ($str) {
 	return fn0($str);
 });
 
-$num = 1000;
-$arr = [2000];
-
-fn2($num);
-fn2($arr[0]);
-fn2(Data::$num);
-echo 'num referenced by fn2: ' . $num, LF;
-echo 'arr[0] referenced by fn2: ' . $arr[0], LF;
-echo 'Data.num referenced by fn2: ' . Data::$num, LF;
+$dict = ['num' => 1000];
+fn2($dict);
+echo "dict['num'] mutated by fn2: {$dict['num']}", LF;
 
 echo fn3(123, function ($a) {
 	return $a . ' has called';

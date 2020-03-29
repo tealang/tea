@@ -162,9 +162,9 @@ public html_encode(string Any, flags Int = ENT_QUOTES) String
 
 public html_decode(string Any, flags Int = ENT_QUOTES) String
 
-#php preg_match(regex Regex, subject String, &matches Array = #default, flags Int = #default, offset Int = #default) Bool
+#php preg_match(regex Regex, subject String, matches mut Array = #default, flags Int = #default, offset Int = #default) Bool
 
-#php preg_match_all(regex Regex, subject String, &matches Array = #default, flags Int = #default, offset Int = #default) Bool
+#php preg_match_all(regex Regex, subject String, matches mut Array = #default, flags Int = #default, offset Int = #default) Bool
 
 #php preg_split(regex Regex, subject String, limit Int = #default, flags Int = #default) Array
 

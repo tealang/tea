@@ -2143,19 +2143,23 @@ class TeaParser extends BaseParser
 	protected function read_parameter_with_token(string $name)
 	{
 		// param Int = 1
-		// &param Int  // for referenced parameters
+		// param mut Array  // for mutable parameters
 
 		$type = null;
 		$value = null;
+		$is_value_mutable = false;
 
-		$is_referenced = false;
-		if ($name === _REFERENCE) {
-			$is_referenced = true;
-			$name = $this->scan_token_ignore_space();
-		}
+		// if ($name === _REFERENCE) {
+		// 	$is_value_mutable = true;
+		// 	$name = $this->scan_token_ignore_space();
+		// }
 
 		if (!TeaHelper::is_declarable_variable_name($name)) {
 			throw $this->new_unexpected_error();
+		}
+
+		if ($this->skip_token_ignore_space(_MUT)) {
+			$is_value_mutable = true;
 		}
 
 		$next = $this->get_token_ignore_space();
@@ -2168,6 +2172,10 @@ class TeaParser extends BaseParser
 			$next = $this->get_token_ignore_space();
 		}
 
+		if ($is_value_mutable && !($type instanceof ArrayType || $type instanceof DictType)) {
+			throw $this->new_parse_error("Cannot use the value-mutable for '$type->name' type parameter.");
+		}
+
 		if ($next === _ASSIGN) {
 			$this->scan_token_ignore_space();
 			$value = $this->read_literal_expression();
@@ -2175,12 +2183,13 @@ class TeaParser extends BaseParser
 
 		$parameter = $this->create_parameter($name, $type, $value);
 
-		if ($is_referenced) {
+		if ($is_value_mutable) {
 			if ($value && $value !== ASTFactory::$default_value_marker) {
-				throw $this->new_parse_error("Cannot set a default value for the referenced parameter.");
+				throw $this->new_parse_error("Cannot set a default value for the value-mutable parameter.");
 			}
 
-			$parameter->is_referenced = $is_referenced;
+			$parameter->is_reassignable = false;
+			$parameter->is_value_mutable = $is_value_mutable;
 		}
 
 		return $parameter;

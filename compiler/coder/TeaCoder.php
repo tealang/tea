@@ -380,8 +380,8 @@ class TeaCoder
 	public function render_parameter_declaration(ParameterDeclaration $node)
 	{
 		$expr = static::VAR_PREFIX . $node->name;
-		if ($node->is_referenced) {
-			$expr = _REFERENCE . $expr;
+		if ($node->is_value_mutable) {
+			$expr = $expr . ' ' . _MUT;
 		}
 
 		if ($node->type) {
@@ -908,11 +908,11 @@ class TeaCoder
 		return "$left $operator $right";
 	}
 
-	public function render_reference_operation(ReferenceOperation $node)
-	{
-		$expression = $node->identifier->render($this);
-		return _REFERENCE . $expression;
-	}
+	// public function render_reference_operation(ReferenceOperation $node)
+	// {
+	// 	$expression = $node->identifier->render($this);
+	// 	return _REFERENCE . $expression;
+	// }
 
 	public function render_prefix_operation(IExpression $node)
 	{

@@ -1070,7 +1070,7 @@ class ASTChecker
 			}
 		}
 
-		if (!ASTHelper::is_assignable_expression($master)) {
+		if (!ASTHelper::is_reassignable_expression($master)) {
 			throw $this->new_syntax_error("Invalid expression to assign.", $master);
 		}
 
@@ -1186,9 +1186,9 @@ class ASTChecker
 			case RegularExpression::KIND:
 				$infered_type = $this->infer_regular_expression($node);
 				break;
-			case ReferenceOperation::KIND:
-				$infered_type = $this->infer_expression($node->identifier);
-				break;
+			// case ReferenceOperation::KIND:
+			// 	$infered_type = $this->infer_expression($node->identifier);
+			// 	break;
 			// case RelayExpression::KIND:
 			// 	$infered_type = $this->infer_relay_expression($node);
 			// 	break;
@@ -1349,9 +1349,9 @@ class ASTChecker
 				? TypeFactory::$_int
 				: $infered_type;
 		}
-		elseif ($node->operator === OperatorFactory::$_reference) {
-			return $infered_type;
-		}
+		// elseif ($node->operator === OperatorFactory::$_reference) {
+		// 	return $infered_type;
+		// }
 		elseif ($node->operator === OperatorFactory::$_bitwise_not) {
 			return $infered_type === TypeFactory::$_uint || $infered_type === TypeFactory::$_int || $infered_type === TypeFactory::$_float
 				? TypeFactory::$_int
@@ -1712,9 +1712,15 @@ class ASTChecker
 				throw $this->new_syntax_error("Type of argument $key does not matched the parameter for '{$callee_name}', expected '{$expected_type_name}', supplied '{$infered_type_name}'.", $argument);
 			}
 
-			if ($parameter->is_referenced) {
-				if (!ASTHelper::is_assignable_expression($argument)) {
-					throw $this->new_syntax_error("Argument $key is invalid for the referenced parameter defined in '{$src_callee_declar->name}'.", $argument);
+			// if ($parameter->is_referenced) {
+			// 	if (!ASTHelper::is_reassignable_expression($argument)) {
+			// 		throw $this->new_syntax_error("Argument $key is invalid for the referenced parameter defined in '{$src_callee_declar->name}'.", $argument);
+			// 	}
+			// }
+
+			if ($parameter->is_value_mutable) {
+				if (!ASTHelper::is_value_mutable($argument)) {
+					throw $this->new_syntax_error("Argument $key is invalid for the value-mutable parameter defined in '{$src_callee_declar->name}'.", $argument);
 				}
 			}
 

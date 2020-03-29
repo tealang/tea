@@ -23,11 +23,6 @@ class Symbol
 		$this->name = $declaration->name;
 		$this->declaration = $declaration;
 	}
-
-	// public function is_assignable()
-	// {
-	// 	return $this->declaration instanceof IVariableDeclaration && $this->declaration->is_assignable;
-	// }
 }
 
 class NamespaceSymbol extends Symbol
@@ -41,10 +36,5 @@ class NamespaceSymbol extends Symbol
 		$this->name = $declaration->name;
 		$this->declaration = $declaration;
 	}
-
-	// public function is_assignable()
-	// {
-	// 	return false;
-	// }
 }
 

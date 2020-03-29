@@ -13,14 +13,14 @@ class ASTHelper
 {
 	static function create_symbol_this(ClassLikeIdentifier $class)
 	{
-		$declaration = new VariableDeclaration(_THIS, $class);
+		$declaration = new InvariantDeclaration(_THIS, $class);
 		$declaration->is_checked = true; // do not need to check
 		return new Symbol($declaration);
 	}
 
 	static function create_symbol_super(ClassLikeIdentifier $class)
 	{
-		$declaration = new VariableDeclaration(_SUPER, $class);
+		$declaration = new InvariantDeclaration(_SUPER, $class);
 		$declaration->is_checked = true; // do not need to check
 		return new Symbol($declaration);
 	}
@@ -33,9 +33,9 @@ class ASTHelper
 		return $identifier;
 	}
 
-	static function is_assignable_expression(IExpression $expr)
+	static function is_reassignable_expression(IExpression $expr)
 	{
-		if ($expr instanceof Identifiable && $expr->is_assignable()) {
+		if ($expr instanceof Identifiable && $expr->is_reassignable()) {
 			return true;
 		}
 

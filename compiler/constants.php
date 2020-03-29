@@ -59,7 +59,8 @@ const
 	_IS = 'is', // for check Type
 	_IN = 'in', _TO = 'to', _DOWNTO = 'downto', _STEP = 'step', // just use in the 'for' block
 
-	_REFERENCE = '&',  _NEGATION = '-', // -1, -num
+	// _REFERENCE = '&',
+	_NEGATION = '-', // -1, -num
 	_ADDITION = '+', _SUBTRACTION = '-', _MULTIPLICATION = '*', _DIVISION = '/', _REMAINDER = '%', _EXPONENTIATION = '**',
 	_BITWISE_NOT = '~', _BITWISE_AND = '&', _BITWISE_OR = '|', _BITWISE_XOR = '^', //bitwise
 	_CONCAT = 'concat', _MERGE = 'merge',
@@ -81,7 +82,7 @@ const
 	// reserved words
 	_UNIT_PATH = 'UNIT_PATH',
 	_VAL_NONE = 'none', _VAL_TRUE = 'true', _VAL_FALSE = 'false',
-	_VAR = 'var', _YIELD = 'yield',
+	_VAR = 'var', _MUT = 'mut', _YIELD = 'yield',
 	_IF = 'if', _ELSE = 'else', _ELSEIF = 'elseif', _WHEN = 'when',
 	_FOR = 'for', _WHILE = 'while', _LOOP = 'loop',
 	_TRY = 'try', _CATCH = 'catch', _FINALLY = 'finally',

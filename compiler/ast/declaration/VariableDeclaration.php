@@ -11,48 +11,53 @@ namespace Tea;
 
 interface IVariableDeclaration extends IDeclaration {}
 
-trait IVariableDeclarationTrait
+abstract class BaseVariableDeclaration extends Node
 {
 	use DeclarationTrait;
 
 	public $value;
 
-	public $is_assignable = true;
+	public $is_reassignable = true;
 
-	public $is_mutable = true;
+	// just for Array / Dict
+	public $is_value_mutable = true;
 
-	public function __construct(string $name, IType $type = null, IExpression $value = null, bool $is_assignable = false)
+	public function __construct(string $name, IType $type = null, IExpression $value = null)
 	{
 		$this->name = $name;
 		$this->type = $type;
 		$this->value = $value;
-		$this->is_assignable = $is_assignable;
 	}
 }
 
-class VariableDeclaration extends Node implements IVariableDeclaration, IStatement
+class VariableDeclaration extends BaseVariableDeclaration implements IVariableDeclaration, IStatement
 {
-	use IVariableDeclarationTrait;
-
 	const KIND = 'variable_declaration';
-
 	public $block; // defined in which block?
+}
+
+class NonReassignableVarDeclaration extends VariableDeclaration
+{
+	public $is_reassignable = false;
+}
+
+class InvariantDeclaration extends VariableDeclaration
+{
+	public $is_reassignable = false;
+	public $is_value_mutable = false;
 }
 
 class SuperVariableDeclaration extends VariableDeclaration implements IRootDeclaration
 {
 	use DeferChecksTrait;
-
 	const KIND = 'super_variable_declaration';
-
-	public $is_assignable = false;
+	public $is_reassignable = false;
 }
 
-class ParameterDeclaration extends Node implements IVariableDeclaration
+class ParameterDeclaration extends BaseVariableDeclaration implements IVariableDeclaration
 {
-	use IVariableDeclarationTrait;
 	const KIND = 'parameter_declaration';
-
-	public $is_referenced;
+	public $is_value_mutable = false;
+	// public $is_referenced;
 }
 

@@ -10,7 +10,8 @@
 namespace Tea;
 
 const _PREFIX_OP_PRECEDENCES = [
-	_NEGATION => 2, _BITWISE_NOT => 2, _REFERENCE => 2,
+	_NEGATION => 2, _BITWISE_NOT => 2,
+	// _REFERENCE => 2,
 	_NOT => 8,
 ];
 
@@ -68,7 +69,7 @@ class OperatorFactory
 
 	static $_negation;
 	static $_bitwise_not; // eg. ~0 == -1
-	static $_reference;
+	// static $_reference;
 
 	static $_cast;
 
@@ -123,7 +124,7 @@ class OperatorFactory
 	{
 		self::$_negation = self::create_prefix_operator_symbol(_NEGATION);
 		self::$_bitwise_not = self::create_prefix_operator_symbol(_BITWISE_NOT);
-		self::$_reference = self::create_prefix_operator_symbol(_REFERENCE);
+		// self::$_reference = self::create_prefix_operator_symbol(_REFERENCE);
 		self::$_bool_not = self::create_prefix_operator_symbol(_NOT);
 
 		self::$_dot = self::create_normal_operator_symbol(_DOT);

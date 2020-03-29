@@ -18,8 +18,8 @@ fn1(fn0)
 fn1((str) => fn0(str))
 
 // parameter reference
-internal fn2(&n Int) {
-	n += 1
+internal fn2(dict mut Int.Dict) {
+	dict['num'] += 1
 }
 
 internal Data {
@@ -27,17 +27,9 @@ internal Data {
 	static num = 3000
 }
 
-var num = 1000
-var arr = [2000]
-
-fn2(num)  		// okay
-fn2(arr[0])		// okay
-fn2(Data.num)   // okay
-// fn2(1000)    // error
-// fn2(Data.ABC) // error
-echo 'num referenced by fn2: $num'
-echo 'arr[0] referenced by fn2: ${arr[0]}'
-echo 'Data.num referenced by fn2: ${Data.num}'
+var dict = ['num': 1000]
+fn2(dict)
+echo "dict['num'] mutated by fn2: ${dict['num']}"
 
 // callbacks
 internal fn3(some Any, done (caller String) String, error (message) = none) String {

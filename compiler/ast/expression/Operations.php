@@ -67,16 +67,16 @@ class PrefixOperation extends Node implements IExpression
 	}
 }
 
-class ReferenceOperation extends Node implements IExpression
-{
-	const KIND = 'reference_operation';
+// class ReferenceOperation extends Node implements IExpression
+// {
+// 	const KIND = 'reference_operation';
 
-	public $identifier;
+// 	public $identifier;
 
-	public function __construct(Identifiable $identifier) {
-		$this->identifier = $identifier;
-	}
-}
+// 	public function __construct(Identifiable $identifier) {
+// 		$this->identifier = $identifier;
+// 	}
+// }
 
 // class PostfixOperation extends Node implements IExpression
 // {

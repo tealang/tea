@@ -25,9 +25,9 @@ trait IClassMemberDeclarationTrait
 	}
 }
 
-class PropertyDeclaration extends Node implements IClassMemberDeclaration, IVariableDeclaration
+class PropertyDeclaration extends BaseVariableDeclaration implements IClassMemberDeclaration, IVariableDeclaration
 {
-	use IClassMemberDeclarationTrait, IVariableDeclarationTrait, DeferChecksTrait;
+	use IClassMemberDeclarationTrait, DeferChecksTrait;
 
 	const KIND = 'property_declaration';
 
