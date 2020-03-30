@@ -4,7 +4,8 @@ internal TeaDemoClass {
 
 	prop1 = 'prop1 value'
 
-	static static_method() {
+	static static_method(some Dict) {
+		// some['k'] = 123   // error, cannot change a immutable item
 		return this.static_prop1
 	}
 

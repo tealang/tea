@@ -1071,7 +1071,12 @@ class ASTChecker
 		}
 
 		if (!ASTHelper::is_reassignable_expression($master)) {
-			throw $this->new_syntax_error("Invalid expression to assign.", $master);
+			if ($master instanceof KeyAccessing) {
+				throw $this->new_syntax_error("Cannot change a immutable item.", $master->left);
+			}
+			else {
+				throw $this->new_syntax_error("Cannot assign to a final/non-assignable item.", $master);
+			}
 		}
 
 		if ($master_type) {

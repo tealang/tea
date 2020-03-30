@@ -241,9 +241,7 @@ class ASTFactory
 	{
 		if ($assignable instanceof PlainIdentifier) {
 			if ($assignable->symbol) {
-				if (!$assignable->is_reassignable()) {
-					throw $this->parser->new_parse_error("Cannot assign to non-assignable item '{$assignable->name}'.");
-				}
+				// no any
 			}
 			else {
 				// symbol has not declared
