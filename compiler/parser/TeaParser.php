@@ -156,7 +156,7 @@ class TeaParser extends BaseParser
 	protected function read_assignment($assignalbe)
 	{
 		if (!$assignalbe instanceof IAssignable) {
-			throw $this->new_parse_error("Assignment cannot put in any expression.");
+			throw $this->new_parse_error("Invalid assigned expression.");
 		}
 
 		$operator = $this->scan_token_ignore_empty();

@@ -1058,16 +1058,14 @@ class ASTChecker
 
 		$master = $node->master;
 		if ($master instanceof KeyAccessing) {
-			// just like: items['abc'] = 123
 			$master_type = $this->infer_key_accessing($master); // it should be not null
 		}
+		elseif ($master instanceof AccessingIdentifier) {
+			$master_type = $this->infer_accessing_identifier($master);
+		}
 		else {
-			if ($master->symbol) {
-				$master_type = $master->symbol->declaration->type;
-			}
-			else {
-				$master_type = $this->infer_expression($master);
-			}
+			// the PlainIdentifier
+			$master_type = $master->symbol->declaration->type;
 		}
 
 		if (!ASTHelper::is_reassignable_expression($master)) {
