@@ -1416,11 +1416,11 @@ class PHPCoder extends TeaCoder
 			$code = sprintf('array_replace(%s, %s)', $left, $right);
 		}
 		else {
-			if ($this->is_need_parentheses_for_operation_item($node->left, $node->operator)) {
+			if ($this->is_need_parentheses_for_operation_item($node->left, $node->operator, false)) {
 				$left = "($left)";
 			}
 
-			if ($this->is_need_parentheses_for_operation_item($node->right, $node->operator, true)) {
+			if ($this->is_need_parentheses_for_operation_item($node->right, $node->operator)) {
 				$right = "($right)";
 			}
 
@@ -1430,9 +1430,9 @@ class PHPCoder extends TeaCoder
 		return $code;
 	}
 
-	protected function is_need_parentheses_for_operation_item(IExpression $expr, OperatorSymbol $operator, bool $is_rightside = false)
+	protected function is_need_parentheses_for_operation_item(IExpression $expr, Operator $operator, bool $is_rightside = true)
 	{
-		if ($expr instanceof BinaryOperation) {
+		if ($expr instanceof MultiOperation) {
 			$sub_operator = $expr->operator;
 			if ($sub_operator->dist_precedence > $operator->dist_precedence) {
 				return true;
@@ -1453,48 +1453,7 @@ class PHPCoder extends TeaCoder
 		return false;
 	}
 
-	protected function is_need_parentheses_for_left_of_node(BinaryOperation $node)
-	{
-		$op = $node->operator;
-		$left = $node->left;
-
-		if ($left instanceof BinaryOperation) {
-			if ($left->operator->dist_precedence > $op->dist_precedence) {
-				return true;
-			}
-
-			// PHP 的幂运算符是右结合的
-			if ($left->operator->dist_precedence === $op->dist_precedence && $op === OperatorFactory::$_exponentiation) {
-				return true;
-			}
-		}
-		elseif ($op === OperatorFactory::$_exponentiation && $left instanceof PrefixOperation) {
-			// PHP 的幂运算符比一元运算优先级高
-			return true;
-		}
-
-		return false;
-	}
-
-	protected function is_need_parentheses_for_right_of_node(BinaryOperation $node)
-	{
-		$op = $node->operator;
-		$right = $node->right;
-
-		if ($right instanceof BinaryOperation) {
-			if ($right->operator->dist_precedence >= $op->dist_precedence) {
-				return true;
-			}
-		}
-		elseif ($op === OperatorFactory::$_exponentiation && $right instanceof PrefixOperation) {
-			// PHP 的幂运算符比一元运算优先级高
-			return true;
-		}
-
-		return false;
-	}
-
-	protected function render_subexpression(IExpression $expr, OperatorSymbol $operator)
+	protected function render_subexpression(IExpression $expr, Operator $operator)
 	{
 		$code = $expr->render($this);
 		if ($expr instanceof MultiOperation && $expr->operator->dist_precedence >= $operator->dist_precedence) {

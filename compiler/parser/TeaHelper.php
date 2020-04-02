@@ -169,7 +169,7 @@ class TeaHelper
 		return preg_match('/^[a-z][a-z0-9]+$/i', $token);
 	}
 
-	static function is_assign_operator(?string $token)
+	static function is_assign_operator_token(?string $token)
 	{
 		return in_array($token, self::ASSIGN_OPERATORS, true);
 	}

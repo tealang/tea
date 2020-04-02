@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class OperatorSymbol
+class Operator
 {
 	public $sign;
 	public $precedence;

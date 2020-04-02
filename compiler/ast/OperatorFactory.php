@@ -124,56 +124,56 @@ class OperatorFactory
 
 	public static function init()
 	{
-		self::$_negation = self::create_prefix_operator_symbol(_NEGATION);
-		self::$_bitwise_not = self::create_prefix_operator_symbol(_BITWISE_NOT);
-		// self::$_reference = self::create_prefix_operator_symbol(_REFERENCE);
-		self::$_bool_not = self::create_prefix_operator_symbol(_NOT);
+		self::$_negation = self::create_prefix_operator(_NEGATION);
+		self::$_bitwise_not = self::create_prefix_operator(_BITWISE_NOT);
+		// self::$_reference = self::create_prefix_operator(_REFERENCE);
+		self::$_bool_not = self::create_prefix_operator(_NOT);
 
-		self::$_dot = self::create_normal_operator_symbol(_DOT);
-		// self::$_notify = self::create_normal_operator_symbol(_NOTIFY);
+		self::$_dot = self::create_normal_operator(_DOT);
+		// self::$_notify = self::create_normal_operator(_NOTIFY);
 
-		self::$_cast = self::create_normal_operator_symbol(_DOUBLE_COLON);
+		self::$_cast = self::create_normal_operator(_DOUBLE_COLON);
 
-		self::$_exponentiation = self::create_normal_operator_symbol(_EXPONENTIATION);
+		self::$_exponentiation = self::create_normal_operator(_EXPONENTIATION);
 
-		self::$_multiplication = self::create_normal_operator_symbol(_MULTIPLICATION);
-		self::$_division = self::create_normal_operator_symbol(_DIVISION);
-		self::$_remainder = self::create_normal_operator_symbol(_REMAINDER);
+		self::$_multiplication = self::create_normal_operator(_MULTIPLICATION);
+		self::$_division = self::create_normal_operator(_DIVISION);
+		self::$_remainder = self::create_normal_operator(_REMAINDER);
 
-		self::$_addition = self::create_normal_operator_symbol(_ADDITION);
-		self::$_subtraction = self::create_normal_operator_symbol(_SUBTRACTION);
+		self::$_addition = self::create_normal_operator(_ADDITION);
+		self::$_subtraction = self::create_normal_operator(_SUBTRACTION);
 
-		self::$_concat = self::create_normal_operator_symbol(_CONCAT);
-		self::$_acat = self::create_normal_operator_symbol(_ACAT);
-		self::$_merge = self::create_normal_operator_symbol(_MERGE);
+		self::$_concat = self::create_normal_operator(_CONCAT);
+		self::$_acat = self::create_normal_operator(_ACAT);
+		self::$_merge = self::create_normal_operator(_MERGE);
 
-		self::$_shift_left = self::create_normal_operator_symbol(_SHIFT_LEFT);
-		self::$_shift_right = self::create_normal_operator_symbol(_SHIFT_RIGHT);
+		self::$_shift_left = self::create_normal_operator(_SHIFT_LEFT);
+		self::$_shift_right = self::create_normal_operator(_SHIFT_RIGHT);
 
-		self::$_is = self::create_normal_operator_symbol(_IS);
+		self::$_is = self::create_normal_operator(_IS);
 
-		self::$_lessthan = self::create_normal_operator_symbol('<');
-		self::$_morethan = self::create_normal_operator_symbol('>');
-		self::$_lessthan_or_equal = self::create_normal_operator_symbol('<=');
-		self::$_morethan_or_equal = self::create_normal_operator_symbol('>=');
-		self::$_comparison = self::create_normal_operator_symbol('<=>');
+		self::$_lessthan = self::create_normal_operator('<');
+		self::$_morethan = self::create_normal_operator('>');
+		self::$_lessthan_or_equal = self::create_normal_operator('<=');
+		self::$_morethan_or_equal = self::create_normal_operator('>=');
+		self::$_comparison = self::create_normal_operator('<=>');
 
-		self::$_equal = self::create_normal_operator_symbol(_EQUAL);
-		self::$_strict_equal = self::create_normal_operator_symbol(_IDENTICAL);
+		self::$_equal = self::create_normal_operator(_EQUAL);
+		self::$_strict_equal = self::create_normal_operator(_IDENTICAL);
 
-		self::$_not_equal = self::create_normal_operator_symbol(_NOT_EQUAL);
-		self::$_strict_not_equal = self::create_normal_operator_symbol(_NOT_IDENTICAL);
+		self::$_not_equal = self::create_normal_operator(_NOT_EQUAL);
+		self::$_strict_not_equal = self::create_normal_operator(_NOT_IDENTICAL);
 
-		self::$_bitwise_and = self::create_normal_operator_symbol(_BITWISE_AND);
-		self::$_bitwise_xor = self::create_normal_operator_symbol(_BITWISE_XOR);
-		self::$_bitwise_or = self::create_normal_operator_symbol(_BITWISE_OR);
+		self::$_bitwise_and = self::create_normal_operator(_BITWISE_AND);
+		self::$_bitwise_xor = self::create_normal_operator(_BITWISE_XOR);
+		self::$_bitwise_or = self::create_normal_operator(_BITWISE_OR);
 
-		self::$_none_coalescing = self::create_normal_operator_symbol(_NONE_COALESCING);
+		self::$_none_coalescing = self::create_normal_operator(_NONE_COALESCING);
 
-		self::$_conditional = self::create_normal_operator_symbol(_CONDITIONAL);
+		self::$_conditional = self::create_normal_operator(_CONDITIONAL);
 
-		self::$_bool_and = self::create_normal_operator_symbol(_AND);
-		self::$_bool_or = self::create_normal_operator_symbol(_OR);
+		self::$_bool_and = self::create_normal_operator(_AND);
+		self::$_bool_or = self::create_normal_operator(_OR);
 
 		// number
 		self::$number_op_symbols = [
@@ -211,39 +211,39 @@ class OperatorFactory
 		}
 	}
 
-	public static function is_number_operator(OperatorSymbol $symbol)
+	public static function is_number_operator(Operator $symbol)
 	{
 		return in_array($symbol, self::$number_op_symbols, true);
 	}
 
-	public static function is_bitwise_operator(OperatorSymbol $symbol)
+	public static function is_bitwise_operator(Operator $symbol)
 	{
 		return in_array($symbol, self::$bitwise_op_symbols, true);
 	}
 
-	public static function is_bool_operator(OperatorSymbol $symbol)
+	public static function is_bool_operator(Operator $symbol)
 	{
 		return in_array($symbol, self::$bool_op_symbols, true);
 	}
 
-	public static function get_prefix_operator_symbol(?string $sign)
+	public static function get_prefix_operator(?string $sign)
 	{
 		return self::$prefix_op_symbol_map[$sign] ?? null;
 	}
 
-	public static function get_normal_operator_symbol(?string $sign)
+	public static function get_normal_operator(?string $sign)
 	{
 		return self::$binary_op_symbol_map[$sign] ?? null;
 	}
 
-	private static function create_prefix_operator_symbol(string $sign)
+	private static function create_prefix_operator(string $sign)
 	{
-		return self::$prefix_op_symbol_map[$sign] = new OperatorSymbol($sign, _PREFIX_OP_PRECEDENCES[$sign]);
+		return self::$prefix_op_symbol_map[$sign] = new Operator($sign, _PREFIX_OP_PRECEDENCES[$sign]);
 	}
 
-	private static function create_normal_operator_symbol(string $sign)
+	private static function create_normal_operator(string $sign)
 	{
-		return self::$binary_op_symbol_map[$sign] = new OperatorSymbol($sign, _BINARY_OP_PRECEDENCES[$sign]);
+		return self::$binary_op_symbol_map[$sign] = new Operator($sign, _BINARY_OP_PRECEDENCES[$sign]);
 	}
 }
 

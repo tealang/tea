@@ -24,7 +24,7 @@ class BinaryOperation extends MultiOperation
 	public $left;
 	public $right;
 
-	public function __construct(OperatorSymbol $operator, IExpression $left, IExpression $right) {
+	public function __construct(Operator $operator, IExpression $left, IExpression $right) {
 		$this->operator = $operator;
 		$this->left = $left;
 		$this->right = $right;
@@ -96,7 +96,7 @@ class PrefixOperation extends UnaryOperation
 
 	public $expression;
 
-	public function __construct(OperatorSymbol $operator, IExpression $expression) {
+	public function __construct(Operator $operator, IExpression $expression) {
 		$this->operator = $operator;
 		$this->expression = $expression;
 	}
@@ -119,7 +119,7 @@ class PrefixOperation extends UnaryOperation
 
 // 	public $expression;
 
-// 	public function __construct(OperatorSymbol $operator, IExpression $expression)
+// 	public function __construct(Operator $operator, IExpression $expression)
 // 	{
 // 		$this->operator = $operator;
 // 		$this->expression = $expression;
@@ -132,7 +132,7 @@ class PrefixOperation extends UnaryOperation
 
 // 	public $items;
 
-// 	public function __construct(OperatorSymbol $operator, IExpression ...$items)
+// 	public function __construct(Operator $operator, IExpression ...$items)
 // 	{
 // 		$this->operator = $operator;
 // 		$this->items = $items;

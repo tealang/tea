@@ -322,7 +322,7 @@ trait TeaTokenTrait
 
 	protected function is_next_assign_operator()
 	{
-		return TeaHelper::is_assign_operator($this->get_token_ignore_empty());
+		return TeaHelper::is_assign_operator_token($this->get_token_ignore_empty());
 	}
 
 	protected function is_next_regular_expression()

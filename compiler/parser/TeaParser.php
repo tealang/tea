@@ -818,7 +818,7 @@ class TeaParser extends BaseParser
 
 	const EXPRESSION_ENDINGS = [null, _PAREN_CLOSE, _BRACKET_CLOSE, _BLOCK_END, _SEMICOLON];
 
-	protected function read_expression(OperatorSymbol $prev_operator = null)
+	protected function read_expression(Operator $prev_operator = null)
 	{
 		$token = $this->scan_token_ignore_empty();
 		if (in_array($token, self::EXPRESSION_ENDINGS, true)) {
@@ -853,7 +853,7 @@ class TeaParser extends BaseParser
 		return $expression;
 	}
 
-	protected function read_expression_with_token(string $token, OperatorSymbol $prev_operator = null)
+	protected function read_expression_with_token(string $token, Operator $prev_operator = null)
 	{
 		switch ($token) {
 			case _SINGLE_QUOTE:
@@ -908,7 +908,7 @@ class TeaParser extends BaseParser
 				}
 
 				// check is prefix operator
-				$check_operator = OperatorFactory::get_prefix_operator_symbol($token);
+				$check_operator = OperatorFactory::get_prefix_operator($token);
 				if ($check_operator !== null) {
 					$expression = $this->read_prefix_operation($check_operator);
 					break;
@@ -969,7 +969,7 @@ class TeaParser extends BaseParser
 		throw $this->new_parse_error("Invalid super-variable name '{$token}'", 1);
 	}
 
-	protected function read_prefix_operation(OperatorSymbol $operator)
+	protected function read_prefix_operation(Operator $operator)
 	{
 		$expression = $this->read_expression($operator);
 		if ($expression === null) {
@@ -1340,7 +1340,7 @@ class TeaParser extends BaseParser
 		return $block;
 	}
 
-	protected function read_expression_combination(IExpression $expression, OperatorSymbol $prev_operator = null)
+	protected function read_expression_combination(IExpression $expression, Operator $prev_operator = null)
 	{
 		$token = $this->get_token_ignore_empty();
 
@@ -1394,7 +1394,7 @@ class TeaParser extends BaseParser
 		return $this->try_read_operation($expression, $prev_operator);
 	}
 
-	protected function read_dot_expression(IExpression $master, OperatorSymbol $prev_operator = null)
+	protected function read_dot_expression(IExpression $master, Operator $prev_operator = null)
 	{
 		// class / object member call
 
@@ -1409,7 +1409,7 @@ class TeaParser extends BaseParser
 		return $this->read_expression_combination($expression, $prev_operator);
 	}
 
-	protected function read_key_accessing(IExpression $master, OperatorSymbol $prev_operator = null)
+	protected function read_key_accessing(IExpression $master, Operator $prev_operator = null)
 	{
 		// array key accessing
 
@@ -1439,7 +1439,7 @@ class TeaParser extends BaseParser
 		return new ArrayElementAssignment($master, null, $value);
 	}
 
-	protected function read_call_expression(IExpression $handler, OperatorSymbol $prev_operator = null)
+	protected function read_call_expression(IExpression $handler, Operator $prev_operator = null)
 	{
 		// new class, or function call, or function declaration
 
@@ -1526,11 +1526,11 @@ class TeaParser extends BaseParser
 		return $node;
 	}
 
-	protected function try_read_operation(IExpression $expression, OperatorSymbol $prev_operator = null)
+	protected function try_read_operation(IExpression $expression, Operator $prev_operator = null)
 	{
 		$token = $this->get_token_ignore_empty();
 
-		$operator = OperatorFactory::get_normal_operator_symbol($token);
+		$operator = OperatorFactory::get_normal_operator($token);
 		if ($operator === null) {
 			return $expression;
 		}
@@ -1596,7 +1596,7 @@ class TeaParser extends BaseParser
 		return $this->try_read_operation($expression, $prev_operator);
 	}
 
-	protected function read_none_coalescing_with(IExpression $first, OperatorSymbol $operator)
+	protected function read_none_coalescing_with(IExpression $first, Operator $operator)
 	{
 		$items = [$first];
 
