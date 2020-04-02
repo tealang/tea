@@ -893,7 +893,7 @@ class TeaCoder
 
 	public function render_cast_operation(CastOperation $node)
 	{
-		$left = $this->render_expression($node->left);
+		$left = $node->left->render($this);
 		$right = $node->right->render($this);
 
 		return "$left as $right";
@@ -901,7 +901,7 @@ class TeaCoder
 
 	public function render_is_operation(IsOperation $node)
 	{
-		$left = $this->render_expression($node->left);
+		$left = $node->left->render($this);
 		$right = $node->right->render($this);
 		$operator = $node->is_not ? 'is not' : 'is';
 
@@ -920,35 +920,48 @@ class TeaCoder
 		return $node->operator->sign . $expression;
 	}
 
-	public function render_postfix_operation(IExpression $node)
-	{
-		$expression = $node->expression->render($this);
-		return $expression . $node->operator;
-	}
+	// public function render_postfix_operation(IExpression $node)
+	// {
+	// 	$expression = $node->expression->render($this);
+	// 	return $expression . $node->operator;
+	// }
 
 	public function render_binary_operation(BinaryOperation $node)
 	{
 		$operator = $node->operator->sign;
-		$left = $this->render_expression($node->left);
-		$right = $this->render_expression($node->right);
+		$left = $node->left->render($this);
+		$right = $node->right->render($this);
 
 		return sprintf('%s %s %s', $left, $operator, $right);
+	}
+
+	public function render_none_coalescing_operation(NoneCoalescingOperation $node)
+	{
+		$items = [];
+		foreach ($node->items as $item) {
+			$items[] = $item->render($this);
+		}
+
+		return join(' ?? ', $items);
 	}
 
 	public function render_conditional_expression(ConditionalExpression $node)
 	{
 		if ($node->then === null) {
-			return sprintf('%s ?: %s',
-				$this->render_expression($node->test),
-				$this->render_expression($node->else)
+			$code = sprintf('%s ?: %s',
+				$node->test->render($this),
+				$node->else->render($this)
+			);
+		}
+		else {
+			$code = sprintf('%s ? %s : %s',
+				$node->test->render($this),
+				$node->then->render($this),
+				$node->else->render($this)
 			);
 		}
 
-		return sprintf('%s ? %s : %s',
-			$this->render_expression($node->test),
-			$this->render_expression($node->then),
-			$this->render_expression($node->else)
-		);
+		return $code;
 	}
 
 	// public function render_relay_expression(RelayExpression $node)
@@ -1264,11 +1277,6 @@ class TeaCoder
 		}
 
 		return join(', ', $items);
-	}
-
-	protected function render_expression(IExpression $expr)
-	{
-		return $expr->render($this);
 	}
 
 	protected function indents(string $contents, $number = 1)

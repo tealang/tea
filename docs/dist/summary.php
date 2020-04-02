@@ -95,7 +95,7 @@ $bool = true;
 $xview = '<div>
 	<h1>XView是什么？</h1>
 	<p>XView类似字符串，但无需引号，可以直接按HTML标签方式编写</p>
-	<p>Interpolation with origin ' . ($uint_num * 10) . '</p>
+	<p>Interpolation with origin ' . $uint_num * 10 . '</p>
 	<p>Interpolation with html-escaped ' . htmlspecialchars($xss, ENT_QUOTES) . '</p>
 </div>';
 

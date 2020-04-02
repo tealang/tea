@@ -1390,7 +1390,7 @@ class TeaParser extends BaseParser
 			return $expression;
 		}
 
-		// maybe has a operation at behind
+		// maybe has a operation at the behind
 		return $this->try_read_operation($expression, $prev_operator);
 	}
 
@@ -1542,11 +1542,6 @@ class TeaParser extends BaseParser
 			}
 		}
 
-		// if ($operator === OperatorFactory::$_dot) {
-		// 	$this->scan_token_ignore_empty(); // skip the operator
-		// 	$expression = $this->read_dot_expression($expression, $prev_operator);
-		// }
-		// else
 		if ($operator === OperatorFactory::$_cast) {
 			$this->scan_token_ignore_empty(); // skip the operator
 
@@ -1573,7 +1568,6 @@ class TeaParser extends BaseParser
 		elseif ($operator === OperatorFactory::$_is) {
 			$this->scan_token_ignore_empty(); // skip the operator
 			$is_not = $this->skip_token_ignore_space(_NOT);
-			// $assert_type = $this->read_expression($operator);
 
 			$assert_type = $this->try_read_type_identifier();
 			if ($assert_type === null) {
@@ -1587,9 +1581,12 @@ class TeaParser extends BaseParser
 			$this->scan_token_ignore_empty(); // skip the operator
 			$expression = $this->read_conditional_expression_with($expression);
 		}
+		elseif ($operator === OperatorFactory::$_none_coalescing) {
+			$this->scan_token_ignore_empty(); // skip the operator
+			$expression = $this->read_none_coalescing_with($expression, $operator);
+		}
 		else {
 			// the normal binary operation
-
 			$this->skip_binary_operator_with_space($token);
 			$right_expression = $this->read_expression($operator);
 			$expression = new BinaryOperation($operator, $expression, $right_expression);
@@ -1597,6 +1594,28 @@ class TeaParser extends BaseParser
 		}
 
 		return $this->try_read_operation($expression, $prev_operator);
+	}
+
+	protected function read_none_coalescing_with(IExpression $first, OperatorSymbol $operator)
+	{
+		$items = [$first];
+
+		$item = $this->read_expression($operator);
+		$items[] = $item;
+
+		while ($this->skip_token_ignore_empty(_NONE_COALESCING)) {
+			$item = $this->read_expression();
+			$items[] = $item;
+		}
+
+		// if (count($items) === 3) {
+		// 	dump($items);exit;
+		// }
+
+		$expression = new NoneCoalescingOperation(...$items);
+		$expression->pos = $item->pos;
+
+		return $expression;
 	}
 
 	protected function skip_binary_operator_with_space(string $operator)

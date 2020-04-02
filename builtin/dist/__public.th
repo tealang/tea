@@ -52,6 +52,10 @@ public uint_ensure(num Int) Int
 
 public is_uint(val Any) Bool
 
+#php max(n1 Float, n2 Float, n3 Float = #default) Float
+
+#php min(n1 Float, n2 Float, n3 Float = #default) Float
+
 #php abs(val Any) Float
 
 #php round(val Any, precision UInt = 0) Float

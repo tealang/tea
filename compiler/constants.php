@@ -63,7 +63,7 @@ const
 	_NEGATION = '-', // -1, -num
 	_ADDITION = '+', _SUBTRACTION = '-', _MULTIPLICATION = '*', _DIVISION = '/', _REMAINDER = '%', _EXPONENTIATION = '**',
 	_BITWISE_NOT = '~', _BITWISE_AND = '&', _BITWISE_OR = '|', _BITWISE_XOR = '^', //bitwise
-	_CONCAT = 'concat', _MERGE = 'merge',
+	_CONCAT = 'concat', _ACAT = 'acat', _MERGE = 'merge',
 	_ASSIGN = '=', _EQUAL = '==', _NOT_EQUAL = '!=', _IDENTICAL = '===', _NOT_IDENTICAL = '!==',
 	_NOT = 'not', _AND = 'and', _OR = 'or', // bool
 	_NONE_COALESCING = '??', _CONDITIONAL = '?',

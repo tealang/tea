@@ -1165,6 +1165,9 @@ class ASTChecker
 			case HTMLEscapeExpression::KIND:
 				$infered_type = $this->infer_expression($node->expression);
 				break;
+			case NoneCoalescingOperation::KIND:
+				$infered_type = $this->infer_none_coalescing_expression($node);
+				break;
 			case ConditionalExpression::KIND:
 				$infered_type = $this->infer_conditional_expression($node);
 				break;
@@ -1275,15 +1278,15 @@ class ASTChecker
 			return TypeFactory::$_bool;
 		}
 
-		if ($operator === OperatorFactory::$_none_coalescing) {
-			return $this->reduce_types([$left_type, $right_type]);
-		}
+		// if ($operator === OperatorFactory::$_none_coalescing) {
+		// 	return $this->reduce_types([$left_type, $right_type]);
+		// }
 
 		// string or array
 		if ($operator === OperatorFactory::$_concat) {
 			if ($left_type instanceof ArrayType) {
-				$node->is_array_concat = true;
 				$this->assert_type_compatible($left_type, $right_type, $node->right, _CONCAT);
+				$node->operator = OperatorFactory::$_acat; // replace to array concat
 				return $left_type;
 			}
 			elseif ($left_type instanceof DictType) {
@@ -1363,6 +1366,16 @@ class ASTChecker
 		else {
 			throw $this->new_syntax_error("Unknow operator: '{$node->operator->sign}'", $node);
 		}
+	}
+
+	private function infer_none_coalescing_expression(NoneCoalescingOperation $node): IType
+	{
+		$infered_types = [];
+		foreach ($node->items as $item) {
+			$infered_types[] = $this->infer_expression($item);
+		}
+
+		return $this->reduce_types($infered_types);
 	}
 
 	private function infer_conditional_expression(ConditionalExpression $node): IType

@@ -9,14 +9,29 @@
 
 namespace Tea;
 
-abstract class BaseBinaryOperation extends Node implements IExpression
+abstract class BaseOperation extends Node implements IExpression
 {
-	public $left;
-	public $right;
 	public $operator;
 }
 
-class CastOperation extends BaseBinaryOperation
+abstract class UnaryOperation extends BaseOperation {}
+abstract class MultiOperation extends BaseOperation {}
+
+class BinaryOperation extends MultiOperation
+{
+	const KIND = 'binary_operation';
+
+	public $left;
+	public $right;
+
+	public function __construct(OperatorSymbol $operator, IExpression $left, IExpression $right) {
+		$this->operator = $operator;
+		$this->left = $left;
+		$this->right = $right;
+	}
+}
+
+class CastOperation extends BinaryOperation
 {
 	const KIND = 'cast_operation';
 
@@ -28,13 +43,13 @@ class CastOperation extends BaseBinaryOperation
 	}
 }
 
-class IsOperation extends BaseBinaryOperation
+class IsOperation extends BinaryOperation
 {
 	const KIND = 'is_operation';
 
 	public $is_not;
 
-	public function __construct(IExpression $left, IType $right, bool $is_not)
+	public function __construct(IExpression $left, IType $right, bool $is_not = false)
 	{
 		$this->operator = OperatorFactory::$_is;
 		$this->left = $left;
@@ -43,22 +58,42 @@ class IsOperation extends BaseBinaryOperation
 	}
 }
 
-class BinaryOperation extends BaseBinaryOperation
+class NoneCoalescingOperation extends MultiOperation
 {
-	const KIND = 'binary_operation';
+	const KIND = 'none_coalescing_operation';
 
-	public function __construct(OperatorSymbol $operator, IExpression $left, IExpression $right) {
-		$this->operator = $operator;
-		$this->left = $left;
-		$this->right = $right;
+	/**
+	 * @var IExpression[]
+	 */
+	public $items;
+
+	public function __construct(IExpression ...$items) {
+		$this->operator = OperatorFactory::$_none_coalescing;
+		$this->items = $items;
 	}
 }
 
-class PrefixOperation extends Node implements IExpression
+class ConditionalExpression extends MultiOperation
+{
+	const KIND = 'conditional_expression';
+
+	public $test;
+	public $then;
+	public $else;
+
+	public function __construct(IExpression $test, ?IExpression $then, IExpression $else)
+	{
+		$this->operator = OperatorFactory::$_conditional;
+		$this->test = $test;
+		$this->then = $then;
+		$this->else = $else;
+	}
+}
+
+class PrefixOperation extends UnaryOperation
 {
 	const KIND = 'prefix_operation';
 
-	public $operator;
 	public $expression;
 
 	public function __construct(OperatorSymbol $operator, IExpression $expression) {
@@ -67,7 +102,7 @@ class PrefixOperation extends Node implements IExpression
 	}
 }
 
-// class ReferenceOperation extends Node implements IExpression
+// class ReferenceOperation extends UnaryOperation
 // {
 // 	const KIND = 'reference_operation';
 
@@ -78,11 +113,10 @@ class PrefixOperation extends Node implements IExpression
 // 	}
 // }
 
-// class PostfixOperation extends Node implements IExpression
+// class PostfixOperation extends UnaryOperation
 // {
 // 	const KIND = 'postfix_operation';
 
-// 	public $operator;
 // 	public $expression;
 
 // 	public function __construct(OperatorSymbol $operator, IExpression $expression)
@@ -92,16 +126,15 @@ class PrefixOperation extends Node implements IExpression
 // 	}
 // }
 
-// class FunctionalOperation extends Node implements IExpression
+// class FunctionalOperation extends MultiOperation
 // {
 // 	const KIND = 'functional_operation';
 
-// 	public $operator;
-// 	public $arguments;
+// 	public $items;
 
-// 	public function __construct(OperatorSymbol $operator, IExpression ...$arguments)
+// 	public function __construct(OperatorSymbol $operator, IExpression ...$items)
 // 	{
 // 		$this->operator = $operator;
-// 		$this->arguments = $arguments;
+// 		$this->items = $items;
 // 	}
 // }

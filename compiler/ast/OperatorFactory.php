@@ -38,6 +38,7 @@ const _BINARY_OP_PRECEDENCES = [
 
 	// L6
 	_CONCAT => 6, // String / Array,  concat to the end of the left expression
+	_ACAT => 6, // Array,  concat to the end of the left array expression
 	_MERGE => 6, // Dict / Array,  merge by key or index
 	// 'pop', 'take'  // todo?
 
@@ -83,6 +84,7 @@ class OperatorFactory
 	static $_subtraction;
 
 	static $_concat;
+	static $_acat;
 	static $_merge;
 
 	static $_shift_left;
@@ -142,6 +144,7 @@ class OperatorFactory
 		self::$_subtraction = self::create_normal_operator_symbol(_SUBTRACTION);
 
 		self::$_concat = self::create_normal_operator_symbol(_CONCAT);
+		self::$_acat = self::create_normal_operator_symbol(_ACAT);
 		self::$_merge = self::create_normal_operator_symbol(_MERGE);
 
 		self::$_shift_left = self::create_normal_operator_symbol(_SHIFT_LEFT);
