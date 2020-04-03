@@ -118,9 +118,9 @@ class OperatorFactory
 	private static $prefix_op_symbol_map = [];
 	private static $binary_op_symbol_map = [];
 
-	private static $number_op_symbols;
-	private static $bitwise_op_symbols;
-	private static $bool_op_symbols;
+	private static $number_operators;
+	private static $bitwise_operators;
+	private static $bool_operators;
 
 	public static function init()
 	{
@@ -176,16 +176,16 @@ class OperatorFactory
 		self::$_bool_or = self::create_normal_operator(_OR);
 
 		// number
-		self::$number_op_symbols = [
+		self::$number_operators = [
 			self::$_addition, self::$_subtraction, self::$_multiplication, self::$_division, self::$_remainder, self::$_exponentiation,
 			self::$_comparison
 		];
 
 		// bitwise
-		self::$bitwise_op_symbols = [self::$_bitwise_and, self::$_bitwise_xor, self::$_bitwise_or, self::$_shift_left, self::$_shift_right];
+		self::$bitwise_operators = [self::$_bitwise_and, self::$_bitwise_xor, self::$_bitwise_or, self::$_shift_left, self::$_shift_right];
 
 		// bool
-		self::$bool_op_symbols = [
+		self::$bool_operators = [
 			self::$_bool_and, self::$_bool_or,
 			self::$_equal, self::$_strict_equal, self::$_not_equal, self::$_strict_not_equal, self::$_is,
 			self::$_lessthan, self::$_morethan, self::$_lessthan_or_equal, self::$_morethan_or_equal
@@ -213,17 +213,17 @@ class OperatorFactory
 
 	public static function is_number_operator(Operator $symbol)
 	{
-		return in_array($symbol, self::$number_op_symbols, true);
+		return in_array($symbol, self::$number_operators, true);
 	}
 
 	public static function is_bitwise_operator(Operator $symbol)
 	{
-		return in_array($symbol, self::$bitwise_op_symbols, true);
+		return in_array($symbol, self::$bitwise_operators, true);
 	}
 
 	public static function is_bool_operator(Operator $symbol)
 	{
-		return in_array($symbol, self::$bool_op_symbols, true);
+		return in_array($symbol, self::$bool_operators, true);
 	}
 
 	public static function get_prefix_operator(?string $sign)
