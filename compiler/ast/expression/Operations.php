@@ -11,6 +11,7 @@ namespace Tea;
 
 abstract class BaseOperation extends Node implements IExpression
 {
+	public $infered_type;
 	public $operator;
 }
 

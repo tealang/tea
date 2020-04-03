@@ -7,7 +7,7 @@ require_once dirname(__DIR__, 1) . '/__public.php';
 const PI = 3.1415926;
 
 // ---------
-$some = 'abc' . (1 + (2 & 2) * 2 ** 3 / 5 % 6);
+$some = 'abc' . (1 + fmod((2 & 2) * 2 ** 3 / 5, 6));
 
 $uint_num = 123;
 $int_num = 123;

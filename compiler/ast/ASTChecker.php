@@ -1257,62 +1257,60 @@ class ASTChecker
 
 	private function infer_binary_operation(BinaryOperation $node): IType
 	{
+		$operator = $node->operator;
 		$left_type = $this->infer_expression($node->left);
 		$right_type = $this->infer_expression($node->right);
-		$operator = $node->operator;
 
 		if (OperatorFactory::is_number_operator($operator)) {
 			if (!TypeFactory::is_number_type($left_type) || !TypeFactory::is_number_type($right_type)) {
-				throw $this->new_syntax_error("Math operation cannot use for non Int/UInt/Float type values.", $node);
+				throw $this->new_syntax_error("Math operation cannot use for non Int/UInt/Float type expressions.", $node);
 			}
 
-			if ($operator === OperatorFactory::$_division
-				|| $left_type === TypeFactory::$_float || $right_type === TypeFactory::$_float) {
-				return TypeFactory::$_float;
+			if ($operator === OperatorFactory::$_division || $left_type === TypeFactory::$_float || $right_type === TypeFactory::$_float) {
+				$node->infered_type = TypeFactory::$_float;
 			}
-
-			if ($left_type === TypeFactory::$_int || $right_type === TypeFactory::$_int) {
-				return TypeFactory::$_int;
+			elseif ($left_type === TypeFactory::$_int || $right_type === TypeFactory::$_int) {
+				$node->infered_type = TypeFactory::$_int;
 			}
-
-			return TypeFactory::$_uint;
+			else {
+				$node->infered_type = TypeFactory::$_uint;
+			}
 		}
-
-		if (OperatorFactory::is_bool_operator($operator)) {
-			return TypeFactory::$_bool;
+		elseif (OperatorFactory::is_bool_operator($operator)) {
+			$node->infered_type = TypeFactory::$_bool;
 		}
-
-		// string or array
-		if ($operator === OperatorFactory::$_concat) {
+		elseif ($operator === OperatorFactory::$_concat) {
+			// string or array
 			if ($left_type instanceof ArrayType) {
 				$this->assert_type_compatible($left_type, $right_type, $node->right, _CONCAT);
 				$node->operator = OperatorFactory::$_vcat; // replace to array concat
-				return $left_type;
+				$node->infered_type = $left_type;
 			}
 			elseif ($left_type === TypeFactory::$_any || $left_type instanceof DictType) {
 				$type_name = $this->get_type_name($left_type);
 				throw $this->new_syntax_error("'concat' operation cannot use for '$type_name' type values.", $node);
 			}
 			else {
-				return TypeFactory::$_string;
+				$node->infered_type = TypeFactory::$_string;
 			}
 		}
-
-		// array or dict
-		if ($operator === OperatorFactory::$_merge) {
+		elseif ($operator === OperatorFactory::$_merge) {
+			// array or dict
 			if (!$left_type instanceof ArrayType && !$left_type instanceof DictType) {
 				throw $this->new_syntax_error("'merge' operation just support Array/Dict type values.", $node);
 			}
 
 			$this->assert_type_compatible($left_type, $right_type, $node->right, _MERGE);
-			return $left_type;
+			$node->infered_type = $left_type;
+		}
+		elseif (OperatorFactory::is_bitwise_operator($operator)) {
+			$node->infered_type = $this->reduce_types([$left_type, $right_type]);
+		}
+		else {
+			throw $this->new_syntax_error("Unknow operator: '{$node->operator->sign}'", $node);
 		}
 
-		if (OperatorFactory::is_bitwise_operator($operator)) {
-			return $this->reduce_types([$left_type, $right_type]);
-		}
-
-		throw $this->new_syntax_error("Unknow operator: '{$node->operator->sign}'", $node);
+		return $node->infered_type;
 	}
 
 	private function infer_cast_operation(CastOperation $node): IType

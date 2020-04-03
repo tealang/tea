@@ -1403,29 +1403,34 @@ class PHPCoder extends TeaCoder
 
 	public function render_binary_operation(BinaryOperation $node)
 	{
+		$operator = $node->operator;
 		$left = $node->left->render($this);
 		$right = $node->right->render($this);
 
-		if ($node->operator === OperatorFactory::$_vcat) {
+		if ($operator === OperatorFactory::$_vcat) {
 			// concat Arrays
 			// $code = sprintf('array_merge(%s, array_values(%s))', $left, $right);
 			$code = sprintf('array_merge(%s, %s)', $left, $right);
 		}
-		elseif ($node->operator === OperatorFactory::$_merge) {
+		elseif ($operator === OperatorFactory::$_merge) {
 			// merge Arrays / Dicts
 			// $code = "$right + $left"; // the order would be incorrect in some times
 			$code = sprintf('array_replace(%s, %s)', $left, $right);
 		}
+		elseif ($operator === OperatorFactory::$_remainder && $node->infered_type === TypeFactory::$_float) {
+			// use the 'fmod' function for the float arguments
+			$code = sprintf('fmod(%s, %s)', $left, $right);
+		}
 		else {
-			if ($this->is_need_parentheses_for_operation_item($node->left, $node->operator, false)) {
+			if ($this->is_need_parentheses_for_operation_item($node->left, $operator, false)) {
 				$left = "($left)";
 			}
 
-			if ($this->is_need_parentheses_for_operation_item($node->right, $node->operator)) {
+			if ($this->is_need_parentheses_for_operation_item($node->right, $operator)) {
 				$right = "($right)";
 			}
 
-			$code = sprintf('%s %s %s', $left, $node->operator->dist_sign, $right);
+			$code = sprintf('%s %s %s', $left, $operator->dist_sign, $right);
 		}
 
 		return $code;
