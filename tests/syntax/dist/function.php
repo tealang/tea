@@ -36,7 +36,7 @@ fn2($dict);
 echo "dict['num'] mutated by fn2: {$dict['num']}", LF;
 
 echo fn3(123, function ($a) {
-	return $a . ' has called';
+	return (string)$a . ' has called';
 }, function ($error) {
 	// no any
 }), LF;

@@ -59,12 +59,13 @@ class PHPCoder extends TeaCoder
 		_CONCAT => _DOT,
 		_NOT => '!',
 		_AND => '&&',
-		_OR => '||'
+		_OR => '||',
+		_REMAINDER => '%',
 	];
 
 	// precedences for MultiOperation
 	const OPERATOR_PRECEDENCES = [
-		_ACAT => 0, 		// array concat, use function
+		_VCAT => 0, 		// array concat, use function
 		_MERGE => 0,		// array/dict merge, use function
 		_DOUBLE_COLON => 1, // cast
 		'**' => 2, 			// 算术运算符
@@ -1405,7 +1406,7 @@ class PHPCoder extends TeaCoder
 		$left = $node->left->render($this);
 		$right = $node->right->render($this);
 
-		if ($node->operator === OperatorFactory::$_acat) {
+		if ($node->operator === OperatorFactory::$_vcat) {
 			// concat Arrays
 			// $code = sprintf('array_merge(%s, array_values(%s))', $left, $right);
 			$code = sprintf('array_merge(%s, %s)', $left, $right);

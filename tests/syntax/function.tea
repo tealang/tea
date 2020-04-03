@@ -37,7 +37,7 @@ internal fn3(some Any, done (caller String) String, error (message) = none) Stri
 }
 
 echo fn3(123, done: (a) => {
-		return a concat ' has called'
+		return a::String concat ' has called'
 	}, error: (error) => {})
 
 echo fn3('any...') -> done(caller String) {

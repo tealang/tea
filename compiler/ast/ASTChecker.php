@@ -1215,6 +1215,8 @@ class ASTChecker
 			if ($right_type !== TypeFactory::$_uint) {
 				throw $this->new_syntax_error("Index type for Array should be 'UInt', '{$right_type->name}' supplied.", $node);
 			}
+
+			$infered_type = $left_type->value_type;
 		}
 		elseif ($left_type instanceof DictType) {
 			if (TypeFactory::is_dict_key_directly_supported_type($right_type)) {
@@ -1229,26 +1231,28 @@ class ASTChecker
 			else {
 				throw $this->new_syntax_error("Invalid key type '{$right_type->name}' for Dict.", $node->right);
 			}
+
+			$infered_type = $left_type->value_type;
 		}
 		elseif ($left_type instanceof AnyType) {
 			// 仅允许将实际类型为Dict的用于这类情况
-			// 由于PHP、JS中字符串也可以使用[index]访问，而它们的多字节字符处理方式不同
-			// 限制key的类型为字符串，这样可以避免被用于对字符串进行[index]方式访问
 			if ($right_type !== TypeFactory::$_string) {
 				throw $this->new_syntax_error("Key type for Dict should only be 'String', type '{$right_type->name}' applied.", $node);
 			}
 		}
-		// 由于PHP、JS中字符串的多字节字符处理方式不同，按索引访问会导致语义不一致
-		// elseif ($left_type instanceof StringType) {
-		// 	return TypeFactory::$_string;
-		// }
+		elseif ($left_type instanceof StringType) {
+			if ($right_type !== TypeFactory::$_uint && $right_type !== TypeFactory::$_int) {
+				throw $this->new_syntax_error("Index type for String should be 'Int/UInt', '{$right_type->name}' supplied.", $node);
+			}
+
+			$infered_type = TypeFactory::$_string;
+		}
 		else {
 			$type_name = $this->get_type_name($left_type);
 			throw $this->new_syntax_error("Cannot use key accessing for type '{$type_name}'.", $node);
 		}
 
-		// the value type
-		return $left_type->value_type ?? TypeFactory::$_any;
+		return $infered_type ?? TypeFactory::$_any;
 	}
 
 	private function infer_binary_operation(BinaryOperation $node): IType
@@ -1278,19 +1282,16 @@ class ASTChecker
 			return TypeFactory::$_bool;
 		}
 
-		// if ($operator === OperatorFactory::$_none_coalescing) {
-		// 	return $this->reduce_types([$left_type, $right_type]);
-		// }
-
 		// string or array
 		if ($operator === OperatorFactory::$_concat) {
 			if ($left_type instanceof ArrayType) {
 				$this->assert_type_compatible($left_type, $right_type, $node->right, _CONCAT);
-				$node->operator = OperatorFactory::$_acat; // replace to array concat
+				$node->operator = OperatorFactory::$_vcat; // replace to array concat
 				return $left_type;
 			}
-			elseif ($left_type instanceof DictType) {
-				throw $this->new_syntax_error("'concat' operation cannot use for Dict type values.", $node);
+			elseif ($left_type === TypeFactory::$_any || $left_type instanceof DictType) {
+				$type_name = $this->get_type_name($left_type);
+				throw $this->new_syntax_error("'concat' operation cannot use for '$type_name' type values.", $node);
 			}
 			else {
 				return TypeFactory::$_string;
