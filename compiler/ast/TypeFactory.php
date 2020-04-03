@@ -36,6 +36,8 @@ class TypeFactory
 	static $_callable;
 	static $_namespace;
 
+	static $_igenerator;
+
 	// for check XView accepts
 	static $_iview_symbol;
 
@@ -72,6 +74,8 @@ class TypeFactory
 
 		self::$_callable = self::create_type(CallableType::class);
 		self::$_namespace = self::create_type(NamespaceType::class);
+
+		self::$_igenerator = new ClassLikeIdentifier('IGenerator');
 	}
 
 	static function is_iterable_type(IType $type)
@@ -122,31 +126,31 @@ class TypeFactory
 
 	static function set_symbols(Unit $unit)
 	{
-		foreach (static::$type_map as $type_name => $object) {
+		foreach (self::$type_map as $type_name => $object) {
 			if (isset($unit->symbols[$type_name])) {
 				$object->symbol = $unit->symbols[$type_name];
 			}
 		}
 
-		static::$_iview_symbol = $unit->symbols['IView'];
-		static::$_iiterator_symbol = $unit->symbols['IIterator'];
-		static::$_igenerator_symbol = $unit->symbols['IGenerator'];
+		self::$_iview_symbol = $unit->symbols['IView'];
+		self::$_iiterator_symbol = $unit->symbols['IIterator'];
+		self::$_igenerator_symbol = $unit->symbols['IGenerator'];
 	}
 
 	static function exists_type(string $name): bool
 	{
-		return isset(static::$type_map[$name]);
+		return isset(self::$type_map[$name]);
 	}
 
 	static function get_type(string $name)
 	{
-		return static::$type_map[$name] ?? null;
+		return self::$type_map[$name] ?? null;
 	}
 
 	static function create_type(string $class)
 	{
 		$type_object = new $class();
-		static::$type_map[$type_object->name] = $type_object;
+		self::$type_map[$type_object->name] = $type_object;
 
 		return $type_object;
 	}
@@ -154,7 +158,7 @@ class TypeFactory
 	static function create_collector_type(IType $value_type)
 	{
 		$type = new ArrayType($value_type);
-		$type->symbol = static::$_array->symbol;
+		$type->symbol = self::$_array->symbol;
 		$type->is_collect_mode = true;
 
 		return $type;
@@ -163,7 +167,7 @@ class TypeFactory
 	static function create_array_type(IType $value_type)
 	{
 		$type = new ArrayType($value_type);
-		$type->symbol = static::$_array->symbol;
+		$type->symbol = self::$_array->symbol;
 
 		return $type;
 	}
@@ -171,7 +175,7 @@ class TypeFactory
 	static function create_dict_type(IType $value_type)
 	{
 		$type = new DictType($value_type);
-		$type->symbol = static::$_dict->symbol;
+		$type->symbol = self::$_dict->symbol;
 
 		return $type;
 	}
@@ -179,7 +183,7 @@ class TypeFactory
 	static function create_callable_type(?IType $return_type, array $parameters = null)
 	{
 		$type = new CallableType($return_type, $parameters);
-		$type->symbol = static::$_callable->symbol;
+		$type->symbol = self::$_callable->symbol;
 
 		return $type;
 	}
@@ -187,7 +191,7 @@ class TypeFactory
 	static function create_meta_type(IType $value_type)
 	{
 		$type = new MetaType($value_type);
-		$type->symbol = static::$_metatype->symbol;
+		$type->symbol = self::$_metatype->symbol;
 
 		return $type;
 	}
@@ -195,7 +199,7 @@ class TypeFactory
 	static function create_union_type(array $members)
 	{
 		$type = new UnionType($members);
-		$type->symbol = static::$_uniontype->symbol;
+		$type->symbol = self::$_uniontype->symbol;
 
 		return $type;
 	}

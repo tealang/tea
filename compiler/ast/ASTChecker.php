@@ -376,21 +376,21 @@ class ASTChecker
 			$infered_type = $this->infer_single_expression_block($node);
 		}
 
-		if ($node->type) {
-			$this->check_type($node->type, $node);
-
+		$declared_type = $node->type;
+		if ($declared_type) {
+			$this->check_type($declared_type, $node);
 			if ($infered_type !== null) {
-				if (!$node->type->is_accept_type($infered_type)) {
-					throw $this->new_syntax_error("Function '{$node->name}' returns type is '{$infered_type->name}', not compatible with the declared '{$node->type->name}'.", $node);
+				if (!$declared_type->is_accept_type($infered_type)) {
+					throw $this->new_syntax_error("Function '{$node->name}' returns type is '{$infered_type->name}', not compatible with the declared '{$declared_type->name}'.", $node);
 				}
 			}
-			elseif (!empty($node->type->is_collect_mode)) {
+			elseif ($declared_type instanceof ArrayType && $declared_type->is_collect_mode) {
 				// process the auto collect return data logic
-				$builder = new ReturnBuilder($node, $node->type->value_type);
+				$builder = new ReturnBuilder($node, $declared_type->value_type);
 				$node->fixed_body = $builder->build_return_statements();
 			}
-			elseif ($node->type !== TypeFactory::$_void && empty($node->has_yield)) {
-				throw $this->new_syntax_error("Function required return type '{$node->type->name}'.", $node->type);
+			elseif ($declared_type !== TypeFactory::$_void && $declared_type !== TypeFactory::$_igenerator) {
+				throw $this->new_syntax_error("Function required return type '{$declared_type->name}'.", $declared_type);
 			}
 		}
 		else {
