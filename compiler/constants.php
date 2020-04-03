@@ -31,14 +31,17 @@ const
 	_UNIONTYPE = 'UnionType',
 	_METATYPE = 'MetaType',
 	_VOID = 'Void', _NONE = 'None', _ANY = 'Any',
-	// _SCALAR = 'Scalar',
-	// _BYTES = 'Bytes',
-	// _RUNES = 'Runes',
+	// _SCALAR = 'Scalar', _BYTES = 'Bytes', _RUNES = 'Runes',
 	_STRING = 'String',
 	_INT = 'Int', _UINT = 'UInt', _FLOAT = 'Float', _BOOL = 'Bool',
 	_ITERABLE = 'Iterable', _DICT = 'Dict', _ARRAY = 'Array', // 'Pair', 'Matrix', 'Tensor'
 	_OBJECT = 'Object', _XVIEW = 'XView', _REGEX = 'Regex',
 	_CALLABLE = 'Callable', _NAMESPACE = 'Namespace', // _CLASS = 'Class',
+	_BUILTIN_TYPE_NAMES = [
+		_UNIONTYPE, _METATYPE, _ANY, _VOID, _NONE,
+		_STRING, _INT, _UINT, _FLOAT, _BOOL, _DICT, _ARRAY,
+		_ITERABLE, _OBJECT, _XVIEW, _REGEX, _CALLABLE, _NAMESPACE,
+	],
 
 	// dot signs of compound types
 	_DOT_SIGN_ARRAY = 'Array', _DOT_SIGN_DICT = 'Dict', _DOT_SIGN_METATYPE = 'Type',
@@ -70,6 +73,8 @@ const
 	_DOT = '.', _NOTIFY = '->', _ARROW = '=>', _RELAY = '==>', _DOUBLE_COLON = '::',
 	_COLLECT = '>>',
 	_SHIFT_LEFT = '<<', _SHIFT_RIGHT = '>>',
+
+	_ASSIGN_OPERATORS = [_ASSIGN, '.=', '**=', '+=', '-=', '*=', '/=', '&=', '|=', '^=', '<<=', '>>='], // '??='
 
 	_SINGLE_QUOTE = '\'', _DOUBLE_QUOTE = '"',
 	_XTAG_OPEN = '<', _XTAG_CLOSE = '>',

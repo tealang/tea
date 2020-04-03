@@ -11,16 +11,6 @@ namespace Tea;
 
 class TypeFactory
 {
-	const BUILTIN_TYPE_NAMES = [
-		_METATYPE,
-		_UNIONTYPE,
-		_ANY, _VOID, _NONE, // _NONE just a internal type
-		_STRING, _INT, _UINT, _FLOAT, _BOOL, // maybe support Bytes?
-		_ITERABLE, _DICT, _ARRAY, // maybe support Matrix, Tensor?
-		_OBJECT, _XVIEW, _REGEX,
-		_CALLABLE, _NAMESPACE,
-	];
-
 	static $_metatype;
 
 	static $_uniontype;

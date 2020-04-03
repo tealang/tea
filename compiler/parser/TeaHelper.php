@@ -9,44 +9,34 @@
 
 namespace Tea;
 
-TeaHelper::$NORMAL_RESERVEDS = array_merge(
-	TypeFactory::BUILTIN_TYPE_NAMES,
-	TeaHelper::STRUCTURE_KEYS,
-	TeaHelper::MODIFIERS,
-	TeaHelper::BUILTIN_IDENTIFIERS,
-	TeaHelper::OTHER_RESERVEDS
-);
+const _PATTERN_MODIFIER_REGEX = '/[imu]+/';
+
+const _STRUCTURE_KEYS = [
+	_VAR,
+	_IF, _WHEN, _FOR, _WHILE, _TRY, // _LOOP
+	_ECHO, _PRINT, _RETURN, _EXIT, _BREAK, _CONTINUE, _THROW,
+];
+
+const _ACCESSING_MODIFIERS = [_MASKED, _PUBLIC, _INTERNAL, _PROTECTED, _PRIVATE];
+
+const _BUILTIN_IDENTIFIERS = [_THIS, _SUPER, _VAL_NONE, _VAL_TRUE, _VAL_FALSE, _UNIT_PATH];
+
+const _OTHER_RESERVEDS = [
+	_CONSTRUCT, _DESTRUCT, _STATIC,
+	_ELSEIF, _ELSE, _CATCH, _FINALLY,
+	_WHEN,
+];
+
+define('TEA_NORMAL_RESERVEDS', array_merge(
+	_BUILTIN_TYPE_NAMES,
+	_STRUCTURE_KEYS,
+	_ACCESSING_MODIFIERS,
+	_BUILTIN_IDENTIFIERS,
+	_OTHER_RESERVEDS
+));
 
 class TeaHelper
 {
-	const PATTERN_MODIFIER_REGEX = '/[imu]+/';
-
-	const STRUCTURE_KEYS = [
-		_VAR,
-		_IF, _WHEN, _FOR, _WHILE, _TRY, // _LOOP
-		_ECHO, _PRINT, _RETURN, _EXIT, _BREAK, _CONTINUE, _THROW,
-	];
-
-	const MODIFIERS = [
-		_MASKED,
-		_PUBLIC,
-		_INTERNAL,
-		_PROTECTED,
-		_PRIVATE
-	];
-
-	const BUILTIN_IDENTIFIERS = [_THIS, _SUPER, _VAL_NONE, _VAL_TRUE, _VAL_FALSE, _UNIT_PATH];
-
-	const OTHER_RESERVEDS = [
-		_CONSTRUCT, _DESTRUCT, _STATIC,
-		_ELSEIF, _ELSE, _CATCH, _FINALLY,
-		_WHEN,
-	];
-
-	const ASSIGN_OPERATORS = [_ASSIGN, '.=', '**=', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^=', '<<=', '>>=']; // '??='
-
-	static $NORMAL_RESERVEDS;
-
 	/**
 	 * Check token is a number
 	 * and return the number base type when is a number format
@@ -91,22 +81,22 @@ class TeaHelper
 
 	static function is_normal_reserveds($token)
 	{
-		return in_array(strtolower($token), self::$NORMAL_RESERVEDS, true);
+		return in_array(strtolower($token), TEA_NORMAL_RESERVEDS, true);
 	}
 
 	static function is_modifier($token)
 	{
-		return in_array($token, self::MODIFIERS, true);
+		return in_array($token, _ACCESSING_MODIFIERS, true);
 	}
 
 	static function is_structure_key($token)
 	{
-		return in_array($token, self::STRUCTURE_KEYS, true);
+		return in_array($token, _STRUCTURE_KEYS, true);
 	}
 
 	static function is_builtin_identifier($token)
 	{
-		return in_array($token, self::BUILTIN_IDENTIFIERS, true);
+		return in_array($token, _BUILTIN_IDENTIFIERS, true);
 	}
 
 	static function is_xtag_name($token)
@@ -121,7 +111,7 @@ class TeaHelper
 
 	static function is_declarable_variable_name(?string $token)
 	{
-		return preg_match('/^_?[a-z][a-z0-9_]*$/', $token) && !TeaHelper::is_normal_reserveds($token);
+		return preg_match('/^_?[a-z][a-z0-9_]*$/', $token) && !self::is_normal_reserveds($token);
 	}
 
 	static function is_constant_name(?string $token)
@@ -156,7 +146,7 @@ class TeaHelper
 
 	static function is_builtin_type_name(?string $token)
 	{
-		return in_array($token, TypeFactory::BUILTIN_TYPE_NAMES, true);
+		return in_array($token, _BUILTIN_TYPE_NAMES, true);
 	}
 
 	static function is_domain_component(?string $token)
@@ -171,11 +161,11 @@ class TeaHelper
 
 	static function is_assign_operator_token(?string $token)
 	{
-		return in_array($token, self::ASSIGN_OPERATORS, true);
+		return in_array($token, _ASSIGN_OPERATORS, true);
 	}
 
 	static function is_regex_flags($token)
 	{
-		return preg_match(self::PATTERN_MODIFIER_REGEX, $token);
+		return preg_match(_PATTERN_MODIFIER_REGEX, $token);
 	}
 }
