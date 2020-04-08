@@ -381,7 +381,7 @@ class ASTChecker
 			$this->check_type($declared_type, $node);
 			if ($infered_type !== null) {
 				if (!$declared_type->is_accept_type($infered_type)) {
-					throw $this->new_syntax_error("Function '{$node->name}' returns type is '{$infered_type->name}', not compatible with the declared '{$declared_type->name}'.", $node);
+					throw $this->new_syntax_error("Function '{$node->name}' returns type is '{$infered_type->name}', do not compatible with the declared '{$declared_type->name}'.", $node);
 				}
 			}
 			elseif ($declared_type instanceof ArrayType && $declared_type->is_collect_mode) {
@@ -572,7 +572,14 @@ class ASTChecker
 			$node_return_type = $this->get_type_name($node->type);
 			$super_return_type = $this->get_type_name($super->type);
 
-			throw $this->new_syntax_error("Type '{$node_return_type}' in '{$node->super_block->name}.{$node->name}' must be compatible with '$super_return_type' in interface '{$super->super_block->name}.{$super->name}'", $node->super_block);
+			throw $this->new_syntax_error("Type '{$node_return_type}' in '{$node->super_block->name}.{$node->name}' must be compatible with '$super_return_type' in '{$super->super_block->name}.{$super->name}'", $node->super_block);
+		}
+
+		// the accessing modifer
+		$super_modifier = $super->modifier ?? _PUBLIC;
+		$this_modifier = $node->modifier ?? _PUBLIC;
+		if ($super_modifier !== $this_modifier) {
+			throw $this->new_syntax_error("Modifier in '{$node->super_block->name}.{$node->name}' must be same as '{$super->super_block->name}.{$super->name}'", $node->super_block);
 		}
 
 		if ($super instanceof FunctionDeclaration) {
@@ -1503,10 +1510,14 @@ class ASTChecker
 	private function check_type(IType $type)
 	{
 		if ($type instanceof BaseType) {
-			// for IterableType and MetaType
-			if (isset($type->value_type)) {
+			if ($type instanceof ValuedType) {
 				// check the value type
-				$this->check_type($type->value_type);
+				$type->value_type !== null && $this->check_type($type->value_type);
+			}
+			elseif ($type instanceof UnionType) {
+				foreach ($type->types as $member) {
+					$this->check_type($member);
+				}
 			}
 			elseif ($type instanceof CallableType) {
 				$this->check_callable_type($type);
@@ -1519,11 +1530,6 @@ class ASTChecker
 			if (!$type->symbol->declaration instanceof ClassLikeDeclaration) {
 				$declare_name = $this->get_declaration_name($type->symbol->declaration);
 				throw $this->new_syntax_error("Cannot use '$declare_name' as a Type.", $type);
-			}
-		}
-		elseif ($type instanceof UnionType) {
-			foreach ($type->types as $member) {
-				$this->check_type($member);
 			}
 		}
 		else {
@@ -2305,7 +2311,7 @@ class ASTChecker
 		$nullable = false;
 		for ($i = 0; $i < $count; $i++) {
 			$result_type = $types[$i];
-			if ($result_type === null) {
+			if ($result_type === null || $result_type === TypeFactory::$_none) {
 				$nullable = true;
 			}
 			else {
@@ -2319,7 +2325,7 @@ class ASTChecker
 
 		for ($i = $i + 1; $i < $count; $i++) {
 			$type = $types[$i];
-			if ($type === null) {
+			if ($type === null || $type === TypeFactory::$_none) {
 				$nullable = true;
 			}
 			elseif ($type === TypeFactory::$_any) {
@@ -2329,6 +2335,10 @@ class ASTChecker
 			else {
 				$result_type = $result_type->unite_type($type);
 			}
+		}
+
+		if ($nullable && $result_type) {
+			$result_type = $result_type->get_nullable_instance();
 		}
 
 		return $result_type;

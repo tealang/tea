@@ -17,11 +17,29 @@ function uint_ensure(int $num): int {
 }
 
 function is_strict_array($it): bool {
-	return is_array($it) && (isset($it[0]) && array_keys($it) === array_keys(array_keys($it)) || empty($it));
+	if (!is_array($it)) {
+		return false;
+	}
+
+	if (empty($it)) {
+		return true;
+	}
+
+	$keys = array_keys($it);
+	return $keys === array_keys($keys);
 }
 
 function is_strict_dict($it): bool {
-	return is_array($it) && (!isset($it[0]) || array_keys($it) !== array_keys(array_keys($it)));
+	if (!is_array($it) || empty($it)) {
+		return false;
+	}
+
+	if (!isset($it[0])) {
+		return true;
+	}
+
+	$keys = array_keys($it);
+	return $keys !== array_keys($keys);
 }
 
 function _iconv_strpos(string $str, string $search, int $offset = 0): int {

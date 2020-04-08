@@ -74,8 +74,12 @@ public is_strict_array(it) Bool {
 }
 
 public is_strict_dict(it) Bool {
-	if not is_array(it) or isset(it[0]) {
+	if not is_array(it) or empty(it) {
 		return false
+	}
+
+	if not isset(it[0]) {
+		return true
 	}
 
 	keys = array_keys(it)

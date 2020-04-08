@@ -361,7 +361,7 @@ class PHPCoder extends TeaCoder
 			$return_type = null;
 		}
 		else {
-			$return_type = $node->type->render($this);
+			$return_type = $this->render_type($node->type);
 		}
 
 		return $return_type
@@ -440,7 +440,7 @@ class PHPCoder extends TeaCoder
 		}
 
 		if ($node->type) {
-			$type = $node->type->render($this);
+			$type = $this->render_type($node->type);
 			if ($type) {
 				$expr = "{$type} {$expr}";
 			}
@@ -553,7 +553,7 @@ class PHPCoder extends TeaCoder
 		$code = "{$header}($parameters)";
 
 		if ($node->type !== null && $node->type !== TypeFactory::$_any && $node->type !== TypeFactory::$_void) {
-			$return_type = $node->type->render($this);
+			$return_type = $this->render_type($node->type);
 			$code .= ": $return_type";
 		}
 
@@ -1089,6 +1089,19 @@ class PHPCoder extends TeaCoder
 		}
 
 		return $name;
+	}
+
+	public function render_type(IType $node)
+	{
+		$code = $node->render($this);
+		if (!isset( $node->nullable)) {
+			dump($node);exit;
+		}
+		if ($code !== null && $node->nullable) {
+			$code = '?' . $code;
+		}
+
+		return $code;
 	}
 
 	public function render_type_identifier(BaseType $node)

@@ -1803,6 +1803,30 @@ class TeaParser extends BaseParser
 	// 	return $this->factory->create_classlike_identifier($ns, $name);
 	// }
 
+	protected function try_read_return_type_identifier()
+	{
+		$type = $this->try_read_type_identifier();
+		if ($type === null) {
+			return null;
+		}
+
+		// the collector feature, eg. IView >> Array
+		if ($this->skip_token_ignore_space(_COLLECT)) {
+			$target_type = $this->scan_token_ignore_space();
+			if ($target_type !== _ARRAY) {
+				throw $this->new_parse_error("The target type for collector should be 'Array'.");
+			}
+
+			if ($type === TypeFactory::$_string || $type === TypeFactory::$_any) {
+				throw $this->new_parse_error("The type to collect do not supported String or Any.");
+			}
+
+			$type = TypeFactory::create_collector_type($type);
+		}
+
+		return $type;
+	}
+
 	protected function try_read_simple_type_identifier()
 	{
 		$token = $this->get_token_ignore_space();
@@ -1848,6 +1872,15 @@ class TeaParser extends BaseParser
 		elseif ($next === _DOT) {
 			// the String.Array.Dict style compound type
 			$type = $this->read_dots_style_compound_type($type);
+		}
+
+		if ($this->skip_token(_INVALIDABLE_SIGN)) {
+			if ($type instanceof BaseType) {
+				$type = $type->get_nullable_instance();
+			}
+			else {
+				$type->nullable = true;
+			}
 		}
 
 		$type->pos = $this->pos;
@@ -1904,30 +1937,6 @@ class TeaParser extends BaseParser
 			}
 
 			$i++;
-		}
-
-		return $type;
-	}
-
-	protected function try_read_return_type_identifier()
-	{
-		$type = $this->try_read_type_identifier();
-		if ($type === null) {
-			return null;
-		}
-
-		// the collector feature, eg. IView >> Array
-		if ($this->skip_token_ignore_space(_COLLECT)) {
-			$target_type = $this->scan_token_ignore_space();
-			if ($target_type !== _ARRAY) {
-				throw $this->new_parse_error("The target type for collector should be 'Array'.");
-			}
-
-			if ($type === TypeFactory::$_string || $type === TypeFactory::$_any) {
-				throw $this->new_parse_error("The type to collect do not supported String or Any.");
-			}
-
-			$type = TypeFactory::create_collector_type($type);
 		}
 
 		return $type;

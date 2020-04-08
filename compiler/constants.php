@@ -28,6 +28,7 @@ const
 	_FIRST = 'first',
 
 	// builtin types
+	_INVALIDABLE_SIGN = '?',
 	_UNIONTYPE = 'UnionType',
 	_METATYPE = 'MetaType',
 	_VOID = 'Void', _NONE = 'None', _ANY = 'Any',
