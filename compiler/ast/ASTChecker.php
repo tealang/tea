@@ -1593,7 +1593,7 @@ class ASTChecker
 	{
 		$program = $this->unit->programs[$name] ?? null;
 		if (!$program) {
-			throw $this->new_syntax_error("'{$node->target}' not found.", $ref_node);
+			throw $this->new_syntax_error("'{$ref_node->target}' not found.", $ref_node);
 		}
 
 		$program->unit->get_checker()->check_program($program);

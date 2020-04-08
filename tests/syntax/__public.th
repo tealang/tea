@@ -15,8 +15,6 @@ public php_get_num() Int
 
 public fn0(str Any) String
 
-public xrange(start Int, stop Int, step UInt = 1) IGenerator
-
 public DemoList: BaseView {
 	ABC String = '12'
 
@@ -30,5 +28,7 @@ public DemoList: BaseView {
 
 	render() String
 }
+
+public xrange(start Int, stop Int, step UInt = 1) IGenerator
 
 // program end

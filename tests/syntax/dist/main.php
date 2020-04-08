@@ -49,7 +49,7 @@ var_dump($items);
 
 echo "\n***Test for include:", LF;
 $title = 'include from main1.tea';
-$result = (include UNIT_PATH . 'dist/label-expect.php');
+$result = (include UNIT_PATH . 'dist/expect.php');
 var_dump($result);
 
 echo "\n***Test for int/uint cast:", LF;
