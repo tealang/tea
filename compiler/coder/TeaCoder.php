@@ -949,13 +949,13 @@ class TeaCoder
 	{
 		if ($node->then === null) {
 			$code = sprintf('%s ?: %s',
-				$node->test->render($this),
+				$node->condition->render($this),
 				$node->else->render($this)
 			);
 		}
 		else {
 			$code = sprintf('%s ? %s : %s',
-				$node->test->render($this),
+				$node->condition->render($this),
 				$node->then->render($this),
 				$node->else->render($this)
 			);

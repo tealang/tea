@@ -4,6 +4,10 @@ const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 #public
 const LF = "\n";
 
+function is_uint($val): bool {
+	return is_int($val) && $val >= 0;
+}
+
 function uint_ensure(int $num): int {
 	if ($num < 0) {
 		throw new \ErrorException('Cannot use ' . $num . ' as a UInt value.');
@@ -12,8 +16,12 @@ function uint_ensure(int $num): int {
 	return $num;
 }
 
-function is_uint($val): bool {
-	return is_int($val) && $val >= 0;
+function is_strict_array($it): bool {
+	return is_array($it) && (isset($it[0]) && array_keys($it) === array_keys(array_keys($it)) || empty($it));
+}
+
+function is_strict_dict($it): bool {
+	return is_array($it) && (!isset($it[0]) || array_keys($it) !== array_keys(array_keys($it)));
 }
 
 function _iconv_strpos(string $str, string $search, int $offset = 0): int {
@@ -41,12 +49,12 @@ function _str_replace(string $master, string $search, string $replacement): stri
 }
 
 function _array_search(array $master, $search): int {
-	$index = array_search($search, $master);
+	$index = array_search($search, $master, true);
 	return $index === false ? -1 : $index;
 }
 
 function _dict_search(array $master, $search): string {
-	$key = array_search($search, $master);
+	$key = array_search($search, $master, true);
 	return $key === false ? null : $key;
 }
 

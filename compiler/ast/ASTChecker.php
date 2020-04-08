@@ -539,7 +539,7 @@ class ASTChecker
 					$this->assert_member_declarations($node->actual_members[$name], $member, true);
 
 					// replace to the default method implementation in interface
-					if ($member->body !== null) {
+					if ($member instanceof FunctionDeclaration && $member->body !== null) {
 						$node->actual_members[$name] = $member;
 					}
 				}
@@ -749,7 +749,7 @@ class ASTChecker
 	{
 		$testing_type = $this->infer_expression($node->test);
 		if (!TypeFactory::is_when_testable_type($testing_type)) {
-			throw $this->new_syntax_error("The testing expression for case-statement should be String/Int/UInt.", $node->test);
+			throw $this->new_syntax_error("The testing expression for when-statement should be String/Int/UInt.", $node->test);
 		}
 
 		$infered_types = [];
@@ -1213,7 +1213,7 @@ class ASTChecker
 
 		if ($left_type instanceof ArrayType) {
 			if ($right_type !== TypeFactory::$_uint) {
-				throw $this->new_syntax_error("Index type for Array should be 'UInt', '{$right_type->name}' supplied.", $node);
+				throw $this->new_syntax_error("Index type for Array should be UInt, '{$right_type->name}' supplied.", $node);
 			}
 
 			$infered_type = $left_type->value_type;
@@ -1236,13 +1236,13 @@ class ASTChecker
 		}
 		elseif ($left_type instanceof AnyType) {
 			// 仅允许将实际类型为Dict的用于这类情况
-			if ($right_type !== TypeFactory::$_string) {
-				throw $this->new_syntax_error("Key type for Dict should only be 'String', type '{$right_type->name}' applied.", $node);
+			if (!TypeFactory::is_dict_key_directly_supported_type($right_type)) {
+				throw $this->new_syntax_error("Key type for Dict should be String/Int/UInt, '{$right_type->name}' applied.", $node);
 			}
 		}
 		elseif ($left_type instanceof StringType) {
 			if ($right_type !== TypeFactory::$_uint && $right_type !== TypeFactory::$_int) {
-				throw $this->new_syntax_error("Index type for String should be 'Int/UInt', '{$right_type->name}' supplied.", $node);
+				throw $this->new_syntax_error("Index type for String should be Int/UInt, '{$right_type->name}' supplied.", $node);
 			}
 
 			$infered_type = TypeFactory::$_string;
@@ -1379,14 +1379,12 @@ class ASTChecker
 
 	private function infer_conditional_expression(ConditionalExpression $node): IType
 	{
-		$condition = $node->test;
-
 		// infer with type assert
-		if ($condition instanceof IsOperation) {
+		if ($node->condition instanceof IsOperation) {
 			return $this->infer_conditional_expression_with_assert($node);
 		}
 
-		$condition_type = $this->infer_expression($condition);
+		$condition_type = $this->infer_expression($node->condition);
 
 		if ($node->then === null) {
 			$then_type = $condition_type;
@@ -1402,7 +1400,7 @@ class ASTChecker
 
 	private function infer_conditional_expression_with_assert(ConditionalExpression $node): IType
 	{
-		$condition = $node->test;
+		$condition = $node->condition;
 		$condition_type = $this->infer_expression($condition);
 
 		$left_declaration = $condition->left->symbol->declaration;

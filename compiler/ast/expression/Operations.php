@@ -78,14 +78,14 @@ class ConditionalExpression extends MultiOperation
 {
 	const KIND = 'conditional_expression';
 
-	public $test;
+	public $condition;
 	public $then;
 	public $else;
 
-	public function __construct(IExpression $test, ?IExpression $then, IExpression $else)
+	public function __construct(IExpression $condition, ?IExpression $then, IExpression $else)
 	{
 		$this->operator = OperatorFactory::$_conditional;
-		$this->test = $test;
+		$this->condition = $condition;
 		$this->then = $then;
 		$this->else = $else;
 	}
