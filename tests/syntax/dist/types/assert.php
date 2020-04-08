@@ -1,14 +1,21 @@
 <?php
 namespace tea\tests\syntax;
 
-require_once dirname(__DIR__, 1) . '/__public.php';
+require_once dirname(__DIR__, 2) . '/__public.php';
 
 // ---------
+$list = ['a', 'b', 'c'];
+
 $dict = [
 	'a' => 1,
 	'b' => '1',
 	'c' => [1]
 ];
+
+echo "list is_strict_array: " . (is_strict_array($list) ? 'Yes' : 'No'), LF;
+echo "list is_strict_dict: " . (is_strict_dict($list) ? 'Yes' : 'No'), LF;
+echo "dict is_strict_array: " . (is_strict_array($dict) ? 'Yes' : 'No'), LF;
+echo "dict is_strict_dict: " . (is_strict_dict($dict) ? 'Yes' : 'No'), LF;
 
 echo "\nUse conditional expression:", LF;
 

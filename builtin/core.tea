@@ -61,11 +61,25 @@ public uint_ensure(num Int) {
 }
 
 public is_strict_array(it) Bool {
-	return is_array(it) and (isset(it[0]) and array_keys(it) === array_keys(array_keys(it)) or empty(it))
+	if not is_array(it) {
+		return false
+	}
+
+	if empty(it) {
+		return true
+	}
+
+	keys = array_keys(it)
+	return keys === array_keys(keys)
 }
 
 public is_strict_dict(it) Bool {
-	return is_array(it) and (not isset(it[0]) or array_keys(it) !== array_keys(array_keys(it)))
+	if not is_array(it) or isset(it[0]) {
+		return false
+	}
+
+	keys = array_keys(it)
+	return keys !== array_keys(keys)
 }
 
 // math

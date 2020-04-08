@@ -1,7 +1,7 @@
 <?php
 namespace tea\tests\syntax;
 
-require_once dirname(__DIR__, 1) . '/__public.php';
+require_once dirname(__DIR__, 2) . '/__public.php';
 
 // ---------
 $str_dict_list = [['a' => 'abc', 'b' => '123.1']];

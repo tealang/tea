@@ -54,13 +54,13 @@ const __AUTOLOADS = [
 	'tea\tests\syntax\Test5' => 'dist/class.php',
 	'tea\tests\syntax\Data' => 'dist/function.php',
 	'tea\tests\syntax\TeaDemoClass' => 'dist/main.php',
-	'tea\tests\syntax\CollectorDemo' => 'dist/type-collector.php',
-	'tea\tests\syntax\CollectorDemoFactory' => 'dist/type-collector.php',
-	'tea\tests\syntax\TestForMetaType0' => 'dist/type-metatype.php',
-	'tea\tests\syntax\TestForMetaType1' => 'dist/type-metatype.php',
-	'tea\tests\syntax\TestForMetaType2' => 'dist/type-metatype.php',
-	'tea\tests\syntax\Cell' => 'dist/type-xview.php',
-	'tea\tests\syntax\DemoList' => 'dist/type-xview.php'
+	'tea\tests\syntax\CollectorDemo' => 'dist/types/collector.php',
+	'tea\tests\syntax\CollectorDemoFactory' => 'dist/types/collector.php',
+	'tea\tests\syntax\TestForMetaType0' => 'dist/types/metatype.php',
+	'tea\tests\syntax\TestForMetaType1' => 'dist/types/metatype.php',
+	'tea\tests\syntax\TestForMetaType2' => 'dist/types/metatype.php',
+	'tea\tests\syntax\Cell' => 'dist/types/xview.php',
+	'tea\tests\syntax\DemoList' => 'dist/types/xview.php'
 ];
 
 spl_autoload_register(function ($class) {

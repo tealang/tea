@@ -1,7 +1,7 @@
 <?php
 namespace tea\tests\syntax;
 
-require_once dirname(__DIR__, 1) . '/__public.php';
+require_once dirname(__DIR__, 2) . '/__public.php';
 
 // ---------
 $num = 123;
