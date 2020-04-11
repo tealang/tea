@@ -605,7 +605,7 @@ class TeaCoder
 	{
 		$name = $node->name;
 		if ($node->ns) {
-			return $this->render_namespace_identifier($node->ns) . static::NS_SEPARATOR . $name;
+			return $this->render_ns_identifier($node->ns) . static::NS_SEPARATOR . $name;
 		}
 
 		return $name;
@@ -616,7 +616,7 @@ class TeaCoder
 	// 	return $this->render_classlike_identifier($node);
 	// }
 
-	public function render_namespace_identifier(NamespaceIdentifier $node)
+	public function render_ns_identifier(NSIdentifier $node)
 	{
 		return $node->uri;
 	}
@@ -987,7 +987,7 @@ class TeaCoder
 
 	public function render_use_statement(UseStatement $node)
 	{
-		$ns = $this->render_namespace_identifier($node->ns);
+		$ns = $this->render_ns_identifier($node->ns);
 
 		$code = "use $ns";
 

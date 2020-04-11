@@ -25,7 +25,7 @@ class UseDeclaration extends Node implements IMemberDeclaration
 
 	public $is_checked = false; // set true when checked by ASTChecker
 
-	public function __construct(NamespaceIdentifier $ns, string $target_name = null, string $source_name = null)
+	public function __construct(NSIdentifier $ns, string $target_name = null, string $source_name = null)
 	{
 		$this->ns = $ns;
 		$this->name = $target_name;

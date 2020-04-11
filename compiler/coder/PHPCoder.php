@@ -1140,12 +1140,12 @@ class PHPCoder extends TeaCoder
 		return $name;
 	}
 
-	public function render_namespace_identifier(NamespaceIdentifier $node)
+	public function render_ns_identifier(NSIdentifier $node)
 	{
 		return static::ns_to_string($node);
 	}
 
-	public static function ns_to_string(NamespaceIdentifier $identifier)
+	public static function ns_to_string(NSIdentifier $identifier)
 	{
 		// use root namespace for tea builtins
 		if ($identifier->uri === _BUILTIN_NS) {

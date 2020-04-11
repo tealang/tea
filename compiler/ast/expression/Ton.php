@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class Ton extends Node
+class Ton extends BaseExpression
 {
 	const KIND = 'ton';
 

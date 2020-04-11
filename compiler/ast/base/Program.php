@@ -45,7 +45,7 @@ class Program extends Node
 
 	/**
 	 * just used for PHP scripts
-	 * @var NamespaceIdentifier
+	 * @var NSIdentifier
 	 */
 	public $ns;
 

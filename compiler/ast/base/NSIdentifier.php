@@ -9,9 +9,9 @@
 
 namespace Tea;
 
-class NamespaceIdentifier extends Node
+class NSIdentifier extends Node
 {
-	const KIND = 'namespace_identifier';
+	const KIND = 'ns_identifier';
 
 	public $uri;
 

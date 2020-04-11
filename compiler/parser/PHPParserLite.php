@@ -32,7 +32,7 @@ class PHPParserLite extends BaseParser
 	];
 
 	/**
-	 * @var NamespaceIdentifier
+	 * @var NSIdentifier
 	 */
 	private $namespace;
 
@@ -635,7 +635,7 @@ class PHPParserLite extends BaseParser
 		$identifier = new ClassLikeIdentifier($name);
 
 		if ($names) {
-			$identifier->ns = new NamespaceIdentifier($names);
+			$identifier->ns = new NSIdentifier($names);
 		}
 
 		return $identifier;
@@ -677,7 +677,7 @@ class PHPParserLite extends BaseParser
 			}
 		}
 
-		return new NamespaceIdentifier($names);
+		return new NSIdentifier($names);
 	}
 
 	protected function expect_statement_end()

@@ -191,7 +191,7 @@ trait TeaSharpTrait
 			throw $this->new_parse_error("The '#unit' label could not be used at here.");
 		}
 
-		$namespace = $this->read_namespace_identifier();
+		$namespace = $this->read_ns_identifier();
 		$this->factory->set_namespace($namespace);
 
 		if ($this->skip_token_ignore_space(_BRACE_OPEN)) {
@@ -224,7 +224,7 @@ trait TeaSharpTrait
 		}
 	}
 
-	protected function read_namespace_identifier()
+	protected function read_ns_identifier()
 	{
 		$domain = $this->read_domain_name();
 
@@ -247,7 +247,7 @@ trait TeaSharpTrait
 			throw $this->new_parse_error(sprintf("It's too many namespace levels, the max levels is %d.", _MAX_NS_LEVELS));
 		}
 
-		return $this->factory->create_namespace_identifier($names);
+		return $this->factory->create_ns_identifier($names);
 	}
 
 	private function read_domain_name(): ?string
@@ -276,7 +276,7 @@ trait TeaSharpTrait
 			throw $this->new_parse_error("The '#use' statements can only be used in the __unit.th or __public.th files.");
 		}
 
-		$ns = $this->read_namespace_identifier();
+		$ns = $this->read_ns_identifier();
 
 		if ($this->skip_token_ignore_space(_BLOCK_BEGIN)) {
 			$targets = $this->read_use_targets($ns);
@@ -290,7 +290,7 @@ trait TeaSharpTrait
 		}
 	}
 
-	private function read_use_targets(NamespaceIdentifier $ns): array
+	private function read_use_targets(NSIdentifier $ns): array
 	{
 		$targets = [];
 		while ($token = $this->scan_token_ignore_empty()) {

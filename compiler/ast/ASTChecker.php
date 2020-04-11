@@ -1187,8 +1187,8 @@ class ASTChecker
 			case LambdaExpression::KIND:
 				$infered_type = $this->infer_lambda_expression($node);
 				break;
-			// case NamespaceIdentifier::KIND:
-			// 	$infered_type = $this->infer_namespace_identifier($node);
+			// case NSIdentifier::KIND:
+			// 	$infered_type = $this->infer_ns_identifier($node);
 			//	break;
 			case IncludeExpression::KIND:
 				$infered_type = $this->infer_include_expression($node);
@@ -2266,7 +2266,7 @@ class ASTChecker
 		return $symbol;
 	}
 
-	private function require_symbol_for_namespace(NamespaceIdentifier $ns, string $name)
+	private function require_symbol_for_namespace(NSIdentifier $ns, string $name)
 	{
 		$symbol = $this->require_unit($ns)->symbols[$name] ?? null;
 		if ($symbol === null) {
@@ -2298,7 +2298,7 @@ class ASTChecker
 		return $use->source_declaration;
 	}
 
-	private function require_unit(NamespaceIdentifier $ns): Unit
+	private function require_unit(NSIdentifier $ns): Unit
 	{
 		$ns_uri = $ns->uri;
 		$program = $this->unit->use_units[$ns_uri] ?? null;

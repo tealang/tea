@@ -73,7 +73,7 @@ class ASTFactory
 		$this->unit->as_main_unit = true;
 	}
 
-	public function set_namespace(NamespaceIdentifier $ns)
+	public function set_namespace(NSIdentifier $ns)
 	{
 		if ($this->unit->ns) {
 			throw $this->parser->new_parse_error("Cannot redeclare the unit namespace.");
@@ -87,7 +87,7 @@ class ASTFactory
 		$this->unit->{$key} = $value;
 	}
 
-	public function create_use_statement(NamespaceIdentifier $ns, array $targets = [])
+	public function create_use_statement(NSIdentifier $ns, array $targets = [])
 	{
 		// add to unit uses
 		$this->unit->use_units[$ns->uri] = $ns;
@@ -95,7 +95,7 @@ class ASTFactory
 		return $this->program->uses[] = new UseStatement($ns, $targets);
 	}
 
-	public function append_use_target(NamespaceIdentifier $ns, string $target_name, string $source_name = null)
+	public function append_use_target(NSIdentifier $ns, string $target_name, string $source_name = null)
 	{
 		$declaration = new UseDeclaration($ns, $target_name, $source_name);
 		$symbol = new Symbol($declaration);
@@ -113,9 +113,9 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_namespace_identifier(array $names)
+	public function create_ns_identifier(array $names)
 	{
-		return new NamespaceIdentifier($names);
+		return new NSIdentifier($names);
 	}
 
 	public function create_accessing_identifier(BaseExpression $master, string $name)

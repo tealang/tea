@@ -16,7 +16,7 @@ class UseStatement extends BaseStatement
 	public $ns;
 	public $targets;
 
-	public function __construct(NamespaceIdentifier $ns, array $targets = [])
+	public function __construct(NSIdentifier $ns, array $targets = [])
 	{
 		$this->ns = $ns;
 		$this->targets = $targets;

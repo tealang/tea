@@ -172,7 +172,7 @@ class Compiler
 
 		// prepare for render
 		$header_coder = new PHPPublicCoder();
-		$this->unit->dist_ns_uri = $header_coder->render_namespace_identifier($this->unit->ns);
+		$this->unit->dist_ns_uri = $header_coder->render_ns_identifier($this->unit->ns);
 		if ($this->unit->dist_ns_uri) {
 			// use to generate the autoloads classmap
 			$this->unit_dist_ns_prefix = $this->unit->dist_ns_uri . PHPCoder::NS_SEPARATOR;
@@ -242,7 +242,7 @@ class Compiler
 		$this->prepare_paths($this->unit->ns);
 	}
 
-	private function prepare_paths(NamespaceIdentifier $ns)
+	private function prepare_paths(NSIdentifier $ns)
 	{
 		$reversed_ns_names = array_reverse($ns->names);
 		$dir_names = [];
@@ -357,7 +357,7 @@ class Compiler
 		}
 	}
 
-	private function load_unit(NamespaceIdentifier $ns): Unit
+	private function load_unit(NSIdentifier $ns): Unit
 	{
 		$uri = $ns->uri;
 
@@ -386,7 +386,7 @@ class Compiler
 		return $unit;
 	}
 
-	private function find_unit_public_dir(NamespaceIdentifier $ns)
+	private function find_unit_public_dir(NSIdentifier $ns)
 	{
 		$dir_names = $ns->names;
 
@@ -615,7 +615,7 @@ class Compiler
 		return $parser->read_program();
 	}
 
-	private static function is_framework_internal_namespaces(NamespaceIdentifier $ns)
+	private static function is_framework_internal_namespaces(NSIdentifier $ns)
 	{
 		return in_array($ns->names[0], self::FRAMEWORK_INTERNAL_NAMESPACES, true);
 	}
