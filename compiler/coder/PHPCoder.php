@@ -355,7 +355,7 @@ class PHPCoder extends TeaCoder
 
 		$header = $this->generate_function_header($node);
 		$parameters = $this->render_function_parameters($node);
-		$body = $this->render_closure_block($node);
+		$body = $this->render_function_body($node);
 
 		if ($node->type === null || $node->type === TypeFactory::$_any || $node->type === TypeFactory::$_void) {
 			$return_type = null;
@@ -372,7 +372,7 @@ class PHPCoder extends TeaCoder
 	public function render_lambda_expression(BaseExpression $node)
 	{
 		$parameters = $this->render_parameters($node->parameters);
-		$body = $this->render_closure_block($node);
+		$body = $this->render_function_body($node);
 
 		if ($node->use_variables) {
 			$uses = $this->render_lambda_use_arguments($node->use_variables);
@@ -392,7 +392,7 @@ class PHPCoder extends TeaCoder
 		return join(', ', $items);
 	}
 
-	public function render_closure_block(IClosure $node)
+	public function render_function_body(IScopeBlock $node)
 	{
 		$body = $node->fixed_body ?? $node->body;
 
@@ -400,7 +400,7 @@ class PHPCoder extends TeaCoder
 
 		// if ($node->auto_declarations) {
 		// 	foreach ($node->auto_declarations as $declar) {
-		// 		if (!$declar->block instanceof IClosure) {
+		// 		if (!$declar->block instanceof IScopeBlock) {
 		// 			$items[] = static::VAR_DECLARE_PREFIX . "{$declar->name} = null;\n";
 		// 		}
 		// 	}
@@ -594,7 +594,7 @@ class PHPCoder extends TeaCoder
 			// that should be ElseIfBlock
 
 			$items = [];
-			$items[] = sprintf("if (%s) %s", $node->condition->render($this), $this->render_block($node, 'case-elseif'));
+			$items[] = sprintf("if (%s) %s", $node->condition->render($this), $this->render_control_structure_body($node, 'case-elseif'));
 
 			if ($node->else) {
 				$items[] = $node->else->render($this);
@@ -655,7 +655,7 @@ class PHPCoder extends TeaCoder
 		}
 
 		$value_var = $node->value_var->render($this);
-		$body = $this->render_block($node);
+		$body = $this->render_control_structure_body($node);
 
 		if ($node->key_var) {
 			$code = sprintf('foreach (%s as %s => %s) %s', $iterable, $node->key_var->render($this), $value_var, $body);
@@ -699,7 +699,7 @@ class PHPCoder extends TeaCoder
 		$var = $node->var->render($this);
 		$step = $node->step ?? 1;
 
-		$body = $this->render_block($node);
+		$body = $this->render_control_structure_body($node);
 
 		if ($node->is_downto_mode) {
 			$for_code = "for ($var = $start; $var >= $end; $var -= $step) $body";
@@ -728,7 +728,7 @@ class PHPCoder extends TeaCoder
 	public function render_while_block(WhileBlock $node)
 	{
 		$test = $node->condition->render($this);
-		$body = $this->render_block($node);
+		$body = $this->render_control_structure_body($node);
 
 		if ($node->do_the_first) {
 			$code = sprintf('do %s while (%s);', $body, $test);
@@ -746,7 +746,7 @@ class PHPCoder extends TeaCoder
 
 	public function render_loop_block(LoopBlock $node)
 	{
-		$body = $this->render_block($node);
+		$body = $this->render_control_structure_body($node);
 		$code = sprintf('while (true) %s', $body);
 
 		if ($node->except) {
@@ -759,7 +759,7 @@ class PHPCoder extends TeaCoder
 	public function render_try_block(TryBlock $node)
 	{
 		$items = [];
-		$code = $this->render_block($node);
+		$code = $this->render_control_structure_body($node);
 		$items[] = "try {$code}";
 		$items[] = $this->render_catch_block($node->except);
 

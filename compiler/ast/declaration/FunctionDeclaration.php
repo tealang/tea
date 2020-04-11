@@ -9,9 +9,9 @@
 
 namespace Tea;
 
-interface IClosure extends IBlock, ICallableDeclaration {}
+interface IScopeBlock extends IBlock, ICallableDeclaration {}
 
-trait IClosureTrait
+trait IScopeBlockTrait
 {
 	use DeclarationTrait, IBlockTrait, DeferChecksTrait;
 
@@ -31,9 +31,9 @@ trait IClosureTrait
 	}
 }
 
-class FunctionDeclaration extends Node implements IClosure, IClassMemberDeclaration, IRootDeclaration
+class FunctionDeclaration extends Node implements IScopeBlock, IClassMemberDeclaration, IRootDeclaration
 {
-	use IClassMemberDeclarationTrait, IClosureTrait;
+	use IClassMemberDeclarationTrait, IScopeBlockTrait;
 
 	const KIND = 'function_declaration';
 
@@ -58,10 +58,10 @@ class FunctionDeclaration extends Node implements IClosure, IClassMemberDeclarat
 		$this->parameters = $parameters;
 	}
 
-	function set_callbacks(CallbackProtocol ...$callbacks)
-	{
-		$this->callbacks = $callbacks;
-	}
+	// function set_callbacks(CallbackProtocol ...$callbacks)
+	// {
+	// 	$this->callbacks = $callbacks;
+	// }
 }
 
 // end

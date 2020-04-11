@@ -21,7 +21,7 @@ class ReturnBuilder
 
 	private $temp_var_idx = 0;
 
-	public function __construct(IClosure $node, IType $collect_type)
+	public function __construct(IScopeBlock $node, IType $collect_type)
 	{
 		$this->node = $node;
 		$this->collect_type = $collect_type;

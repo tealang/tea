@@ -499,7 +499,7 @@ class PHPParserLite extends BaseParser
 		$declaration = $this->factory->create_method_declaration($modifier ?? _PUBLIC, $name);
 
 		$parameters = $this->read_parameters();
-		$this->factory->set_closure_parameters($parameters);
+		$this->factory->set_scope_parameters($parameters);
 
 		$declaration->type = $this->try_read_function_return_type();
 
@@ -522,7 +522,7 @@ class PHPParserLite extends BaseParser
 		$parameters = $this->read_parameters();
 		$return_type = $this->try_read_function_return_type();
 
-		$this->factory->set_closure_parameters($parameters);
+		$this->factory->set_scope_parameters($parameters);
 		$declaration->type = $return_type;
 
 		$declaration->ns = $this->namespace;

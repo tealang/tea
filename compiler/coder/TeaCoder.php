@@ -219,23 +219,23 @@ class TeaCoder
 		return join(', ', $items);
 	}
 
-	protected function render_callback_protocols(array $nodes)
-	{
-		foreach ($nodes as $node) {
-			$items[] = $this->render_callback_protocol($node);
-		}
+	// protected function render_callback_protocols(array $nodes)
+	// {
+	// 	foreach ($nodes as $node) {
+	// 		$items[] = $this->render_callback_protocol($node);
+	// 	}
 
-		return ' -> ' . join(' -> ', $items);
-	}
+	// 	return ' -> ' . join(' -> ', $items);
+	// }
 
-	protected function render_callback_protocol(CallbackProtocol $node)
-	{
-		$async = $node->async ? 'async ' : '';
-		$parameters = $this->render_parameters($node->parameters);
-		$type = $this->generate_type($node);
+	// protected function render_callback_protocol(CallbackProtocol $node)
+	// {
+	// 	$async = $node->async ? 'async ' : '';
+	// 	$parameters = $this->render_parameters($node->parameters);
+	// 	$type = $this->generate_type($node);
 
-		return "{$async}{$node->name}($parameters){$type}";
-	}
+	// 	return "{$async}{$node->name}($parameters){$type}";
+	// }
 
 	public function render_expect_declaration(ExpectDeclaration $node)
 	{
@@ -277,7 +277,7 @@ class TeaCoder
 		$code = $this->render_function_protocol($node);
 
 		if ($node->body !== null) {
-			$body = $this->render_closure_block($node);
+			$body = $this->render_function_body($node);
 			$code = $code . ' ' . $body;
 		}
 
@@ -287,7 +287,7 @@ class TeaCoder
 	// public function render_function_block(FunctionBlock $node)
 	// {
 	// 	$declaration = $this->render_function_protocol($node);
-	// 	$body = $this->render_closure_block($node);
+	// 	$body = $this->render_function_body($node);
 
 	// 	return "{$declaration} $body";
 	// }
@@ -295,7 +295,7 @@ class TeaCoder
 	public function render_lambda_expression(BaseExpression $node)
 	{
 		$parameters = $this->render_parameters($node->parameters);
-		$body = $this->render_closure_block($node);
+		$body = $this->render_function_body($node);
 
 		return sprintf('(%s) => ', $parameters) . $body;
 	}
@@ -1012,7 +1012,7 @@ class TeaCoder
 	{
 		$iterable = $node->iterable->render($this);
 		$value_var = $node->value_var->render($this);
-		$body = $this->render_block($node);
+		$body = $this->render_control_structure_body($node);
 
 		if ($node->key_var) {
 			$key_var = $node->key_var->render($this);
@@ -1036,13 +1036,13 @@ class TeaCoder
 			$code .= "step {$node->step} ";
 		}
 
-		return $code . $this->render_block($node);
+		return $code . $this->render_control_structure_body($node);
 	}
 
 	public function render_while_block(WhileBlock $node)
 	{
 		$test = $node->condition->render($this);
-		$body = $this->render_block($node);
+		$body = $this->render_control_structure_body($node);
 
 		return $node->do_the_first
 			? "while is first $test $body"
@@ -1051,14 +1051,14 @@ class TeaCoder
 
 	public function render_loop_block(LoopBlock $node)
 	{
-		$body = $this->render_block($node);
+		$body = $this->render_control_structure_body($node);
 		return sprintf('loop %s', $body);
 	}
 
 	public function render_if_block(IfBlock $node)
 	{
 		$items = [];
-		$items[] = sprintf('if (%s) %s', $node->condition->render($this), $this->render_block($node, 'if'));
+		$items[] = sprintf('if (%s) %s', $node->condition->render($this), $this->render_control_structure_body($node, 'if'));
 
 		if ($node->else) {
 			$items[] = $node->else->render($this);
@@ -1086,7 +1086,7 @@ class TeaCoder
 	public function render_elseif_block(ElseIfBlock $node)
 	{
 		$items = [];
-		$items[] = sprintf("\nelseif (%s) %s", $node->condition->render($this), $this->render_block($node, 'elseif'));
+		$items[] = sprintf("\nelseif (%s) %s", $node->condition->render($this), $this->render_control_structure_body($node, 'elseif'));
 
 		if ($node->else) {
 			$items[] = $node->else->render($this);
@@ -1097,7 +1097,7 @@ class TeaCoder
 
 	public function render_else_block(ElseBlock $node)
 	{
-		return "\nelse " . $this->render_block($node, _ELSE);
+		return "\nelse " . $this->render_control_structure_body($node, _ELSE);
 	}
 
 	public function render_catch_block(CatchBlock $node)
@@ -1106,7 +1106,7 @@ class TeaCoder
 		$type = $node->var->type->render($this);
 
 		$items = [];
-		$items[] = "\ncatch ($type $var) " . $this->render_block($node, _CATCH);
+		$items[] = "\ncatch ($type $var) " . $this->render_control_structure_body($node, _CATCH);
 
 		if ($node->except) {
 			$items[] = $node->except->render($this);
@@ -1117,7 +1117,7 @@ class TeaCoder
 
 	public function render_finally_block(FinallyBlock $node)
 	{
-		return "\nfinally " . $this->render_block($node, _FINALLY);
+		return "\nfinally " . $this->render_control_structure_body($node, _FINALLY);
 	}
 
 	public function render_echo_statement(EchoStatement $node)
@@ -1207,7 +1207,7 @@ class TeaCoder
 		return $this->render_block_nodes($members);
 	}
 
-	public function render_closure_block(IClosure $node)
+	public function render_function_body(IScopeBlock $node)
 	{
 		if (is_array($node->body)) {
 			$code = $this->render_block_nodes($node->body);
@@ -1221,7 +1221,7 @@ class TeaCoder
 		return $code;
 	}
 
-	public function render_block(IBlock $node, string $label = null)
+	public function render_control_structure_body(IBlock $node, string $label = null)
 	{
 		$code = $this->render_block_nodes($node->body);
 		return $this->wrap_block_code($code, $label);

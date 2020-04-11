@@ -149,7 +149,7 @@ class HeaderParser extends TeaParser
 		$declaration->is_static = $static;
 
 		$parameters = $this->read_parameters_with_parentheses();
-		$this->factory->set_closure_parameters($parameters);
+		$this->factory->set_scope_parameters($parameters);
 
 		$declaration->type = $this->try_read_return_type_identifier();
 

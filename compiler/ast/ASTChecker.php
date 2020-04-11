@@ -260,19 +260,19 @@ class ASTChecker
 		}
 	}
 
-	private function check_callback_protocol(CallbackProtocol $node)
-	{
-		$node->is_checked = true;
+	// private function check_callback_protocol(CallbackProtocol $node)
+	// {
+	// 	$node->is_checked = true;
 
-		if ($node->type) {
-			$this->check_type($node->type);
-		}
-		else {
-			$node->type = TypeFactory::$_void;
-		}
+	// 	if ($node->type) {
+	// 		$this->check_type($node->type);
+	// 	}
+	// 	else {
+	// 		$node->type = TypeFactory::$_void;
+	// 	}
 
-		$this->check_parameters_for_callable_declaration($node);
-	}
+	// 	$this->check_parameters_for_callable_declaration($node);
+	// }
 
 	private function check_masked_declaration(MaskedDeclaration $node)
 	{
@@ -367,13 +367,13 @@ class ASTChecker
 		return TypeFactory::create_callable_type($node->type, $node->parameters);
 	}
 
-	private function check_function_body(IClosure $node)
+	private function check_function_body(IScopeBlock $node)
 	{
 		if (is_array($node->body)) {
 			$infered_type = $this->infer_block($node);
 		}
 		else {
-			$infered_type = $this->infer_single_expression_closure($node);
+			$infered_type = $this->infer_single_expression_block($node);
 		}
 
 		$declared_type = $node->type;
@@ -880,7 +880,7 @@ class ASTChecker
 		return $result_type;
 	}
 
-	private function infer_single_expression_closure(IClosure $block): ?IType
+	private function infer_single_expression_block(IBlock $block): ?IType
 	{
 		// maybe block to check not a sub-block, so need a temp
 		$temp_block = $this->block;
@@ -2062,8 +2062,8 @@ class ASTChecker
 				$this->infer_lambda_expression($node);
 				break;
 
-			case CallbackProtocol::KIND:
-				break;
+			// case CallbackProtocol::KIND:
+			// 	break;
 
 			default:
 				$kind = $node::KIND;
