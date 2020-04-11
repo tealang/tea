@@ -19,7 +19,7 @@ trait IClassMemberDeclarationTrait
 
 	public $super_block;
 
-	public function is_accessable(IExpression $expr) {
+	public function is_accessable(BaseExpression $expr) {
 		return ($this->modifier !== _PRIVATE && $this->modifier !== _INTERNAL)
 			|| $expr instanceof PlainIdentifier && $expr->symbol === $this->super_block->this_object_symbol;
 	}
@@ -31,7 +31,7 @@ class PropertyDeclaration extends BaseVariableDeclaration implements IClassMembe
 
 	const KIND = 'property_declaration';
 
-	public function __construct(?string $modifier, string $name, IType $type = null, IExpression $value = null)
+	public function __construct(?string $modifier, string $name, IType $type = null, BaseExpression $value = null)
 	{
 		$this->modifier = $modifier;
 		$this->name = $name;

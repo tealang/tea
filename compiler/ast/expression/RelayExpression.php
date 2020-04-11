@@ -16,7 +16,7 @@ class RelayExpression extends BaseExpression
 	public $argument;
 	public $callees;
 
-	public function __construct(IExpression $argument, IExpression ...$callees)
+	public function __construct(BaseExpression $argument, BaseExpression ...$callees)
 	{
 		$this->argument = $argument;
 		$this->callees = $callees;

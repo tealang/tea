@@ -123,7 +123,7 @@ trait TeaStringTrait
 		return new HTMLEscapeExpression($expression);
 	}
 
-	protected function try_read_dollar_interpolation(): ?IExpression
+	protected function try_read_dollar_interpolation(): ?BaseExpression
 	{
 		if ($this->get_token() === _BLOCK_BEGIN) {
 			$this->scan_token(); // skip {
@@ -176,7 +176,7 @@ trait TeaStringTrait
 		return $identifer;
 	}
 
-	protected static function collect_and_reset_temp(array &$items, string &$string, IExpression $expression)
+	protected static function collect_and_reset_temp(array &$items, string &$string, BaseExpression $expression)
 	{
 		if ($string !== '') {
 			$items[] = $string;

@@ -16,7 +16,7 @@ class KeyAccessing extends BaseExpression implements IAssignable
 	public $left;
 	public $right;
 
-	public function __construct(IExpression $left, IExpression $right)
+	public function __construct(BaseExpression $left, BaseExpression $right)
 	{
 		$this->left = $left;
 		$this->right = $right;

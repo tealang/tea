@@ -15,7 +15,7 @@ class NormalStatement extends BaseStatement
 
 	public $expression;
 
-	public function __construct(IExpression $expression)
+	public function __construct(BaseExpression $expression)
 	{
 		$this->expression = $expression;
 	}

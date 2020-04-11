@@ -20,7 +20,7 @@ class Assignment extends BaseStatement implements IAssignment
 	public $master;
 	public $value;
 
-	public function __construct(IAssignable $master, IExpression $value)
+	public function __construct(IAssignable $master, BaseExpression $value)
 	{
 		$this->master = $master;
 		$this->value = $value;
@@ -35,7 +35,7 @@ class CompoundAssignment extends BaseStatement implements IAssignment
 	public $master;
 	public $value;
 
-	public function __construct(string $operator, IAssignable $master, IExpression $value)
+	public function __construct(string $operator, IAssignable $master, BaseExpression $value)
 	{
 		$this->operator = $operator;
 		$this->master = $master;
@@ -51,7 +51,7 @@ class ArrayElementAssignment extends BaseStatement implements IAssignment
 	public $key;
 	public $value;
 
-	public function __construct(IExpression $master, ?IExpression $key, IExpression $value)
+	public function __construct(BaseExpression $master, ?BaseExpression $key, BaseExpression $value)
 	{
 		$this->master = $master;
 		$this->key = $key;

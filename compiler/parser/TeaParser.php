@@ -84,7 +84,7 @@ class TeaParser extends BaseParser
 			if ($this->is_next_assign_operator()) {
 				$node = $this->read_assignment($node);
 			}
-			elseif ($node instanceof IExpression) {
+			elseif ($node instanceof BaseExpression) {
 				// for normal expression
 				$node = new NormalStatement($node);
 			}
@@ -135,7 +135,7 @@ class TeaParser extends BaseParser
 			if ($this->is_next_assign_operator()) {
 				$node = $this->read_assignment($node);
 			}
-			elseif ($node instanceof IExpression) {
+			elseif ($node instanceof BaseExpression) {
 				if ($is_in_when_branch && in_array($this->get_token_ignore_space(), [_COLON, _COMMA])) {
 					return $node;
 				}
@@ -655,7 +655,7 @@ class TeaParser extends BaseParser
 			$next_rule_expr = null;
 			$statements = [];
 			while (($item = $this->read_normal_statement(null, null, true)) !== null) {
-				if ($item instanceof IExpression) {
+				if ($item instanceof BaseExpression) {
 					$next_rule_expr = $item;
 					break;
 				}
@@ -674,7 +674,7 @@ class TeaParser extends BaseParser
 		return $branches;
 	}
 
-	protected function read_expression_list_with(IExpression $expression)
+	protected function read_expression_list_with(BaseExpression $expression)
 	{
 		$list = [$expression];
 		while ($this->skip_token_ignore_space(_COMMA)) {
@@ -1143,7 +1143,7 @@ class TeaParser extends BaseParser
 		return new RegularExpression($pattern, $flags);
 	}
 
-	protected function read_conditional_expression_with(IExpression $test)
+	protected function read_conditional_expression_with(BaseExpression $test)
 	{
 		// 由于三元条件运算符优先级最低，故可直接读取，无需与子表达式比较优先级
 
@@ -1259,7 +1259,7 @@ class TeaParser extends BaseParser
 		return $expr;
 	}
 
-	protected function read_array_with_first_item(IExpression $item)
+	protected function read_array_with_first_item(BaseExpression $item)
 	{
 		$has_non_literal = false;
 		$items = [];
@@ -1279,7 +1279,7 @@ class TeaParser extends BaseParser
 		return $has_non_literal ? new ArrayExpression($items) : new ArrayLiteral($items);
 	}
 
-	protected function read_dict_with_first_item(IExpression $key)
+	protected function read_dict_with_first_item(BaseExpression $key)
 	{
 		$has_non_literal = false;
 		$items = [];
@@ -1340,7 +1340,7 @@ class TeaParser extends BaseParser
 		return $block;
 	}
 
-	protected function read_expression_combination(IExpression $expression, Operator $prev_operator = null)
+	protected function read_expression_combination(BaseExpression $expression, Operator $prev_operator = null)
 	{
 		$token = $this->get_token_ignore_empty();
 
@@ -1394,7 +1394,7 @@ class TeaParser extends BaseParser
 		return $this->try_read_operation($expression, $prev_operator);
 	}
 
-	protected function read_dot_expression(IExpression $master, Operator $prev_operator = null)
+	protected function read_dot_expression(BaseExpression $master, Operator $prev_operator = null)
 	{
 		// class / object member call
 
@@ -1409,7 +1409,7 @@ class TeaParser extends BaseParser
 		return $this->read_expression_combination($expression, $prev_operator);
 	}
 
-	protected function read_key_accessing(IExpression $master, Operator $prev_operator = null)
+	protected function read_key_accessing(BaseExpression $master, Operator $prev_operator = null)
 	{
 		// array key accessing
 
@@ -1427,7 +1427,7 @@ class TeaParser extends BaseParser
 		return $this->read_expression_combination($expression, $prev_operator);
 	}
 
-	protected function read_array_element_assignment(IExpression $master)
+	protected function read_array_element_assignment(BaseExpression $master)
 	{
 		$this->expect_token_ignore_empty(_ASSIGN);
 
@@ -1439,7 +1439,7 @@ class TeaParser extends BaseParser
 		return new ArrayElementAssignment($master, null, $value);
 	}
 
-	protected function read_call_expression(IExpression $handler, Operator $prev_operator = null)
+	protected function read_call_expression(BaseExpression $handler, Operator $prev_operator = null)
 	{
 		// new class, or function call, or function declaration
 
@@ -1526,7 +1526,7 @@ class TeaParser extends BaseParser
 		return $node;
 	}
 
-	protected function try_read_operation(IExpression $expression, Operator $prev_operator = null)
+	protected function try_read_operation(BaseExpression $expression, Operator $prev_operator = null)
 	{
 		$token = $this->get_token_ignore_empty();
 
@@ -1596,7 +1596,7 @@ class TeaParser extends BaseParser
 		return $this->try_read_operation($expression, $prev_operator);
 	}
 
-	protected function read_none_coalescing_with(IExpression $first, Operator $operator)
+	protected function read_none_coalescing_with(BaseExpression $first, Operator $operator)
 	{
 		$items = [$first];
 
@@ -2223,7 +2223,7 @@ class TeaParser extends BaseParser
 		return $parameter;
 	}
 
-	protected function create_parameter(string $name, IType $type = null, IExpression $value = null)
+	protected function create_parameter(string $name, IType $type = null, BaseExpression $value = null)
 	{
 		$parameter = new ParameterDeclaration($name, $type, $value, true);
 		$parameter->pos = $this->pos;

@@ -15,7 +15,7 @@ class ExpressionList extends BaseExpression
 
 	public $items;
 
-	public function __construct(IExpression ...$items)
+	public function __construct(BaseExpression ...$items)
 	{
 		$this->items = $items;
 	}

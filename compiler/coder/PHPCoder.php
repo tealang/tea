@@ -369,7 +369,7 @@ class PHPCoder extends TeaCoder
 			: "$header($parameters) $body";
 	}
 
-	public function render_lambda_expression(IExpression $node)
+	public function render_lambda_expression(BaseExpression $node)
 	{
 		$parameters = $this->render_parameters($node->parameters);
 		$body = $this->render_closure_block($node);
@@ -791,7 +791,7 @@ class PHPCoder extends TeaCoder
 	protected function render_xblock_elements(array $items)
 	{
 		foreach ($items as $k => $item) {
-			if ($item instanceof IExpression) {
+			if ($item instanceof BaseExpression) {
 				$expr = $this->render_subexpression($item, OperatorFactory::$_concat);
 				$items[$k] = $expr;
 			}
@@ -1173,7 +1173,7 @@ class PHPCoder extends TeaCoder
 		return null;
 	}
 
-	private function render_master_expression(IExpression $expr)
+	private function render_master_expression(BaseExpression $expr)
 	{
 		if ($expr instanceof CastOperation) {
 			$code = $this->render_cast_operation($expr, true);
@@ -1315,7 +1315,7 @@ class PHPCoder extends TeaCoder
 		return $this->new_string_placeholder($code);
 	}
 
-	protected function render_instring_expression(IExpression $expr)
+	protected function render_instring_expression(BaseExpression $expr)
 	{
 		$code = $expr->render($this);
 
@@ -1326,7 +1326,7 @@ class PHPCoder extends TeaCoder
 		return $code;
 	}
 
-	protected function render_dict_key(IExpression $expr)
+	protected function render_dict_key(BaseExpression $expr)
 	{
 		$key = $expr->render($this);
 		if (isset($expr->infered_type)) {
@@ -1340,7 +1340,7 @@ class PHPCoder extends TeaCoder
 		return $key;
 	}
 
-	protected function render_object_item(string $key, IExpression $value)
+	protected function render_object_item(string $key, BaseExpression $value)
 	{
 		$value = $value->render($this);
 		return "'$key' => $value";
@@ -1398,7 +1398,7 @@ class PHPCoder extends TeaCoder
 		return $code;
 	}
 
-	public function render_prefix_operation(IExpression $node)
+	public function render_prefix_operation(BaseExpression $node)
 	{
 		$expression = $node->expression->render($this);
 		if ($node->operator === OperatorFactory::$_bool_not) {
@@ -1449,7 +1449,7 @@ class PHPCoder extends TeaCoder
 		return $code;
 	}
 
-	protected function is_need_parentheses_for_operation_item(IExpression $expr, Operator $operator, bool $is_rightside = true)
+	protected function is_need_parentheses_for_operation_item(BaseExpression $expr, Operator $operator, bool $is_rightside = true)
 	{
 		if ($expr instanceof MultiOperation) {
 			$sub_operator = $expr->operator;
@@ -1472,7 +1472,7 @@ class PHPCoder extends TeaCoder
 		return false;
 	}
 
-	protected function render_subexpression(IExpression $expr, Operator $operator)
+	protected function render_subexpression(BaseExpression $expr, Operator $operator)
 	{
 		$code = $expr->render($this);
 		if ($expr instanceof MultiOperation && $expr->operator->dist_precedence >= $operator->dist_precedence) {

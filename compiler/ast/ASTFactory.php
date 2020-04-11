@@ -118,7 +118,7 @@ class ASTFactory
 		return new NamespaceIdentifier($names);
 	}
 
-	public function create_accessing_identifier(IExpression $master, string $name)
+	public function create_accessing_identifier(BaseExpression $master, string $name)
 	{
 		return new AccessingIdentifier($master, $name);
 	}
@@ -143,7 +143,7 @@ class ASTFactory
 		return $identifier;
 	}
 
-	private function create_builtin_identifier(string $token): IExpression
+	private function create_builtin_identifier(string $token): BaseExpression
 	{
 		if ($token === _THIS) {
 			$identifier = new PlainIdentifier($token);
@@ -199,7 +199,7 @@ class ASTFactory
 		return $expression;
 	}
 
-	public function create_yield_expression(IExpression $argument)
+	public function create_yield_expression(BaseExpression $argument)
 	{
 		// force set type IGenerator to current function
 		$this->function->type = TypeFactory::$_igenerator;
@@ -236,7 +236,7 @@ class ASTFactory
 		}
 	}
 
-	public function create_assignment(IAssignable $assignable, IExpression $value, string $operator = null)
+	public function create_assignment(IAssignable $assignable, BaseExpression $value, string $operator = null)
 	{
 		if ($assignable instanceof PlainIdentifier) {
 			if ($assignable->symbol) {
@@ -264,7 +264,7 @@ class ASTFactory
 		return $assignment;
 	}
 
-	private function auto_declare_for_assigning_identifier(IExpression $identifier)
+	private function auto_declare_for_assigning_identifier(BaseExpression $identifier)
 	{
 		if (!TeaHelper::is_declarable_variable_name($identifier->name)) {
 			throw $this->parser->new_parse_error("Identifier '$identifier->name' not a valid variable name.");
@@ -468,7 +468,7 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_variable_declaration(string $name, IType $type = null, IExpression $value = null)
+	public function create_variable_declaration(string $name, IType $type = null, BaseExpression $value = null)
 	{
 		$declaration = new VariableDeclaration($name, $type, $value);
 		$this->create_local_symbol($declaration);
@@ -487,14 +487,14 @@ class ASTFactory
 		return $block;
 	}
 
-	public function create_if_block(IExpression $test)
+	public function create_if_block(BaseExpression $test)
 	{
 		$block = new IfBlock($test);
 		$this->begin_block($block);
 		return $block;
 	}
 
-	public function create_elseif_block(IExpression $test)
+	public function create_elseif_block(BaseExpression $test)
 	{
 		$block = new ElseIfBlock($test);
 		$this->begin_block($block);
@@ -533,14 +533,14 @@ class ASTFactory
 		return $block;
 	}
 
-	public function create_when_block(IExpression $argument)
+	public function create_when_block(BaseExpression $argument)
 	{
 		$block = new WhenBlock($argument);
 		$this->begin_block($block);
 		return $block;
 	}
 
-	public function create_when_branch_block(IExpression $rule)
+	public function create_when_branch_block(BaseExpression $rule)
 	{
 		$block = new WhenBranch($rule);
 		$this->begin_block($block);
@@ -583,7 +583,7 @@ class ASTFactory
 		return $layer;
 	}
 
-	public function create_forin_block(IExpression $iterable, ?VariableIdentifier $key_var, VariableIdentifier $value_var)
+	public function create_forin_block(BaseExpression $iterable, ?VariableIdentifier $key_var, VariableIdentifier $value_var)
 	{
 		$block = new ForInBlock($iterable, $key_var, $value_var);
 		$this->begin_block($block);
@@ -599,7 +599,7 @@ class ASTFactory
 		return $block;
 	}
 
-	public function create_forto_block(VariableIdentifier $value_var, IExpression $start, IExpression $end, ?int $step)
+	public function create_forto_block(VariableIdentifier $value_var, BaseExpression $start, BaseExpression $end, ?int $step)
 	{
 		$block = new ForToBlock($value_var, $start, $end, $step);
 		$this->begin_block($block);

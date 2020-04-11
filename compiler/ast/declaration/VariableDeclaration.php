@@ -22,7 +22,7 @@ abstract class BaseVariableDeclaration extends Node
 	// just for Array / Dict
 	public $is_value_mutable = true;
 
-	public function __construct(string $name, IType $type = null, IExpression $value = null)
+	public function __construct(string $name, IType $type = null, BaseExpression $value = null)
 	{
 		$this->name = $name;
 		$this->type = $type;

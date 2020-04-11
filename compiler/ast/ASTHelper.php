@@ -33,7 +33,7 @@ class ASTHelper
 		return $identifier;
 	}
 
-	static function is_reassignable_expression(IExpression $expr)
+	static function is_reassignable_expression(BaseExpression $expr)
 	{
 		if ($expr instanceof Identifiable && $expr->is_reassignable()) {
 			return true;
@@ -46,7 +46,7 @@ class ASTHelper
 		return false;
 	}
 
-	static function is_value_mutable(IExpression $expr)
+	static function is_value_mutable(BaseExpression $expr)
 	{
 		if ($expr instanceof Identifiable && $expr->is_value_mutable()) {
 			return true;

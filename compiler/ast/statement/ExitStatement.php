@@ -15,7 +15,7 @@ class ExitStatement extends PostConditionAbleStatement
 
 	public $argument;
 
-	public function __construct(IExpression $argument = null)
+	public function __construct(BaseExpression $argument = null)
 	{
 		$this->argument = $argument;
 	}

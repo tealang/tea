@@ -292,7 +292,7 @@ class TeaCoder
 	// 	return "{$declaration} $body";
 	// }
 
-	public function render_lambda_expression(IExpression $node)
+	public function render_lambda_expression(BaseExpression $node)
 	{
 		$parameters = $this->render_parameters($node->parameters);
 		$body = $this->render_closure_block($node);
@@ -452,7 +452,7 @@ class TeaCoder
 	{
 		$code = '';
 		foreach ($items as $item) {
-			if ($item instanceof IExpression) {
+			if ($item instanceof BaseExpression) {
 				$item = $item->render($this);
 				$code .= '${' . $item . '}';
 			}
@@ -627,7 +627,7 @@ class TeaCoder
 		return sprintf('%s%s%s', $master, static::OBJECT_MEMBER_OPERATOR, $node->name);
 	}
 
-	public function render_class_new(IExpression $node)
+	public function render_class_new(BaseExpression $node)
 	{
 		$class = $node->class->render($this);
 
@@ -830,7 +830,7 @@ class TeaCoder
 		return $this->wrap_dict($body);
 	}
 
-	protected function render_dict_key(IExpression $expr)
+	protected function render_dict_key(BaseExpression $expr)
 	{
 		return $expr->render($this);
 	}
@@ -858,7 +858,7 @@ class TeaCoder
 		return '{' . $body . '}';
 	}
 
-	public function render_object_expression(IExpression $node)
+	public function render_object_expression(BaseExpression $node)
 	{
 		$items = [];
 		foreach ($subnodes as $key => $value) {
@@ -870,7 +870,7 @@ class TeaCoder
 		return $this->wrap_object($body);
 	}
 
-	protected function render_object_item(string $key, IExpression $value)
+	protected function render_object_item(string $key, BaseExpression $value)
 	{
 		$value = $value->render($this);
 		return "$key: $value";
@@ -914,13 +914,13 @@ class TeaCoder
 	// 	return _REFERENCE . $expression;
 	// }
 
-	public function render_prefix_operation(IExpression $node)
+	public function render_prefix_operation(BaseExpression $node)
 	{
 		$expression = $node->expression->render($this);
 		return $node->operator->sign . $expression;
 	}
 
-	// public function render_postfix_operation(IExpression $node)
+	// public function render_postfix_operation(BaseExpression $node)
 	// {
 	// 	$expression = $node->expression->render($this);
 	// 	return $expression . $node->operator;

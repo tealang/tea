@@ -21,7 +21,7 @@ class WhileBlock extends ControlBlock implements IExceptAble, ILoopLikeBlock, IC
 
 	public $do_the_first;
 
-	public function __construct(IExpression $condition)
+	public function __construct(BaseExpression $condition)
 	{
 		$this->condition = $condition instanceof Parentheses ? $condition->expression : $condition;
 	}

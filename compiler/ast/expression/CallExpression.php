@@ -16,7 +16,7 @@ class CallExpression extends BaseExpression
 	const KIND = 'call_expression';
 
 	public $callee;
-	public $arguments; // array of IExpression
+	public $arguments; // array of BaseExpression
 	public $callbacks = []; // callback arguments
 
 	public $normalized_arguments; // for render to target lang

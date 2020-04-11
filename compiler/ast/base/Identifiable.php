@@ -51,7 +51,7 @@ class AccessingIdentifier extends Identifiable
 
 	public $master;
 
-	public function __construct(IExpression $master, string $name)
+	public function __construct(BaseExpression $master, string $name)
 	{
 		$master->is_call_mode = true;
 

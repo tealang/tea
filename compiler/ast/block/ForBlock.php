@@ -19,7 +19,7 @@ class ForInBlock extends ControlBlock implements IElseAble, IExceptAble, ILoopLi
 	public $key_var;
 	public $value_var;
 
-	public function __construct(IExpression $iterable, ?VariableIdentifier $key_var, VariableIdentifier $value_var)
+	public function __construct(BaseExpression $iterable, ?VariableIdentifier $key_var, VariableIdentifier $value_var)
 	{
 		$this->iterable = $iterable;
 		$this->key_var = $key_var;
@@ -40,7 +40,7 @@ class ForToBlock extends ControlBlock implements IElseAble, IExceptAble, ILoopLi
 
 	public $is_downto_mode;
 
-	public function __construct(VariableIdentifier $var, IExpression $start, IExpression $end, ?int $step)
+	public function __construct(VariableIdentifier $var, BaseExpression $start, BaseExpression $end, ?int $step)
 	{
 		$this->var = $var;
 		$this->start = $start;

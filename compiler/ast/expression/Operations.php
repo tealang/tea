@@ -25,7 +25,7 @@ class BinaryOperation extends MultiOperation
 	public $left;
 	public $right;
 
-	public function __construct(Operator $operator, IExpression $left, IExpression $right) {
+	public function __construct(Operator $operator, BaseExpression $left, BaseExpression $right) {
 		$this->operator = $operator;
 		$this->left = $left;
 		$this->right = $right;
@@ -36,7 +36,7 @@ class CastOperation extends BinaryOperation
 {
 	const KIND = 'cast_operation';
 
-	public function __construct(IExpression $left, IType $right)
+	public function __construct(BaseExpression $left, IType $right)
 	{
 		$this->operator = OperatorFactory::$_cast;
 		$this->left = $left;
@@ -50,7 +50,7 @@ class IsOperation extends BinaryOperation
 
 	public $is_not;
 
-	public function __construct(IExpression $left, IType $right, bool $is_not = false)
+	public function __construct(BaseExpression $left, IType $right, bool $is_not = false)
 	{
 		$this->operator = OperatorFactory::$_is;
 		$this->left = $left;
@@ -64,11 +64,11 @@ class NoneCoalescingOperation extends MultiOperation
 	const KIND = 'none_coalescing_operation';
 
 	/**
-	 * @var IExpression[]
+	 * @var BaseExpression[]
 	 */
 	public $items;
 
-	public function __construct(IExpression ...$items) {
+	public function __construct(BaseExpression ...$items) {
 		$this->operator = OperatorFactory::$_none_coalescing;
 		$this->items = $items;
 	}
@@ -82,7 +82,7 @@ class ConditionalExpression extends MultiOperation
 	public $then;
 	public $else;
 
-	public function __construct(IExpression $condition, ?IExpression $then, IExpression $else)
+	public function __construct(BaseExpression $condition, ?BaseExpression $then, BaseExpression $else)
 	{
 		$this->operator = OperatorFactory::$_conditional;
 		$this->condition = $condition;
@@ -97,7 +97,7 @@ class PrefixOperation extends UnaryOperation
 
 	public $expression;
 
-	public function __construct(Operator $operator, IExpression $expression) {
+	public function __construct(Operator $operator, BaseExpression $expression) {
 		$this->operator = $operator;
 		$this->expression = $expression;
 	}
@@ -120,7 +120,7 @@ class PrefixOperation extends UnaryOperation
 
 // 	public $expression;
 
-// 	public function __construct(Operator $operator, IExpression $expression)
+// 	public function __construct(Operator $operator, BaseExpression $expression)
 // 	{
 // 		$this->operator = $operator;
 // 		$this->expression = $expression;
@@ -133,7 +133,7 @@ class PrefixOperation extends UnaryOperation
 
 // 	public $items;
 
-// 	public function __construct(Operator $operator, IExpression ...$items)
+// 	public function __construct(Operator $operator, BaseExpression ...$items)
 // 	{
 // 		$this->operator = $operator;
 // 		$this->items = $items;

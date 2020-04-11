@@ -25,7 +25,7 @@ trait IClosureTrait
 
 	public $is_checking; // set true when on checking by ASTChecker
 
-	function set_body_with_expression(IExpression $expression)
+	function set_body_with_expression(BaseExpression $expression)
 	{
 		$this->body = $expression;
 	}

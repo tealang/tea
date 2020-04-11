@@ -207,7 +207,7 @@ class ReturnBuilder
 		return null;
 	}
 
-	private function create_local_variable(IExpression $value)
+	private function create_local_variable(BaseExpression $value)
 	{
 		$name = '__tmp' . $this->temp_var_idx++;
 		return new VariableDeclaration($name, null, $value);

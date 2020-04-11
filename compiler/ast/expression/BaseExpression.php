@@ -9,9 +9,7 @@
 
 namespace Tea;
 
-interface IExpression {}
-
-abstract class BaseExpression extends Node implements IExpression
+abstract class BaseExpression extends Node
 {
 	public $is_pure;
 }

@@ -17,7 +17,7 @@ class EchoStatement extends BaseStatement
 
 	public $end_newline = true;
 
-	public function __construct(IExpression ...$arguments)
+	public function __construct(BaseExpression ...$arguments)
 	{
 		$this->arguments = $arguments;
 	}

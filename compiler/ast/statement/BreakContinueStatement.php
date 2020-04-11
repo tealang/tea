@@ -15,7 +15,7 @@ interface IContinueAble {}
 abstract class PostConditionAbleStatement extends BaseStatement
 {
 	/**
-	 * @IExpression
+	 * @BaseExpression
 	 */
 	public $condition;
 }

@@ -15,7 +15,7 @@ class HTMLEscapeExpression extends BaseExpression
 
 	public $expression;
 
-	public function __construct(IExpression $expression)
+	public function __construct(BaseExpression $expression)
 	{
 		if ($expression instanceof Parentheses) {
 			$expression = $expression->expression;

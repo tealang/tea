@@ -201,7 +201,7 @@ class ASTChecker
 		}
 	}
 
-	private function check_is_constant_expression(IExpression $node): bool
+	private function check_is_constant_expression(BaseExpression $node): bool
 	{
 		if ($node instanceof ILiteral || $node instanceof ConstantIdentifier) {
 			$is_constant = true;
@@ -985,7 +985,7 @@ class ASTChecker
 		return null;
 	}
 
-	private function expect_infered_type(IExpression $node, IType ...$types)
+	private function expect_infered_type(BaseExpression $node, IType ...$types)
 	{
 		$infered_type = $this->infer_expression($node);
 		if (!in_array($infered_type, $types, true)) {
@@ -1093,7 +1093,7 @@ class ASTChecker
 		}
 	}
 
-	private function infer_expression(IExpression $node): ?IType
+	private function infer_expression(BaseExpression $node): ?IType
 	{
 		switch ($node::KIND) {
 			case PlainIdentifier::KIND:
@@ -1926,7 +1926,7 @@ class ASTChecker
 
 	private function check_xblock_element(XBlockElement $node)
 	{
-		if ($node->name instanceof IExpression) {
+		if ($node->name instanceof BaseExpression) {
 			$this->infer_expression($node->name);
 		}
 
@@ -2214,7 +2214,7 @@ class ASTChecker
 	// }
 
 	// includes builtin types, and classes, and namespace
-	private function require_object_declaration(IExpression $node): ClassLikeDeclaration
+	private function require_object_declaration(BaseExpression $node): ClassLikeDeclaration
 	{
 		$infered_type = $this->infer_expression($node);
 		if (!$infered_type instanceof IType) {

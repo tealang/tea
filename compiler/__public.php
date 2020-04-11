@@ -221,7 +221,6 @@ const __AUTOLOADS = [
 	'Tea\ArrayExpression' => 'ast/expression/ArrayDictExpression.php',
 	'Tea\DictExpression' => 'ast/expression/ArrayDictExpression.php',
 	'Tea\DictItem' => 'ast/expression/ArrayDictExpression.php',
-	'Tea\IExpression' => 'ast/expression/BaseExpression.php',
 	'Tea\BaseExpression' => 'ast/expression/BaseExpression.php',
 	'Tea\ICallee' => 'ast/expression/CallExpression.php',
 	'Tea\CallExpression' => 'ast/expression/CallExpression.php',

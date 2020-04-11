@@ -19,7 +19,7 @@ class WhenBlock extends ControlBlock implements IElseAble, IExceptAble, ILoopLik
 	public $branches;
 	public $is_senior_mode;
 
-	public function __construct(IExpression $test)
+	public function __construct(BaseExpression $test)
 	{
 		$this->test = $test instanceof Parentheses ? $test->expression : $test;
 	}
@@ -36,7 +36,7 @@ class WhenBranch extends ControlBlock
 
 	public $rule;
 
-	public function __construct(IExpression $rule)
+	public function __construct(BaseExpression $rule)
 	{
 		$this->rule = $rule;
 	}

@@ -56,7 +56,7 @@ class DictItem extends Node
 	public $key;
 	public $value;
 
-	public function __construct(IExpression $key, IExpression $value)
+	public function __construct(BaseExpression $key, BaseExpression $value)
 	{
 		$this->key = $key;
 		$this->value = $value;

@@ -28,7 +28,7 @@ abstract class BaseIfBlock extends ControlBlock implements IElseAble, IExceptAbl
 
 	public $condition;
 
-	public function __construct(IExpression $condition)
+	public function __construct(BaseExpression $condition)
 	{
 		$this->condition = $condition instanceof Parentheses ? $condition->expression : $condition;
 	}

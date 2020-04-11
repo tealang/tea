@@ -13,7 +13,7 @@ interface IBlock {}
 
 trait IBlockTrait {
 	/**
-	 * @var IStatement[] or IExpression
+	 * @var IStatement[] or BaseExpression
 	 */
 	public $body;
 

@@ -15,7 +15,7 @@ class YieldExpression extends BaseExpression
 
 	public $argument;
 
-	public function __construct(IExpression $argument)
+	public function __construct(BaseExpression $argument)
 	{
 		$this->argument = $argument;
 	}
