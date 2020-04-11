@@ -9,9 +9,9 @@
 
 namespace Tea;
 
-class ExpectDeclaration extends RootDeclaration
+class ExpectDeclaration extends Node implements IRootDeclaration, IStatement
 {
-	use DeferChecksTrait;
+	use DeclarationTrait, DeferChecksTrait;
 
 	const KIND = 'expect_declaration';
 

@@ -208,7 +208,7 @@ class TeaParser extends BaseParser
 		$declaration->pos = $this->pos;
 
 		$parameters = $this->read_parameters_with_parentheses();
-		$this->factory->set_enclosing_parameters($parameters);
+		$this->factory->set_closure_parameters($parameters);
 
 		$declaration->type = $this->try_read_return_type_identifier();
 
@@ -221,13 +221,13 @@ class TeaParser extends BaseParser
 		return $declaration;
 	}
 
-	protected function read_block_body(BaseBlock $block)
+	protected function read_block_body(IBlock $block)
 	{
 		$this->read_body_statements($block);
 		$this->factory->end_block();
 	}
 
-	protected function read_body_statements(BaseBlock $block)
+	protected function read_body_statements(IBlock $block)
 	{
 		$this->expect_block_begin_inline();
 
@@ -349,7 +349,7 @@ class TeaParser extends BaseParser
 
 		if ($this->get_token() === _PAREN_OPEN) {
 			$parameters = $this->read_parameters_with_parentheses();
-			$this->factory->set_enclosing_parameters($parameters);
+			$this->factory->set_closure_parameters($parameters);
 		}
 
 		$declaration->type = $this->try_read_return_type_identifier();
@@ -2081,7 +2081,7 @@ class TeaParser extends BaseParser
 		$declaration->is_static = $static;
 
 		$parameters = $this->read_parameters_with_parentheses();
-		$this->factory->set_enclosing_parameters($parameters);
+		$this->factory->set_closure_parameters($parameters);
 
 		$declaration->type = $this->try_read_return_type_identifier();
 

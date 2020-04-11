@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class EscapedStringInterpolation extends Node implements IExpression
+class EscapedStringInterpolation extends BaseExpression
 {
 	const KIND = 'escaped_string_interpolation';
 

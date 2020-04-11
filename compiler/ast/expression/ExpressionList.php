@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class ExpressionList extends Node implements IExpression
+class ExpressionList extends BaseExpression
 {
 	const KIND = 'expression_list';
 

@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class HTMLEscapeExpression extends Node implements IExpression
+class HTMLEscapeExpression extends BaseExpression
 {
 	const KIND = 'html_escape_expression';
 

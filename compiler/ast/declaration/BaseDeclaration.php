@@ -44,7 +44,7 @@ trait DeclarationTrait {
 	public $is_unit_level = false;
 }
 
-class RootDeclaration extends Node implements IRootDeclaration, IStatement
-{
-	use DeclarationTrait;
-}
+// class RootDeclaration extends Node implements IRootDeclaration, IStatement
+// {
+// 	use DeclarationTrait;
+// }

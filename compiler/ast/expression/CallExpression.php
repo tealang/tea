@@ -11,7 +11,7 @@ namespace Tea;
 
 interface ICallee {}
 
-class CallExpression extends Node implements IExpression
+class CallExpression extends BaseExpression
 {
 	const KIND = 'call_expression';
 
@@ -48,5 +48,19 @@ class CallExpression extends Node implements IExpression
 		}
 
 		return false;
+	}
+}
+
+class CallbackArgument extends Node
+{
+	const KIND = 'callback_argument';
+
+	public $name;
+	public $value;
+
+	public function __construct(?string $name, ICallee $value)
+	{
+		$this->name = $name;
+		$this->value = $value;
 	}
 }

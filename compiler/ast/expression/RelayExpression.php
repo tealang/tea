@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class RelayExpression extends Node implements IExpression
+class RelayExpression extends BaseExpression
 {
 	const KIND = 'relay_expression';
 

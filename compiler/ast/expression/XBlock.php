@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class XBlock extends Node implements IExpression
+class XBlock extends BaseExpression
 {
 	const KIND = 'xblock';
 

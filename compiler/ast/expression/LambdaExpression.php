@@ -9,9 +9,9 @@
 
 namespace Tea;
 
-class LambdaExpression extends BaseBlock implements IEnclosingBlock, ICallableDeclaration, ICallee, IExpression
+class LambdaExpression extends BaseExpression implements IClosure, ICallee
 {
-	use FunctionLikeTrait;
+	use IClosureTrait;
 
 	const KIND = 'lambda_expression';
 

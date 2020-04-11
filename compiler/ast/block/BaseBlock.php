@@ -9,10 +9,9 @@
 
 namespace Tea;
 
-class BaseBlock extends Node implements IStatement
-{
-	public $docs;
+interface IBlock {}
 
+trait IBlockTrait {
 	/**
 	 * @var IStatement[] or IExpression
 	 */
@@ -26,4 +25,8 @@ class BaseBlock extends Node implements IStatement
 	{
 		$this->body = $statements;
 	}
+}
+
+class ControlBlock extends BaseStatement implements IBlock {
+	use IBlockTrait;
 }

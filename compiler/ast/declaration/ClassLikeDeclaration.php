@@ -9,9 +9,9 @@
 
 namespace Tea;
 
-class ClassLikeDeclaration extends RootDeclaration implements IMemberDeclaration
+abstract class ClassLikeDeclaration extends Node implements IRootDeclaration, IStatement
 {
-	use DeferChecksTrait;
+	use DeclarationTrait, DeferChecksTrait;
 
 	public $modifier;
 

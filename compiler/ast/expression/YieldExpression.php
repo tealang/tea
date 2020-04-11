@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class YieldExpression extends Node implements IExpression
+class YieldExpression extends BaseExpression
 {
 	const KIND = 'yield_expression';
 

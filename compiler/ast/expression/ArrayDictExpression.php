@@ -9,8 +9,10 @@
 
 namespace Tea;
 
-abstract class ArrayLikeExpression extends Node implements IExpression
+class ArrayExpression extends BaseExpression
 {
+	const KIND = 'array_expression';
+
 	/**
 	 * @var array of IExpession
 	 */
@@ -27,12 +29,7 @@ abstract class ArrayLikeExpression extends Node implements IExpression
 	}
 }
 
-class ArrayExpression extends ArrayLikeExpression
-{
-	const KIND = 'array_expression';
-}
-
-class DictExpression extends ArrayLikeExpression
+class DictExpression extends BaseExpression
 {
 	const KIND = 'dict_expression';
 
@@ -40,6 +37,16 @@ class DictExpression extends ArrayLikeExpression
 	 * @var array of DictItem
 	 */
 	public $items;
+
+	/**
+	 * @var bool
+	 */
+	public $is_vertical_layout = false; // for render target code
+
+	public function __construct(array $items = [])
+	{
+		$this->items = $items;
+	}
 }
 
 class DictItem extends Node

@@ -9,12 +9,11 @@
 
 namespace Tea;
 
-interface IEnclosingBlock {}
-// interface IFunctionDeclaration extends ICallableDeclaration, IRootDeclaration, IClassMemberDeclaration {}
+interface IClosure extends IBlock, ICallableDeclaration {}
 
-trait FunctionLikeTrait
+trait IClosureTrait
 {
-	use DeclarationTrait, DeferChecksTrait;
+	use DeclarationTrait, IBlockTrait, DeferChecksTrait;
 
 	// public $is_static = false;
 
@@ -32,9 +31,9 @@ trait FunctionLikeTrait
 	}
 }
 
-class FunctionDeclaration extends BaseBlock implements IEnclosingBlock, ICallableDeclaration, IClassMemberDeclaration, IRootDeclaration
+class FunctionDeclaration extends Node implements IClosure, IClassMemberDeclaration, IRootDeclaration
 {
-	use IClassMemberDeclarationTrait, FunctionLikeTrait;
+	use IClassMemberDeclarationTrait, IClosureTrait;
 
 	const KIND = 'function_declaration';
 

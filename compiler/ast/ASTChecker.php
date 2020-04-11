@@ -25,7 +25,7 @@ class ASTChecker
 
 	/**
 	 * current block
-	 * @var BaseBlock
+	 * @var IBlock
 	 */
 	private $block;
 
@@ -367,13 +367,13 @@ class ASTChecker
 		return TypeFactory::create_callable_type($node->type, $node->parameters);
 	}
 
-	private function check_function_body(IEnclosingBlock $node)
+	private function check_function_body(IClosure $node)
 	{
 		if (is_array($node->body)) {
 			$infered_type = $this->infer_block($node);
 		}
 		else {
-			$infered_type = $this->infer_single_expression_block($node);
+			$infered_type = $this->infer_single_expression_closure($node);
 		}
 
 		$declared_type = $node->type;
@@ -742,7 +742,7 @@ class ASTChecker
 		return $result_type;
 	}
 
-	private function reduce_types_with_except_block(BaseBlock $node, ?IType $previous_type)
+	private function reduce_types_with_except_block(IExceptAble $node, ?IType $previous_type)
 	{
 		$infered_type = $this->infer_except_block($node->except);
 		if ($previous_type) {
@@ -880,7 +880,7 @@ class ASTChecker
 		return $result_type;
 	}
 
-	private function infer_single_expression_block(BaseBlock $block): ?IType
+	private function infer_single_expression_closure(IClosure $block): ?IType
 	{
 		// maybe block to check not a sub-block, so need a temp
 		$temp_block = $this->block;
@@ -893,7 +893,7 @@ class ASTChecker
 		return $infered_type;
 	}
 
-	private function infer_block(BaseBlock $block): ?IType
+	private function infer_block(IBlock $block): ?IType
 	{
 		// maybe block to check not a sub-block, so need a temp
 		$temp_block = $this->block;
@@ -1579,20 +1579,25 @@ class ASTChecker
 		$program = $this->require_program_declaration($node->target, $node);
 
 		$target_main = $program->main_function;
-		if (!$target_main) {
-			return null;
-		}
-
-		// check all expect variables is decalared in current including place
-		foreach ($target_main->parameters as $parameter) {
-			$param_name = $parameter->name;
-			$symbol = $node->symbols[$param_name] ?? $this->find_symbol_by_name($param_name);
-			if ($symbol === null) {
-				throw $including->unit->new_syntax_error("Expected var '{$param_name}' to #include({$node->target}).", $node);
+		if ($target_main) {
+			// check all expect variables is decalared in current including place
+			foreach ($target_main->parameters as $parameter) {
+				$param_name = $parameter->name;
+				$symbol = $node->symbols[$param_name] ?? $this->find_symbol_by_name($param_name);
+				if ($symbol === null) {
+					throw $including->unit->new_syntax_error("Expected var '{$param_name}' to #include({$node->target}).", $node);
+				}
 			}
+
+			$infered_type = $target_main->type;
+		}
+		else {
+			$infered_type = null;
 		}
 
-		return $target_main->type;
+		$this->program = $including;
+
+		return $infered_type;
 	}
 
 	protected function require_program_declaration(string $name, Node $ref_node)

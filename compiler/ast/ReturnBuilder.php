@@ -21,7 +21,7 @@ class ReturnBuilder
 
 	private $temp_var_idx = 0;
 
-	public function __construct(IEnclosingBlock $node, IType $collect_type)
+	public function __construct(IClosure $node, IType $collect_type)
 	{
 		$this->node = $node;
 		$this->collect_type = $collect_type;
@@ -50,7 +50,7 @@ class ReturnBuilder
 		return $fixeds;
 	}
 
-	private function collect_block(BaseBlock $node)
+	private function collect_block(IBlock $node)
 	{
 		$fixeds = [];
 		foreach ($node->body as $subnode) {
@@ -76,7 +76,7 @@ class ReturnBuilder
 					continue;
 				}
 			}
-			elseif ($subnode instanceof BaseBlock && !$subnode instanceof IEnclosingBlock) {
+			elseif ($subnode instanceof ControlBlock) {
 				// eg. for-in, if-elseif-else, try-catch-finally, ...
 				$to_fix_block = clone $subnode;
 				$to_fix_block->body = $this->collect_block($to_fix_block);

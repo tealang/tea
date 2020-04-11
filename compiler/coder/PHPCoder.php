@@ -355,7 +355,7 @@ class PHPCoder extends TeaCoder
 
 		$header = $this->generate_function_header($node);
 		$parameters = $this->render_function_parameters($node);
-		$body = $this->render_enclosing_block($node);
+		$body = $this->render_closure_block($node);
 
 		if ($node->type === null || $node->type === TypeFactory::$_any || $node->type === TypeFactory::$_void) {
 			$return_type = null;
@@ -372,7 +372,7 @@ class PHPCoder extends TeaCoder
 	public function render_lambda_expression(IExpression $node)
 	{
 		$parameters = $this->render_parameters($node->parameters);
-		$body = $this->render_enclosing_block($node);
+		$body = $this->render_closure_block($node);
 
 		if ($node->use_variables) {
 			$uses = $this->render_lambda_use_arguments($node->use_variables);
@@ -392,7 +392,7 @@ class PHPCoder extends TeaCoder
 		return join(', ', $items);
 	}
 
-	public function render_enclosing_block(IEnclosingBlock $node)
+	public function render_closure_block(IClosure $node)
 	{
 		$body = $node->fixed_body ?? $node->body;
 
@@ -400,7 +400,7 @@ class PHPCoder extends TeaCoder
 
 		// if ($node->auto_declarations) {
 		// 	foreach ($node->auto_declarations as $declar) {
-		// 		if (!$declar->block instanceof IEnclosingBlock) {
+		// 		if (!$declar->block instanceof IClosure) {
 		// 			$items[] = static::VAR_DECLARE_PREFIX . "{$declar->name} = null;\n";
 		// 		}
 		// 	}

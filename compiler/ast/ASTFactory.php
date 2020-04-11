@@ -34,12 +34,12 @@ class ASTFactory
 
 	/**
 	 * current function or lambda
-	 * @var IEnclosingBlock
+	 * @var IClosure
 	 */
-	private $enclosing;
+	private $closure;
 
 	/**
-	 * @var BaseBlock
+	 * @var IBlock
 	 */
 	private $block;
 
@@ -148,7 +148,7 @@ class ASTFactory
 		if ($token === _THIS) {
 			$identifier = new PlainIdentifier($token);
 			if ($this->class) {
-				if ($this->function !== $this->enclosing) { // it is would be in a lambda block
+				if ($this->function !== $this->closure) { // it is would be in a lambda block
 					throw $this->parser->new_parse_error("Cannot use '$token' identifier in lambda functions.");
 				}
 
@@ -161,7 +161,7 @@ class ASTFactory
 		elseif ($token === _SUPER) {
 			$identifier = new PlainIdentifier($token);
 			if ($this->class) {
-				if ($this->function !== $this->enclosing) { // it is would be in a lambda block
+				if ($this->function !== $this->closure) { // it is would be in a lambda block
 					throw $this->parser->new_parse_error("Cannot use '$token' identifier in lambda functions.");
 				}
 			}
@@ -226,11 +226,11 @@ class ASTFactory
 
 	public function remove_defer_check(PlainIdentifier $identifier)
 	{
-		$block = $this->enclosing;
+		$block = $this->closure;
 		$block->remove_defer_check_identifier($identifier);
 
 		while ($block = $block->super_block) {
-			if ($block instanceof IEnclosingBlock) {
+			if ($block instanceof IClosure) {
 				$block->remove_defer_check_identifier($identifier);
 			}
 		}
@@ -272,7 +272,7 @@ class ASTFactory
 
 		$declaration = new VariableDeclaration($identifier->name);
 		$declaration->block = $this->block;
-		// $this->enclosing->auto_declarations[$identifier->name] = $declaration;
+		// $this->closure->auto_declarations[$identifier->name] = $declaration;
 
 		// link to symbol
 		$identifier->symbol = $this->create_local_symbol($declaration);
@@ -386,14 +386,14 @@ class ASTFactory
 		return $symbol;
 	}
 
-	public function set_enclosing_parameters(array $parameters)
+	public function set_closure_parameters(array $parameters)
 	{
 		foreach ($parameters as $parameter) {
 			$symbol = new Symbol($parameter);
-			$this->add_enclosing_symbol($symbol);
+			$this->add_closure_symbol($symbol);
 		}
 
-		$this->enclosing->parameters = $parameters;
+		$this->closure->parameters = $parameters;
 	}
 
 	public function create_masked_declaration(string $name)
@@ -402,7 +402,7 @@ class ASTFactory
 		$this->begin_class_member($declaration);
 
 		$this->declaration = $declaration;
-		$this->enclosing = $declaration;
+		$this->closure = $declaration;
 		$this->function = $declaration;
 		$this->block = $declaration;
 
@@ -453,7 +453,7 @@ class ASTFactory
 
 		$this->begin_root_declaration($declaration);
 		$symbol = $this->create_global_symbol($declaration);
-		// $this->add_enclosing_symbol($symbol);
+		// $this->add_closure_symbol($symbol);
 
 		return $declaration;
 	}
@@ -480,9 +480,9 @@ class ASTFactory
 	{
 		$block = new LambdaExpression($type, $parameters);
 
-		$this->enclosing = $block;
+		$this->closure = $block;
 		$this->begin_block($block);
-		$this->set_enclosing_parameters($parameters);
+		$this->set_closure_parameters($parameters);
 
 		return $block;
 	}
@@ -558,7 +558,7 @@ class ASTFactory
 			}
 
 			while ($block = $block->super_block) {
-				if ($block instanceof IEnclosingBlock) {
+				if ($block instanceof IClosure) {
 					break;
 				}
 				elseif (!$block instanceof ILoopLikeBlock) {
@@ -631,14 +631,14 @@ class ASTFactory
 		$this->program->append_defer_check_identifiers($this->function);
 		$this->program = null;
 		$this->declaration = null;
-		$this->block = $this->function = $this->enclosing = null;
+		$this->block = $this->function = $this->closure = null;
 	}
 
 	public function begin_class(ClassLikeDeclaration $declaration)
 	{
 		$this->class = $declaration;
 		$this->declaration = $declaration;
-		$this->block = $this->function = $this->enclosing = null;
+		$this->block = $this->function = $this->closure = null;
 	}
 
 	public function end_class()
@@ -657,7 +657,7 @@ class ASTFactory
 
 		if ($declaration instanceof FunctionDeclaration) {
 			$this->block = $declaration;
-			$this->enclosing = $declaration;
+			$this->closure = $declaration;
 			$this->function = $declaration;
 		}
 
@@ -672,7 +672,7 @@ class ASTFactory
 		$this->class->append_defer_check_identifiers($this->declaration);
 
 		$this->declaration = $this->class;
-		$this->enclosing = null;
+		$this->closure = null;
 		$this->function = null;
 	}
 
@@ -682,7 +682,7 @@ class ASTFactory
 
 		if ($declaration instanceof FunctionDeclaration) {
 			$this->block = $declaration;
-			$this->enclosing = $declaration;
+			$this->closure = $declaration;
 			$this->function = $declaration;
 		}
 	}
@@ -693,7 +693,7 @@ class ASTFactory
 		$this->set_main_function();
 	}
 
-	public function begin_block(BaseBlock $block)
+	public function begin_block(IBlock $block)
 	{
 		$block->super_block = $this->block;
 		$this->block = $block;
@@ -706,7 +706,7 @@ class ASTFactory
 		if ($block->super_block) {
 			$this->block = $block->super_block;
 			if ($block instanceof LambdaExpression) {
-				$this->enclosing = $this->find_super_enclosing($block);
+				$this->closure = $this->find_super_closure($block);
 			}
 		}
 		else {
@@ -718,21 +718,21 @@ class ASTFactory
 
 	private function set_main_function()
 	{
-		$this->declaration = $this->function = $this->enclosing = $this->block = $this->program->main_function;
+		$this->declaration = $this->function = $this->closure = $this->block = $this->program->main_function;
 	}
 
-	private static function find_super_enclosing(BaseBlock $block)
+	private static function find_super_closure(IBlock $block)
 	{
 		$block= $block->super_block;
-		if (!$block || $block instanceof IEnclosingBlock) {
+		if (!$block || $block instanceof IClosure) {
 			return $block;
 		}
 
-		if (!$block instanceof BaseBlock) {
+		if (!$block instanceof IBlock) {
 			return null;
 		}
 
-		return self::find_super_enclosing($block);
+		return self::find_super_closure($block);
 	}
 
 	const GLOBAL_MODIFIERS = [_PUBLIC, _INTERNAL];
@@ -760,13 +760,13 @@ class ASTFactory
 		return $symbols;
 	}
 
-	private function seek_symbol_in_function(Identifiable $identifier, BaseBlock $seek_block = null)
+	private function seek_symbol_in_function(Identifiable $identifier, IBlock $seek_block = null)
 	{
 		if ($seek_block === null) {
 			$seek_block = $this->block;
 		}
 
-		if (!$seek_block instanceof BaseBlock) {
+		if (!$seek_block instanceof IBlock) {
 			// should be at the begin of a class
 			return $this->program->symbols[$identifier->name] ?? null;
 		}
@@ -791,14 +791,14 @@ class ASTFactory
 		return $symbol;
 	}
 
-	private function seek_symbol_in_encolsing(string $name, BaseBlock &$seek_block): ?Symbol
+	private function seek_symbol_in_encolsing(string $name, IBlock &$seek_block): ?Symbol
 	{
 		do {
 			if (isset($seek_block->symbols[$name])) {
 				return $seek_block->symbols[$name];
 			}
 
-			if ($seek_block instanceof IEnclosingBlock) {
+			if ($seek_block instanceof IClosure) {
 				break;
 			}
 		} while ($seek_block = $seek_block->super_block);
@@ -815,11 +815,11 @@ class ASTFactory
 		return $symbol;
 	}
 
-	// // create symbol, and add to enclosing block, includes: Anonymous Function, Normal Function, Method
-	// private function create_enclosing_symbol(IDeclaration $declaration)
+	// // create symbol, and add to closure block, includes: Anonymous Function, Normal Function, Method
+	// private function create_closure_symbol(IDeclaration $declaration)
 	// {
 	// 	$symbol = new Symbol($declaration);
-	// 	$this->add_enclosing_symbol($symbol);
+	// 	$this->add_closure_symbol($symbol);
 
 	// 	return $symbol;
 	// }
@@ -921,13 +921,13 @@ class ASTFactory
 		$this->program->symbols[$symbol->name] = $symbol;
 	}
 
-	private function add_enclosing_symbol(Symbol $symbol)
+	private function add_closure_symbol(Symbol $symbol)
 	{
-		if (isset($this->enclosing->symbols[$symbol->name])) {
-			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in enclosing function, cannot redeclare.");
+		if (isset($this->closure->symbols[$symbol->name])) {
+			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in closure function, cannot redeclare.");
 		}
 
-		$this->enclosing->symbols[$symbol->name] = $symbol;
+		$this->closure->symbols[$symbol->name] = $symbol;
 	}
 
 	private function add_block_symbol(Symbol $symbol)

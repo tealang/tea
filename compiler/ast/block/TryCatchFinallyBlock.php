@@ -12,14 +12,14 @@ namespace Tea;
 interface IExceptAble {}
 interface IExceptBlock {}
 
-class TryBlock extends BaseBlock implements IExceptAble
+class TryBlock extends ControlBlock implements IExceptAble
 {
 	use ExceptTrait;
 
 	const KIND = 'try_block';
 }
 
-class CatchBlock extends BaseBlock implements IExceptBlock, IExceptAble
+class CatchBlock extends ControlBlock implements IExceptBlock, IExceptAble
 {
 	use ExceptTrait;
 
@@ -33,7 +33,7 @@ class CatchBlock extends BaseBlock implements IExceptBlock, IExceptAble
 	}
 }
 
-class FinallyBlock extends BaseBlock implements IExceptBlock
+class FinallyBlock extends ControlBlock implements IExceptBlock
 {
 	const KIND = 'finally_block';
 }

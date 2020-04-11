@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class KeyAccessing extends Node implements IExpression, IAssignable
+class KeyAccessing extends BaseExpression implements IAssignable
 {
 	const KIND = 'key_accessing';
 

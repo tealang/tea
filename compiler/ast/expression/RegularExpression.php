@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class RegularExpression extends Node implements IExpression
+class RegularExpression extends BaseExpression
 {
 	const KIND = 'regular_expression';
 

@@ -9,8 +9,9 @@
 
 namespace Tea;
 
-class FloatLiteral extends Node implements ILiteral
+interface IExpression {}
+
+abstract class BaseExpression extends Node implements IExpression
 {
-	use LiteralTraitWithValue;
-	const KIND = 'float_literal';
+	public $is_pure;
 }

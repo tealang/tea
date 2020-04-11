@@ -277,7 +277,7 @@ class TeaCoder
 		$code = $this->render_function_protocol($node);
 
 		if ($node->body !== null) {
-			$body = $this->render_enclosing_block($node);
+			$body = $this->render_closure_block($node);
 			$code = $code . ' ' . $body;
 		}
 
@@ -287,7 +287,7 @@ class TeaCoder
 	// public function render_function_block(FunctionBlock $node)
 	// {
 	// 	$declaration = $this->render_function_protocol($node);
-	// 	$body = $this->render_enclosing_block($node);
+	// 	$body = $this->render_closure_block($node);
 
 	// 	return "{$declaration} $body";
 	// }
@@ -295,7 +295,7 @@ class TeaCoder
 	public function render_lambda_expression(IExpression $node)
 	{
 		$parameters = $this->render_parameters($node->parameters);
-		$body = $this->render_enclosing_block($node);
+		$body = $this->render_closure_block($node);
 
 		return sprintf('(%s) => ', $parameters) . $body;
 	}
@@ -1207,7 +1207,7 @@ class TeaCoder
 		return $this->render_block_nodes($members);
 	}
 
-	public function render_enclosing_block(IEnclosingBlock $node)
+	public function render_closure_block(IClosure $node)
 	{
 		if (is_array($node->body)) {
 			$code = $this->render_block_nodes($node->body);
@@ -1221,7 +1221,7 @@ class TeaCoder
 		return $code;
 	}
 
-	public function render_block(BaseBlock $node, string $label = null)
+	public function render_block(IBlock $node, string $label = null)
 	{
 		$code = $this->render_block_nodes($node->body);
 		return $this->wrap_block_code($code, $label);

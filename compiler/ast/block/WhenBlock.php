@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class WhenBlock extends BaseBlock implements IElseAble, IExceptAble, ILoopLikeBlock
+class WhenBlock extends ControlBlock implements IElseAble, IExceptAble, ILoopLikeBlock
 {
 	use ElseTrait, ExceptTrait;
 
@@ -30,7 +30,7 @@ class WhenBlock extends BaseBlock implements IElseAble, IExceptAble, ILoopLikeBl
 	}
 }
 
-class WhenBranch extends BaseBlock
+class WhenBranch extends ControlBlock
 {
 	const KIND = 'when_branch';
 

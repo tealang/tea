@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class Parentheses extends Node implements IExpression
+class Parentheses extends BaseExpression
 {
 	const KIND = 'parentheses';
 

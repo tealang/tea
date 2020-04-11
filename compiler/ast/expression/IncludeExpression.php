@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class IncludeExpression extends Node implements IExpression
+class IncludeExpression extends BaseExpression
 {
 	const KIND = 'include_expression';
 

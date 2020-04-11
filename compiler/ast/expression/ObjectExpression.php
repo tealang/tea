@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class ObjectExpression extends Node implements IExpression
+class ObjectExpression extends BaseExpression
 {
 	const KIND = 'object_expression';
 

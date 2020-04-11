@@ -33,7 +33,7 @@ trait IConstantDeclarationTrait
 	}
 }
 
-class ConstantDeclaration extends RootDeclaration implements IConstantDeclaration
+class ConstantDeclaration extends Node implements IConstantDeclaration, IRootDeclaration, IStatement
 {
 	use IConstantDeclarationTrait;
 

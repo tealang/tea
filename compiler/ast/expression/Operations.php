@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-abstract class BaseOperation extends Node implements IExpression
+abstract class BaseOperation extends BaseExpression
 {
 	public $infered_type;
 	public $operator;
