@@ -238,7 +238,6 @@ const __AUTOLOADS = [
 	'Tea\UnescapedStringLiteral' => 'ast/expression/Literal.php',
 	'Tea\EscapedStringLiteral' => 'ast/expression/Literal.php',
 	'Tea\IntegerLiteral' => 'ast/expression/Literal.php',
-	'Tea\UnsignedIntegerLiteral' => 'ast/expression/Literal.php',
 	'Tea\FloatLiteral' => 'ast/expression/Literal.php',
 	'Tea\BooleanLiteral' => 'ast/expression/Literal.php',
 	'Tea\ArrayLiteral' => 'ast/expression/Literal.php',

@@ -13,6 +13,9 @@ interface ILiteral {}
 
 trait LiteralTraitWithValue
 {
+	/**
+	 * @var string
+	 */
 	public $value;
 
 	public function __construct(string $value) {
@@ -45,7 +48,7 @@ class IntegerLiteral extends BaseExpression implements ILiteral
 {
 	use LiteralTraitWithValue;
 
-	const KIND = 'int_literal';
+	const KIND = 'integer_literal';
 
 	/**
 	 * The string format integer data
@@ -57,11 +60,6 @@ class IntegerLiteral extends BaseExpression implements ILiteral
 	 * @var string
 	 */
 	// public $value;
-}
-
-class UnsignedIntegerLiteral extends IntegerLiteral
-{
-	const KIND = 'uint_literal';
 }
 
 class FloatLiteral extends BaseExpression implements ILiteral

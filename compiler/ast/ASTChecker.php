@@ -1109,9 +1109,6 @@ class ASTChecker
 				$infered_type = TypeFactory::$_float;
 				break;
 			case IntegerLiteral::KIND:
-				$infered_type = TypeFactory::$_int;
-				break;
-			case UnsignedIntegerLiteral::KIND:
 				$infered_type = TypeFactory::$_uint;
 				break;
 			case BooleanLiteral::KIND:

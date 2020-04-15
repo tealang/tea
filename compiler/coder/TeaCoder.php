@@ -697,14 +697,9 @@ class TeaCoder
 		return $node->value ? 'true' : 'false';
 	}
 
-	public function render_int_literal(IntegerLiteral $node)
+	public function render_integer_literal(IntegerLiteral $node)
 	{
 		return $node->value;
-	}
-
-	public function render_uint_literal(IntegerLiteral $node)
-	{
-		return $this->render_int_literal($node);
 	}
 
 	public function render_float_literal(FloatLiteral $node)

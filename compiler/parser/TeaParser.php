@@ -1092,7 +1092,7 @@ class TeaParser extends BaseParser
 			}
 		}
 
-		return new UnsignedIntegerLiteral($token);
+		return new IntegerLiteral($token);
 	}
 
 	protected function read_scientific_notation_number_with(string $prefix)

@@ -1201,7 +1201,7 @@ class PHPCoder extends TeaCoder
 		return "{$master}[{$key}]";
 	}
 
-	public function render_int_literal(IntegerLiteral $node)
+	public function render_integer_literal(IntegerLiteral $node)
 	{
 		$num = $this->remove_number_underline($node->value);
 		if (strpos($num, 'o')) {
