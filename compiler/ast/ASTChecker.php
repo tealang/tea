@@ -2248,9 +2248,14 @@ class ASTChecker
 			$identifier->symbol = $symbol;
 		}
 
-		$this->check_classlike_declaration($symbol->declaration);
+		$declaration = $symbol->declaration;
 
-		return $symbol->declaration;
+		$temp_program = $this->program;
+		$this->program = $declaration->program;
+		$this->check_classlike_declaration($declaration);
+		$this->program = $temp_program;
+
+		return $declaration;
 	}
 
 	private function require_global_symbol_for_identifier(Identifiable $identifier)
