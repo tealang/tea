@@ -100,7 +100,7 @@ class TeaParser extends BaseParser
 		return $node;
 	}
 
-	protected function read_normal_statement($leading = null, Docs $docs = null, bool $is_in_when_branch = false)
+	protected function read_normal_statement($leading = null, Docs $docs = null)
 	{
 		if ($this->get_token_ignore_space() === _BLOCK_END) {
 			return null;
@@ -108,7 +108,7 @@ class TeaParser extends BaseParser
 
 		$token = $this->scan_token_ignore_space();
 		if ($token === LF) {
-			return $this->read_normal_statement(LF, null, $is_in_when_branch);
+			return $this->read_normal_statement(LF);
 		}
 		elseif ($token === _SEMICOLON || $token === null) {
 			return null;
@@ -121,11 +121,11 @@ class TeaParser extends BaseParser
 		}
 		elseif ($token === _DOCS_MARK) {
 			$docs = $this->read_docs();
-			return $this->read_normal_statement($leading, $docs, $is_in_when_branch);
+			return $this->read_normal_statement($leading, $docs);
 		}
 		elseif ($token === _INLINE_COMMENT_MARK) {
 			$this->skip_current_line();
-			return $this->read_normal_statement($leading, $docs, $is_in_when_branch);
+			return $this->read_normal_statement($leading, $docs);
 		}
 		elseif (TeaHelper::is_structure_key($token)) {
 			$node = $this->read_structure($token);
@@ -136,10 +136,6 @@ class TeaParser extends BaseParser
 				$node = $this->read_assignment($node);
 			}
 			elseif ($node instanceof BaseExpression) {
-				if ($is_in_when_branch && in_array($this->get_token_ignore_space(), [_COLON, _COMMA])) {
-					return $node;
-				}
-
 				// for normal expression
 				$node = new NormalStatement($node);
 			}
@@ -634,44 +630,48 @@ class TeaParser extends BaseParser
 	{
 		$this->expect_block_begin_inline();
 
-		// the rule expression of first branch
-		$rule_expr = $this->read_expression();
-		if (!$rule_expr) {
-			throw $this->new_unexpected_error();
-		}
-
-		// read branches
 		$branches = [];
-		while ($rule_expr) {
-			// the multi-matches
-			if ($this->get_token() === _COMMA) {
-				$rule_expr = $this->read_expression_list_with($rule_expr);
-			}
+		while ($argument = $this->read_case_argument()) {
 
 			$this->expect_token_ignore_space(_COLON);
+			$when_branch = $this->factory->create_when_branch_block($argument);
 
-			$when_branch = $this->factory->create_when_branch_block($rule_expr);
-
-			$next_rule_expr = null;
 			$statements = [];
-			while (($item = $this->read_normal_statement(null, null, true)) !== null) {
-				if ($item instanceof BaseExpression) {
-					$next_rule_expr = $item;
+			while (($item = $this->read_normal_statement()) !== null) {
+				$statements[] = $item;
+
+				// end current case
+				if ($this->get_token_ignore_empty() === _CASE) {
 					break;
-				}
-				else {
-					$statements[] = $item;
 				}
 			}
 
 			$when_branch->set_body_with_statements(...$statements);
 			$branches[] = $when_branch;
-			$rule_expr = $next_rule_expr;
 		}
 
 		$this->expect_block_end();
 
 		return $branches;
+	}
+
+	private function read_case_argument()
+	{
+		if (!$this->skip_token_ignore_empty(_CASE)) {
+			return null;
+		}
+
+		$argument = $this->read_expression();
+		if ($argument === null) {
+			throw $this->new_unexpected_error();
+		}
+
+		// the multi-matches
+		if ($this->get_token() === _COMMA) {
+			return $this->read_expression_list_with($argument);
+		}
+
+		return $argument;
 	}
 
 	protected function read_expression_list_with(BaseExpression $expression)

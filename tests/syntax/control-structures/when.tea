@@ -5,20 +5,20 @@ b = 1
 num = 1
 
 #outer when num {
-	a * 3:
+	case a * 3:
 		when num {
-			b:
-				b = num * 5
-				echo b
-			1, 2, 3:
-				a = num * 2
-				break #outer
+		case b:
+			b = num * 5
+			echo b
+		case 1, 2, 3:
+			a = num * 2
+			break #outer
 		}
 		else {
 			echo 'not matched.'
 		}
 
-	10, 100:
+	case 10, 100:
 		echo num
 }
 elseif num > 10 {

@@ -117,6 +117,7 @@ public _iconv_strrpos(str String, search String, offset Int = 0) Int {
 	return pos === false ? -1 : pos  // return -1 on not found
 }
 
+#php mb_strwidth(str String, encoding String = #default)
 #php mb_strtoupper(str String) String
 #php mb_strtolower(str String) String
 
@@ -242,6 +243,8 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 #tea None {}
 
 #tea String {
+	masked width UInt => mb_strwidth(this)
+
 	// process in dist native mode
 	masked length UInt => strlen(this)
 	masked find(str String, offset Int = 0) => _strpos(this, str, offset)
