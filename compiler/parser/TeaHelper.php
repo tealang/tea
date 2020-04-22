@@ -111,7 +111,7 @@ class TeaHelper
 
 	static function is_declarable_variable_name(?string $token)
 	{
-		return preg_match('/^_?[a-z][a-z0-9_]*$/', $token) && !self::is_normal_reserveds($token);
+		return (preg_match('/^_?[a-z][a-z0-9_]*$/', $token) && !self::is_normal_reserveds($token)) || $token === '_';
 	}
 
 	static function is_constant_name(?string $token)

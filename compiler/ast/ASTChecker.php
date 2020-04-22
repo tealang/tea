@@ -1266,8 +1266,14 @@ class ASTChecker
 		$right_type = $this->infer_expression($node->right);
 
 		if (OperatorFactory::is_number_operator($operator)) {
-			if (!TypeFactory::is_number_type($left_type) || !TypeFactory::is_number_type($right_type)) {
-				throw $this->new_syntax_error("Math operation cannot use for non Int/UInt/Float type expressions.", $node);
+			if (!TypeFactory::is_number_type($left_type)) {
+				$type_name = $this->get_type_name($left_type);
+				throw $this->new_syntax_error("Math operation cannot use for '$type_name' type expressions.", $node->left);
+			}
+
+			if (!TypeFactory::is_number_type($right_type)) {
+				$type_name = $this->get_type_name($right_type);
+				throw $this->new_syntax_error("Math operation cannot use for '$type_name' type expressions.", $node->right);
 			}
 
 			if ($operator === OperatorFactory::$_division || $left_type === TypeFactory::$_float || $right_type === TypeFactory::$_float) {

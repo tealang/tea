@@ -409,7 +409,7 @@ class TeaParser extends BaseParser
 
 		$condition = $this->read_expression_inline();
 		if ($condition === null) {
-			throw $this->new_parse_error("Required condition expression after 'when' keyword.");
+			throw $this->new_parse_error("Expected a post condition expression");
 		}
 
 		$statement->condition = $condition;

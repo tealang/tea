@@ -119,9 +119,21 @@ class TypeFactory
 
 	static function is_number_type(?IType $type)
 	{
-		return $type === self::$_int
-			|| $type === self::$_uint
-			|| $type === self::$_float;
+		if ($type === self::$_int || $type === self::$_uint || $type === self::$_float) {
+			return true;
+		}
+
+		if ($type instanceof UnionType) {
+			foreach ($type->types as $subtype) {
+				if (!static::is_number_type($subtype)) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		return false;
 	}
 
 	static function set_symbols(Unit $unit)
