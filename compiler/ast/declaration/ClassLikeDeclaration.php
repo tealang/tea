@@ -65,6 +65,11 @@ abstract class ClassLikeDeclaration extends Node implements IRootDeclaration, IS
 		$this->name = $name;
 	}
 
+	public function is_root_namespace()
+	{
+		return $this->program->unit === null || $this->label === _PHP;
+	}
+
 	public function set_baseds(ClassLikeIdentifier ...$baseds)
 	{
 		$this->baseds = $baseds;
