@@ -11,7 +11,7 @@ namespace Tea;
 
 class Program extends Node
 {
-	use DeferChecksTrait;
+	use DeclarationTrait;
 
 	const KIND = 'program';
 
@@ -52,8 +52,6 @@ class Program extends Node
 	public $depends_native_programs = [];
 
 	public $is_native = false; // for native programs, eg. PHP scripts
-
-	public $is_checked = false; // set true when has been checked by ASTChecker
 
 	private $subdirectory_levels;
 

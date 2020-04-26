@@ -13,7 +13,7 @@ interface IScopeBlock extends IBlock, ICallableDeclaration {}
 
 trait IScopeBlockTrait
 {
-	use DeclarationTrait, IBlockTrait, DeferChecksTrait;
+	use DeclarationTrait, IBlockTrait;
 
 	// public $is_static = false;
 

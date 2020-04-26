@@ -463,6 +463,15 @@ class Compiler
 	{
 		self::echo_start('Rendering programs...');
 
+		// the depends relation
+		foreach ($this->normal_programs as $program) {
+			foreach ($program->declarations as $node) {
+				if ($node->is_unit_level && !$node instanceof ClassLikeDeclaration) {
+					$node->set_depends_to_unit_level();
+				}
+			}
+		}
+
 		foreach ($this->native_programs as $program) {
 			$ns_prefix = PHPCoder::ns_to_string($program->ns) . PHPCoder::NS_SEPARATOR;
 			$this->collect_autoloads_map($program, $program->file, $ns_prefix);

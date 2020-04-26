@@ -640,6 +640,10 @@ class TeaParser extends BaseParser
 			while (($item = $this->read_normal_statement()) !== null) {
 				$statements[] = $item;
 
+				while ($this->skip_token_ignore_space(_INLINE_COMMENT_MARK)) {
+					$this->skip_current_line();
+				}
+
 				// end current case
 				if ($this->get_token_ignore_empty() === _CASE) {
 					break;

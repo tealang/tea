@@ -11,7 +11,7 @@ namespace Tea;
 
 class ExpectDeclaration extends Node implements IRootDeclaration, IStatement
 {
-	use DeclarationTrait, DeferChecksTrait;
+	use DeclarationTrait;
 
 	const KIND = 'expect_declaration';
 

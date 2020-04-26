@@ -49,7 +49,6 @@ class InvariantDeclaration extends VariableDeclaration
 
 class SuperVariableDeclaration extends VariableDeclaration implements IRootDeclaration
 {
-	use DeferChecksTrait;
 	const KIND = 'super_variable_declaration';
 	public $is_reassignable = false;
 }

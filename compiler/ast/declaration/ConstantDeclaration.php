@@ -13,7 +13,7 @@ interface IConstantDeclaration {}
 
 trait IConstantDeclarationTrait
 {
-	use DeclarationTrait, DeferChecksTrait;
+	use DeclarationTrait;
 
 	public $modifier;
 

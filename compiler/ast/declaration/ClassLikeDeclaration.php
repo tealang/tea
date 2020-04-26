@@ -11,7 +11,7 @@ namespace Tea;
 
 abstract class ClassLikeDeclaration extends Node implements IRootDeclaration, IStatement
 {
-	use DeclarationTrait, DeferChecksTrait;
+	use DeclarationTrait;
 
 	public $modifier;
 

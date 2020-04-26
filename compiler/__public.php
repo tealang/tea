@@ -128,7 +128,6 @@ const __AUTOLOADS = [
 	'Tea\TypeFactory' => 'ast/TypeFactory.php',
 	'Tea\InlineComments' => 'ast/base/Comment.php',
 	'Tea\BlockComment' => 'ast/base/Comment.php',
-	'Tea\DeferChecksTrait' => 'ast/base/DeferChecks.php',
 	'Tea\Docs' => 'ast/base/Docs.php',
 	'Tea\ParameterDoc' => 'ast/base/Docs.php',
 	'Tea\Identifiable' => 'ast/base/Identifiable.php',

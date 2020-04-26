@@ -11,6 +11,8 @@ namespace Tea;
 
 class UseDeclaration extends Node implements IMemberDeclaration
 {
+	use DeclarationTrait;
+
 	const KIND = 'use_declaration';
 
 	public $ns;
@@ -22,8 +24,6 @@ class UseDeclaration extends Node implements IMemberDeclaration
 	public $source_name;
 
 	public $source_declaration;
-
-	public $is_checked = false; // set true when checked by ASTChecker
 
 	public function __construct(NSIdentifier $ns, string $target_name = null, string $source_name = null)
 	{
