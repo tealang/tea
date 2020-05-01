@@ -31,7 +31,7 @@ arr2 = [4, 5, 6]
 arr3 = arr1 concat arr2
 
 var dict = [:]
-dict[1.1] = 1
+dict[1.1::String] = 1
 
 var key = 1
 var key1 Any = 1
@@ -40,13 +40,13 @@ var key3 = false
 
 dict1 = [
 	key: "abc", // some comments
-	key1: "abc", // some comments
-	key3: "abc", // some comments
+	key1::String: "abc", // some comments
+	key3::String: "abc", // some comments
 	"k1": "v1", /* some comments */
 ]
 
 dict2 = [
-	key2: "abc", /* some comments
+	key2::String: "abc", /* some comments
 	 */
 	"k1": "v1", // some comments
 ]

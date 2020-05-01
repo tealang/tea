@@ -11,6 +11,8 @@ namespace Tea;
 
 class TypeFactory
 {
+	static $_dict_key_type;
+
 	static $_metatype;
 
 	static $_uniontype;
@@ -75,6 +77,8 @@ class TypeFactory
 		self::$_callable = self::create_type(CallableType::class);
 		self::$_namespace = self::create_type(NamespaceType::class);
 
+		self::$_dict_key_type = self::create_union_type([self::$_string, self::$_int]);
+
 		self::$_igenerator = new ClassLikeIdentifier('IGenerator');
 	}
 
@@ -95,20 +99,22 @@ class TypeFactory
 	{
 		return $type === self::$_string
 			|| $type === self::$_uint
-			|| $type === self::$_int;
+			|| $type === self::$_int
+			|| $type === self::$_dict_key_type
+			;
 	}
 
-	static function is_dict_key_castable_type(?IType $type)
-	{
-		// Data type convert is a problem
-		// false to string in javascript is 'false', and in python is 'False', in PHP is '' ...
+	// static function is_dict_key_castable_type(?IType $type)
+	// {
+	// 	// Data type convert is a problem
+	// 	// false to string in javascript is 'false', and in python is 'False', in PHP is '' ...
 
-		return $type === self::$_int
-			|| $type === self::$_uint
-			|| $type === self::$_float
-			|| $type === self::$_bool
-			|| $type === self::$_any;
-	}
+	// 	return $type === self::$_int
+	// 		|| $type === self::$_uint
+	// 		|| $type === self::$_float
+	// 		|| $type === self::$_bool
+	// 		|| $type === self::$_any;
+	// }
 
 	static function is_when_testable_type(?IType $type)
 	{

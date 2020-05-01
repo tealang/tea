@@ -589,7 +589,7 @@ class ASTFactory
 		$this->begin_block($block);
 
 		if ($key_var) {
-			$key_declaration = new InvariantDeclaration($key_var->name, TypeFactory::$_string);
+			$key_declaration = new InvariantDeclaration($key_var->name, TypeFactory::$_dict_key_type);
 			$block->symbols[$key_var->name] = $key_var->symbol = new Symbol($key_declaration);
 		}
 

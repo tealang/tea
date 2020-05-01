@@ -64,7 +64,7 @@ public is_strict_dict(it Any) Bool
 
 #php abs(val Any) Float
 
-#php round(val Any, precision UInt = 0) Float
+#php round(val Any, precision Int = 0) Float
 
 #php ceil(val Any) Int
 
@@ -234,7 +234,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	masked abs() Float
 	masked ceil() Int
 	masked floor() Int
-	masked round(precision UInt = 0) Float
+	masked round(precision Int = 0) Float
 }
 
 #tea Int {

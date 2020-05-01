@@ -11,7 +11,7 @@ public PHPClassInMixed1 {
 
 public php_get_num() Int
 
-#php range(start Int, end Int, step UInt = 1) Array
+#php range(start Int, end Int, step Int = 1) Array
 
 public fn0(str Any) String
 
@@ -29,6 +29,6 @@ public DemoList: BaseView {
 	render() String
 }
 
-public xrange(start Int, stop Int, step UInt = 1) IGenerator
+public xrange(start Int, stop Int, step Int = 1) IGenerator
 
 // program end

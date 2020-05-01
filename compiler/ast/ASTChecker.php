@@ -152,12 +152,13 @@ class ASTChecker
 		}
 	}
 
-	private function check_constant_declaration(ConstantDeclaration $node)
+	private function check_constant_declaration(IConstantDeclaration $node)
 	{
 		$node->is_checked = true;
+
 		$value = $node->value;
 
-		// no value, it should be declare mode
+		// no value, it should be in declare mode
 		if ($value === null) {
 			if ($node->type) {
 				$this->check_type($node->type, $node);
@@ -184,11 +185,11 @@ class ASTChecker
 			if ($value->operator === OperatorFactory::$_concat) {
 				$left_type = $this->infer_expression($value->left);
 				if ($left_type instanceof ArrayType) {
-					throw $this->new_syntax_error("Array concat operation cannot use as a constant value.", $value);
+					throw $this->new_syntax_error("Array concat operation cannot use for constant value.", $value);
 				}
 			}
 			elseif ($value->operator === OperatorFactory::$_merge) {
-				throw $this->new_syntax_error("Array/Dict merge operation cannot use as a constant value.", $value);
+				throw $this->new_syntax_error("Array/Dict merge operation cannot use for constant value.", $value);
 			}
 		}
 
@@ -222,15 +223,27 @@ class ASTChecker
 		return $is_constant;
 	}
 
-	private function check_variable_declaration(VariableDeclaration $node)
+	private function check_variable_declaration(BaseVariableDeclaration $node)
 	{
 		$node->is_checked = true;
 
 		$infered_type = $node->value ? $this->infer_expression($node->value) : null;
 
+		$this->set_variable_like_declaration_type($node, $infered_type);
+	}
+
+	private function set_variable_like_declaration_type(IDeclaration $node, ?IType $infered_type)
+	{
 		if ($node->type) {
 			$this->check_type($node->type, $node);
 			$infered_type && $this->assert_type_compatible($node->type, $infered_type, $node->value);
+		}
+		elseif ($infered_type === TypeFactory::$_uint && $node->value instanceof IntegerLiteral) {
+			// set infered type to Int when value is Integer literal
+			$node->type = TypeFactory::$_int;
+		}
+		elseif ($infered_type === null || $infered_type === TypeFactory::$_none) {
+			$node->type = TypeFactory::$_any;
 		}
 		else {
 			$node->type = $infered_type;
@@ -245,18 +258,7 @@ class ASTChecker
 	private function check_parameters_for_node($node)
 	{
 		foreach ($node->parameters as $parameter) {
-			$parameter->is_checked = true;
-			$infered_type = $parameter->value ? $this->infer_expression($parameter->value) : null;
-
-			if ($parameter->type) {
-				$this->check_type($parameter->type, $node);
-				$infered_type && $this->assert_type_compatible($parameter->type, $infered_type, $parameter->value);
-			}
-			else {
-				$parameter->type = $infered_type === null || $infered_type === TypeFactory::$_none
-					? TypeFactory::$_any
-					: $infered_type;
-			}
+			$this->check_variable_declaration($parameter);
 		}
 	}
 
@@ -419,18 +421,13 @@ class ASTChecker
 
 	private function check_property_declaration(PropertyDeclaration $node)
 	{
+		if ($node->value === null && $node->type === null) {
+			throw $this->new_syntax_error("The type hint required when not setted default value for property.", $node);
+		}
+
 		$infered_type = $node->value ? $this->infer_expression($node->value) : null;
 
-		if ($node->type) {
-			$this->check_type($node->type, $node);
-			$infered_type && $this->assert_type_compatible($node->type, $infered_type, $node->value);
-		}
-		elseif ($infered_type) {
-			$node->type = $infered_type;
-		}
-		else {
-			throw $this->new_syntax_error("Type required for property '{$node->name}'.", $node);
-		}
+		$this->set_variable_like_declaration_type($node, $infered_type);
 	}
 
 	private function check_class_constant_declaration(ClassConstantDeclaration $node)
@@ -1140,13 +1137,13 @@ class ASTChecker
 				$infered_type = $this->infer_accessing_identifier($node);
 				break;
 			case VariableIdentifier::KIND:
-				$infered_type = $this->infer_variable($node);
+				$infered_type = $this->infer_variable_identifier($node);
 				break;
 			case ClassLikeIdentifier::KIND:
 				$infered_type = $this->infer_classlike_identifier($node);
 				break;
 			case ConstantIdentifier::KIND:
-				$infered_type = $this->infer_constant($node);
+				$infered_type = $this->infer_constant_identifier($node);
 				break;
 			case CallExpression::KIND:
 				$infered_type = $this->infer_call_expression($node);
@@ -1226,12 +1223,12 @@ class ASTChecker
 			if (TypeFactory::is_dict_key_directly_supported_type($right_type)) {
 				// okay
 			}
-			elseif (TypeFactory::is_dict_key_castable_type($right_type)) {
-				// 一些类型值作为下标调用时，PHP中有一些隐式的转换规则，这些规则往往不那么清晰，容易出问题，故我们需要显示的转换
-				// 如false将转换为0，但实际情况可能需要的是''
-				// 而float如0.1将转换为0，但实际情况可能需要的是'0.1'
-				$node->right->infered_type = $right_type;
-			}
+			// elseif (TypeFactory::is_dict_key_castable_type($right_type)) {
+			// 	// 一些类型值作为下标调用时，PHP中有一些隐式的转换规则，这些规则往往不那么清晰，容易出问题，故我们需要显示的转换
+			// 	// 如false将转换为0，但实际情况可能需要的是''
+			// 	// 而float如0.1将转换为0，但实际情况可能需要的是'0.1'
+			// 	$node->right->infered_type = $right_type;
+			// }
 			else {
 				throw $this->new_syntax_error("Invalid key type '{$right_type->name}' for Dict.", $node->right);
 			}
@@ -1482,10 +1479,10 @@ class ASTChecker
 			if (TypeFactory::is_dict_key_directly_supported_type($key_type)) {
 				// okay
 			}
-			elseif (TypeFactory::is_dict_key_castable_type($key_type)) {
-				// need cast
-				$item->key->infered_type = $key_type;
-			}
+			// elseif (TypeFactory::is_dict_key_castable_type($key_type)) {
+			// 	// need cast
+			// 	$item->key->infered_type = $key_type;
+			// }
 			else {
 				throw $this->new_syntax_error("Invalid key type for Dict.", $item->key);
 			}
@@ -1561,7 +1558,7 @@ class ASTChecker
 		return $declaration->type;
 	}
 
-	private function infer_constant(ConstantIdentifier $node): IType
+	private function infer_constant_identifier(ConstantIdentifier $node): IType
 	{
 		if (!$node->symbol) {
 			$this->attach_symbol($node);
@@ -1911,7 +1908,7 @@ class ASTChecker
 		return TypeFactory::$_string;
 	}
 
-	private function infer_variable(VariableIdentifier $node): IType
+	private function infer_variable_identifier(VariableIdentifier $node): IType
 	{
 		return $this->attach_symbol($node)->declaration->type;
 	}
