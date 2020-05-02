@@ -168,24 +168,22 @@ var str1 = 'Hi!'  // 此用例将自动推断成String类型
 var str2 String
 
 // 直接赋值给一个未经声明的变量
-var_without_decared = 123  // 此用例将自动推断成UInt类型
+var_without_decared = 123  // 此用例将自动推断成Int类型
 
 ---
 ## 07. 运算符
 - 运算符的优先级和结合方向在不同语言中有不同的规则，Tea语言试图简化这些规则，并尽可能让其在使用时显得更自然
-- 访问运算符优先级最高，除逻辑非（not）以外的一元运算符和类型转换符优先级排第二
 - 结合方向，前置一元运算符为右结合，二元运算符为左结合
 - 三元运算符嵌套使用时必须加括号，故无需考虑结合方向
 - Tea语言不支持赋值运算作为子表达式，故无需考虑其优先级和结合方向
-- Tea语言中不支持“--”、“++”等前置和后置运算符，因考虑其可在子表达式中改变值，易产生难以被发现的问题
 
 	优先级	运算符
-	1	. [] () -> ::					成员访问，Array/Dict元素访问，函数调用，回调访问，类型传唤
-	2	~ -  							按位取反，取负
-	3	**								幂运算
-	4	* / rem << >> &					乘，除，取余，按位左移，按位右移，按位与
-	5	+ - | ^  						加，减，按位或，按位异或
-	6	concat merge					String/Array连接，Array/Dict按index/key合并
+	1	. [] () -> ::					成员访问, Array/Dict元素访问, 函数调用, 回调访问, 类型传唤
+	2	- ~  							按位取反, 数值取负
+	3	^								幂运算
+	4	* / rem << >> &					乘, 除, 取余, 按位左移, 按位右移, 按位与
+	5	+ - | ^|  						加, 减, 按位或, 按位异或
+	6	concat 							String连接, Array连接
 	7	<=> < <= > >= != !== == === is  比较运算
 	8	not 							逻辑非
 	9	and 							逻辑与
@@ -195,9 +193,9 @@ var_without_decared = 123  // 此用例将自动推断成UInt类型
 
 ---
 
-// 值得注意的是，“**”运算符在一些语言中优先级比一元运算符高，且大多为右结合
-// 而在Tea语言中，为简化规则考虑，“**”运算符优先级比一元前置运算符“~”和“-”低，且为左结合
-var pow_result = -2 ** 3 ** 5  // 相当于 ((-2) ** 3) ** 5
+// C语言风格语言中^符号一般用作按位异或运算符, 方便编写底层程序
+// 考虑到以后应用程序和科学计算编程需求更多, 故将^用于幂运算
+var pow_result = -2 ^ 2 ^ 3  // 相当于 ((-2) ^ 2) ^ 3
 
 // 连接运算符，可用于字符串/数组
 // 很多语言使用“+”进行连接运算，但数值相加与字符串/数组连接的语义有所不同，我们认为这在一些场景下不太清晰
@@ -206,15 +204,10 @@ var pow_result = -2 ** 3 ** 5  // 相当于 ((-2) ** 3) ** 5
 var string_concat = 'abc' concat 1 + 8 & 2 * 3  // 相当于 'abc' concat (1 + (8 & 2) * 3)
 var array_concat = ['A', 'B'] concat ['A1', 'C1'] // result: ['A', 'B', 'A1', 'C1']
 
-// 合并运算符，可用于数组/字典
-var array_merge = ['A', 'B'] merge ['A1', 'B1'] // result: ['A1', 'B1']
-var dict_merge = ['a': 'A', 'b': 'B'] merge ['a': 'A1', 'c': 'C1'] // result: ['a': 'A1', 'b': 'B', 'c': 'C1']
-
-// as运算符，当用于基础类型时，将进行类型转换
+// 类型传唤运算符，当用于基础类型时，将进行类型转换(cast)
 var uint_from_non_negative_string = '123'::UInt  // okay
 // var uint_from_negative_string = '-123'::UInt  // error
 var str_from_uint = 123::String
-var str_from_int = -123::String
 var str_from_float = 123.123::String
 
 // as运算符，当用于类时，将只被用于编译器类型系统检查处理，而不会进行任何转换
@@ -236,7 +229,7 @@ var ternary_result = uint_num == 1 ? 'one' : (uint_num == 2 ? 'two' : (uint_num 
 
 ---
 ## 08. 流程控制和异常处理结构
-- Tea语言支持 if条件分支、when条件分支、for-in迭代遍历、for-to/downto区间循环、while条件循环、try异常处理 等结构
+- Tea语言支持 if条件分支、switch条件分支、for-in迭代遍历、for-to/downto区间循环、while条件循环、try异常处理 等结构
 - C风格 for (;;;) 风格循环语句很灵活，但没有被支持，因其易被写出预料之外的代码
 - 我们在尝试将else、elseif、catch、finally这些副语句块与上述主语句块混搭，这样是不是有点意思？至于好不好，待使用看看吧😄
 - 目前除了while语句之外的语句都支持elseif、else语句块
@@ -347,8 +340,8 @@ var ret2 = demo_function_with_callbacks('some data') -> success(message) {
 - 接口名风格1：以字母I作为前缀，并且第二个字母必须为大写
 - 接口名风格2：以字母Interface作为后缀
 - 满足接口名风格的将被编译器认为是接口，否则被认为是普通类
-- Tea语言的接口相当于是PHP中Interface和Trait的结合，实际上在编译生成的目标代码中的确由这两部分组成
-- Tea语言的接口中可以有代码实现，甚至可以声明属性，和非public成员！（这和传统面向对象语言有所不同，这样的改变真的好吗？我暂时不太确定）
+- Tea语言的接口相当于是PHP中Interface和Trait的结合
+- Tea语言的接口中可以有代码实现，可以声明属性，和非public成员
 ---
 
 // 这是一个I前缀风格的接口

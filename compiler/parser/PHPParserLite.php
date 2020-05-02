@@ -199,12 +199,12 @@ class PHPParserLite extends BaseParser
 		$declaration->is_abstract = $is_abstract;
 
 		if ($this->skip_typed_token(T_EXTENDS)) {
-			$declaration->inherits = $this->read_classlike_identifier();
+			$declaration->inherits = $this->read_classkindred_identifier();
 		}
 
 		if ($this->skip_typed_token(T_IMPLEMENTS)) {
 			do {
-				$implements[] = $this->read_classlike_identifier();
+				$implements[] = $this->read_classkindred_identifier();
 			}
 			while ($this->skip_char_token(_COMMA));
 
@@ -216,7 +216,7 @@ class PHPParserLite extends BaseParser
 		$use_traits = [];
 		if ($this->skip_typed_token(T_USE)) {
 			do {
-				$use_traits[] = $this->read_classlike_identifier();
+				$use_traits[] = $this->read_classkindred_identifier();
 			}
 			while ($this->skip_char_token(_COMMA));
 
@@ -608,7 +608,7 @@ class PHPParserLite extends BaseParser
 		$this->expect_block_end();
 	}
 
-	private function read_classlike_identifier()
+	private function read_classkindred_identifier()
 	{
 		// \NS1\NS2\Name
 		// NS1\NS2\Name
@@ -632,7 +632,7 @@ class PHPParserLite extends BaseParser
 		}
 
 		$name = array_pop($names);
-		$identifier = new ClassLikeIdentifier($name);
+		$identifier = new ClassKindredIdentifier($name);
 
 		if ($names) {
 			$identifier->ns = new NSIdentifier($names);
@@ -655,7 +655,7 @@ class PHPParserLite extends BaseParser
 			$identifier = TypeFactory::get_type($name);
 		}
 		else {
-			$identifier = new ClassLikeIdentifier($name);
+			$identifier = new ClassKindredIdentifier($name);
 		}
 
 		return $identifier;

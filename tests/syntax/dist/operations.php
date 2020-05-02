@@ -15,7 +15,6 @@ $int_num = 123;
 $uint_from_string = uint_ensure((int)'123');
 
 $str_from_uint = (string)123;
-$str_from_int = (string)-123;
 $str_from_float = (string)123.123;
 
 $dict = ['a' => 1, 'b' => '100'];

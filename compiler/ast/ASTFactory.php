@@ -64,7 +64,7 @@ class ASTFactory
 
 
 		// use for untyped catch
-		$this->base_exception_identifier = new ClassLikeIdentifier('Exception');
+		$this->base_exception_identifier = new ClassKindredIdentifier('Exception');
 	}
 
 	public function set_as_main_program()
@@ -123,9 +123,9 @@ class ASTFactory
 		return new AccessingIdentifier($master, $name);
 	}
 
-	public function create_classlike_identifier(string $name)
+	public function create_classkindred_identifier(string $name)
 	{
-		$identifier = new ClassLikeIdentifier($name);
+		$identifier = new ClassKindredIdentifier($name);
 		$this->set_defer_check($identifier);
 		return $identifier;
 	}
@@ -367,13 +367,13 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_class_symbol(ClassLikeDeclaration $declaration)
+	public function create_class_symbol(ClassKindredDeclaration $declaration)
 	{
 		// create symbol
 		$symbol = $this->create_global_symbol($declaration);
 
 		// create 'this' symbol
-		$class_identifier = new ClassLikeIdentifier($declaration->name); // as a Type for this
+		$class_identifier = new ClassKindredIdentifier($declaration->name); // as a Type for this
 		$class_identifier->symbol = $symbol;
 		// $declaration->symbols[_THIS] = ASTHelper::create_symbol_this($class_identifier);
 
@@ -515,7 +515,7 @@ class ASTFactory
 		return $block;
 	}
 
-	public function create_catch_block(string $var_name, ?ClassLikeIdentifier $type)
+	public function create_catch_block(string $var_name, ?ClassKindredIdentifier $type)
 	{
 		$var_declaration = new InvariantDeclaration($var_name, $type ?? $this->base_exception_identifier);
 
@@ -533,16 +533,16 @@ class ASTFactory
 		return $block;
 	}
 
-	public function create_when_block(BaseExpression $argument)
+	public function create_switch_block(BaseExpression $argument)
 	{
-		$block = new WhenBlock($argument);
+		$block = new SwitchBlock($argument);
 		$this->begin_block($block);
 		return $block;
 	}
 
-	public function create_when_branch_block(BaseExpression $rule)
+	public function create_case_branch_block(BaseExpression $rule)
 	{
-		$block = new WhenBranch($rule);
+		$block = new CaseBranch($rule);
 		$this->begin_block($block);
 		return $block;
 	}
@@ -552,8 +552,8 @@ class ASTFactory
 		$layer = 0;
 		$block = $this->block;
 
-		if (!$block instanceof ILoopLikeBlock || $block->label !== $label) {
-			if ($block instanceof ILoopLikeBlock) {
+		if (!$block instanceof ILoopKindredBlock || $block->label !== $label) {
+			if ($block instanceof ILoopKindredBlock) {
 				$layer++;
 			}
 
@@ -561,7 +561,7 @@ class ASTFactory
 				if ($block instanceof IScopeBlock) {
 					break;
 				}
-				elseif (!$block instanceof ILoopLikeBlock) {
+				elseif (!$block instanceof ILoopKindredBlock) {
 					continue;
 				}
 
@@ -634,7 +634,7 @@ class ASTFactory
 		$this->block = $this->function = $this->scope = null;
 	}
 
-	public function begin_class(ClassLikeDeclaration $declaration)
+	public function begin_class(ClassKindredDeclaration $declaration)
 	{
 		$this->class = $declaration;
 		$this->declaration = $declaration;
@@ -749,7 +749,7 @@ class ASTFactory
 		$block = $this->block;
 		$symbols = $block->symbols;
 
-		while (($block = $block->super_block) && !$block instanceof ClassLikeDeclaration) {
+		while (($block = $block->super_block) && !$block instanceof ClassKindredDeclaration) {
 			$symbols = array_merge($symbols, $block->symbols);
 		}
 
@@ -779,7 +779,7 @@ class ASTFactory
 				$seek_block->set_defer_check_identifier($identifier);
 			}
 
-			if ($seek_block->super_block && !$seek_block->super_block instanceof ClassLikeDeclaration) {
+			if ($seek_block->super_block && !$seek_block->super_block instanceof ClassKindredDeclaration) {
 				$symbol = $this->seek_symbol_in_function($identifier, $seek_block->super_block);
 			}
 		}

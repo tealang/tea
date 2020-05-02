@@ -56,19 +56,22 @@ class PHPCoder extends TeaCoder
 
 	const OPERATOR_MAP = [
 		_IS => 'instanceof',
-		_CONCAT => _DOT,
+		_CONCAT => '.',
 		_NOT => '!',
 		_AND => '&&',
 		_OR => '||',
 		_REMAINDER => '%',
+		_EXPONENTIATION => '**',
+		_BITWISE_XOR => '^',
+		'^|=' => '^=',
 	];
 
 	// precedences for MultiOperation
 	const OPERATOR_PRECEDENCES = [
 		_VCAT => 0, 		// array concat, use function
-		_MERGE => 0,		// array/dict merge, use function
+		// _MERGE => 0,		// array/dict merge, use function
 		_DOUBLE_COLON => 1, // cast
-		'**' => 2, 			// 算术运算符
+		'**' => 2, 			// 幂运算符
 		'instanceof' => 3, 	// 类型
 		'*' => 4, '/' => 4, '%' => 4, 	// 算术运算符
 		'+' => 5, '-' => 5, '.' => 5,	// 算术运算符和字符串运算符
@@ -146,7 +149,7 @@ class PHPCoder extends TeaCoder
 		$declarations = [];
 		foreach ($program->declarations as $node) {
 			// 公用常量和函数都生成到了__public.php中
-			if (!$node->is_unit_level || $node instanceof ClassLikeDeclaration) {
+			if (!$node->is_unit_level || $node instanceof ClassKindredDeclaration) {
 				$declarations[] = $node;
 			}
 		}
@@ -207,7 +210,7 @@ class PHPCoder extends TeaCoder
 			}
 
 			$declaration = $target->source_declaration;
-			if ($declaration instanceof ClassLikeDeclaration) {
+			if ($declaration instanceof ClassKindredDeclaration) {
 				// do not do anything
 			}
 			elseif ($declaration instanceof FunctionDeclaration) {
@@ -227,7 +230,7 @@ class PHPCoder extends TeaCoder
 		return sprintf('\{ %s }', join(', ', $items));
 	}
 
-	protected function generate_class_header(ClassLikeDeclaration $node, string $kind = null)
+	protected function generate_class_header(ClassKindredDeclaration $node, string $kind = null)
 	{
 		$modifier = $node->modifier ?? _INTERNAL;
 		$name = $this->get_normalized_name($node->name);
@@ -236,17 +239,17 @@ class PHPCoder extends TeaCoder
 		return "#$modifier\n{$type} {$name}";
 	}
 
-	protected function generate_class_baseds(ClassLikeDeclaration $node)
+	protected function generate_class_baseds(ClassKindredDeclaration $node)
 	{
 		$code = '';
 		if ($node->inherits) {
-			$code = ' extends ' . $this->render_classlike_identifier($node->inherits);
+			$code = ' extends ' . $this->render_classkindred_identifier($node->inherits);
 		}
 
 		if ($node->baseds) {
 			$items = [];
 			foreach ($node->baseds as $item) {
-				$items[] = $this->render_classlike_identifier($item);
+				$items[] = $this->render_classkindred_identifier($item);
 			}
 
 			$keyword = $node instanceof InterfaceDeclaration ? ' extends ' : ' implements ';
@@ -562,17 +565,17 @@ class PHPCoder extends TeaCoder
 
 // ---
 
-	public function render_when_block(WhenBlock $node)
+	public function render_switch_block(SwitchBlock $node)
 	{
 		$test = $node->test->render($this);
 
 		$branches = [];
 		foreach ($node->branches as $branch) {
-			$branches[] = $this->render_when_branch($branch);
+			$branches[] = $this->render_case_branch($branch);
 		}
 
 		if ($node->else) {
-			$branches[] = $this->render_else_for_when_block($node->else);
+			$branches[] = $this->render_else_for_switch_block($node->else);
 		}
 
 		$branches = $this->indents(join(LF, $branches));
@@ -585,10 +588,10 @@ class PHPCoder extends TeaCoder
 		return $code;
 	}
 
-	protected function render_else_for_when_block(IElseBlock $node)
+	protected function render_else_for_switch_block(IElseBlock $node)
 	{
 		if ($node instanceof ElseBlock) {
-			$body = $this->render_when_branch_body($node->body);
+			$body = $this->render_case_branch_body($node->body);
 		}
 		else {
 			// that should be ElseIfBlock
@@ -606,7 +609,7 @@ class PHPCoder extends TeaCoder
 		return "default:\n{$body}";
 	}
 
-	protected function render_when_branch(WhenBranch $node)
+	protected function render_case_branch(CaseBranch $node)
 	{
 		$codes = [];
 		if ($node->rule instanceof ExpressionList) {
@@ -620,12 +623,12 @@ class PHPCoder extends TeaCoder
 			$codes[] = "case {$expr}:";
 		}
 
-		$codes[] = $this->render_when_branch_body($node->body);
+		$codes[] = $this->render_case_branch_body($node->body);
 
 		return join(LF, $codes);
 	}
 
-	protected function render_when_branch_body(array $nodes)
+	protected function render_case_branch_body(array $nodes)
 	{
 		$items = [];
 		foreach ($nodes as $node) {
@@ -1083,8 +1086,8 @@ class PHPCoder extends TeaCoder
 			return $this->add_variable_prefix($node->name);
 		}
 
-		if ($declaration instanceof ClassLikeDeclaration) {
-			$name = $this->get_classlike_identifier_name($node);
+		if ($declaration instanceof ClassKindredDeclaration) {
+			$name = $this->get_classkindred_identifier_name($node);
 		}
 		else {
 			// function/constant
@@ -1095,7 +1098,7 @@ class PHPCoder extends TeaCoder
 			if ($declaration instanceof FunctionDeclaration) {
 				$name = sprintf("'%s%s%s'", $declaration->program->unit->dist_ns_uri, static::NS_SEPARATOR, $name);
 			}
-			elseif ($declaration instanceof ClassLikeDeclaration) {
+			elseif ($declaration instanceof ClassKindredDeclaration) {
 				$name = TeaHelper::is_builtin_type_name($declaration->name)
 					? "'{$declaration->name}'"
 					: $name . '::class';
@@ -1128,17 +1131,17 @@ class PHPCoder extends TeaCoder
 		return static::TYPE_MAP[_ANY];
 	}
 
-	public function render_classlike_identifier(ClassLikeIdentifier $node)
+	public function render_classkindred_identifier(ClassKindredIdentifier $node)
 	{
 		if ($node->ns) {
 			$name = $this->get_normalized_name($node->name);
 			return $this->render_plain_identifier($node->ns) . static::NS_SEPARATOR . $name;
 		}
 
-		return $this->get_classlike_identifier_name($node);
+		return $this->get_classkindred_identifier_name($node);
 	}
 
-	private function get_classlike_identifier_name(PlainIdentifier $node)
+	private function get_classkindred_identifier_name(PlainIdentifier $node)
 	{
 		$declaration = $node->symbol->declaration;
 		if ($declaration->is_root_namespace()) {
@@ -1151,7 +1154,7 @@ class PHPCoder extends TeaCoder
 		return $name;
 	}
 
-	private function get_identifier_name_for_root_namespace_declaration(ClassLikeDeclaration $declaration)
+	private function get_identifier_name_for_root_namespace_declaration(ClassKindredDeclaration $declaration)
 	{
 		$name = $declaration->name;
 
@@ -1409,7 +1412,7 @@ class PHPCoder extends TeaCoder
 			$code = "is_{$type_name}($left)";
 		}
 		else {
-			$right = $this->get_classlike_identifier_name($node->right);
+			$right = $this->get_classkindred_identifier_name($node->right);
 			$code = "{$left} instanceof {$right}";
 		}
 
@@ -1447,11 +1450,11 @@ class PHPCoder extends TeaCoder
 			// $code = sprintf('array_merge(%s, array_values(%s))', $left, $right);
 			$code = sprintf('array_merge(%s, %s)', $left, $right);
 		}
-		elseif ($operator === OperatorFactory::$_merge) {
-			// merge Arrays / Dicts
-			// $code = "$right + $left"; // the order would be incorrect in some times
-			$code = sprintf('array_replace(%s, %s)', $left, $right);
-		}
+		// elseif ($operator === OperatorFactory::$_merge) {
+		// 	// merge Arrays / Dicts
+		// 	// $code = "$right + $left"; // the order would be incorrect in some times
+		// 	$code = sprintf('array_replace(%s, %s)', $left, $right);
+		// }
 		elseif ($operator === OperatorFactory::$_remainder && $node->infered_type === TypeFactory::$_float) {
 			// use the 'fmod' function for the float arguments
 			$code = sprintf('fmod(%s, %s)', $left, $right);

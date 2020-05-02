@@ -9,11 +9,11 @@
 
 namespace Tea;
 
-class WhenBlock extends ControlBlock implements IElseAble, IExceptAble, ILoopLikeBlock
+class SwitchBlock extends ControlBlock implements IElseAble, IExceptAble, ILoopKindredBlock
 {
 	use ElseTrait, ExceptTrait;
 
-	const KIND = 'when_block';
+	const KIND = 'switch_block';
 
 	public $test;
 	public $branches;
@@ -24,15 +24,15 @@ class WhenBlock extends ControlBlock implements IElseAble, IExceptAble, ILoopLik
 		$this->test = $test instanceof Parentheses ? $test->expression : $test;
 	}
 
-	public function set_branches(WhenBranch ...$branches)
+	public function set_branches(CaseBranch ...$branches)
 	{
 		$this->branches = $branches;
 	}
 }
 
-class WhenBranch extends ControlBlock
+class CaseBranch extends ControlBlock
 {
-	const KIND = 'when_branch';
+	const KIND = 'case_branch';
 
 	public $rule;
 

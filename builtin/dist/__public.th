@@ -146,11 +146,9 @@ public _str_replace(master String, search String, replacement String) String
 
 public _array_search(master Array, search Any) Int
 
-public _dict_search(master Dict, search Any) String
+public array_last_index(array Array) UInt
 
 #php array_key_exists(key Any, arr Dict) Bool
-
-public array_last_index(array Array) UInt
 
 #php unset(target Any)
 
@@ -159,6 +157,8 @@ public array_last_index(array Array) UInt
 #php array_values(array Any) Array
 
 public dict_get(dict Dict, key String) Any
+
+public dict_search(master Dict, search Any) String
 
 #php json_encode(data Any, flags Int = 0, depth UInt = 512) String
 

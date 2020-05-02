@@ -20,10 +20,7 @@ const _BINARY_OP_PRECEDENCES = [
 	_DOT => 1,  // class/object
 	_NOTIFY => 1, // the callback notify
 	// () []
-
-	// L2
-	// _NEGATION => 2, _BITWISE_NOT => 2, // prefix unary
-	_DOUBLE_COLON => 2, // type cast
+	_DOUBLE_COLON => 1, // type cast
 
 	// L3
 	_EXPONENTIATION => 3, // math
@@ -39,7 +36,7 @@ const _BINARY_OP_PRECEDENCES = [
 	// L6
 	_CONCAT => 6, // String / Array,  concat to the end of the left expression
 	_VCAT => 6, // Array,  concat to the end of the left array expression
-	_MERGE => 6, // Dict / Array,  merge by key or index
+	// _MERGE => 6, // Dict / Array,  merge by key or index
 	// 'pop', 'take'  // todo?
 
 	// L7 comparisons
@@ -85,7 +82,7 @@ class OperatorFactory
 
 	static $_concat;
 	static $_vcat;
-	static $_merge;
+	// static $_merge;
 
 	static $_shift_left;
 	static $_shift_right;
@@ -145,7 +142,7 @@ class OperatorFactory
 
 		self::$_concat = self::create_normal_operator(_CONCAT);
 		self::$_vcat = self::create_normal_operator(_VCAT);
-		self::$_merge = self::create_normal_operator(_MERGE);
+		// self::$_merge = self::create_normal_operator(_MERGE);
 
 		self::$_shift_left = self::create_normal_operator(_SHIFT_LEFT);
 		self::$_shift_right = self::create_normal_operator(_SHIFT_RIGHT);

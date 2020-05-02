@@ -115,7 +115,7 @@ abstract class ValuedType extends BaseType
 		}
 
 		// for the builtin classes
-		if ($target instanceof ClassLikeIdentifier && $this->symbol === $target->symbol) {
+		if ($target instanceof ClassKindredIdentifier && $this->symbol === $target->symbol) {
 			return true;
 		}
 

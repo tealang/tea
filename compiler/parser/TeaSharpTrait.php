@@ -59,7 +59,7 @@ trait TeaSharpTrait
 			throw $this->new_parse_error("'$name' not a builtin type, cannot use the #tea label.");
 		}
 
-		$this->read_rest_for_classlike_declaration($declaration);
+		$this->read_rest_for_classkindred_declaration($declaration);
 
 		$this->is_in_tea_declaration = false;
 
@@ -79,12 +79,12 @@ trait TeaSharpTrait
 			}
 		}
 
-		if (TeaHelper::is_classlike_name($name)) {
+		if (TeaHelper::is_classkindred_name($name)) {
 			// the alias feature
 			if ($this->skip_token_ignore_space(_AS)) {
 				$origin_name = $name;
 				$name = $this->scan_token_ignore_space();
-				if (!TeaHelper::is_classlike_name($name)) {
+				if (!TeaHelper::is_classkindred_name($name)) {
 					throw $this->new_parse_error("Invalid class/interface name.");
 				}
 			}
@@ -175,8 +175,8 @@ trait TeaSharpTrait
 		// elseif ($next === _LOOP) {
 		// 	$block = $this->read_loop_block($label);
 		// }
-		elseif ($next === _WHEN) {
-			$block = $this->read_when_block($label);
+		elseif ($next === _SWITCH) {
+			$block = $this->read_switch_block($label);
 		}
 		else {
 			throw $this->new_parse_error("Expected a inline statement after label #{$label}.");

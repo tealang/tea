@@ -11,14 +11,14 @@ namespace Tea;
 
 class ASTHelper
 {
-	static function create_symbol_this(ClassLikeIdentifier $class)
+	static function create_symbol_this(ClassKindredIdentifier $class)
 	{
 		$declaration = new InvariantDeclaration(_THIS, $class);
 		$declaration->is_checked = true; // do not need to check
 		return new Symbol($declaration);
 	}
 
-	static function create_symbol_super(ClassLikeIdentifier $class)
+	static function create_symbol_super(ClassKindredIdentifier $class)
 	{
 		$declaration = new InvariantDeclaration(_SUPER, $class);
 		$declaration->is_checked = true; // do not need to check

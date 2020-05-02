@@ -2,7 +2,7 @@
 
 internal PI = 3.1415926
 
-some = 'abc' concat 1 + 2 & 2 * 2 ** 3 / 5 rem 6
+some = 'abc' concat 1 + 2 & 2 * 2 ^ 3 / 5 rem 6
 
 var uint_num = 123
 var int_num Int = 123
@@ -11,7 +11,6 @@ var uint_from_string = '123'::UInt
 // var uint_from_string = '-123'::UInt // error
 
 var str_from_uint = 123::String
-var str_from_int = -123::String
 var str_from_float = 123.123::String
 
 var dict = ['a': 1, 'b': '100']
@@ -35,7 +34,7 @@ if found === -1 {
 
 // math
 num = 3
-result = -num * PI ** 2 - 12
+result = -num * PI ^ 2 - 12
 
 // compare
 is_greater = 3 > num

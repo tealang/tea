@@ -99,12 +99,12 @@ class HeaderParser extends TeaParser
 			throw $this->new_parse_error("Required the 'as' keyword to alias to a new name without dots.");
 		}
 
-		if (!TeaHelper::is_classlike_name($name)) {
+		if (!TeaHelper::is_classkindred_name($name)) {
 			throw $this->new_parse_error("Invalid class/interface name.");
 		}
 
 		// class or interface
-		$declaration = $this->try_read_classlike_declaration($name, $modifier);
+		$declaration = $this->try_read_classkindred_declaration($name, $modifier);
 		if (!$declaration) {
 			throw $this->new_unexpected_error();
 		}

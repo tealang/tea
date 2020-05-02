@@ -133,17 +133,13 @@ $str2 = null;
 
 $var_without_decared = 123;
 
-$pow_result = ((-2) ** 3) ** 5;
+$pow_result = ((-2) ** 2) ** 3;
 
 $string_concat = 'abc' . (1 + (8 & 2) * 3);
 $array_concat = array_merge(['A', 'B'], ['A1', 'C1']);
 
-$array_merge = array_replace(['A', 'B'], ['A1', 'B1']);
-$dict_merge = array_replace(['a' => 'A', 'b' => 'B'], ['a' => 'A1', 'c' => 'C1']);
-
 $uint_from_non_negative_string = uint_ensure((int)'123');
 $str_from_uint = (string)123;
-$str_from_int = (string)-123;
 $str_from_float = (string)123.123;
 
 $ex1 = null;

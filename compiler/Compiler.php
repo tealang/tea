@@ -466,7 +466,7 @@ class Compiler
 		// the depends relation
 		foreach ($this->normal_programs as $program) {
 			foreach ($program->declarations as $node) {
-				if ($node->is_unit_level && !$node instanceof ClassLikeDeclaration) {
+				if ($node->is_unit_level && !$node instanceof ClassKindredDeclaration) {
 					$node->set_depends_to_unit_level();
 				}
 			}
@@ -546,7 +546,7 @@ class Compiler
 		$dist_file_path = substr($dist_file_path, $this->unit_dist_path_len);
 
 		foreach ($program->declarations as $node) {
-			if ($node instanceof ClassLikeDeclaration && !$node instanceof BuiltinTypeClassDeclaration && $node->label !== _PHP) {
+			if ($node instanceof ClassKindredDeclaration && !$node instanceof BuiltinTypeClassDeclaration && $node->label !== _PHP) {
 				$name = $name_prefix . $node->name;
 				$this->autoloads_map[$name] = $dist_file_path;
 

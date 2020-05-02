@@ -162,18 +162,17 @@ public _str_replace(master String, search String, replacement String) {
 #php array_push(master Array, item Any) UInt
 #php array_pop(master Array) Any
 #php array_search(search, master, strict = false) Int
+
 public _array_search(master Array, search) Int {
 	index = array_search(search, master, true)
 	return index === false ? -1 : index  // would return -1 on not found
 }
-public _dict_search(master Dict, search) String {
-	key = array_search(search, master, true)
-	return key === false ? none : key  // would return none on not found
-}
-#php array_key_exists(key, arr Dict) Bool
+
 public array_last_index(array Array) UInt {
 	return count(array) - 1
 }
+
+#php array_key_exists(key, arr Dict) Bool
 
 // assoc array
 #php unset(target) Void
@@ -182,6 +181,11 @@ public array_last_index(array Array) UInt {
 
 public dict_get(dict Dict, key String) {
 	return dict[key] ?? none
+}
+
+public dict_search(master Dict, search) String {
+	key = array_search(search, master, true)
+	return key === false ? none : key  // would return none on not found
 }
 
 #php JSON_UNESCAPED_UNICODE Int
@@ -327,7 +331,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 	masked has_value(val) => in_array(val, this, true)
 
 	masked get(key String) => dict_get(this, key)
-	masked find(val) => _dict_search(this, val) // find the key with supported value
+	masked find(val) => dict_search(this, val) // find the key with supported value
 
 	// masked remove(key String) => unset(this[key])
 

@@ -18,6 +18,8 @@ class Operator
 	public $dist_sign;
 	public $dist_precedence;
 
+	public $is_left_associativity = true;
+
 	public function __construct(string $sign, int $precedence)
 	{
 		$this->sign = $sign;

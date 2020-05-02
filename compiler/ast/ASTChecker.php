@@ -100,11 +100,11 @@ class ASTChecker
 				break;
 
 			case ClassDeclaration::KIND:
-				$this->check_classlike_declaration($node);
+				$this->check_classkindred_declaration($node);
 				break;
 
 			case InterfaceDeclaration::KIND:
-				$this->check_classlike_declaration($node);
+				$this->check_classkindred_declaration($node);
 				break;
 
 			case ConstantDeclaration::KIND:
@@ -188,9 +188,9 @@ class ASTChecker
 					throw $this->new_syntax_error("Array concat operation cannot use for constant value.", $value);
 				}
 			}
-			elseif ($value->operator === OperatorFactory::$_merge) {
-				throw $this->new_syntax_error("Array/Dict merge operation cannot use for constant value.", $value);
-			}
+			// elseif ($value->operator === OperatorFactory::$_merge) {
+			// 	throw $this->new_syntax_error("Array/Dict merge operation cannot use for constant value.", $value);
+			// }
 		}
 
 		if ($node->type) {
@@ -229,10 +229,10 @@ class ASTChecker
 
 		$infered_type = $node->value ? $this->infer_expression($node->value) : null;
 
-		$this->set_variable_like_declaration_type($node, $infered_type);
+		$this->set_variable_similar_declaration_type($node, $infered_type);
 	}
 
-	private function set_variable_like_declaration_type(IDeclaration $node, ?IType $infered_type)
+	private function set_variable_similar_declaration_type(IDeclaration $node, ?IType $infered_type)
 	{
 		if ($node->type) {
 			$this->check_type($node->type, $node);
@@ -427,7 +427,7 @@ class ASTChecker
 
 		$infered_type = $node->value ? $this->infer_expression($node->value) : null;
 
-		$this->set_variable_like_declaration_type($node, $infered_type);
+		$this->set_variable_similar_declaration_type($node, $infered_type);
 	}
 
 	private function check_class_constant_declaration(ClassConstantDeclaration $node)
@@ -446,7 +446,7 @@ class ASTChecker
 		}
 	}
 
-	private function check_classlike_declaration(ClassLikeDeclaration $node)
+	private function check_classkindred_declaration(ClassKindredDeclaration $node)
 	{
 		if ($node->is_checked) return;
 		$node->is_checked = true;
@@ -454,7 +454,7 @@ class ASTChecker
 		// 当前是类时，包括继承的类，或实现的接口
 		// 当前是接口时，包括继承的接口
 		if ($node->baseds) {
-			$this->attach_baseds_for_classlike_declaration($node);
+			$this->attach_baseds_for_classkindred_declaration($node);
 		}
 
 		// 先检查本类中成员，推断出的类型会被后面用到
@@ -469,21 +469,21 @@ class ASTChecker
 
 		// 检查本类与实现或继承的接口中的成员是否匹配
 		if ($node->baseds) {
-			$this->check_baseds_for_classlike_declaration($node);
+			$this->check_baseds_for_classkindred_declaration($node);
 		}
 
 		// 本类中的成员优先级最高
 		$node->actual_members = array_merge($node->actual_members, $node->members);
 	}
 
-	private function attach_baseds_for_classlike_declaration(ClassLikeDeclaration $node)
+	private function attach_baseds_for_classkindred_declaration(ClassKindredDeclaration $node)
 	{
 		// 类可以实现多个接口，但只能继承一个父类
 		// 接口可以继承多个父接口
 
 		$interfaces = [];
 		foreach ($node->baseds as $identifier) {
-			$declaration = $this->require_classlike_declaration($identifier);
+			$declaration = $this->require_classkindred_declaration($identifier);
 
 			// check is a class
 			if ($declaration instanceof ClassDeclaration) {
@@ -521,7 +521,7 @@ class ASTChecker
 		}
 	}
 
-	private function check_baseds_for_classlike_declaration(ClassLikeDeclaration $node)
+	private function check_baseds_for_classkindred_declaration(ClassKindredDeclaration $node)
 	{
 		// 接口中的成员默认实现属于this，优先级较高，后面接口的默认实现将覆盖前面的
 		foreach ($node->baseds as $identifier) {
@@ -584,7 +584,7 @@ class ASTChecker
 				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatible with '{$super->super_block->name}.{$super->name}'.", $node);
 			}
 
-			$this->assert_classlike_method_parameters($node, $super);
+			$this->assert_classkindred_method_parameters($node, $super);
 		}
 		elseif ($super instanceof PropertyDeclaration) {
 			if (!$node instanceof PropertyDeclaration) {
@@ -596,7 +596,7 @@ class ASTChecker
 		}
 	}
 
-	private function assert_classlike_method_parameters(FunctionDeclaration $node, FunctionDeclaration $protocol)
+	private function assert_classkindred_method_parameters(FunctionDeclaration $node, FunctionDeclaration $protocol)
 	{
 		if ($protocol->parameters === null && $protocol->parameters === null) {
 			return;
@@ -749,7 +749,7 @@ class ASTChecker
 		return $infered_type;
 	}
 
-	private function infer_when_block(WhenBlock $node): ?IType
+	private function infer_switch_block(SwitchBlock $node): ?IType
 	{
 		$testing_type = $this->infer_expression($node->test);
 		if (!TypeFactory::is_when_testable_type($testing_type)) {
@@ -964,8 +964,8 @@ class ASTChecker
 			case TryBlock::KIND:
 				return $this->infer_try_block($node);
 
-			case WhenBlock::KIND:
-				return $this->infer_when_block($node);
+			case SwitchBlock::KIND:
+				return $this->infer_switch_block($node);
 
 			case UseStatement::KIND:
 				break;
@@ -1139,8 +1139,8 @@ class ASTChecker
 			case VariableIdentifier::KIND:
 				$infered_type = $this->infer_variable_identifier($node);
 				break;
-			case ClassLikeIdentifier::KIND:
-				$infered_type = $this->infer_classlike_identifier($node);
+			case ClassKindredIdentifier::KIND:
+				$infered_type = $this->infer_classkindred_identifier($node);
 				break;
 			case ConstantIdentifier::KIND:
 				$infered_type = $this->infer_constant_identifier($node);
@@ -1295,21 +1295,21 @@ class ASTChecker
 			}
 			elseif ($left_type === TypeFactory::$_any || $left_type instanceof DictType) {
 				$type_name = $this->get_type_name($left_type);
-				throw $this->new_syntax_error("'concat' operation cannot use for '$type_name' type values.", $node);
+				throw $this->new_syntax_error("'concat' operation cannot use for '$type_name' type targets.", $node);
 			}
 			else {
 				$node->infered_type = TypeFactory::$_string;
 			}
 		}
-		elseif ($operator === OperatorFactory::$_merge) {
-			// array or dict
-			if (!$left_type instanceof ArrayType && !$left_type instanceof DictType) {
-				throw $this->new_syntax_error("'merge' operation just support Array/Dict type values.", $node);
-			}
+		// elseif ($operator === OperatorFactory::$_merge) {
+		// 	// array or dict
+		// 	if (!$left_type instanceof ArrayType && !$left_type instanceof DictType) {
+		// 		throw $this->new_syntax_error("'merge' operation just support Array/Dict type targets.", $node);
+		// 	}
 
-			$this->assert_type_compatible($left_type, $right_type, $node->right, _MERGE);
-			$node->infered_type = $left_type;
-		}
+		// 	$this->assert_type_compatible($left_type, $right_type, $node->right, _MERGE);
+		// 	$node->infered_type = $left_type;
+		// }
 		elseif (OperatorFactory::is_bitwise_operator($operator)) {
 			$node->infered_type = $this->reduce_types([$left_type, $right_type]);
 		}
@@ -1527,7 +1527,7 @@ class ASTChecker
 		}
 		elseif ($type instanceof PlainIdentifier) {
 			$infered_type = $this->infer_plain_identifier($type);
-			if (!$type->symbol->declaration instanceof ClassLikeDeclaration) {
+			if (!$type->symbol->declaration instanceof ClassKindredDeclaration) {
 				$declare_name = $this->get_declaration_name($type->symbol->declaration);
 				throw $this->new_syntax_error("Cannot use '$declare_name' as a Type.", $type);
 			}
@@ -1552,9 +1552,9 @@ class ASTChecker
 		$node->parameters and $this->check_parameters_for_callable_declaration($node);
 	}
 
-	private function infer_classlike_identifier(ClassLikeIdentifier $node): IType
+	private function infer_classkindred_identifier(ClassKindredIdentifier $node): IType
 	{
-		$declaration = $this->require_classlike_declaration($node);
+		$declaration = $this->require_classkindred_declaration($node);
 		return $declaration->type;
 	}
 
@@ -1629,7 +1629,7 @@ class ASTChecker
 			$this->check_call_arguments($node);
 		}
 
-		if ($callee->symbol->declaration instanceof ClassLikeDeclaration) {
+		if ($callee->symbol->declaration instanceof ClassKindredDeclaration) {
 			if (!$callee->symbol->declaration instanceof ClassDeclaration) {
 				throw $this->new_syntax_error("Invalid call for: '{$callee->symbol->declaration->name}'", $node);
 			}
@@ -1847,7 +1847,7 @@ class ASTChecker
 
 		$declaration = $node->symbol->declaration;
 
-		if ($declaration instanceof VariableDeclaration || $declaration instanceof ConstantDeclaration || $declaration instanceof ParameterDeclaration || $declaration instanceof ClassLikeDeclaration) {
+		if ($declaration instanceof VariableDeclaration || $declaration instanceof ConstantDeclaration || $declaration instanceof ParameterDeclaration || $declaration instanceof ClassKindredDeclaration) {
 			if (!$declaration->type) {
 				throw $this->new_syntax_error("Declaration of '{$node->name}' not found.", $node);
 			}
@@ -2034,8 +2034,8 @@ class ASTChecker
 				throw $this->new_syntax_error("Invalid callable expression.", $node);
 			}
 		}
-		elseif ($node instanceof ClassLikeIdentifier) {
-			$declar = $this->require_classlike_declaration($node);
+		elseif ($node instanceof ClassKindredIdentifier) {
+			$declar = $this->require_classkindred_declaration($node);
 		}
 		else {
 			$kind = $node::KIND;
@@ -2141,10 +2141,10 @@ class ASTChecker
 		$node->symbol = new Symbol(ASTFactory::$virtual_property_for_any, $node->name);
 	}
 
-	private function find_member_symbol_in_class(ClassLikeDeclaration $classlike, string $member_name): ?Symbol
+	private function find_member_symbol_in_class(ClassKindredDeclaration $classkindred, string $member_name): ?Symbol
 	{
 		// 当作为外部调用时，应命中这里的逻辑
-		$declaration = $classlike->actual_members[$member_name] ?? null;
+		$declaration = $classkindred->actual_members[$member_name] ?? null;
 		if ($declaration) {
 			return $declaration->symbol;
 		}
@@ -2152,12 +2152,12 @@ class ASTChecker
 		// 当调用的地方为正在检查的类中时，需要走以下逻辑
 
 		// find in self
-		$declaration = $classlike->members[$member_name] ?? null;
+		$declaration = $classkindred->members[$member_name] ?? null;
 		if ($declaration) {
 			if (!$declaration->is_checked) {
 				// switch to target program
 				$temp_program = $this->program;
-				$this->program = $classlike->program;
+				$this->program = $classkindred->program;
 
 				$this->check_class_member_declaration($declaration);
 
@@ -2169,18 +2169,18 @@ class ASTChecker
 		}
 
 		// find in extends class
-		if ($classlike->inherits) {
-			$symbol = $this->find_member_symbol_in_class($classlike->inherits->symbol->declaration, $member_name);
+		if ($classkindred->inherits) {
+			$symbol = $this->find_member_symbol_in_class($classkindred->inherits->symbol->declaration, $member_name);
 			if ($symbol) {
 				return $symbol;
 			}
 		}
 
 		// find in implements interfaces
-		if ($classlike->baseds) {
-			foreach ($classlike->baseds as $interface) {
+		if ($classkindred->baseds) {
+			foreach ($classkindred->baseds as $interface) {
 				if (!$interface->symbol) {
-					$this->require_classlike_declaration($interface);
+					$this->require_classkindred_declaration($interface);
 				}
 
 				$symbol = $this->find_member_symbol_in_class($interface->symbol->declaration, $member_name);
@@ -2193,11 +2193,11 @@ class ASTChecker
 		return null;
 	}
 
-	private function require_class_member_symbol(ClassLikeDeclaration $classlike, Identifiable $node): Symbol
+	private function require_class_member_symbol(ClassKindredDeclaration $classkindred, Identifiable $node): Symbol
 	{
-		$symbol = $this->find_member_symbol_in_class($classlike, $node->name);
+		$symbol = $this->find_member_symbol_in_class($classkindred, $node->name);
 		if (!$symbol) {
-			throw $this->new_syntax_error("Member '{$node->name}' not found in '{$classlike->name}'", $node);
+			throw $this->new_syntax_error("Member '{$node->name}' not found in '{$classkindred->name}'", $node);
 		}
 
 		return $symbol;
@@ -2214,7 +2214,7 @@ class ASTChecker
 	// }
 
 	// includes builtin types, and classes, and namespace
-	private function require_object_declaration(BaseExpression $node): ClassLikeDeclaration
+	private function require_object_declaration(BaseExpression $node): ClassKindredDeclaration
 	{
 		$infered_type = $this->infer_expression($node);
 		if (!$infered_type instanceof IType) {
@@ -2228,7 +2228,7 @@ class ASTChecker
 		return $infered_type->symbol->declaration;
 	}
 
-	private function require_classlike_declaration(PlainIdentifier $identifier)
+	private function require_classkindred_declaration(PlainIdentifier $identifier)
 	{
 		$symbol = $identifier->symbol;
 
@@ -2244,8 +2244,8 @@ class ASTChecker
 				}
 			}
 
-			if (!$symbol->declaration instanceof ClassLikeDeclaration) {
-				throw $this->new_syntax_error("Declaration of '{$identifier->name}' not a classlike declaration.", $identifier);
+			if (!$symbol->declaration instanceof ClassKindredDeclaration) {
+				throw $this->new_syntax_error("Declaration of '{$identifier->name}' not a classkindred declaration.", $identifier);
 			}
 
 			$identifier->symbol = $symbol;
@@ -2255,7 +2255,7 @@ class ASTChecker
 
 		$temp_program = $this->program;
 		$this->program = $declaration->program;
-		$this->check_classlike_declaration($declaration);
+		$this->check_classkindred_declaration($declaration);
 		$this->program = $temp_program;
 
 		return $declaration;

@@ -78,7 +78,7 @@ class TeaCoder
 		}
 
 		foreach ($program->declarations as $node) {
-			if (!$node instanceof ClassLikeDeclaration && !$node instanceof FunctionDeclaration) {
+			if (!$node instanceof ClassKindredDeclaration && !$node instanceof FunctionDeclaration) {
 				$simple_item = $node->render($this);
 				$simple_item === null || $items[] = $simple_item;
 			}
@@ -98,7 +98,7 @@ class TeaCoder
 		}
 
 		foreach ($program->declarations as $node) {
-			if ($node instanceof ClassLikeDeclaration || $node instanceof FunctionDeclaration) {
+			if ($node instanceof ClassKindredDeclaration || $node instanceof FunctionDeclaration) {
 				$item = $node->render($this);
 				$item === null || $items[] = $item . LF;
 			}
@@ -119,7 +119,7 @@ class TeaCoder
 
 // -----------
 
-	protected function generate_class_header(ClassLikeDeclaration $node, string $kind = null)
+	protected function generate_class_header(ClassKindredDeclaration $node, string $kind = null)
 	{
 		if ($node instanceof BuiltinTypeClassDeclaration) {
 			$prefix = _SHARP . 'tea';
@@ -137,15 +137,15 @@ class TeaCoder
 		return "$prefix $node->name";
 	}
 
-	protected function generate_class_baseds(ClassLikeDeclaration $node)
+	protected function generate_class_baseds(ClassKindredDeclaration $node)
 	{
 		$items = [];
 		if ($node->inherits) {
-			$items[] = $this->render_classlike_identifier($node->inherits);
+			$items[] = $this->render_classkindred_identifier($node->inherits);
 		}
 
 		foreach ($node->baseds as $item) {
-			$items[] = $this->render_classlike_identifier($item);
+			$items[] = $this->render_classkindred_identifier($item);
 		}
 
 		return $items ? ': ' . join(', ', $items) : '';
@@ -601,7 +601,7 @@ class TeaCoder
 		return sprintf('(%s) %s', $parameters, $type);
 	}
 
-	public function render_classlike_identifier(ClassLikeIdentifier $node)
+	public function render_classkindred_identifier(ClassKindredIdentifier $node)
 	{
 		$name = $node->name;
 		if ($node->ns) {
@@ -613,7 +613,7 @@ class TeaCoder
 
 	// public function render_class_identifier(ClassIdentifier $node)
 	// {
-	// 	return $this->render_classlike_identifier($node);
+	// 	return $this->render_classkindred_identifier($node);
 	// }
 
 	public function render_ns_identifier(NSIdentifier $node)

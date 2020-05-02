@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-const TEA_TOKENS_SPLIT_PATTERN = '/(\s|\{|\}|\(|\)|\[|\]|\'|\"|\,|\.=|\.|\$|\\\|\/\*|\*\/|\/\/|\/>|\/=|\/|\;|\+=|---|-->|->|-=|--|-|~|=>|<=|>=|>>=|<<=|>>|<<|<|>|===|\!==|\!=|\!|==|\*=|&=|\|=|\^=|\?\?=|\?\?|\?|=|@|#|&|::|:)/';
+const TEA_TOKENS_SPLIT_PATTERN = '/(\s|\{|\}|\(|\)|\[|\]|\'|\"|\,|\.=|\.|\$|\\\|\/\*|\*\/|\/\/|\/>|\/=|\/|\;|\+=|---|-->|->|-=|--|-|~|=>|<=|>=|>>=|<<=|>>|<<|<|>|===|\!==|\!=|\!|==|\*=|&=|\|=|\^=|\^\|=|\^\||\^|\?\?=|\?\?|\?|=|@|#|&|::|:)/';
 
 trait TeaTokenTrait
 {
@@ -412,11 +412,11 @@ trait TeaTokenTrait
 		throw $this->new_parse_error("Invalid identifier token '{$token}'", 1);
 	}
 
-	protected function expect_block_begin_ignore_empty()
-	{
-		$this->expect_token_ignore_empty(_BLOCK_BEGIN);
-		$this->skip_token_ignore_space(LF);
-	}
+	// protected function expect_block_begin_ignore_empty()
+	// {
+	// 	$this->expect_token_ignore_empty(_BLOCK_BEGIN);
+	// 	$this->skip_token_ignore_space(LF);
+	// }
 
 	protected function expect_block_begin_inline()
 	{

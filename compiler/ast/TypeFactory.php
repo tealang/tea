@@ -79,7 +79,7 @@ class TypeFactory
 
 		self::$_dict_key_type = self::create_union_type([self::$_string, self::$_int]);
 
-		self::$_igenerator = new ClassLikeIdentifier('IGenerator');
+		self::$_igenerator = new ClassKindredIdentifier('IGenerator');
 	}
 
 	static function is_iterable_type(IType $type)

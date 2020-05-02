@@ -77,7 +77,7 @@ class PlainIdentifier extends Identifiable implements IType
 
 	public function is_based_with(IType $target)
 	{
-		if (!$this->symbol->declaration instanceof ClassLikeDeclaration) {
+		if (!$this->symbol->declaration instanceof ClassKindredDeclaration) {
 			return false;
 		}
 
@@ -114,9 +114,9 @@ class VariableIdentifier extends PlainIdentifier
 	const KIND = 'variable_identifier';
 }
 
-class ClassLikeIdentifier extends PlainIdentifier
+class ClassKindredIdentifier extends PlainIdentifier
 {
-	const KIND = 'classlike_identifier';
+	const KIND = 'classkindred_identifier';
 
 	public $ns;
 
@@ -131,7 +131,7 @@ class ClassLikeIdentifier extends PlainIdentifier
 	}
 }
 
-// class ClassIdentifier extends ClassLikeIdentifier
+// class ClassIdentifier extends ClassKindredIdentifier
 // {
 // 	const KIND = 'class_identifier';
 // }

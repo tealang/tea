@@ -76,7 +76,7 @@ class TeaParser extends BaseParser
 		elseif (TeaHelper::is_modifier($token)) {
 			$node = $this->read_definition_with_modifier($token);
 		}
-		// elseif (TeaHelper::is_classlike_name($token) && ($node = $this->try_read_classlike_declaration($token))) {
+		// elseif (TeaHelper::is_classkindred_name($token) && ($node = $this->try_read_classkindred_declaration($token))) {
 		// 	// that's the class declaration
 		// }
 		else {
@@ -180,9 +180,9 @@ class TeaParser extends BaseParser
 			return $this->read_function_declaration($token, $modifier);
 		}
 
-		if (TeaHelper::is_classlike_name($token)) {
+		if (TeaHelper::is_classkindred_name($token)) {
 			// maybe is a constant in some times, so need to try read class
-			if ($class = $this->try_read_classlike_declaration($token, $modifier)) {
+			if ($class = $this->try_read_classkindred_declaration($token, $modifier)) {
 				$class->define_mode = true; // for check
 				return $class;
 			}
@@ -307,8 +307,8 @@ class TeaParser extends BaseParser
 			case _IF:
 				$node = $this->read_if_block();
 				break;
-			case _WHEN:
-				$node = $this->read_when_block();
+			case _SWITCH:
+				$node = $this->read_switch_block();
 				break;
 			case _FOR:
 				$node = $this->read_for_block();
@@ -584,7 +584,7 @@ class TeaParser extends BaseParser
 				throw $this->new_parse_error("Invalid variable name '{$var_name}'", 1);
 			}
 
-			$type = $this->try_read_classlike_identifier();
+			$type = $this->try_read_classkindred_identifier();
 			$sub_block = $this->factory->create_catch_block($var_name, $type);
 
 			$this->read_block_body($sub_block);
@@ -608,16 +608,16 @@ class TeaParser extends BaseParser
 		$master_block->set_except_block($sub_block);
 	}
 
-	protected function read_when_block(string $label = null)
+	protected function read_switch_block(string $label = null)
 	{
 		// case test-expression { branches }
 
 		$argument = $this->read_expression();
 
-		$master_block = $this->factory->create_when_block($argument);
+		$master_block = $this->factory->create_switch_block($argument);
 		$master_block->label = $label;
 
-		$branches = $this->read_when_branches();
+		$branches = $this->read_case_branches();
 		$master_block->set_branches(...$branches);
 
 		$this->try_attach_else_block($master_block);
@@ -626,7 +626,7 @@ class TeaParser extends BaseParser
 		return $master_block;
 	}
 
-	protected function read_when_branches()
+	protected function read_case_branches()
 	{
 		$this->expect_block_begin_inline();
 
@@ -634,7 +634,7 @@ class TeaParser extends BaseParser
 		while ($argument = $this->read_case_argument()) {
 
 			$this->expect_token_ignore_space(_COLON);
-			$when_branch = $this->factory->create_when_branch_block($argument);
+			$case_branch = $this->factory->create_case_branch_block($argument);
 
 			$statements = [];
 			while (($item = $this->read_normal_statement()) !== null) {
@@ -650,8 +650,8 @@ class TeaParser extends BaseParser
 				}
 			}
 
-			$when_branch->set_body_with_statements(...$statements);
-			$branches[] = $when_branch;
+			$case_branch->set_body_with_statements(...$statements);
+			$branches[] = $case_branch;
 		}
 
 		$this->expect_block_end();
@@ -912,9 +912,9 @@ class TeaParser extends BaseParser
 				}
 
 				// check is prefix operator
-				$check_operator = OperatorFactory::get_prefix_operator($token);
-				if ($check_operator !== null) {
-					$expression = $this->read_prefix_operation($check_operator);
+				$prefix_operator = OperatorFactory::get_prefix_operator($token);
+				if ($prefix_operator !== null) {
+					$expression = $this->read_prefix_operation($prefix_operator);
 					break;
 				}
 
@@ -1540,8 +1540,11 @@ class TeaParser extends BaseParser
 		}
 
 		// compare operator precedences
-		if ($prev_operator) {
-			if ($prev_operator->precedence <= $operator->precedence) {
+		if ($prev_operator !== null) {
+			if ($prev_operator->precedence < $operator->precedence) {
+				return $expression;
+			}
+			elseif ($prev_operator->precedence === $operator->precedence && $operator->is_left_associativity) {
 				return $expression;
 			}
 		}
@@ -1591,13 +1594,28 @@ class TeaParser extends BaseParser
 		}
 		else {
 			// the normal binary operation
+
+			// need spaces for other operations
 			$this->skip_binary_operator_with_space($token);
+
 			$right_expression = $this->read_expression($operator);
 			$expression = new BinaryOperation($operator, $expression, $right_expression);
 			$expression->pos = $right_expression->pos;
 		}
 
 		return $this->try_read_operation($expression, $prev_operator);
+	}
+
+	protected function skip_binary_operator_with_space(string $operator)
+	{
+		$this->expect_space("Missed space char before operator '$operator'.");
+		$this->scan_token_ignore_empty(); // skip the operator
+		$this->expect_space("Missed space char after operator '$operator'.");
+	}
+
+	protected function read_exponentiation_with(BaseExpression $first, Operator $operator)
+	{
+		//
 	}
 
 	protected function read_none_coalescing_with(BaseExpression $first, Operator $operator)
@@ -1620,13 +1638,6 @@ class TeaParser extends BaseParser
 		$expression->pos = $item->pos;
 
 		return $expression;
-	}
-
-	protected function skip_binary_operator_with_space(string $operator)
-	{
-		$this->expect_space("Missed space char before operator '$operator'.");
-		$this->scan_token_ignore_empty(); // skip the operator
-		$this->expect_space("Missed space char after operator '$operator'.");
 	}
 
 	protected function read_call_expression_arguments()
@@ -1692,7 +1703,7 @@ class TeaParser extends BaseParser
 		return $items;
 	}
 
-	protected function try_read_classlike_declaration(string $name, string $modifier = null)
+	protected function try_read_classkindred_declaration(string $name, string $modifier = null)
 	{
 		$next = $this->get_token_ignore_empty();
 		if ($next !== _BLOCK_BEGIN && $next !== _COLON) {
@@ -1714,7 +1725,7 @@ class TeaParser extends BaseParser
 		$declaration = $this->factory->create_class_declaration($name, $modifier);
 		$declaration->pos = $this->pos;
 
-		$this->read_rest_for_classlike_declaration($declaration);
+		$this->read_rest_for_classkindred_declaration($declaration);
 
 		return $declaration;
 	}
@@ -1725,19 +1736,19 @@ class TeaParser extends BaseParser
 		$declaration->pos = $this->pos;
 
 		$this->is_declare_mode = true;
-		$this->read_rest_for_classlike_declaration($declaration);
+		$this->read_rest_for_classkindred_declaration($declaration);
 		$this->is_declare_mode = false;
 
 		return $declaration;
 	}
 
-	protected function read_rest_for_classlike_declaration(ClassLikeDeclaration $declaration)
+	protected function read_rest_for_classkindred_declaration(ClassKindredDeclaration $declaration)
 	{
 		if ($baseds = $this->read_class_baseds()) {
 			$declaration->set_baseds(...$baseds);
 		}
 
-		$this->expect_block_begin_ignore_empty();
+		$this->expect_block_begin_inline();
 
 		while ($item = $this->read_class_member_declaration());
 
@@ -1752,7 +1763,7 @@ class TeaParser extends BaseParser
 		}
 
 		$baseds = [];
-		while ($identifer = $this->try_read_classlike_identifier()) {
+		while ($identifer = $this->try_read_classkindred_identifier()) {
 			$baseds[] = $identifer;
 			if (!$this->skip_comma()) {
 				break;
@@ -1766,7 +1777,7 @@ class TeaParser extends BaseParser
 		return $baseds;
 	}
 
-	protected function try_read_classlike_identifier()
+	protected function try_read_classkindred_identifier()
 	{
 		$token = $this->get_token_ignore_empty();
 		if (!TeaHelper::is_identifier_name($token)) {
@@ -1779,14 +1790,14 @@ class TeaParser extends BaseParser
 			throw $this->new_parse_error("Cannot use type '$token' as a class/interface.");
 		}
 
-		// return $this->read_classlike_identifier($token);
-		$identifer = $this->factory->create_classlike_identifier($token);
+		// return $this->read_classkindred_identifier($token);
+		$identifer = $this->factory->create_classkindred_identifier($token);
 		$identifer->pos = $this->pos;
 
 		return $identifer;
 	}
 
-	// protected function read_classlike_identifier(string $name = null)
+	// protected function read_classkindred_identifier(string $name = null)
 	// {
 	// 	if ($name === null) {
 	// 		$name = $this->expect_identifier_token();
@@ -1804,7 +1815,7 @@ class TeaParser extends BaseParser
 	// 	// 	throw $this->new_parse_error("Namespaces that exceed two levels not supported.");
 	// 	// }
 
-	// 	return $this->factory->create_classlike_identifier($ns, $name);
+	// 	return $this->factory->create_classkindred_identifier($ns, $name);
 	// }
 
 	protected function try_read_return_type_identifier()
@@ -1840,8 +1851,8 @@ class TeaParser extends BaseParser
 		}
 		elseif (TeaHelper::is_identifier_name($token)) {
 			$this->scan_token_ignore_space(); // skip
-			// $type = $this->read_classlike_identifier($token);
-			$type = $this->factory->create_classlike_identifier($token);
+			// $type = $this->read_classkindred_identifier($token);
+			$type = $this->factory->create_classkindred_identifier($token);
 		}
 		else {
 			return null;
@@ -1860,8 +1871,8 @@ class TeaParser extends BaseParser
 		}
 		elseif (TeaHelper::is_identifier_name($token)) {
 			$this->scan_token_ignore_space(); // skip
-			// $type = $this->read_classlike_identifier($token);
-			$type = $this->factory->create_classlike_identifier($token);
+			// $type = $this->read_classkindred_identifier($token);
+			$type = $this->factory->create_classkindred_identifier($token);
 		}
 		else {
 			return null;

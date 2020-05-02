@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-abstract class ClassLikeDeclaration extends Node implements IRootDeclaration, IStatement
+abstract class ClassKindredDeclaration extends Node implements IRootDeclaration, IStatement
 {
 	use DeclarationTrait;
 
@@ -23,7 +23,7 @@ abstract class ClassLikeDeclaration extends Node implements IRootDeclaration, IS
 
 	/**
 	 * the implements interfaces or inherits class
-	 * @var ClassLikeIdentifier[]
+	 * @var ClassKindredIdentifier[]
 	 */
 	public $baseds = [];
 
@@ -70,7 +70,7 @@ abstract class ClassLikeDeclaration extends Node implements IRootDeclaration, IS
 		return $this->program->unit === null || $this->label === _PHP;
 	}
 
-	public function set_baseds(ClassLikeIdentifier ...$baseds)
+	public function set_baseds(ClassKindredIdentifier ...$baseds)
 	{
 		$this->baseds = $baseds;
 	}
@@ -111,7 +111,7 @@ abstract class ClassLikeDeclaration extends Node implements IRootDeclaration, IS
 	}
 }
 
-class ClassDeclaration extends ClassLikeDeclaration implements ICallableDeclaration
+class ClassDeclaration extends ClassKindredDeclaration implements ICallableDeclaration
 {
 	const KIND = 'class_declaration';
 
@@ -140,7 +140,7 @@ class BuiltinTypeClassDeclaration extends ClassDeclaration
 	const KIND = 'class_declaration';
 }
 
-class InterfaceDeclaration extends ClassLikeDeclaration
+class InterfaceDeclaration extends ClassKindredDeclaration
 {
 	const KIND = 'interface_declaration';
 

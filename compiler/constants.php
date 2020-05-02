@@ -65,9 +65,9 @@ const
 
 	// _REFERENCE = '&',
 	_NEGATION = '-', // -1, -num
-	_ADDITION = '+', _SUBTRACTION = '-', _MULTIPLICATION = '*', _DIVISION = '/', _REMAINDER = 'rem', _EXPONENTIATION = '**',
-	_BITWISE_NOT = '~', _BITWISE_AND = '&', _BITWISE_OR = '|', _BITWISE_XOR = '^', //bitwise
-	_CONCAT = 'concat', _VCAT = 'vcat', _MERGE = 'merge',
+	_ADDITION = '+', _SUBTRACTION = '-', _MULTIPLICATION = '*', _DIVISION = '/', _REMAINDER = 'rem', _EXPONENTIATION = '^',
+	_BITWISE_NOT = '~', _BITWISE_AND = '&', _BITWISE_OR = '|', _BITWISE_XOR = '^|', //bitwise
+	_CONCAT = 'concat', _VCAT = 'vcat', // _MERGE = 'merge',
 	_ASSIGN = '=', _EQUAL = '==', _NOT_EQUAL = '!=', _IDENTICAL = '===', _NOT_IDENTICAL = '!==',
 	_NOT = 'not', _AND = 'and', _OR = 'or', // bool
 	_NONE_COALESCING = '??', _CONDITIONAL = '?',
@@ -75,7 +75,7 @@ const
 	_COLLECT = '>>',
 	_SHIFT_LEFT = '<<', _SHIFT_RIGHT = '>>',
 
-	_ASSIGN_OPERATORS = [_ASSIGN, '.=', '**=', '+=', '-=', '*=', '/=', '&=', '|=', '^=', '<<=', '>>='], // '??='
+	_ASSIGN_OPERATORS = [_ASSIGN, '.=', '^=', '+=', '-=', '*=', '/=', '&=', '|=', '^|=', '<<=', '>>='], // '??='
 
 	_SINGLE_QUOTE = '\'', _DOUBLE_QUOTE = '"',
 	_XTAG_OPEN = '<', _XTAG_CLOSE = '>',
@@ -89,11 +89,11 @@ const
 	_UNIT_PATH = 'UNIT_PATH',
 	_VAL_NONE = 'none', _VAL_TRUE = 'true', _VAL_FALSE = 'false',
 	_VAR = 'var', _MUT = 'mut', _YIELD = 'yield',
-	_IF = 'if', _ELSE = 'else', _ELSEIF = 'elseif', _WHEN = 'when', _CASE = 'case',
+	_IF = 'if', _ELSE = 'else', _ELSEIF = 'elseif', _SWITCH = 'switch', _CASE = 'case',
 	_FOR = 'for', _WHILE = 'while', _LOOP = 'loop',
 	_TRY = 'try', _CATCH = 'catch', _FINALLY = 'finally',
 	_ECHO = 'echo', _PRINT = 'print',
-	_RETURN = 'return', _EXIT = 'exit', _BREAK = 'break', _CONTINUE = 'continue', _THROW = 'throw',
+	_RETURN = 'return', _EXIT = 'exit', _BREAK = 'break', _CONTINUE = 'continue', _THROW = 'throw', _WHEN = 'when',
 	_STATIC = 'static', _FINAL = 'final', _MASKED = 'masked',
 	_PUBLIC = 'public', _INTERNAL = 'internal', _PROTECTED = 'protected', _PRIVATE = 'private',
 	_THIS = 'this', _SUPER = 'super', _CONSTRUCT = 'construct', _DESTRUCT = 'destruct';

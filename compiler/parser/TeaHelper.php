@@ -13,7 +13,7 @@ const _PATTERN_MODIFIER_REGEX = '/[imu]+/';
 
 const _STRUCTURE_KEYS = [
 	_VAR,
-	_IF, _WHEN, _FOR, _WHILE, _TRY, // _LOOP
+	_IF, _SWITCH, _FOR, _WHILE, _TRY, // _LOOP
 	_ECHO, _PRINT, _RETURN, _EXIT, _BREAK, _CONTINUE, _THROW,
 ];
 
@@ -129,7 +129,7 @@ class TeaHelper
 		return preg_match('/^[_a-z]+[a-zA-Z0-9_]*$/', $token);
 	}
 
-	static function is_classlike_name(?string $token)
+	static function is_classkindred_name(?string $token)
 	{
 		return preg_match('/^[A-Z][a-zA-Z0-9_]*$/', $token);
 	}
@@ -141,7 +141,7 @@ class TeaHelper
 
 	static function is_type_name(?string $token)
 	{
-		return self::is_builtin_type_name($token) || self::is_classlike_name($token);
+		return self::is_builtin_type_name($token) || self::is_classkindred_name($token);
 	}
 
 	static function is_builtin_type_name(?string $token)
