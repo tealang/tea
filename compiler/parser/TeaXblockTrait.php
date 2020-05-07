@@ -67,31 +67,18 @@ trait TeaXBlockTrait
 			}
 		}
 
-		// support the variable tag name
-		// eg. <item=$name>...</item>
-		if ($this->skip_token_ignore_space(_ASSIGN)) {
-			if (!$this->skip_token_ignore_space(_DOLLAR)) {
-				throw $this->new_unexpected_error();
-			}
-
-			$tag_expression = $this->try_read_dollar_interpolation();
-			if ($tag_expression === null) {
-				throw $this->new_unexpected_error();
-			}
-		}
-
 		$attributes = $this->read_xtag_attributes();
 
 		$current_token = $this->get_current_token_string();
 
 		// xtag end
 		if ($current_token === _XTAG_SELF_END) {
-			return new XBlockElement($tag_expression ?? $tag, $attributes);
+			return new XBlockElement($tag, $attributes);
 		}
 
 		// no children
 		if (in_array(strtolower($tag), _LEAF_TAGS, true)) {
-			return new XBlockLeaf($tag_expression ?? $tag, $attributes);
+			return new XBlockLeaf($tag, $attributes);
 		}
 
 		// expect xtag head close
@@ -101,7 +88,7 @@ trait TeaXBlockTrait
 
 		$children = $this->read_xtag_children($tag, $block_previous_spaces);
 
-		return new XBlockElement($tag_expression ?? $tag, $attributes, $children);
+		return new XBlockElement($tag, $attributes, $children);
 	}
 
 	protected function read_xcomment_block(string $block_previous_spaces)

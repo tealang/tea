@@ -529,11 +529,11 @@ class ASTChecker
 			foreach ($interface->actual_members as $name => $member) {
 				if (isset($node->members[$name])) {
 					// check member declared in current class/interface
-					$this->assert_member_declarations($node->members[$name], $member, true);
+					$this->assert_member_declarations($member, $node->members[$name], true);
 				}
 				elseif (isset($node->actual_members[$name])) {
 					// check member declared in baseds class/interfaces
-					$this->assert_member_declarations($node->actual_members[$name], $member, true);
+					$this->assert_member_declarations($member, $node->actual_members[$name], true);
 
 					// replace to the default method implementation in interface
 					if ($member instanceof FunctionDeclaration && $member->body !== null) {
@@ -569,7 +569,7 @@ class ASTChecker
 			$node_return_type = $this->get_type_name($node->type);
 			$super_return_type = $this->get_type_name($super->type);
 
-			throw $this->new_syntax_error("Type '{$node_return_type}' in '{$node->super_block->name}.{$node->name}' must be compatible with '$super_return_type' in '{$super->super_block->name}.{$super->name}'", $node->super_block);
+			throw $this->new_syntax_error("The return type '{$node_return_type}' in '{$node->super_block->name}.{$node->name}' must be compatible with '$super_return_type' in '{$super->super_block->name}.{$super->name}'", $node->super_block);
 		}
 
 		// the accessing modifer

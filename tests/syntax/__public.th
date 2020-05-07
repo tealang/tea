@@ -18,7 +18,6 @@ public fn0(str Any) String
 public DemoList: BaseView {
 	ABC String = '12'
 
-	tag String
 	title String
 	items Array
 

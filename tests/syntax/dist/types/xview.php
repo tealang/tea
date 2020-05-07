@@ -23,7 +23,6 @@ class Cell extends BaseView {
 class DemoList extends BaseView {
 	const ABC = '12';
 
-	public $tag;
 	public $title;
 	public $items;
 
@@ -53,7 +52,7 @@ class DemoList extends BaseView {
 			}
 		}
 
-		return '<' . $this->tag . ' id="' . $this->name . '">
+		return '<view id="' . $this->name . '">
 	' . ($this->title == "abc" ? '<h1>' . htmlspecialchars($this->title . 123, ENT_QUOTES) . '</h1>' : null) . '
 	<i></i>
 	<cells>
@@ -63,7 +62,7 @@ class DemoList extends BaseView {
 		' . implode(LF, $this->subviews) . '
 	</views>
 	<script> if (a < 1 || a >= 5) {} </script>
-</' . $this->tag . '>';
+</view>';
 	}
 }
 

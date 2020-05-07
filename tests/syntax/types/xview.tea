@@ -43,7 +43,6 @@ abc = DemoList('', items: ['A', 'B', 'C'])
 public DemoList: BaseView {
 	ABC = '12'
 
-	tag String
 	title String
 	items Array
 
@@ -73,7 +72,7 @@ public DemoList: BaseView {
 			}
 		}
 
-		return <vtag=${this.tag} id="${this.name}">
+		return <view id="${this.name}">
 			${this.title == "abc" ? <h1>#{this.title concat 123}</h1> : none}
 			<i></i>
 			<cells>
@@ -83,6 +82,6 @@ public DemoList: BaseView {
 				${this.subviews.join()}
 			</views>
 			<script> if (a < 1 || a >= 5) {} </script>
-		</vtag>
+		</view>
 	}
 }

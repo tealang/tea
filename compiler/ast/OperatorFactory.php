@@ -10,8 +10,11 @@
 namespace Tea;
 
 const _PREFIX_OP_PRECEDENCES = [
+	// L2
 	_NEGATION => 2, _BITWISE_NOT => 2,
 	// _REFERENCE => 2,
+
+	// L8
 	_NOT => 8,
 ];
 
@@ -43,9 +46,6 @@ const _BINARY_OP_PRECEDENCES = [
 	'<' => 7, '>' => 7, '<=' => 7, '>=' => 7,
 	_EQUAL => 7, _IDENTICAL => 7, _NOT_EQUAL => 7, _NOT_IDENTICAL => 7, '<=>' => 7,
 	_IS => 7, // type / class, and maybe pattern?
-
-	// L8
-	// _NOT => 8,
 
 	// L9
 	_AND => 9,
