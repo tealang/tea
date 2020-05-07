@@ -20,11 +20,13 @@ Tea语言是一门新的计算机编程语言，采用强规范设计（规范�
 ---
 
 // 带换行符结尾的字符串输出，支持输出多项
-echo 'Hi,', 'How are you?' // 相当于print 'Hi,', 'How are you?', "\n"
+echo '雷总: Are you OK?', "米粉: I'm very OK!" // 相当于print '雷总: Are you OK?', '米粉: I'm very OK!', "\n"
 
 // 不带换行符结尾的字符串输出，支持输出多项
-// 这里的NL是内置常量，被定义为 "\n"
-print 'string1', 'string2', LF
+print 'string1', 'string2', 'string3'
+
+// LF是内置常量，被定义为 "\n"
+print LF
 
 // 返回，可带一个参数，或不带任何参数
 // 可用于函数/方法中返回数据，也可用于被#include的程序文件中返回数据
@@ -54,7 +56,7 @@ print 'string1', 'string2', LF
 - Callable为可调用类型，可接受普通函数和匿名函数作为值
 ---
 
-// Any 可接受任何类型值
+// Any类型变量可接受任何类型值
 var any Any
 any = 1
 any = []
@@ -63,21 +65,31 @@ any = 'abc'
 // 将Any类型值转换成String类型
 var any_as_string = any::String
 
-// String
-var str String = 'Unescaped string\n' 	// 单引号字符串，\n\t\r等字符将当作字面字符
-str = "Escaped string\n"   				// 双引号字符串，将处理转义字符
-str_with_interpolation = 'Unescaped string with interpolation ${5 * 6}'	// 单双引号字符串均支持插值，带$插值的字符串，不转义HTML字符
+// 单引号字符串，\n\t\r等字符将当作字面字符
+var str String = 'Unescaped string\n'
+
+// 双引号字符串，将处理转义字符
+str = "Escaped string\n"
+
+// 单引号字符串插值
+str_with_interpolation = 'Unescaped string with interpolation ${5 * 6}'
+
+// 双引号字符串插值
 str_with_interpolation = "Escaped string with interpolation ${5 * 6}\n"
 
-xss = '<script>alert("XSS!")</script>'
-html_escaped_interpolation = "The html-escaped string: #{xss}" 	// #插值，将转义HTML字符
-text_labeled = #text "would not process interpolation ${5 * 6}" // 以#text标记的字符串，其中插值表达式将不被处理
+// 带$的插值，不转义HTML字符；带#的插值，将转义HTML字符
+safe_html = '<strong>Some strong text.</strong>'
+unsafe_html = '<script>alert("XSS!")</script>'
+html_escaped_interpolation = "html-unescaped: ${safe_html}. html-escaped: #{unsafe_html}"
 
-// 类似对象一样的调用String伪对象属性或方法
-str.length  // 按原生实现统计的长度（表达成PHP后是strlen）
-str.rune_length  // 按默认字符集统计的字符串长度（表达成PHP后是iconv_strlen）
-str.copy(0, 3)  // 按原生实现从0开始拷贝长度为3的字符串片段（表达成PHP代码后是substr）
-str.rune_copy(0, 3)  // 按默认字符集从0开始拷贝长度为3的字符串片段（表达成PHP代码后是iconv_substr）
+// 以#text标记的字符串，其中插值表达式将不被处理
+text_labeled = #text "would not process interpolation ${5 * 6}"
+
+// 类似对象一样的调用String伪对象的属性或方法
+str.length  		// 按原生实现统计的长度（表达成PHP后是strlen）
+str.rune_length  	// 按默认字符集统计的字符串长度（表达成PHP后是iconv_strlen）
+str.copy(0, 3)  	// 按原生实现从0开始拷贝长度为3的字符串片段（表达成PHP代码后是substr）
+str.rune_copy(0, 3) // 按默认字符集从0开始拷贝长度为3的字符串片段（表达成PHP代码后是iconv_substr）
 
 var uint_num UInt = 123
 var int_num Int = -123
@@ -89,7 +101,7 @@ var xview XView = <div>
 	<h1>XView是什么？</h1>
 	<p>XView类似字符串，但无需引号，可以直接按HTML标签方式编写</p>
 	<p>Interpolation with origin ${uint_num * 10}</p>
-	<p>Interpolation with html-escaped #{xss}</p>
+	<p>Interpolation with html-escaped #{unsafe_html}</p>
 </div>
 
 // 正则表达式
@@ -194,7 +206,7 @@ var_without_decared = 123  // 此用例将自动推断成Int类型
 ---
 
 // C风格语言中“^”符号一般用作按位异或运算符, 方便编写底层程序
-// 考虑到以后应用程序和科学计算编程需求更多, 故将“^”用于幂运算, 并且为左结合
+// 考虑到应用程序和科学计算编程需求将更多, 故将“^”用于幂运算, 且为左结合以降低记忆成本
 var pow_result = -2 ^ 2 ^ 3  // 相当于 ((-2) ^ 2) ^ 3
 
 // 连接运算符，可用于字符串/数组
@@ -210,7 +222,7 @@ var uint_from_non_negative_string = '123'::UInt  // okay
 var str_from_uint = 123::String
 var str_from_float = 123.123::String
 
-// as运算符，当用于类时，将只被用于编译器类型系统检查处理，而不会进行任何转换
+// 当::运算符用于类时，将只被用于编译器类型系统检查处理，而不会进行任何转换
 var ex1 Any
 var ex2 = ex1::Exception
 
@@ -338,10 +350,9 @@ var ret2 = demo_function_with_callbacks('some data') -> success(message) {
 - 类/接口名必须以大写字母开始，可包括[A-Za-z0-9_]
 - 类/接口成员的命名规范与常量、变量、函数一致
 - 接口名风格1：以字母I作为前缀，并且第二个字母必须为大写
-- 接口名风格2：以字母Interface作为后缀
+- 接口名风格2：以Interface作为后缀
 - 满足接口名风格的将被编译器认为是接口，否则被认为是普通类
-- Tea语言的接口相当于是PHP中Interface和Trait的结合
-- Tea语言的接口中可以有代码实现，可以声明属性，和非public成员
+- Tea语言的接口相当于PHP中Interface和Trait的结合，可以有代码实现，可以声明属性，和非public成员
 ---
 
 // 这是一个I前缀风格的接口
@@ -426,7 +437,7 @@ DemoPublicClass.say_hello_with_static()
 
 ---
 ## 13. 将程序文件设置为入口
-- 在目标Tea语言程序文件的开头加上#main标签，即可声明该程序文件为“入口程序”
+- 在目标Tea语言程序文件的开头加上“#main”标签，即可声明该程序文件为“入口程序”
 - 当前程序文件的编译结果中将自动加上依赖项加载语句
 - 当前Unit的编译结果中将自动加上内置库加载语句
 ---
@@ -475,7 +486,7 @@ DemoPublicClass.say_hello_with_static()
 - 一元前置运算符前面须至少有一个空格
 - 非访问运算的二元运算符（如+、-、*、/等）两端须至少各有一个空格
 - 函数括号“(”、数组元素访问中括号“[”前面不能有空格
-- 运算符强编码规范有助于保持一致的代码风格，也有助于更快速、更清晰的阅读理解代码
+- 运算符强编码规范有助于保持一致的代码风格，有助于更快速、更清晰的阅读理解代码
 ---
 
 ---

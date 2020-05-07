@@ -62,9 +62,11 @@ class DemoPublicClass extends DemoBaseClass implements IDemo, DemoInterface {
 // ---------
 echo "Hello, 世界", LF;
 
-echo 'Hi,', 'How are you?', LF;
+echo '雷总: Are you OK?', "米粉: I'm very OK!", LF;
 
-echo 'string1', 'string2', LF;
+echo 'string1', 'string2', 'string3';
+
+echo LF;
 
 $any = null;
 $any = 1;
@@ -74,12 +76,17 @@ $any = 'abc';
 $any_as_string = (string)$any;
 
 $str = 'Unescaped string\n';
+
 $str = "Escaped string\n";
+
 $str_with_interpolation = 'Unescaped string with interpolation ' . (5 * 6);
+
 $str_with_interpolation = "Escaped string with interpolation " . (5 * 6) . "\n";
 
-$xss = '<script>alert("XSS!")</script>';
-$html_escaped_interpolation = "The html-escaped string: " . htmlspecialchars($xss, ENT_QUOTES);
+$safe_html = '<strong>Some strong text.</strong>';
+$unsafe_html = '<script>alert("XSS!")</script>';
+$html_escaped_interpolation = "html-unescaped: {$safe_html}. html-escaped: " . htmlspecialchars($unsafe_html, ENT_QUOTES);
+
 $text_labeled = "would not process interpolation \${5 * 6}";
 
 strlen($str);
@@ -96,7 +103,7 @@ $xview = '<div>
 	<h1>XView是什么？</h1>
 	<p>XView类似字符串，但无需引号，可以直接按HTML标签方式编写</p>
 	<p>Interpolation with origin ' . $uint_num * 10 . '</p>
-	<p>Interpolation with html-escaped ' . htmlspecialchars($xss, ENT_QUOTES) . '</p>
+	<p>Interpolation with html-escaped ' . htmlspecialchars($unsafe_html, ENT_QUOTES) . '</p>
 </div>';
 
 $regex = '/^[a-z0-9\'_"]+$/i';
