@@ -94,7 +94,7 @@ Tea语言项目最早开始于19年2月份，主要由创业者Benny设计与开
 	tea/bin/tea tea/docs
 	```
 	
-- 在tea/dist目录中可看到编译结果
+- 在编译目标Unit的dist目录中可看到编译结果
 	
 - 创建或初始化一个新的Unit，如：
 	
