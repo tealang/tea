@@ -160,7 +160,7 @@ class UnionType extends BaseType
 		$this->types = $types;
 	}
 
-	public function unite_type(IType $target): UnionType {
+	public function unite_type(IType $target): IType {
 		if ($target instanceof UnionType) {
 			foreach ($target->types as $target_member) {
 				$this->add_single_type($target_member);
