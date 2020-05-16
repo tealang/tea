@@ -160,6 +160,26 @@ class UnionType extends BaseType
 		$this->types = $types;
 	}
 
+	public function is_all_array_types() {
+		foreach ($this->types as $member_type) {
+			if (!$member_type instanceof ArrayType) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public function is_all_dict_types() {
+		foreach ($this->types as $member_type) {
+			if (!$member_type instanceof DictType) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	public function unite_type(IType $target): IType {
 		if ($target instanceof UnionType) {
 			foreach ($target->types as $target_member) {

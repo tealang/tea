@@ -85,23 +85,45 @@ class TypeFactory
 	static function is_iterable_type(IType $type)
 	{
 		if ($type === TypeFactory::$_any || $type instanceof IterableType) {
-			return true;
+			$result = true;
+		}
+		elseif ($type instanceof PlainIdentifier) {
+			$result = $type->symbol->declaration->is_same_or_based_with_symbol(self::$_iiterator_symbol);
+		}
+		elseif ($type instanceof UnionType) {
+			$result = true;
+			foreach ($type->types as $member_type) {
+				if (!TypeFactory::is_iterable_type($member_type)) {
+					$result = false;
+					break;
+				}
+			}
+		}
+		else {
+			$result = false;
 		}
 
-		if (!$type instanceof PlainIdentifier) {
-			return false;
-		}
-
-		return $type->symbol->declaration->is_same_or_based_with_symbol(self::$_iiterator_symbol);
+		return $result;
 	}
 
 	static function is_dict_key_directly_supported_type(?IType $type)
 	{
-		return $type === self::$_string
+		if ($type === self::$_string
 			|| $type === self::$_uint
 			|| $type === self::$_int
 			|| $type === self::$_dict_key_type
-			;
+			) {
+			return true;
+		}
+		elseif ($type instanceof UnionType) {
+			foreach ($type->types as $member_type) {
+				if (!TypeFactory::is_dict_key_directly_supported_type($member_type)) {
+					return false;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	// static function is_dict_key_castable_type(?IType $type)

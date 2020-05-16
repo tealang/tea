@@ -1111,10 +1111,8 @@ class PHPCoder extends TeaCoder
 	public function render_type(IType $node)
 	{
 		$code = $node->render($this);
-		if (!isset( $node->nullable)) {
-			dump($node);exit;
-		}
-		if ($code !== null && $node->nullable) {
+
+		if ($code && $node->nullable) {
 			$code = '?' . $code;
 		}
 

@@ -794,16 +794,16 @@ class ASTChecker
 		$iterable_type = $this->infer_expression($node->iterable);
 		if (!TypeFactory::is_iterable_type($iterable_type)) {
 			$type_name = self::get_type_name($iterable_type);
-			throw $this->new_syntax_error("Expect a Iterable type, but '{$type_name}' supplied.", $node->iterable);
+			throw $this->new_syntax_error("Expect a Iterable type, '{$type_name}' supplied.", $node->iterable);
 		}
 
 		// the key type, default is String
-		if (isset($node->key_var) && $iterable_type instanceof ArrayType) {
+		if ($node->key_var && $iterable_type instanceof ArrayType) {
 			$node->key_var->symbol->declaration->type = TypeFactory::$_uint;
 		}
 
 		// the value type, default is Any
-		if (isset($iterable_type->value_type)) {
+		if ($iterable_type instanceof IterableType and $iterable_type->value_type) {
 			$node->value_var->symbol->declaration->type = $iterable_type->value_type;
 		}
 
@@ -1214,7 +1214,7 @@ class ASTChecker
 
 		if ($left_type instanceof ArrayType) {
 			if ($right_type !== TypeFactory::$_uint) {
-				throw $this->new_syntax_error("Index type for Array should be UInt, '{$right_type->name}' supplied.", $node);
+				throw $this->new_syntax_error("Index type for Array accessing should be UInt, '{$right_type->name}' supplied.", $node->right);
 			}
 
 			$infered_type = $left_type->value_type;
@@ -1230,7 +1230,7 @@ class ASTChecker
 			// 	$node->right->infered_type = $right_type;
 			// }
 			else {
-				throw $this->new_syntax_error("Invalid key type '{$right_type->name}' for Dict.", $node->right);
+				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$right_type->name}' supplied.", $node->right);
 			}
 
 			$infered_type = $left_type->value_type;
@@ -1238,7 +1238,7 @@ class ASTChecker
 		elseif ($left_type instanceof AnyType) {
 			// 仅允许将实际类型为Dict的用于这类情况
 			if (!TypeFactory::is_dict_key_directly_supported_type($right_type)) {
-				throw $this->new_syntax_error("Key type for Dict should be String/Int/UInt, '{$right_type->name}' applied.", $node);
+				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$right_type->name}' supplied.", $node->right);
 			}
 		}
 		elseif ($left_type instanceof StringType) {
@@ -1247,6 +1247,29 @@ class ASTChecker
 			}
 
 			$infered_type = TypeFactory::$_string;
+		}
+		elseif ($left_type instanceof UnionType) {
+			if ($left_type->is_all_array_types()) {
+				if ($right_type !== TypeFactory::$_uint) {
+					throw $this->new_syntax_error("Index type for Array accessing should be UInt, '{$right_type->name}' supplied.", $node->right);
+				}
+			}
+			elseif ($left_type->is_all_dict_types()) {
+				if (!TypeFactory::is_dict_key_directly_supported_type($right_type)) {
+					throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$right_type->name}' supplied.", $node->right);
+				}
+			}
+			else {
+				$type_name = $this->get_type_name($left_type);
+				throw $this->new_syntax_error("Cannot use key accessing for type '{$type_name}'.", $node);
+			}
+
+			$value_types = [];
+			foreach ($left_type->types as $member_type) {
+				$value_types[] = $member_type;
+			}
+
+			$infered_type = $this->reduce_types($value_types);
 		}
 		else {
 			$type_name = $this->get_type_name($left_type);
@@ -1484,7 +1507,8 @@ class ASTChecker
 			// 	$item->key->infered_type = $key_type;
 			// }
 			else {
-				throw $this->new_syntax_error("Invalid key type for Dict.", $item->key);
+				$type_name = $this->get_type_name($key_type);
+				throw $this->new_syntax_error("Key type for Dict should be String/Int, '{$type_name}' supplied.", $item->key);
 			}
 
 			$infered_value_types[] = $this->infer_expression($item->value);
