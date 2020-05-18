@@ -13,4 +13,6 @@ echo 'abc', 'efg', '123', LF;
 echo 'abc', $str;
 // ---------
 
+\Swoole\Event::wait();
+
 // program end

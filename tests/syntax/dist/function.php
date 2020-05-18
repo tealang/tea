@@ -46,4 +46,6 @@ echo fn3('any...', function (string $caller) {
 }), LF;
 // ---------
 
+\Swoole\Event::wait();
+
 // program end

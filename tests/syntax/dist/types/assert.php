@@ -48,4 +48,6 @@ foreach ($dict as $key => $value) {
 }
 // ---------
 
+\Swoole\Event::wait();
+
 // program end

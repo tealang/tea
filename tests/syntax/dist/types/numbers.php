@@ -29,4 +29,6 @@ $num_str = (string)$dec;
 $num_str = (string)123.1;
 // ---------
 
+\Swoole\Event::wait();
+
 // program end

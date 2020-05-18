@@ -24,7 +24,7 @@ const
 	_UNIT = 'unit', _USE = 'use',
 	_MAIN = 'main', _EXPECT = 'expect', _INCLUDE = 'include',
 	_TEXT = 'text', _DEFAULT = 'default',
-	_ASYNC = 'async', _AWAIT = 'await',
+	_ASYNC = 'async', _AWAIT = 'await', _CO = 'co',
 	_FIRST = 'first',
 
 	// builtin types

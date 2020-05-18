@@ -19,4 +19,6 @@ $result2 = preg_split($regex, 'ab cd|e,f');
 var_dump($result2);
 // ---------
 
+\Swoole\Event::wait();
+
 // program end

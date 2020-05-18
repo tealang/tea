@@ -108,11 +108,7 @@ class TypeFactory
 
 	static function is_dict_key_directly_supported_type(?IType $type)
 	{
-		if ($type === self::$_string
-			|| $type === self::$_uint
-			|| $type === self::$_int
-			|| $type === self::$_dict_key_type
-			) {
+		if ($type === self::$_string || $type === self::$_uint || $type === self::$_int || $type === self::$_dict_key_type) {
 			return true;
 		}
 		elseif ($type instanceof UnionType) {
@@ -121,6 +117,8 @@ class TypeFactory
 					return false;
 				}
 			}
+
+			return true;
 		}
 
 		return false;

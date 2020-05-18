@@ -60,4 +60,6 @@ $v_20 = null;
 $v_21 = "sth.";
 // ---------
 
+\Swoole\Event::wait();
+
 // program end

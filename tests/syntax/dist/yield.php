@@ -9,4 +9,6 @@ foreach (xrange(0, 10) as $v) {
 }
 // ---------
 
+\Swoole\Event::wait();
+
 // program end

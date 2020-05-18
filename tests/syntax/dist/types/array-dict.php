@@ -79,4 +79,6 @@ $filtered = array_filter([0, 1, 2, 3, 4, 5], function ($item) {
 var_dump($filtered);
 // ---------
 
+\Swoole\Event::wait();
+
 // program end

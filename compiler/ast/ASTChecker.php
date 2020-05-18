@@ -345,6 +345,28 @@ class ASTChecker
 		$this->check_parameters_for_node($node);
 	}
 
+	private function check_coroutine_block(CoroutineBlock $node)
+	{
+		// check for use variables
+		foreach ($node->defer_check_identifiers as $identifier) {
+			if (!$identifier->symbol) {
+				$this->infer_plain_identifier($identifier);
+			}
+
+			if ($identifier->symbol->declaration instanceof IVariableDeclaration) {
+				if ($identifier->name === _THIS || $identifier->name === _SUPER) {
+					throw $this->new_syntax_error("'{$identifier->name}' cannot use in coroutine block", $node);
+				}
+
+				// for lambda use in php
+				$node->use_variables[$identifier->name] = $identifier;
+			}
+		}
+
+		$this->check_parameters_for_callable_declaration($node);
+		$this->check_function_body($node);
+	}
+
 	private function infer_lambda_expression(LambdaExpression $node)
 	{
 		// check for use variables
@@ -972,6 +994,10 @@ class ASTChecker
 
 			case SuperVariableDeclaration::KIND:
 				$this->check_variable_declaration($node);
+				break;
+
+			case CoroutineBlock::KIND:
+				$this->check_coroutine_block($node);
 				break;
 
 			default:

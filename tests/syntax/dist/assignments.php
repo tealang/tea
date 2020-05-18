@@ -18,4 +18,6 @@ $a ^= 1;
 $a += 123;
 // ---------
 
+\Swoole\Event::wait();
+
 // program end

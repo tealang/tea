@@ -39,12 +39,32 @@ trait TeaSharpTrait
 				$this->factory->set_as_main_program();
 				return;
 
+			case _CO:
+				return $this->read_coroutine_expression();
+
 			default:
 				$node = $this->read_other_label_statement_with($token);
 		}
 
 		$node->label = $token;
 		return $node;
+	}
+
+	protected function read_coroutine_expression()
+	{
+		$block = $this->factory->create_coroutine_block();
+		$block->pos = $this->pos;
+
+		if ($this->get_token_ignore_empty() === _BLOCK_BEGIN) {
+			$this->read_block_body($block);
+		}
+		else {
+			$statement = $this->read_normal_statement();
+			$block->set_body_with_statements($statement);
+			$this->factory->end_block();
+		}
+
+		return $block;
 	}
 
 	protected function read_tea_declaration()

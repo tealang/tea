@@ -59,4 +59,6 @@ $result = collector1();
 var_dump($result);
 // ---------
 
+\Swoole\Event::wait();
+
 // program end

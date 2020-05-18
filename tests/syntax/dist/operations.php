@@ -63,4 +63,6 @@ $d = 0 ? 1 : (2 + $a ? $a : 3);
 $e = $a ?? 1 ? $a ?? 2 : $a ?? 3;
 // ---------
 
+\Swoole\Event::wait();
+
 // program end

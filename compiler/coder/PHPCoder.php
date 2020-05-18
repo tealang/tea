@@ -186,8 +186,14 @@ class PHPCoder extends TeaCoder
 			$body_items = $this->render_block_nodes($program->main_function->body);
 			$items[] = '// ---------';
 			$items[] = trim(join($body_items));
+
 			$items[] = '// ---------';
 			$items[] = '';
+
+			if ($program->as_main_program && $program->unit->is_used_coroutine) {
+				$items[] = '\Swoole\Event::wait();';
+				$items[] = '';
+			}
 		}
 
 		return $items;
@@ -370,6 +376,22 @@ class PHPCoder extends TeaCoder
 		return $return_type
 			? "$header($parameters): $return_type $body"
 			: "$header($parameters) $body";
+	}
+
+	public function render_coroutine_block(CoroutineBlock $node)
+	{
+		$parameters = $this->render_parameters($node->parameters);
+		$body = $this->render_function_body($node);
+
+		if ($node->use_variables) {
+			$uses = $this->render_lambda_use_arguments($node->use_variables);
+			$header = sprintf('function (%s) use(%s)', $parameters, $uses);
+		}
+		else {
+			$header = sprintf('function (%s)', $parameters);
+		}
+
+		return sprintf('\Swoole\Coroutine::create(%s %s);', $header, $body);
 	}
 
 	public function render_lambda_expression(BaseExpression $node)

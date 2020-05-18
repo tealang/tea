@@ -87,4 +87,6 @@ $abc = new DemoList('', '', ['A', 'B', 'C'], function () {
 });
 // ---------
 
+\Swoole\Event::wait();
+
 // program end

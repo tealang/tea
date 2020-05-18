@@ -45,4 +45,6 @@ finally {
 }
 // ---------
 
+\Swoole\Event::wait();
+
 // program end

@@ -56,4 +56,6 @@ echo "\n***Test for int/uint cast:", LF;
 echo "'-123abc' cast to int: ", (int)'-123abc', LF;
 // ---------
 
+\Swoole\Event::wait();
+
 // program end

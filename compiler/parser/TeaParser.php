@@ -1339,6 +1339,7 @@ class TeaParser extends BaseParser
 		else {
 			$expression = $this->read_expression();
 			$block->set_body_with_expression($expression);
+			$this->factory->end_block();
 		}
 
 		return $block;

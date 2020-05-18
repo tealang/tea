@@ -63,6 +63,11 @@ class Unit
 	/**
 	 * @var bool
 	 */
+	public $is_used_coroutine;
+
+	/**
+	 * @var bool
+	 */
 	public $is_mixed_mode;
 
 	/**

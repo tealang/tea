@@ -227,4 +227,6 @@ $a = new Test3();
 Test4::fx(new Test3());
 // ---------
 
+\Swoole\Event::wait();
+
 // program end

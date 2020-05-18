@@ -487,6 +487,19 @@ class ASTFactory
 		return $block;
 	}
 
+	public function create_coroutine_block(array $parameters = [])
+	{
+		$this->unit->is_used_coroutine = true;
+
+		$block = new CoroutineBlock(null, $parameters);
+
+		$this->scope = $block;
+		$this->begin_block($block);
+		$this->set_scope_parameters($parameters);
+
+		return $block;
+	}
+
 	public function create_if_block(BaseExpression $test)
 	{
 		$block = new IfBlock($test);

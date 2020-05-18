@@ -230,6 +230,7 @@ const __AUTOLOADS = [
 	'Tea\IncludeExpression' => 'ast/expression/IncludeExpression.php',
 	'Tea\KeyAccessing' => 'ast/expression/KeyAccessing.php',
 	'Tea\LambdaExpression' => 'ast/expression/LambdaExpression.php',
+	'Tea\CoroutineBlock' => 'ast/expression/LambdaExpression.php',
 	'Tea\ILiteral' => 'ast/expression/Literal.php',
 	'Tea\LiteralTraitWithValue' => 'ast/expression/Literal.php',
 	'Tea\NoneLiteral' => 'ast/expression/Literal.php',

@@ -32,4 +32,6 @@ TestForMetaType0::test_class_argument($class_type);
 TestForMetaType0::test_class_argument(TestForMetaType1::class);
 // ---------
 
+\Swoole\Event::wait();
+
 // program end
