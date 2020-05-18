@@ -1089,6 +1089,11 @@ class ASTChecker
 		$master = $node->master;
 		if ($master instanceof KeyAccessing) {
 			$master_type = $this->infer_key_accessing($master); // it should be not null
+
+			// for generates the use-variables for lambda
+			if (isset($master->left->lambda)) {
+				$master->left->lambda->mutating_variable_names[] = $master->left->name;
+			}
 		}
 		elseif ($master instanceof AccessingIdentifier) {
 			$master_type = $this->infer_accessing_identifier($master);
@@ -1096,6 +1101,11 @@ class ASTChecker
 		else {
 			// the PlainIdentifier
 			$master_type = $master->symbol->declaration->type;
+
+			// for generates the use-variables for lambda
+			if (isset($master->lambda)) {
+				$master->lambda->mutating_variable_names[] = $master->name;
+			}
 		}
 
 		if (!ASTHelper::is_reassignable_expression($master)) {

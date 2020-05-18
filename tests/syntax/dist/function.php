@@ -1,6 +1,8 @@
 <?php
 namespace tea\tests\syntax;
 
+\Swoole\Runtime::enableCoroutine();
+
 require_once dirname(__DIR__, 1) . '/__public.php';
 
 function fn1(callable $callee) {
@@ -35,7 +37,9 @@ $dict = ['num' => 1000];
 fn2($dict);
 echo "dict['num'] mutated by fn2: {$dict['num']}", LF;
 
-echo fn3(123, function ($a) {
+$out_num = 1;
+echo fn3(123, function ($a) use(&$out_num) {
+	$out_num += 1;
 	return (string)$a . ' has called';
 }, function ($error) {
 	// no any

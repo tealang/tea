@@ -292,7 +292,7 @@ class TeaCoder
 	// 	return "{$declaration} $body";
 	// }
 
-	public function render_lambda_expression(BaseExpression $node)
+	public function render_lambda_expression(LambdaExpression $node)
 	{
 		$parameters = $this->render_parameters($node->parameters);
 		$body = $this->render_function_body($node);

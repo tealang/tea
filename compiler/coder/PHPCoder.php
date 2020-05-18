@@ -159,6 +159,11 @@ class PHPCoder extends TeaCoder
 		$items = $this->render_heading_statements($program);
 
 		if ($program->as_main_program) {
+			if ($program->unit->is_used_coroutine) {
+				$items[] = '\Swoole\Runtime::enableCoroutine();';
+				$items[] = '';
+			}
+
 			$levels = $program->get_subdirectory_levels();
 			if ($levels) {
 				// 在Unit子目录中
@@ -384,7 +389,7 @@ class PHPCoder extends TeaCoder
 		$body = $this->render_function_body($node);
 
 		if ($node->use_variables) {
-			$uses = $this->render_lambda_use_arguments($node->use_variables);
+			$uses = $this->render_lambda_use_arguments($node);
 			$header = sprintf('function (%s) use(%s)', $parameters, $uses);
 		}
 		else {
@@ -394,24 +399,28 @@ class PHPCoder extends TeaCoder
 		return sprintf('\Swoole\Coroutine::create(%s %s);', $header, $body);
 	}
 
-	public function render_lambda_expression(BaseExpression $node)
+	public function render_lambda_expression(LambdaExpression $node)
 	{
 		$parameters = $this->render_parameters($node->parameters);
 		$body = $this->render_function_body($node);
 
 		if ($node->use_variables) {
-			$uses = $this->render_lambda_use_arguments($node->use_variables);
+			$uses = $this->render_lambda_use_arguments($node);
 			return sprintf('function (%s) use(%s) ', $parameters, $uses) . $body;
 		}
 
 		return sprintf('function (%s) ', $parameters) . $body;
 	}
 
-	protected function render_lambda_use_arguments(array $nodes)
+	protected function render_lambda_use_arguments(LambdaExpression $node)
 	{
-		foreach ($nodes as $arg) {
+		foreach ($node->use_variables as $arg) {
 			$item = $arg->render($this);
-			$items[] = '&' . $item;
+			if (in_array($arg->name, $node->mutating_variable_names, true)) {
+				$item = '&' . $item;
+			}
+
+			$items[] = $item;
 		}
 
 		return join(', ', $items);

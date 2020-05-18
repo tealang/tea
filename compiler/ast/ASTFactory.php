@@ -790,6 +790,7 @@ class ASTFactory
 			// add to lambda check list
 			if ($seek_block instanceof LambdaExpression) {
 				$seek_block->set_defer_check_identifier($identifier);
+				$identifier->lambda = $seek_block; // for the mutating feature
 			}
 
 			if ($seek_block->super_block && !$seek_block->super_block instanceof ClassKindredDeclaration) {

@@ -3,6 +3,8 @@ namespace tea\tests\syntax;
 
 use tea\tests\PHPDemoUnit\{ NS1\Demo as PHPClassDemo, function php_function_demo, const PHP_CONST_DEMO };
 
+\Swoole\Runtime::enableCoroutine();
+
 require_once dirname(__DIR__, 1) . '/__public.php';
 
 require_once UNIT_PATH . '_mixed2.php';

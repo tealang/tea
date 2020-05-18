@@ -10,11 +10,15 @@ internal co_test() {
 	// 本函数中有使用协程
 	// 编译器将自动添加 协程容器创建语句 到函数体的开头
 	// 使用协程的Unit，将在入口文件末尾添加 wait 语句
-	for _ = 1 to 100 {
+	for i = 1 to 100 {
 		// 使用 #co 标记的语句，编译器将自动创建协程
-		#co for _ = 1 to 100 {
+		print 'run usleep: '
+		#co for k = 1 to 100 {
 			usleep(1000)
+			print '($i,$k) '
 		}
+
+		echo
 	}
 
 	echo 'the Coroutine executing...'

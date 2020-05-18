@@ -20,6 +20,8 @@ class LambdaExpression extends BaseExpression implements IScopeBlock, ICallee
 	 */
 	public $use_variables = [];
 
+	public $mutating_variable_names = [];
+
 	public function __construct(IType $type = null, array $parameters = null)
 	{
 		$this->type = $type;

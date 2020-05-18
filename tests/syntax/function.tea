@@ -36,7 +36,9 @@ internal fn3(some Any, done (caller String) String, error (message) = none) Stri
 	return done('A cool man') concat ' with $some'
 }
 
+var out_num = 1
 echo fn3(123, done: (a) => {
+		out_num += 1
 		return a::String concat ' has called'
 	}, error: (error) => {})
 
