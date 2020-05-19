@@ -6,7 +6,7 @@ require_once __DIR__ . '/__public.php';
 function fib_generator(int $num = 9): \Generator {
 	$a = 0;
 	$b = 1;
-	for ($i = 0; $i <= $num; $i += 1) {
+	foreach (\xrange(0, $num) as $i) {
 		$c = $b;
 		$b = $a + $b;
 		$a = $c;

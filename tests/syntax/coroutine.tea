@@ -7,21 +7,21 @@ The Coroutine syntax draft
 #php usleep(micro_seconds UInt)
 
 internal co_test() {
-	// 本函数中有使用协程
-	// 编译器将自动添加 协程容器创建语句 到函数体的开头
-	// 使用协程的Unit，将在入口文件末尾添加 wait 语句
-	for i = 1 to 100 {
-		// 使用 #co 标记的语句，编译器将自动创建协程
-		print 'run usleep: '
-		#co for k = 1 to 100 {
-			usleep(1000)
-			print '($i,$k) '
-		}
+	// would auto add the Swoole coroutine statements when used coroutines
+	var count
+	for i = 1 to 5 {
+		// just use the #co label to create a coroutine
+		#co for j = 1 to 5 {
+			usleep(10000)
+			count += 1
 
-		echo
+			// the value of variable 'i' would be aways 5 at here
+			// becourse of current is in the coroutine, that's an async mode
+			echo "No.$count\t$i\t$j"
+		}
 	}
 
-	echo 'the Coroutine executing...'
+	echo 'the Coroutine executing...', LF
 }
 
 co_test()

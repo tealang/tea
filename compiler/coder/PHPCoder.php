@@ -416,9 +416,12 @@ class PHPCoder extends TeaCoder
 	{
 		foreach ($node->use_variables as $arg) {
 			$item = $arg->render($this);
-			if (in_array($arg->name, $node->mutating_variable_names, true)) {
-				$item = '&' . $item;
-			}
+			// if (in_array($arg->name, $node->mutating_variable_names, true)) {
+			// 	$item = '&' . $item;
+			// }
+
+			// 统一处理成引用，因为这些变量的作用域应是属于延伸，故不能处理成拷贝
+			$item = '&' . $item;
 
 			$items[] = $item;
 		}
@@ -628,7 +631,7 @@ class PHPCoder extends TeaCoder
 			// that should be ElseIfBlock
 
 			$items = [];
-			$items[] = sprintf("if (%s) %s", $node->condition->render($this), $this->render_control_structure_body($node, 'case-elseif'));
+			$items[] = sprintf("if (%s) %s", $node->condition->render($this), $this->render_control_structure_body($node));
 
 			if ($node->else) {
 				$items[] = $node->else->render($this);
@@ -736,10 +739,15 @@ class PHPCoder extends TeaCoder
 		$body = $this->render_control_structure_body($node);
 
 		if ($node->is_downto_mode) {
-			$for_code = "for ($var = $start; $var >= $end; $var -= $step) $body";
+			// $for_code = "for ($var = $start; $var >= $end; $var -= $step) $body";
+			$for_code = "foreach (\xrange($start, $end, -$step) as $var) $body";
+		}
+		elseif ($step === 1) {
+			$for_code = "foreach (\xrange($start, $end) as $var) $body";
 		}
 		else {
-			$for_code = "for ($var = $start; $var <= $end; $var += $step) $body";
+			// $for_code = "for ($var = $start; $var <= $end; $var += $step) $body";
+			$for_code = "foreach (\xrange($start, $end, $step) as $var) $body";
 		}
 
 		if ($node->else) {

@@ -42,6 +42,25 @@ function is_strict_dict($it): bool {
 	return $keys !== array_keys($keys);
 }
 
+function xrange(int $start, int $end, int $step = 1): \Generator {
+	$i = $start;
+	if ($step > 0) {
+		while ($i <= $end) {
+			yield $i;
+			$i += $step;
+		}
+	}
+	elseif ($step < 0) {
+		while ($i >= $end) {
+			yield $i;
+			$i += $step;
+		}
+	}
+	else {
+		throw new \LogicException('Parameter "step" should not be 0.');
+	}
+}
+
 function _iconv_strpos(string $str, string $search, int $offset = 0): int {
 	$pos = iconv_strpos($str, $search, $offset);
 	return $pos === false ? -1 : $pos;

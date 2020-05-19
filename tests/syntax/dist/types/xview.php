@@ -84,7 +84,7 @@ $num = 2;
 
 $abc = new DemoList('', '', ['A', 'B', 'C'], function () {
 	return new Cell();
-}, function ($message) use($str, $num) {
+}, function ($message) use(&$str, &$num) {
 	echo $str, $num, LF;
 });
 // ---------

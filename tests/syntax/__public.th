@@ -30,6 +30,6 @@ public DemoList: BaseView {
 	render() String
 }
 
-public xrange(start Int, stop Int, step Int = 1) IGenerator
+public demo_range(start Int, end Int) IGenerator
 
 // program end

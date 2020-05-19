@@ -12,8 +12,10 @@ $arr = [
 ];
 
 foreach (range(0, 9) as $val) {
-	echo $val, LF;
+	echo $val, ',';
 }
+
+echo LF;
 
 if ($arr && count($arr) > 0) {
 	foreach ($arr as $k => $v) {
@@ -28,21 +30,23 @@ else {
 }
 
 if (0 <= 9) {
-	for ($i = 0; $i <= 9; $i += 1) {
+	foreach (\xrange(0, 9) as $i) {
 		$i + 3;
-		echo $i, LF;
+		echo $i, ',';
 	}
 }
 else {
 	echo 'no loops', LF;
 }
 
+echo LF;
+
 try {
 	$__tmp0 = 9 * 2;
 	$__tmp1 = 0 + 5;
 	if ($__tmp0 >= $__tmp1) {
-		for ($i = $__tmp0; $i >= $__tmp1; $i -= 2) {
-			echo $i, LF;
+		foreach (\xrange($__tmp0, $__tmp1, -2) as $i) {
+			echo $i, ',';
 		}
 	}
 	elseif ($arr) {
@@ -55,6 +59,8 @@ catch (\Exception $ex) {
 finally {
 	// no any
 }
+
+echo LF;
 // ---------
 
 \Swoole\Event::wait();

@@ -13,6 +13,9 @@ public LF = "\n"
 #php print_r(expr, is_return Bool = #default)
 #php header(info String, replace = true, http_response_code Int = #default)
 
+#php is_int(val) Bool
+#php is_array(val) Bool
+
 // php builtin constants
 #php __DIR__ String
 #php __FILE__ String
@@ -32,21 +35,11 @@ public LF = "\n"
 	public getCode() Int
 	public getMessage() String
 }
+
 #php ErrorException: Exception {}
+#php LogicException: Exception {}
 
-// file
-#php file_exists(filename String) Bool
-#php dirname(path String, levels UInt = #default) String
-#php basename(path String, suffix String = #default) String
-#php realpath(path String) String
-#php file_get_contents(file String) String
-#php file_set_contents(file String, data String, flags Int = #default) UInt
-#php FILE_APPEND Int
-#php LOCK_EX Int
-
-// type helpers
-#php is_int(val) Bool
-#php is_array(val) Bool
+// helper functions
 
 public is_uint(val) Bool {
 	return is_int(val) and val >= 0
@@ -85,6 +78,37 @@ public is_strict_dict(it) Bool {
 	keys = array_keys(it)
 	return keys !== array_keys(keys)
 }
+
+public xrange(start Int, end Int, step = 1) {
+	i = start
+	if step > 0 {
+		// step greate than 0, increment
+		while i <= end {
+			yield i
+			i += step
+		}
+	}
+	elseif (step < 0) {
+		// step less than 0, decrement
+		while i >= end {
+			yield i
+			i += step
+		}
+	}
+	else {
+		throw LogicException('Parameter "step" should not be 0.');
+	}
+}
+
+// file
+#php file_exists(filename String) Bool
+#php dirname(path String, levels UInt = #default) String
+#php basename(path String, suffix String = #default) String
+#php realpath(path String) String
+#php file_get_contents(file String) String
+#php file_set_contents(file String, data String, flags Int = #default) UInt
+#php FILE_APPEND Int
+#php LOCK_EX Int
 
 // math
 #php max(n1 Float, n2 Float, n3 Float = #default) Float
@@ -341,17 +365,17 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 // primitive types end
 
 #tea Regex {
-	// match in target text, returns is matched
-	masked test(text String) Bool => regex_test(this, text)
+	// match in target string, returns is matched
+	masked test(string String) Bool => regex_test(this, string)
 
-	// use this pattern to untie a text, returns the untied items
-	masked untie(text String) String.Array => preg_split(this, text)
+	// use this pattern to untie a string, returns the untied items
+	masked untie(string String) String.Array => preg_split(this, string)
 
-	// match in target text, returns the first captured item
-	masked capture_one(text String) String.Array => regex_capture_one(this, text)
+	// match in target string, returns the first captured item
+	masked capture_one(string String) String.Array => regex_capture_one(this, string)
 
-	// match in target text, returns the all captured items
-	masked capture_all(text String) String.Array.Array => regex_capture_all(this, text)
+	// match in target string, returns the all captured items
+	masked capture_all(string String) String.Array.Array => regex_capture_all(this, string)
 }
 
 #tea XView: String {}   // accept IView

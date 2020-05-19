@@ -195,7 +195,7 @@ else {
 }
 
 if (0 <= 9) {
-	for ($i = 0; $i <= 9; $i += 1) {
+	foreach (\xrange(0, 9) as $i) {
 		// no any
 	}
 }
@@ -203,7 +203,7 @@ else {
 	// no any
 }
 
-for ($i = 9; $i >= 0; $i -= 2) {
+foreach (\xrange(9, 0, -2) as $i) {
 	// no any
 }
 

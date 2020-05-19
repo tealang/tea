@@ -16,7 +16,7 @@ function fib_closure(): callable {
 
 // ---------
 $f = fib_closure();
-for ($i = 0; $i <= 9; $i += 1) {
+foreach (\xrange(0, 9) as $i) {
 	echo "{$i} ==> " . $f(), LF;
 }
 // ---------

@@ -1,31 +1,14 @@
 #main
 
 // a int range generator that implementeds with yield
-public xrange(start Int, stop Int, step = 1) {
-	// increment
-	if step > 0 {
-		i = start
-		while i < stop {
-			yield i
-			i += step
-		}
-
-		return
-	}
-
-	// invalid
-	if step == 0 {
-		throw Exception('Step should not be 0.');
-	}
-
-	// step less than 0, decrement
+public demo_range(start Int, end Int) {
 	i = start
-	while i > stop {
+	while i <= end {
 		yield i
-		i += step
+		i += 1
 	}
 }
 
-for v in xrange(0, 10) {
+for v in demo_range(0, 9) {
 	echo v
 }

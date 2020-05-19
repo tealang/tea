@@ -15,25 +15,11 @@ function fn0($str): string {
 	return PHP_CONST_DEMO;
 }
 
-function xrange(int $start, int $stop, int $step = 1): \Generator {
-	if ($step > 0) {
-		$i = $start;
-		while ($i < $stop) {
-			yield $i;
-			$i += $step;
-		}
-
-		return;
-	}
-
-	if ($step == 0) {
-		throw new \Exception('Step should not be 0.');
-	}
-
+function demo_range(int $start, int $end): \Generator {
 	$i = $start;
-	while ($i > $stop) {
+	while ($i <= $end) {
 		yield $i;
-		$i += $step;
+		$i += 1;
 	}
 }
 

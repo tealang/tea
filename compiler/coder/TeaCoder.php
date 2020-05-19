@@ -1053,7 +1053,7 @@ class TeaCoder
 	public function render_if_block(IfBlock $node)
 	{
 		$items = [];
-		$items[] = sprintf('if (%s) %s', $node->condition->render($this), $this->render_control_structure_body($node, 'if'));
+		$items[] = sprintf('if (%s) %s', $node->condition->render($this), $this->render_control_structure_body($node));
 
 		if ($node->else) {
 			$items[] = $node->else->render($this);
@@ -1081,7 +1081,7 @@ class TeaCoder
 	public function render_elseif_block(ElseIfBlock $node)
 	{
 		$items = [];
-		$items[] = sprintf("\nelseif (%s) %s", $node->condition->render($this), $this->render_control_structure_body($node, 'elseif'));
+		$items[] = sprintf("\nelseif (%s) %s", $node->condition->render($this), $this->render_control_structure_body($node));
 
 		if ($node->else) {
 			$items[] = $node->else->render($this);
@@ -1092,7 +1092,7 @@ class TeaCoder
 
 	public function render_else_block(ElseBlock $node)
 	{
-		return "\nelse " . $this->render_control_structure_body($node, _ELSE);
+		return "\nelse " . $this->render_control_structure_body($node);
 	}
 
 	public function render_catch_block(CatchBlock $node)
@@ -1101,7 +1101,7 @@ class TeaCoder
 		$type = $node->var->type->render($this);
 
 		$items = [];
-		$items[] = "\ncatch ($type $var) " . $this->render_control_structure_body($node, _CATCH);
+		$items[] = "\ncatch ($type $var) " . $this->render_control_structure_body($node);
 
 		if ($node->except) {
 			$items[] = $node->except->render($this);
@@ -1112,7 +1112,7 @@ class TeaCoder
 
 	public function render_finally_block(FinallyBlock $node)
 	{
-		return "\nfinally " . $this->render_control_structure_body($node, _FINALLY);
+		return "\nfinally " . $this->render_control_structure_body($node);
 	}
 
 	public function render_echo_statement(EchoStatement $node)
@@ -1216,19 +1216,19 @@ class TeaCoder
 		return $code;
 	}
 
-	public function render_control_structure_body(IBlock $node, string $label = null)
+	public function render_control_structure_body(IBlock $node)
 	{
 		$code = $this->render_block_nodes($node->body);
-		return $this->wrap_block_code($code, $label);
+		return $this->wrap_block_code($code);
 	}
 
-	protected function wrap_block_code(array $items, string $label = null)
+	protected function wrap_block_code(array $items)
 	{
 		$body = trim(join($items));
 
 		$code = $this->begin_tag() . LF;
 		$code .= $this->indents($body === '' ? '// no any' : $body);
-		$code .= LF . $this->end_tag($label);
+		$code .= LF . $this->end_tag();
 
 		return $code;
 	}
@@ -1290,7 +1290,7 @@ class TeaCoder
 		return static::BLOCK_BEGIN;
 	}
 
-	protected function end_tag(string $kind = null)
+	protected function end_tag()
 	{
 		return static::BLOCK_END;
 	}

@@ -16,8 +16,10 @@ arr = [
 
 // for-in
 for val in range(0, 9) {
-	echo val
+	print val, ','
 }
+
+echo
 
 // for-in-else
 for k, v in arr {
@@ -34,15 +36,17 @@ else {
 for i = 0 to 9 {
 	// i = 10	// error, i is a final value variable
 	i + 3
-	echo i
+	print i, ','
 }
 else {
 	echo 'no loops'
 }
 
+echo
+
 // for-downto
 for i = 9 * 2 downto 0 + 5 step 2 {
-	echo i
+	print i, ','
 }
 elseif (arr) {
 	print 'oh!'
@@ -53,3 +57,5 @@ catch ex {
 finally {
 	//
 }
+
+echo

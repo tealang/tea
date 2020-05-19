@@ -24,6 +24,10 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 
 #php header(info String, replace Bool = true, http_response_code Int = #default)
 
+#php is_int(val Any) Bool
+
+#php is_array(val Any) Bool
+
 #php Exception {
 	public construct(message String, code Int = 0)
 	public getCode() Int
@@ -33,6 +37,20 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 #php ErrorException: Exception {
 	// no any
 }
+
+#php LogicException: Exception {
+	// no any
+}
+
+public is_uint(val Any) Bool
+
+public uint_ensure(num Int) Int
+
+public is_strict_array(it Any) Bool
+
+public is_strict_dict(it Any) Bool
+
+public xrange(start Int, end Int, step Int = 1) IGenerator
 
 #php file_exists(filename String) Bool
 
@@ -45,18 +63,6 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 #php file_get_contents(file String) String
 
 #php file_set_contents(file String, data String, flags Int = #default) UInt
-
-#php is_int(val Any) Bool
-
-#php is_array(val Any) Bool
-
-public is_uint(val Any) Bool
-
-public uint_ensure(num Int) Int
-
-public is_strict_array(it Any) Bool
-
-public is_strict_dict(it Any) Bool
 
 #php max(n1 Float, n2 Float, n3 Float = #default) Float
 
@@ -278,10 +284,10 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 }
 
 #tea Regex {
-	masked test(text String) Bool
-	masked untie(text String) String.Array
-	masked capture_one(text String) String.Array
-	masked capture_all(text String) String.Array.Array
+	masked test(string String) Bool
+	masked separate(string String) String.Array
+	masked capture_one(string String) String.Array
+	masked capture_all(string String) String.Array.Array
 }
 
 #tea XView: String {
