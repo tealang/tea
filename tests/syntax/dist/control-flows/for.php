@@ -6,19 +6,19 @@ namespace tea\tests\syntax;
 require_once dirname(__DIR__, 2) . '/__public.php';
 
 // ---------
-$arr = [
+$list = [
 	"k1" => "hi",
 	"k2" => "hello"
 ];
 
-foreach (range(0, 9) as $val) {
-	echo $val, ',';
+foreach ($list as $value) {
+	echo $value, ',';
 }
 
 echo LF;
 
-if ($arr && count($arr) > 0) {
-	foreach ($arr as $k => $v) {
+if ($list && count($list) > 0) {
+	foreach ($list as $k => $v) {
 		// no any
 	}
 }
@@ -49,7 +49,7 @@ try {
 			echo $i, ',';
 		}
 	}
-	elseif ($arr) {
+	elseif ($list) {
 		echo 'oh!';
 	}
 }

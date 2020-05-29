@@ -2,10 +2,13 @@
 
 #unit tea/tests/syntax
 
+#use  tea/tests/xview { BaseView, IViewDemo }
+#use  tea/tests/PHPDemoUnit { BaseInterface, PHPClassDemo, PHP_CONST_DEMO, php_function_demo }
+
 public PHPClassInMixed1 {
 	protected PREFIX String
 	private caller String
-	public construct(caller String)
+	public construct(caller String = #default, items Any, some Bool = #default)
 	public get_message() String
 }
 

@@ -1,5 +1,6 @@
 ---
 The Coroutine syntax draft
+It would be auto add the Swoole Coroutine statements when used Coroutines
 ---
 
 #main
@@ -7,21 +8,38 @@ The Coroutine syntax draft
 #php usleep(micro_seconds UInt)
 
 internal co_test() {
-	// would auto add the Swoole coroutine statements when used coroutines
+	// declare and initialize a String type Channel variable
+	// var chan = String.Chan()
+
+	// produce data
 	var count
 	for i = 1 to 5 {
-		// just use the #co label to create a coroutine
+		// use the #co label to create a Coroutine
 		#co for j = 1 to 5 {
+			// usleep would be hooked by Swoole, and became to Coroutine inside mode
 			usleep(10000)
+
 			count += 1
 
 			// the value of variable 'i' would be aways 5 at here
-			// becourse of current is in the coroutine, that's an async mode
-			echo "No.$count\t$i\t$j"
+			// because currently in the process of Coroutine, that's an async mode
+			str = "No.$count\t$i\t$j"
+
+			// send data to the Channel
+			// put chan, str
 		}
 	}
 
-	echo 'the Coroutine executing...', LF
+	// consume data
+	// while 1 {
+	// 	// receive data from the Channel
+	// 	// it would be infered to String type
+	// 	received = take chan
+
+	// 	echo 'received: $received'
+	// }
+
+	echo 'the Coroutine running...'
 }
 
 co_test()

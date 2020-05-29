@@ -6,22 +6,21 @@ namespace tea\tests\syntax;
 require_once dirname(__DIR__, 2) . '/__public.php';
 
 // ---------
-$a = 0;
-$b = 1;
 $num = 1;
+$str = 'abc';
 
 try {
 	switch ($num) {
-		case $a * 3:
-			switch ($num) {
-				case $b:
-					$b = $num * 5;
-					echo $b, LF;
+		case $num * 3:
+			switch ($str) {
+				case 'some' . $num:
+				case 'hello':
+				case ('a' . 123):
+					$str = $num * 5;
+					echo $str, LF;
 					break;
-				case 1:
-				case 2:
-				case 3:
-					$a = $num * 2;
+				case 'a':
+					$num = $num * 2;
 					break 2;
 
 				default:

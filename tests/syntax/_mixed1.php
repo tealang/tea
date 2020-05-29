@@ -6,7 +6,7 @@ class PHPClassInMixed1 {
 
 	private string $caller;
 
-	public function __construct(string $caller = self::PREFIX . '-' . (1 * 2), $some = null) {
+	public function __construct(string $caller = self::PREFIX . '-' . (1 * 2), array $items, bool $some = null) {
 		$this->caller = $caller;
 	}
 

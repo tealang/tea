@@ -21,6 +21,8 @@ class TeaCoder
 
 	const VAR_DECLARE_PREFIX = 'var ';
 
+	const USE_DECLARE_PREFIX = '#use ';
+
 	const NS_SEPARATOR = '.';
 
 	const STATEMENT_TERMINATOR = '';
@@ -37,7 +39,7 @@ class TeaCoder
 
 	const NONE = 'none';
 
-	const PROGRAM_HEADER = LF; // a empty line
+	const PROGRAM_HEADER = LF; // an empty line
 
 	protected const STRING_HOLDER_MARK = "\r\r:%d:";
 
@@ -164,8 +166,13 @@ class TeaCoder
 
 		$items[] = $node->name;
 
-		$header = join(' ', $items);
-		return $header;
+		$code = join(' ', $items);
+
+		$parameters = $this->render_parameters($node->parameters);
+		// $callbacks = $node->callbacks ? $this->render_callback_protocols($node->callbacks) : '';
+		$type = $this->generate_declaration_type($node);
+
+		return "{$code}($parameters){$type}";
 	}
 
 	protected function generate_property_header(PropertyDeclaration $node)
@@ -203,7 +210,7 @@ class TeaCoder
 		return $code;
 	}
 
-	protected function generate_type(IDeclaration $node)
+	protected function generate_declaration_type(IDeclaration $node)
 	{
 		return $node->type && $node->type !== TypeFactory::$_void ? ' ' . $node->type->render($this) : '';
 	}
@@ -232,7 +239,7 @@ class TeaCoder
 	// {
 	// 	$async = $node->async ? 'async ' : '';
 	// 	$parameters = $this->render_parameters($node->parameters);
-	// 	$type = $this->generate_type($node);
+	// 	$type = $this->generate_declaration_type($node);
 
 	// 	return "{$async}{$node->name}($parameters){$type}";
 	// }
@@ -246,7 +253,7 @@ class TeaCoder
 	public function render_masked_declaration(MaskedDeclaration $node)
 	{
 		$header = _MASKED . " {$node->name}";
-		$type = $this->generate_type($node);
+		$type = $this->generate_declaration_type($node);
 
 		$statement = 'return ' . $node->body->render($this) . static::STATEMENT_TERMINATOR;
 		$body = $this->wrap_block_code([$statement]);
@@ -264,12 +271,7 @@ class TeaCoder
 
 	protected function render_function_protocol(FunctionDeclaration $node)
 	{
-		$header = $this->generate_function_header($node);
-		$parameters = $this->render_parameters($node->parameters);
-		// $callbacks = $node->callbacks ? $this->render_callback_protocols($node->callbacks) : '';
-		$type = $this->generate_type($node);
-
-		return "{$header}($parameters){$type}";
+		return $this->generate_function_header($node);
 	}
 
 	public function render_function_declaration(FunctionDeclaration $node)
@@ -984,7 +986,7 @@ class TeaCoder
 	{
 		$ns = $this->render_ns_identifier($node->ns);
 
-		$code = "use $ns";
+		$code = static::USE_DECLARE_PREFIX . " $ns";
 
 		if ($node->targets) {
 			$code .= $this->generate_use_targets($node->targets);
@@ -997,7 +999,7 @@ class TeaCoder
 	{
 		$items = [];
 		foreach ($targets as $target) {
-			$items[] = $target->source_name ? "$source_name as $target_name" : $target_name;
+			$items[] = $target->source_name ? "{$target->source_name} as {$target->target_name}" : $target->target_name;
 		}
 
 		return sprintf(' { %s }', join(', ', $items));

@@ -165,7 +165,7 @@ class TeaParser extends BaseParser
 
 	protected function assert_not_reserveds_word($token)
 	{
-		if (TeaHelper::is_normal_reserveds($token)) {
+		if (TeaHelper::is_reserveds($token)) {
 			throw $this->new_parse_error("'$token' is a reserveds word, cannot use for a class/function/constant/variable name.");
 		}
 	}

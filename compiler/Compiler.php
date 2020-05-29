@@ -523,6 +523,7 @@ class Compiler
 		self::echo_start('Rendering public declarations...');
 
 		$program = new Program(PUBLIC_HEADER_NAME, $this->unit);
+		$program->uses = $this->header_program->uses;
 
 		foreach ($this->unit->symbols as $symbol) {
 			$declaration = $symbol->declaration;

@@ -31,6 +31,18 @@ class PHPParserLite extends BaseParser
 		'__toString' => 'to_string',
 	];
 
+	const OPERATOR_MAP = [
+		'instanceof' => _IS,
+		'.' => _CONCAT,
+		'!' => _NOT,
+		'&&' => _AND,
+		'||' => _OR,
+		'%' => _REMAINDER,
+		'**' => _EXPONENTIATION,
+		'^' => _BITWISE_XOR,
+		'^=' => '^|=',
+	];
+
 	/**
 	 * @var NSIdentifier
 	 */
@@ -124,43 +136,87 @@ class PHPParserLite extends BaseParser
 		return $node;
 	}
 
-	const EXPRESSION_ENDINGS = [null, _PAREN_CLOSE, _BRACKET_CLOSE, _BLOCK_END, _SEMICOLON];
+	const EXPRESSION_ENDINGS = [null, _PAREN_CLOSE, _BRACKET_CLOSE, _BLOCK_END, _COMMA, _SEMICOLON];
 
-	private function read_expression()
+	private function read_expression($debug_name = null)
 	{
 		// we do not care about the contents, just skip ...
 
+		// var_dump($this->file);
+		$expr = null;
 		while (($token = $this->scan_token_ignore_empty()) !== null) {
+			// $this->print_token($token);
 			if (is_string($token)) {
 				if (in_array($token, static::EXPRESSION_ENDINGS, true)) {
 					$this->pos--;
-					$expr = null;
 					break;
 				}
 
 				switch ($token) {
 					case _PAREN_OPEN:
-						$this->read_expression();
+						$expr = $this->read_expression();
 						$this->expect_char_token(_PAREN_CLOSE);
-						break;
+						break 2;
 
 					case _BRACKET_OPEN:
 						$expr = $this->read_bracket_expression();
+						break 2;
+
+					default:
+						$op_token = static::OPERATOR_MAP[$token] ?? $token;
+						$operator = OperatorFactory::get_normal_operator($op_token);
+						if ($operator === null) {
+							return $expr;
+						}
+
+						// we dont care the precedences
+						$right_expr = $this->read_expression();
+						$expr = new BinaryOperation($operator, $expr, $right_expr);
 						break;
 				}
+
+				continue;
+			}
+
+			$token_type = $token[0];
+			$token_content = $token[1];
+			switch ($token_type) {
+				case T_STRING:
+					$expr = $this->factory->create_identifier($token_content);
+					break;
+				case T_CONSTANT_ENCAPSED_STRING:
+					$quote = $token_content[0];
+					$quote_content = substr($token_content, 1, -1);
+					$expr = $quote === _SINGLE_QUOTE
+						? new UnescapedStringLiteral($quote_content)
+						: new EscapedStringLiteral($quote_content);
+					break;
+				case T_LNUMBER:
+					$expr = new IntegerLiteral($token_content);
+					break;
+				case T_DNUMBER:
+					$expr = new FloatLiteral($token_content);
+					break;
+				case T_DOUBLE_COLON:
+					$name = $this->expect_identifier_name();
+					$expr = $this->factory->create_accessing_identifier($expr, $name);
+					break;
+				default:
+					$this->print_token($token);
+					throw $this->new_unexpected_error();
 			}
 		}
 
 		return $expr;
 	}
 
-	private function read_bracket_expression(bool $not_opened = false)
+	private function read_bracket_expression(bool $not_opened = false, $debug_name = null)
 	{
 		$not_opened && $this->expect_char_token(_BRACKET_OPEN);
 
 		$is_dict = false;
-		while ($expr = $this->read_expression()) {
-			if ($this->skip_char_token('=>')) {
+		while ($expr = $this->read_expression($debug_name)) {
+			if ($this->skip_typed_token(T_DOUBLE_ARROW)) {
 				$is_dict = true;
 			}
 		}
@@ -357,17 +413,17 @@ class PHPParserLite extends BaseParser
 		$declaration = $this->factory->create_class_constant_declaration($modifier, $name);
 
 		$this->expect_char_token(_ASSIGN);
-		$declaration->type = $this->read_value_type_skip($doc);
+		$declaration->type = $this->read_value_type_skip($doc, 'const', $name);
 		$this->expect_statement_end();
 
 		return $declaration;
 	}
 
-	private function read_value_type_skip(?string $doc, string $doc_kind = 'const')
+	private function read_value_type_skip(?string $doc, string $doc_kind = 'const', string $name = null)
 	{
 		$temp_pos = $this->pos;
 
-		$type = $this->try_detatch_assign_value_type_and_skip();
+		$type = $this->try_detatch_assign_value_type_and_skip($name);
 		if ($type === null) {
 			$doc && $type = $this->get_type_in_doc($doc, $doc_kind);
 			if ($type === null) {
@@ -392,11 +448,13 @@ class PHPParserLite extends BaseParser
 		return null;
 	}
 
-	private function try_detatch_assign_value_type_and_skip()
+	private function try_detatch_assign_value_type_and_skip($name = null)
 	{
 		$token = $this->scan_token_ignore_empty();
+
 		if ($token === _BRACKET_OPEN) {
-			$expr = $this->read_bracket_expression();
+			$expr = $this->read_bracket_expression(false, $name);
+
 			if ($this->skip_char_token(_SEMICOLON)) {
 				$this->pos--; // back to ;
 				return $expr instanceof ArrayExpression
@@ -553,8 +611,14 @@ class PHPParserLite extends BaseParser
 
 			$this->scan_token_ignore_empty();
 
-			if ($token[0] === T_STRING) {
+			$this->print_token($token);
+			$token_type = $token[0];
+			if ($token_type === T_STRING) {
 				$type = $this->create_type_identifier($token[1]);
+				$token = $this->scan_token_ignore_empty();
+			}
+			elseif ($token_type === T_ARRAY) {
+				$type = TypeFactory::$_any; // maybe Array / Dict type
 				$token = $this->scan_token_ignore_empty();
 			}
 			else {
@@ -562,15 +626,23 @@ class PHPParserLite extends BaseParser
 			}
 
 			if ($token[0] !== T_VARIABLE) {
+				// var_dump($token, token_name($token[0]));exit;
 				throw $this->new_unexpected_error();
 			}
 
+			$name = substr($token[1], 1); // remove the first '$'
+
+			$value = null;
 			if ($this->skip_char_token(_ASSIGN)) {
-				$value = $this->read_expression();
+				$value = $this->read_expression($name);
+				if ($value instanceof DictType) {
+					$type = TypeFactory::$_dict;
+				}
+
+				$value = ASTFactory::$default_value_marker;
 			}
 
-			$name = ltrim($token[1], '$');
-			$items[] = new ParameterDeclaration($name, $type);
+			$items[] = new ParameterDeclaration($name, $type, $value);
 
 			if (!$this->skip_char_token(_COMMA)) {
 				break;
@@ -826,7 +898,7 @@ class PHPParserLite extends BaseParser
 			$token = $this->tokens[$i];
 			$i++;
 
-			if ($token === LF) {
+			if ($token === LF || (is_array($token) && strpos($token[1], LF) !== false)) {
 				break;
 			}
 

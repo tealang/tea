@@ -27,7 +27,7 @@ const _OTHER_RESERVEDS = [
 	_WHEN,
 ];
 
-define('TEA_NORMAL_RESERVEDS', array_merge(
+define('_TEA_RESERVEDS', array_merge(
 	_BUILTIN_TYPE_NAMES,
 	_STRUCTURE_KEYS,
 	_ACCESSING_MODIFIERS,
@@ -79,9 +79,9 @@ class TeaHelper
 		return $token === _SPACE || $token === _TAB || $token === LF || $token === _CR;
 	}
 
-	static function is_normal_reserveds($token)
+	static function is_reserveds($token)
 	{
-		return in_array(strtolower($token), TEA_NORMAL_RESERVEDS, true);
+		return in_array(strtolower($token), _TEA_RESERVEDS, true);
 	}
 
 	static function is_modifier($token)
@@ -111,7 +111,7 @@ class TeaHelper
 
 	static function is_declarable_variable_name(?string $token)
 	{
-		return (preg_match('/^_?[a-z][a-z0-9_]*$/', $token) && !self::is_normal_reserveds($token)) || $token === '_';
+		return (preg_match('/^_?[a-z][a-z0-9_]*$/', $token) && !self::is_reserveds($token)) || $token === '_';
 	}
 
 	static function is_constant_name(?string $token)

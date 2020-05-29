@@ -15,6 +15,8 @@ class PHPCoder extends TeaCoder
 
 	const VAR_DECLARE_PREFIX = _DOLLAR;
 
+	const USE_DECLARE_PREFIX = 'use ';
+
 	const NS_SEPARATOR = _BACK_SLASH;
 
 	const STATEMENT_TERMINATOR = ';';
@@ -222,7 +224,7 @@ class PHPCoder extends TeaCoder
 
 			$declaration = $target->source_declaration;
 			if ($declaration instanceof ClassKindredDeclaration) {
-				// do not do anything
+				// no any
 			}
 			elseif ($declaration instanceof FunctionDeclaration) {
 				$item = "function $item";
@@ -298,7 +300,16 @@ class PHPCoder extends TeaCoder
 			$name = $this->get_normalized_name($node->name);
 		}
 
-		return "{$modifier}function $name";
+		$parameters = $this->render_function_parameters($node);
+
+		$code = "{$modifier}function {$name}({$parameters})";
+
+		if ($node->type !== null && $node->type !== TypeFactory::$_any && $node->type !== TypeFactory::$_void) {
+			$return_type = $this->render_type($node->type);
+			$return_type and $code .= ": $return_type";
+		}
+
+		return $code;
 	}
 
 	protected function generate_property_header(PropertyDeclaration $node)
@@ -368,22 +379,18 @@ class PHPCoder extends TeaCoder
 		}
 
 		$header = $this->generate_function_header($node);
-		$parameters = $this->render_function_parameters($node);
 		$body = $this->render_function_body($node);
 
-		if ($node->type === null || $node->type === TypeFactory::$_any || $node->type === TypeFactory::$_void) {
-			$return_type = null;
-		}
-		else {
-			$return_type = $this->render_type($node->type);
-		}
-
-		return $return_type
-			? "$header($parameters): $return_type $body"
-			: "$header($parameters) $body";
+		return $header . ' ' . $body;
 	}
 
 	public function render_coroutine_block(CoroutineBlock $node)
+	{
+		$lambda = $this->render_lambda_expression($node);
+		return sprintf('\Swoole\Coroutine::create(%s);', $lambda);
+	}
+
+	public function render_lambda_expression(LambdaExpression $node)
 	{
 		$parameters = $this->render_parameters($node->parameters);
 		$body = $this->render_function_body($node);
@@ -396,20 +403,7 @@ class PHPCoder extends TeaCoder
 			$header = sprintf('function (%s)', $parameters);
 		}
 
-		return sprintf('\Swoole\Coroutine::create(%s %s);', $header, $body);
-	}
-
-	public function render_lambda_expression(LambdaExpression $node)
-	{
-		$parameters = $this->render_parameters($node->parameters);
-		$body = $this->render_function_body($node);
-
-		if ($node->use_variables) {
-			$uses = $this->render_lambda_use_arguments($node);
-			return sprintf('function (%s) use(%s) ', $parameters, $uses) . $body;
-		}
-
-		return sprintf('function (%s) ', $parameters) . $body;
+		return $header . ' ' . $body;
 	}
 
 	protected function render_lambda_use_arguments(LambdaExpression $node)
@@ -585,16 +579,7 @@ class PHPCoder extends TeaCoder
 	protected function render_interface_method(FunctionDeclaration $node)
 	{
 		$header = $this->generate_function_header($node);
-		$parameters = $this->render_function_parameters($node);
-
-		$code = "{$header}($parameters)";
-
-		if ($node->type !== null && $node->type !== TypeFactory::$_any && $node->type !== TypeFactory::$_void) {
-			$return_type = $this->render_type($node->type);
-			$code .= ": $return_type";
-		}
-
-		return $code . static::CLASS_MEMBER_TERMINATOR;
+		return $header . static::CLASS_MEMBER_TERMINATOR;
 	}
 
 // ---
@@ -740,14 +725,14 @@ class PHPCoder extends TeaCoder
 
 		if ($node->is_downto_mode) {
 			// $for_code = "for ($var = $start; $var >= $end; $var -= $step) $body";
-			$for_code = "foreach (\xrange($start, $end, -$step) as $var) $body";
+			$for_code = "foreach (\\xrange($start, $end, -$step) as $var) $body";
 		}
 		elseif ($step === 1) {
-			$for_code = "foreach (\xrange($start, $end) as $var) $body";
+			$for_code = "foreach (\\xrange($start, $end) as $var) $body";
 		}
 		else {
 			// $for_code = "for ($var = $start; $var <= $end; $var += $step) $body";
-			$for_code = "foreach (\xrange($start, $end, $step) as $var) $body";
+			$for_code = "foreach (\\xrange($start, $end, $step) as $var) $body";
 		}
 
 		if ($node->else) {
@@ -1172,10 +1157,13 @@ class PHPCoder extends TeaCoder
 	{
 		if ($node->ns) {
 			$name = $this->get_normalized_name($node->name);
-			return $this->render_plain_identifier($node->ns) . static::NS_SEPARATOR . $name;
+			$name = $this->render_plain_identifier($node->ns) . static::NS_SEPARATOR . $name;
+		}
+		else {
+			$name = $this->get_classkindred_identifier_name($node);
 		}
 
-		return $this->get_classkindred_identifier_name($node);
+		return $name;
 	}
 
 	private function get_classkindred_identifier_name(PlainIdentifier $node)
@@ -1565,7 +1553,7 @@ class PHPCoder extends TeaCoder
 				$expr = "$left ?? $expr";
 			}
 			else {
-				$expr = $left;
+				$expr = $item instanceof MultiOperation ? "($left)" : $left;
 			}
 		}
 

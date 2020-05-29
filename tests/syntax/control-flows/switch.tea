@@ -1,17 +1,16 @@
 #main
 
-a = 0
-b = 1
 num = 1
+str = 'abc'
 
 #outer switch num {
-	case a * 3:
-		switch num {
-		case b:
-			b = num * 5
-			echo b
-		case 1, 2, 3:
-			a = num * 2
+	case num * 3:
+		switch str {
+		case 'some${num}', 'hello', ('a' concat 123):
+			str = num * 5
+			echo str
+		case 'a':
+			num = num * 2
 			break #outer
 		}
 		else {

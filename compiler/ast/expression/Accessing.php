@@ -23,3 +23,16 @@ class KeyAccessing extends BaseExpression implements IAssignable
 	}
 }
 
+class MemberAccessing extends BaseExpression implements IAssignable
+{
+	const KIND = 'member_accessing';
+
+	public $left;
+	public $right;
+
+	public function __construct(BaseExpression $left, BaseExpression $right)
+	{
+		$this->left = $left;
+		$this->right = $right;
+	}
+}

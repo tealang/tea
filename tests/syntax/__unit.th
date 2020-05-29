@@ -4,6 +4,12 @@ The syntax tests for Tea
 
 #unit tea/tests/syntax
 
+// #unit tea/tests/syntax {
+// 	swoole: {
+// 		hooks: []
+// 	}
+// }
+
 #use tea/tests/xview { BaseView, IViewDemo }
 #use tea/tests/PHPDemoUnit { BaseInterface, PHPClassDemo, PHP_CONST_DEMO, php_function_demo }
 

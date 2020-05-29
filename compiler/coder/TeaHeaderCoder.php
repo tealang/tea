@@ -38,7 +38,7 @@ class TeaHeaderCoder extends TeaCoder
 	public function render_masked_declaration(MaskedDeclaration $node)
 	{
 		$header = _MASKED . " {$node->name}";
-		$type = $this->generate_type($node);
+		$type = $this->generate_declaration_type($node);
 
 		if ($node->parameters === null && $node->callbacks === null) {
 			return "{$header}{$type}";

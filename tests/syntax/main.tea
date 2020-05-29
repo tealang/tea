@@ -21,7 +21,7 @@ internal TeaDemoClass {
 var caller = 'The caller in main.tea'
 
 echo "\n***Test for call with mixed programming:"
-result1 = PHPClassInMixed1(caller).get_message()
+result1 = PHPClassInMixed1(caller, []).get_message()
 result2 = php_get_num() + 1
 var_dump(result1, result2)
 

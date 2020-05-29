@@ -1,7 +1,7 @@
 <?php
 namespace tea\tests\syntax;
 
-use tea\tests\PHPDemoUnit\{ NS1\Demo as PHPClassDemo, function php_function_demo, const PHP_CONST_DEMO };
+use  tea\tests\PHPDemoUnit\{ NS1\Demo as PHPClassDemo, function php_function_demo, const PHP_CONST_DEMO };
 
 \Swoole\Runtime::enableCoroutine();
 
@@ -32,7 +32,7 @@ class TeaDemoClass {
 $caller = 'The caller in main.tea';
 
 echo "\n***Test for call with mixed programming:", LF;
-$result1 = (new PHPClassInMixed1($caller))->get_message();
+$result1 = (new PHPClassInMixed1($caller, []))->get_message();
 $result2 = php_get_num() + 1;
 var_dump($result1, $result2);
 

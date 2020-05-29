@@ -11,14 +11,15 @@ function co_test() {
 		\Swoole\Coroutine::create(function () use(&$count, &$i) {
 			foreach (\xrange(1, 5) as $j) {
 				usleep(10000);
+
 				$count += 1;
 
-				echo "No.{$count}\t{$i}\t{$j}", LF;
+				$str = "No.{$count}\t{$i}\t{$j}";
 			}
 		});
 	}
 
-	echo 'the Coroutine executing...', LF, LF;
+	echo 'the Coroutine running...', LF;
 }
 
 // ---------

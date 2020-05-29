@@ -15,7 +15,7 @@ const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
 const LF = "\n";
 
-// array_key_last do not support in PHP 7.2
+// array_key_last undefined in version <= 7.2
 if (!function_exists('array_key_last')) {
 	function array_key_last(array $items) {
 		$keys = array_keys($items);
@@ -119,13 +119,6 @@ function get_traces(int $trace_start = 0) {
 const __AUTOLOADS = [
 	'Tea\Compiler' => 'Compiler.php',
 	'Tea\Exception' => 'Exception.php',
-	'Tea\ASTChecker' => 'ast/ASTChecker.php',
-	'Tea\UnexpectNode' => 'ast/ASTChecker.php',
-	'Tea\ASTFactory' => 'ast/ASTFactory.php',
-	'Tea\ASTHelper' => 'ast/ASTHelper.php',
-	'Tea\OperatorFactory' => 'ast/OperatorFactory.php',
-	'Tea\ReturnBuilder' => 'ast/ReturnBuilder.php',
-	'Tea\TypeFactory' => 'ast/TypeFactory.php',
 	'Tea\InlineComments' => 'ast/base/Comment.php',
 	'Tea\BlockComment' => 'ast/base/Comment.php',
 	'Tea\Docs' => 'ast/base/Docs.php',
@@ -218,6 +211,8 @@ const __AUTOLOADS = [
 	'Tea\InvariantDeclaration' => 'ast/declaration/VariableDeclaration.php',
 	'Tea\SuperVariableDeclaration' => 'ast/declaration/VariableDeclaration.php',
 	'Tea\ParameterDeclaration' => 'ast/declaration/VariableDeclaration.php',
+	'Tea\KeyAccessing' => 'ast/expression/Accessing.php',
+	'Tea\MemberAccessing' => 'ast/expression/Accessing.php',
 	'Tea\ArrayExpression' => 'ast/expression/ArrayDictExpression.php',
 	'Tea\DictExpression' => 'ast/expression/ArrayDictExpression.php',
 	'Tea\DictItem' => 'ast/expression/ArrayDictExpression.php',
@@ -228,7 +223,6 @@ const __AUTOLOADS = [
 	'Tea\ExpressionList' => 'ast/expression/ExpressionList.php',
 	'Tea\HTMLEscapeExpression' => 'ast/expression/HTMLEscapeExpression.php',
 	'Tea\IncludeExpression' => 'ast/expression/IncludeExpression.php',
-	'Tea\KeyAccessing' => 'ast/expression/KeyAccessing.php',
 	'Tea\LambdaExpression' => 'ast/expression/LambdaExpression.php',
 	'Tea\CoroutineBlock' => 'ast/expression/LambdaExpression.php',
 	'Tea\ILiteral' => 'ast/expression/Literal.php',
@@ -286,6 +280,13 @@ const __AUTOLOADS = [
 	'Tea\PHPPublicCoder' => 'coder/PHPPublicCoder.php',
 	'Tea\TeaCoder' => 'coder/TeaCoder.php',
 	'Tea\TeaHeaderCoder' => 'coder/TeaHeaderCoder.php',
+	'Tea\ASTChecker' => 'factory/ASTChecker.php',
+	'Tea\UnexpectNode' => 'factory/ASTChecker.php',
+	'Tea\ASTFactory' => 'factory/ASTFactory.php',
+	'Tea\ASTHelper' => 'factory/ASTHelper.php',
+	'Tea\OperatorFactory' => 'factory/OperatorFactory.php',
+	'Tea\ReturnBuilder' => 'factory/ReturnBuilder.php',
+	'Tea\TypeFactory' => 'factory/TypeFactory.php',
 	'Tea\Dumper' => 'helper/Dumper.php',
 	'Tea\FileHelper' => 'helper/FileHelper.php',
 	'Tea\PHPLoaderMaker' => 'helper/PHPLoaderMaker.php',

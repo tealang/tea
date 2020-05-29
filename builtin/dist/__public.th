@@ -285,7 +285,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 
 #tea Regex {
 	masked test(string String) Bool
-	masked separate(string String) String.Array
+	masked untie(string String) String.Array
 	masked capture_one(string String) String.Array
 	masked capture_all(string String) String.Array.Array
 }

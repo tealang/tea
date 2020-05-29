@@ -9,20 +9,20 @@ for key Int, val Int in vt1 {
 
 #php range(start Int, end Int, step = 1) Array
 
-arr = [
+list = [
 	"k1": "hi",
 	"k2": "hello",
 ]
 
 // for-in
-for val in range(0, 9) {
-	print val, ','
+for value in list {
+	print value, ','
 }
 
 echo
 
 // for-in-else
-for k, v in arr {
+for k, v in list {
 	// do sth.
 }
 elseif true {
@@ -48,7 +48,7 @@ echo
 for i = 9 * 2 downto 0 + 5 step 2 {
 	print i, ','
 }
-elseif (arr) {
+elseif list {
 	print 'oh!'
 }
 catch ex {
