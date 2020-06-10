@@ -64,9 +64,9 @@ public xrange(start Int, end Int, step Int = 1) IGenerator
 
 #php file_set_contents(file String, data String, flags Int = #default) UInt
 
-#php max(n1 Float, n2 Float, n3 Float = #default) Float
+#php max(n1 Any, n2 Any, n3 Any = #default) Any
 
-#php min(n1 Float, n2 Float, n3 Float = #default) Float
+#php min(n1 Any, n2 Any, n3 Any = #default) Any
 
 #php abs(val Any) Float
 
@@ -84,7 +84,7 @@ public xrange(start Int, end Int, step Int = 1) IGenerator
 
 #php iconv_strlen(str String) UInt
 
-#php iconv_substr(str String, start Int, length UInt = #default) String
+#php iconv_substr(str String, start Int, length Int = #default) String
 
 #php iconv_strpos(str String, search String, offset Int = 0) Int
 
@@ -102,7 +102,7 @@ public _iconv_strrpos(str String, search String, offset Int = 0) Int
 
 #php strlen(str String) UInt
 
-#php substr(str String, start Int, length UInt = #default) String
+#php substr(str String, start Int, length Int = #default) String
 
 #php strpos(master String, search String, offset Int = 0) Int
 
@@ -217,23 +217,31 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	masked length UInt
 	masked find(str String, offset Int = 0) Int
 	masked find_last(str String, offset Int = 0) Int
-	masked copy(start Int, length UInt = #default) String
+	masked copy(start Int, length Int = #default) String
 	masked lower_case() String
 	masked upper_case() String
 	masked byte_length UInt
 	masked byte_find(str String, offset Int = 0) Int
 	masked byte_find_last(str String, offset Int = 0) Int
-	masked byte_copy(start Int, length UInt = #default) String
+	masked byte_copy(start Int, length Int = #default) String
 	masked byte_lower() String
 	masked byte_upper() String
 	masked rune_length UInt
 	masked rune_find(str String, offset Int = 0) Int
 	masked rune_find_last(str String, offset Int = 0) Int
-	masked rune_copy(start Int, length UInt = #default) String
+	masked rune_copy(start Int, length Int = #default) String
 	masked rune_lower() String
 	masked rune_upper() String
 	masked split(delimiter String) Array
 	masked replace(search String, replacement String) String
+}
+
+#tea Int: String {
+	masked abs() UInt
+}
+
+#tea UInt: Int {
+	// no any
 }
 
 #tea Float {
@@ -241,14 +249,6 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	masked ceil() Int
 	masked floor() Int
 	masked round(precision Int = 0) Float
-}
-
-#tea Int {
-	masked abs() UInt
-}
-
-#tea UInt {
-	// no any
 }
 
 #tea Bool {

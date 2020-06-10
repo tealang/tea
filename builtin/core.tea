@@ -111,8 +111,8 @@ public xrange(start Int, end Int, step = 1) {
 #php LOCK_EX Int
 
 // math
-#php max(n1 Float, n2 Float, n3 Float = #default) Float
-#php min(n1 Float, n2 Float, n3 Float = #default) Float
+#php max(n1, n2, n3 = #default) Any
+#php min(n1, n2, n3 = #default) Any
 #php abs(val) Float
 #php round(val, precision = 0) Float
 #php ceil(val) Int
@@ -125,7 +125,7 @@ public xrange(start Int, end Int, step = 1) {
 
 // with default charset
 #php iconv_strlen(str String) UInt
-#php iconv_substr(str String, start Int, length UInt = #default) String
+#php iconv_substr(str String, start Int, length Int = #default) String
 
 // first pos in default charset
 #php iconv_strpos(str String, search String, offset Int = 0) Int  // would return false on not found
@@ -147,7 +147,7 @@ public _iconv_strrpos(str String, search String, offset Int = 0) Int {
 
 // bytes mode functions
 #php strlen(str String) UInt
-#php substr(str String, start Int, length UInt = #default) String
+#php substr(str String, start Int, length Int = #default) String
 #php strpos(master String, search String, offset Int = 0) Int  // would return false on not found
 public _strpos(master String, search String, offset Int = 0) Int {
 	pos = strpos(master, search, offset);
@@ -277,7 +277,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 	masked length UInt => strlen(this)
 	masked find(str String, offset Int = 0) => _strpos(this, str, offset)
 	masked find_last(str String, offset Int = 0) => _strrpos(this, str, offset)
-	masked copy(start Int, length UInt = #default) => substr(this, start, length)
+	masked copy(start Int, length Int = #default) => substr(this, start, length)
 	masked lower_case() => strtolower(this)
 	masked upper_case() => strtoupper(this)
 
@@ -285,7 +285,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 	masked byte_length UInt => strlen(this)
 	masked byte_find(str String, offset Int = 0) => _strpos(this, str, offset)
 	masked byte_find_last(str String, offset Int = 0) => _strrpos(this, str, offset)
-	masked byte_copy(start Int, length UInt = #default) => substr(this, start, length)
+	masked byte_copy(start Int, length Int = #default) => substr(this, start, length)
 	masked byte_lower() => strtolower(this)
 	masked byte_upper() => strtoupper(this)
 
@@ -293,7 +293,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 	masked rune_length UInt => iconv_strlen(this)
 	masked rune_find(str String, offset Int = 0) => _iconv_strpos(this, str, offset)
 	masked rune_find_last(str String, offset Int = 0) => _iconv_strrpos(this, str, offset)
-	masked rune_copy(start Int, length UInt = #default) => iconv_substr(this, start, length)
+	masked rune_copy(start Int, length Int = #default) => iconv_substr(this, start, length)
 	masked rune_lower() => mb_strtolower(this)
 	masked rune_upper() => mb_strtoupper(this)
 
@@ -302,6 +302,12 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 	masked replace(search String, replacement String) => _str_replace(this, search, replacement)
 }
 
+#tea Int: String {
+	masked abs() UInt => abs(this)
+}
+
+#tea UInt: Int {}
+
 #tea Float {
 	masked abs() => abs(this)
 	masked ceil() => ceil(this)
@@ -309,19 +315,13 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 	masked round(precision = 0) => round(this, precision)
 }
 
-#tea Int {
-	masked abs() UInt => abs(this)
-}
-
-#tea UInt {}
-
 #tea Bool {}
 
 #tea Array {
 	masked length UInt => count(this)
 	masked end UInt => array_last_index(this)
 
-	masked has_value(val) => in_array(val, this, true)
+	masked has_value(val) => in_array(val, this)
 
 	masked find(val) => _array_search(this, val) // find the index with supported value
 
@@ -352,7 +352,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 	masked values() => array_values(this)
 
 	masked has_key(key String) => array_key_exists(key, this)
-	masked has_value(val) => in_array(val, this, true)
+	masked has_value(val) => in_array(val, this)
 
 	masked get(key String) => dict_get(this, key)
 	masked find(val) => dict_search(this, val) // find the key with supported value

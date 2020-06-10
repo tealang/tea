@@ -19,7 +19,7 @@ is_uint($num2);
 is_uint($dec);
 is_int($dec);
 
-$float_num0 = 123;
+$float_num0 = 123.0;
 $float_num1 = 123.123;
 $float_num2 = 123e3;
 $float_num2 = 123e+3;

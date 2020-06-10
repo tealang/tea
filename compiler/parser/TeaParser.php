@@ -843,16 +843,17 @@ class TeaParser extends BaseParser
 			return null;
 		}
 
-		$label = null;
-		if ($this->skip_colon()) {
-			$label = $token;
-			$token = $this->scan_token_ignore_space();
-		}
+		// the named arguments feature has bugs
+		// $label = null;
+		// if ($this->skip_colon()) {
+		// 	$label = $token;
+		// 	$token = $this->scan_token_ignore_space();
+		// }
 
 		$expression = $this->read_expression_with_token($token);
 		$expression and $expression->pos = $this->pos;
 
-		$expression->label = $label;
+		// $expression->label = $label;
 
 		return $expression;
 	}
@@ -1462,7 +1463,7 @@ class TeaParser extends BaseParser
 
 		$this->skip_token(_PAREN_OPEN);
 		$args = $this->read_call_expression_arguments();
-		$this->skip_token(_PAREN_CLOSE);
+		$this->skip_token_ignore_empty(_PAREN_CLOSE);
 
 		// function call
 		$call = new CallExpression($handler, $args);
@@ -1646,7 +1647,7 @@ class TeaParser extends BaseParser
 		$has_label = false;
 		$items = [];
 		while ($item = $this->read_argument()) {
-			if ($item->label !== null) {
+			if (isset($item->label)) {
 				// the labeled argument
 				if (isset($items[$item->label])) {
 					throw $this->new_parse_error("Parameter '{$item->label}' already has be assigned.");

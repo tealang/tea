@@ -164,14 +164,27 @@ class PHPParserLite extends BaseParser
 
 					default:
 						$op_token = static::OPERATOR_MAP[$token] ?? $token;
-						$operator = OperatorFactory::get_normal_operator($op_token);
+
+						if ($expr === null) {
+							$operator = OperatorFactory::get_prefix_operator($op_token);
+						}
+						else {
+							$operator = OperatorFactory::get_normal_operator($op_token);
+						}
+
 						if ($operator === null) {
 							return $expr;
 						}
 
 						// we dont care the precedences
 						$right_expr = $this->read_expression();
-						$expr = new BinaryOperation($operator, $expr, $right_expr);
+
+						if ($expr === null) {
+							$expr = new PrefixOperation($operator, $right_expr);
+						}
+						else {
+							$expr = new BinaryOperation($operator, $expr, $right_expr);
+						}
 						break;
 				}
 
@@ -201,6 +214,9 @@ class PHPParserLite extends BaseParser
 					$name = $this->expect_identifier_name();
 					$expr = $this->factory->create_accessing_identifier($expr, $name);
 					break;
+				case T_DOUBLE_ARROW:
+					$this->pos--;
+					break 2;
 				default:
 					$this->print_token($token);
 					throw $this->new_unexpected_error();
@@ -218,6 +234,11 @@ class PHPParserLite extends BaseParser
 		while ($expr = $this->read_expression($debug_name)) {
 			if ($this->skip_typed_token(T_DOUBLE_ARROW)) {
 				$is_dict = true;
+				$value_expr = $this->read_expression();
+			}
+
+			if (!$this->skip_char_token(_COMMA)) {
+				break;
 			}
 		}
 
@@ -611,7 +632,7 @@ class PHPParserLite extends BaseParser
 
 			$this->scan_token_ignore_empty();
 
-			$this->print_token($token);
+			// $this->print_token($token);
 			$token_type = $token[0];
 			if ($token_type === T_STRING) {
 				$type = $this->create_type_identifier($token[1]);
@@ -620,6 +641,17 @@ class PHPParserLite extends BaseParser
 			elseif ($token_type === T_ARRAY) {
 				$type = TypeFactory::$_any; // maybe Array / Dict type
 				$token = $this->scan_token_ignore_empty();
+
+				if ($token[0] === T_COMMENT) {
+					if ($token[1] === '/*list*/') {
+						$type = TypeFactory::$_array;
+					}
+					elseif ($token[1] === '/*dict*/') {
+						$type = TypeFactory::$_dict;
+					}
+
+					$token = $this->scan_token_ignore_empty();
+				}
 			}
 			else {
 				$type = TypeFactory::$_any;
@@ -715,11 +747,13 @@ class PHPParserLite extends BaseParser
 
 	private function read_type_identifier()
 	{
+		$nullable = $this->skip_char_token('?');
 		$name = $this->expect_identifier_name();
-		return $this->create_type_identifier($name);
+
+		return $this->create_type_identifier($name, $nullable);
 	}
 
-	private function create_type_identifier(string $name)
+	private function create_type_identifier(string $name, bool $nullable = false)
 	{
 		$lower_case_name = strtolower($name);
 		if (isset(static::TYPE_MAP[$lower_case_name])) {
@@ -729,6 +763,8 @@ class PHPParserLite extends BaseParser
 		else {
 			$identifier = new ClassKindredIdentifier($name);
 		}
+
+		$identifier->nullable = $nullable;
 
 		return $identifier;
 	}

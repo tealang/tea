@@ -986,7 +986,7 @@ class TeaCoder
 	{
 		$ns = $this->render_ns_identifier($node->ns);
 
-		$code = static::USE_DECLARE_PREFIX . " $ns";
+		$code = static::USE_DECLARE_PREFIX . $ns;
 
 		if ($node->targets) {
 			$code .= $this->generate_use_targets($node->targets);

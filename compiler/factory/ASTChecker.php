@@ -405,7 +405,7 @@ class ASTChecker
 			$this->check_type($declared_type, $node);
 			if ($infered_type !== null) {
 				if (!$declared_type->is_accept_type($infered_type)) {
-					throw $this->new_syntax_error("Function '{$node->name}' returns type is '{$infered_type->name}', do not compatible with the declared '{$declared_type->name}'.", $node);
+					throw $this->new_syntax_error("Function '{$node->name}' returns type is '{$infered_type->name}', do not compatibled with the declared '{$declared_type->name}'.", $node);
 				}
 			}
 			elseif ($declared_type instanceof ArrayType && $declared_type->is_collect_mode) {
@@ -591,7 +591,7 @@ class ASTChecker
 			$node_return_type = $this->get_type_name($node->type);
 			$super_return_type = $this->get_type_name($super->type);
 
-			throw $this->new_syntax_error("The return type '{$node_return_type}' in '{$node->super_block->name}.{$node->name}' must be compatible with '$super_return_type' in '{$super->super_block->name}.{$super->name}'", $node->super_block);
+			throw $this->new_syntax_error("The return type '{$node_return_type}' in '{$node->super_block->name}.{$node->name}' must be compatibled with '$super_return_type' in '{$super->super_block->name}.{$super->name}'", $node->super_block);
 		}
 
 		// the accessing modifer
@@ -603,14 +603,14 @@ class ASTChecker
 
 		if ($super instanceof FunctionDeclaration) {
 			if (!$node instanceof FunctionDeclaration) {
-				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatible with '{$super->super_block->name}.{$super->name}'.", $node);
+				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatibled with '{$super->super_block->name}.{$super->name}'.", $node);
 			}
 
 			$this->assert_classkindred_method_parameters($node, $super);
 		}
 		elseif ($super instanceof PropertyDeclaration) {
 			if (!$node instanceof PropertyDeclaration) {
-				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatible with '{$super->super_block->name}.{$super->name}'.", $node);
+				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatibled with '{$super->super_block->name}.{$super->name}'.", $node);
 			}
 		}
 		elseif ($super instanceof ClassConstantDeclaration && $is_interface) {
@@ -626,14 +626,14 @@ class ASTChecker
 
 		// the parameters count
 		if (count($protocol->parameters) !== count($node->parameters)) {
-			throw $this->new_syntax_error("Parameters of '{$node->super_block->name}.{$node->name}' must be compatible with '{$protocol->super_block->name}.{$protocol->name}'", $node->super_block);
+			throw $this->new_syntax_error("Parameters of '{$node->super_block->name}.{$node->name}' must be compatibled with '{$protocol->super_block->name}.{$protocol->name}'", $node->super_block);
 		}
 
 		// the parameter types
 		foreach ($protocol->parameters as $idx => $protocol_param) {
 			$node_param = $node->parameters[$idx];
 			if (!$this->is_strict_compatible_types($protocol_param->type, $node_param->type)) {
-				throw $this->new_syntax_error("Type of parameter {$idx} in '{$node->super_block->name}.{$node->name}' must be compatible with '{$protocol->super_block->name}.{$protocol->name}'", $node->super_block);
+				throw $this->new_syntax_error("Type of parameter {$idx} in '{$node->super_block->name}.{$node->name}' must be compatibled with '{$protocol->super_block->name}.{$protocol->name}'", $node->super_block);
 			}
 		}
 	}
@@ -1771,7 +1771,7 @@ class ASTChecker
 			if (is_numeric($key)) {
 				$parameter = $parameters[$key] ?? null;
 				if (!$parameter) {
-					throw $this->new_syntax_error("Argument $key does not matched parameter defined in '{$src_callee_declar->name}'.", $argument);
+					throw $this->new_syntax_error("Argument $key does not matched the parameter defined in '{$src_callee_declar->name}'.", $argument);
 				}
 
 				$idx = $key;
@@ -2160,7 +2160,9 @@ class ASTChecker
 			// 	$this->attach_namespace_member_symbol($master->symbol->declaration, $node);
 			// }
 			elseif ($master_type instanceof MetaType) { // includes static call for class members
-				$declaration = $master->symbol->declaration;
+				// if (!isset($master->symbol)) {dump($master_type); exit;}
+				// $declaration = $master->symbol->declaration;
+				$declaration = $master_type->value_type->symbol->declaration;
 				if (!$declaration instanceof ClassDeclaration) {
 					$declaration = $declaration->type->value_type->symbol->declaration;
 				}

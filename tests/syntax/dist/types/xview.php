@@ -82,7 +82,7 @@ new DemoList('demo-list', 'Demo List', ['A', 'B', 'C'], null, function (string $
 $str = 'str';
 $num = 2;
 
-$abc = new DemoList('', '', ['A', 'B', 'C'], function () {
+$abc = new DemoList('name', 'title', ['A', 'B', 'C'], function () {
 	return new Cell();
 }, function ($message) use(&$str, &$num) {
 	echo $str, $num, LF;

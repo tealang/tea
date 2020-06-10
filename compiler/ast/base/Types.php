@@ -339,7 +339,6 @@ class IntType extends BaseType {
 }
 
 class UIntType extends BaseType {
-	// would output int for php
 	public $name = _UINT;
 
 	public function is_same_or_based_with(IType $target) {
