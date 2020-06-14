@@ -19,9 +19,26 @@ trait IClassMemberDeclarationTrait
 
 	public $super_block;
 
-	public function is_accessable(BaseExpression $expr) {
-		return ($this->modifier !== _PRIVATE && $this->modifier !== _INTERNAL)
-			|| $expr instanceof PlainIdentifier && $expr->symbol === $this->super_block->this_object_symbol;
+	public function is_accessable_for_object(BaseExpression $expr) {
+		if ($this->modifier === _PRIVATE) {
+			return $expr instanceof PlainIdentifier && $expr->symbol === $this->super_block->this_object_symbol;
+		}
+		elseif ($this->modifier === _PROTECTED) {
+			return $expr instanceof PlainIdentifier && ($expr->name === _THIS || $expr->name === _SUPER);
+		}
+
+		return true;
+	}
+
+	public function is_accessable_for_class(BaseExpression $expr) {
+		if ($this->modifier === _PRIVATE) {
+			return $expr instanceof PlainIdentifier && $expr->symbol === $this->super_block->this_class_symbol;
+		}
+		elseif ($this->modifier === _PROTECTED) {
+			return $expr instanceof PlainIdentifier && ($expr->name === _THIS || $expr->name === _SUPER);
+		}
+
+		return true;
 	}
 }
 
