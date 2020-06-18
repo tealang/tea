@@ -1261,6 +1261,8 @@ class TeaParser extends BaseParser
 
 		$this->expect_token_ignore_empty(_BRACKET_CLOSE);
 
+		$expr->pos = $this->pos;
+
 		return $expr;
 	}
 

@@ -111,6 +111,9 @@ class TypeFactory
 		if ($type === self::$_string || $type === self::$_uint || $type === self::$_int || $type === self::$_dict_key_type) {
 			return true;
 		}
+		elseif ($type instanceof StringType || $type instanceof IntType) {
+			return true;
+		}
 		elseif ($type instanceof UnionType) {
 			foreach ($type->types as $member_type) {
 				if (!TypeFactory::is_dict_key_directly_supported_type($member_type)) {

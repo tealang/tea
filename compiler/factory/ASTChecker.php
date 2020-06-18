@@ -208,13 +208,31 @@ class ASTChecker
 			$is_constant = true;
 		}
 		elseif ($node instanceof Identifiable) {
-			$is_constant = $node->symbol->declaration instanceof ConstantDeclaration;
+			$is_constant = $node->symbol->declaration instanceof IConstantDeclaration;
 		}
 		elseif ($node instanceof BinaryOperation) {
 			$is_constant = $this->check_is_constant_expression($node->left) && $this->check_is_constant_expression($node->right);
 		}
 		elseif ($node instanceof PrefixOperation) {
 			$is_constant = $this->check_is_constant_expression($expr->expression);
+		}
+		elseif ($node instanceof ArrayExpression) {
+			$is_constant = true;
+			foreach ($node->items as $item) {
+				if (!$this->check_is_constant_expression($item)) {
+					$is_constant = false;
+					break;
+				}
+			}
+		}
+		elseif ($node instanceof DictExpression) {
+			$is_constant = true;
+			foreach ($node->items as $item) {
+				if (!$this->check_is_constant_expression($item->key) || !$this->check_is_constant_expression($item->value)) {
+					$is_constant = false;
+					break;
+				}
+			}
 		}
 		else {
 			$is_constant = false;
@@ -1274,7 +1292,8 @@ class ASTChecker
 		elseif ($left_type instanceof AnyType) {
 			// 仅允许将实际类型为Dict的用于这类情况
 			if (!TypeFactory::is_dict_key_directly_supported_type($right_type)) {
-				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$right_type->name}' supplied.", $node->right);
+				$type_name = $this->get_type_name($right_type);
+				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$type_name}' supplied.", $node->right);
 			}
 		}
 		elseif ($left_type instanceof StringType) {
