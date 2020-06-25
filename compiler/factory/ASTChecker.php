@@ -1877,7 +1877,7 @@ class ASTChecker
 			return true;
 		}
 
-		// for [] / [:]
+		// for [], [:]
 		if (($value_node instanceof ArrayLiteral || $value_node instanceof DictLiteral) && !$value_node->items) {
 			return true;
 		}
@@ -1888,9 +1888,9 @@ class ASTChecker
 	private function assert_type_compatible(IType $left, IType $right, Node $value_node, string $kind = 'assign')
 	{
 		if (!$this->check_type_compatible($left, $right, $value_node)) {
-			$left_type_name = self::get_type_name($left);
-			$right_type_name = self::get_type_name($right);
-			throw $this->new_syntax_error("It's not compatible for type '{$left_type_name}' {$kind} with '{$right_type_name}'.", $value_node);
+			$left = self::get_type_name($left);
+			$right = self::get_type_name($right);
+			throw $this->new_syntax_error("It's not compatible for type '{$left}' {$kind} with '{$right}'.", $value_node);
 		}
 	}
 
@@ -1903,7 +1903,7 @@ class ASTChecker
 			}
 		}
 
-		throw $this->new_syntax_error("Argument '$name' deliver to callee '{$callee_node->name}' not found in it declaration.", $callee_node);
+		throw $this->new_syntax_error("Argument '$name' deliver to callee '{$callee_node->name}' not found in declaration.", $callee_node);
 	}
 
 	// return [index, CallbackProtocol]

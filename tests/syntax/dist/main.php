@@ -1,7 +1,7 @@
 <?php
 namespace tea\tests\syntax;
 
-use  tea\tests\PHPDemoUnit\{ NS1\Demo as PHPClassDemo, function php_function_demo, const PHP_CONST_DEMO };
+use tea\tests\PHPDemoUnit\{ NS1\Demo as PHPClassDemo, function php_function_demo, const PHP_CONST_DEMO };
 
 \Swoole\Runtime::enableCoroutine();
 

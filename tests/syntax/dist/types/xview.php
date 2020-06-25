@@ -1,7 +1,7 @@
 <?php
 namespace tea\tests\syntax;
 
-use  tea\tests\xview\{ BaseView };
+use tea\tests\xview\{ BaseView };
 
 \Swoole\Runtime::enableCoroutine();
 

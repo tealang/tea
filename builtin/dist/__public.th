@@ -24,6 +24,10 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 
 #php header(info String, replace Bool = true, http_response_code Int = #default)
 
+#php time() Int
+
+#php date(format String, timestamp Int = #default) String
+
 #php is_int(val Any) Bool
 
 #php is_array(val Any) Bool
@@ -169,8 +173,6 @@ public dict_search(master Dict, search Any) String
 #php json_encode(data Any, flags Int = 0, depth UInt = 512) String
 
 #php json_decode(data Any, assoc Bool = false, depth UInt = 512, flags Int = 0) Dict
-
-#php date(format String, timestamp Int = #default) String
 
 #php htmlspecialchars(string Any, flags Int = #default, encoding String = #default, double_encode Any = #default) String
 

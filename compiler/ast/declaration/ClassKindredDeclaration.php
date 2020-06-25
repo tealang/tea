@@ -93,17 +93,15 @@ abstract class ClassKindredDeclaration extends Node implements IRootDeclaration,
 	public function is_based_with_symbol(Symbol $symbol)
 	{
 		// check the implements interfaces
-		if ($this->baseds) {
-			foreach ($this->baseds as $interface) {
-				if ($interface->symbol === $symbol) {
-					return true;
-				}
+		foreach ($this->baseds as $interface) {
+			if ($interface->symbol === $symbol) {
+				return true;
+			}
 
-				// if $interface->symbol is null, it should be not checked ast...
+			// if $interface->symbol is null, it should be not checked ast...
 
-				if ($interface->symbol->declaration->is_based_with_symbol($symbol)) {
-					return true;
-				}
+			if ($interface->symbol->declaration->is_based_with_symbol($symbol)) {
+				return true;
 			}
 		}
 
@@ -122,11 +120,14 @@ class ClassDeclaration extends ClassKindredDeclaration implements ICallableDecla
 	{
 		// check the extends class first
 		if ($this->inherits !== null) {
-			if ($this->inherits->symbol === $symbol) {
+			$inherits_symbol = $this->inherits->symbol;
+
+			// 当 引用的unit中类所继承类 和 当前引用的类 为同一个第三方unit的类时，symbol会有所不同，这时需比较declaration
+			if ($inherits_symbol === $symbol || $inherits_symbol->declaration === $symbol->declaration) {
 				return true;
 			}
 
-			if ($this->inherits->symbol->declaration->is_based_with_symbol($symbol)) {
+			if ($inherits_symbol->declaration->is_based_with_symbol($symbol)) {
 				return true;
 			}
 		}

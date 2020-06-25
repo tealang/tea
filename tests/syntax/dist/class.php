@@ -1,7 +1,7 @@
 <?php
 namespace tea\tests\syntax;
 
-use  tea\tests\PHPDemoUnit\{ BaseInterface };
+use tea\tests\PHPDemoUnit\{ BaseInterface };
 
 \Swoole\Runtime::enableCoroutine();
 

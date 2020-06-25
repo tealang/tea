@@ -1,7 +1,7 @@
 <?php
 namespace tea\tests\syntax;
 
-use  tea\tests\PHPDemoUnit\{ const PHP_CONST_DEMO };
+use tea\tests\PHPDemoUnit\{ const PHP_CONST_DEMO };
 
 const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 

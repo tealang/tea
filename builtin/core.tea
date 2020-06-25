@@ -13,6 +13,9 @@ public LF = "\n"
 #php print_r(expr, is_return Bool = #default)
 #php header(info String, replace = true, http_response_code Int = #default)
 
+#php time() Int
+#php date(format String, timestamp Int = #default) String
+
 #php is_int(val) Bool
 #php is_array(val) Bool
 
@@ -215,7 +218,6 @@ public dict_search(master Dict, search) String {
 #php JSON_UNESCAPED_UNICODE Int
 #php json_encode(data, flags Int = 0, depth UInt = 512) String
 #php json_decode(data, assoc Bool = false, depth UInt = 512, flags Int = 0) Dict
-#php date(format String, timestamp Int = #default) String
 
 #php ENT_QUOTES Int
 #php htmlspecialchars(string, flags Int = #default, encoding String = #default, double_encode = #default) String
