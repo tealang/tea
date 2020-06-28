@@ -39,10 +39,10 @@ abstract class ClassKindredDeclaration extends Node implements IRootDeclaration,
 	public $members = [];
 
 	/**
-	 * 实际可用的成员，包括继承父类的、接口中默认实现的，和本类中定义的
+	 * 聚合的，实际可用的成员，包括继承父类的、接口中默认实现的，和本类中定义的
 	 * @var array  [name => IClassMemberDeclaration]
 	 */
-	public $actual_members = [];
+	public $aggregated_members = [];
 
 	/**
 	 * The symbols for current class instance

@@ -513,7 +513,7 @@ class ASTChecker
 		}
 
 		// 本类中的成员优先级最高
-		$node->actual_members = array_merge($node->actual_members, $node->members);
+		$node->aggregated_members = array_merge($node->aggregated_members, $node->members);
 	}
 
 	private function attach_baseds_for_classkindred_declaration(ClassKindredDeclaration $node)
@@ -550,10 +550,10 @@ class ASTChecker
 	private function check_inherts_for_class_declaration(ClassDeclaration $node)
 	{
 		// 添加到本类实际成员中，继承的成员属于super，优先级最低
-		$node->actual_members = $node->inherits->symbol->declaration->actual_members;
+		$node->aggregated_members = $node->inherits->symbol->declaration->aggregated_members;
 
 		// 检查本类中有重写的成员是否与父类成员匹配
-		foreach ($node->actual_members as $name => $super_class_member) {
+		foreach ($node->aggregated_members as $name => $super_class_member) {
 			if (isset($node->members[$name])) {
 				// check super class member declared in current class
 				$this->assert_member_declarations($node->members[$name], $super_class_member);
@@ -566,29 +566,29 @@ class ASTChecker
 		// 接口中的成员默认实现属于this，优先级较高，后面接口的默认实现将覆盖前面的
 		foreach ($node->baseds as $identifier) {
 			$interface = $identifier->symbol->declaration;
-			foreach ($interface->actual_members as $name => $member) {
+			foreach ($interface->aggregated_members as $name => $member) {
 				if (isset($node->members[$name])) {
 					// check member declared in current class/interface
 					$this->assert_member_declarations($member, $node->members[$name], true);
 				}
-				elseif (isset($node->actual_members[$name])) {
+				elseif (isset($node->aggregated_members[$name])) {
 					// check member declared in baseds class/interfaces
-					$this->assert_member_declarations($member, $node->actual_members[$name], true);
+					$this->assert_member_declarations($member, $node->aggregated_members[$name], true);
 
 					// replace to the default method implementation in interface
 					if ($member instanceof FunctionDeclaration && $member->body !== null) {
-						$node->actual_members[$name] = $member;
+						$node->aggregated_members[$name] = $member;
 					}
 				}
 				else {
-					$node->actual_members[$name] = $member;
+					$node->aggregated_members[$name] = $member;
 				}
 			}
 		}
 
 		// 如果是类定义，最后检查是否还有未实现的接口成员
 		if ($node instanceof ClassDeclaration && $node->define_mode) {
-			foreach ($node->actual_members as $name => $member) {
+			foreach ($node->aggregated_members as $name => $member) {
 				if ($member instanceof FunctionDeclaration && $member->body === null) {
 					$interface = $member->super_block;
 					throw $this->new_syntax_error("Method protocol '{$interface->name}.{$name}' required an implementation in class '{$node->name}'.", $node);
@@ -2222,7 +2222,7 @@ class ASTChecker
 	private function find_member_symbol_in_class(ClassKindredDeclaration $classkindred, string $member_name): ?Symbol
 	{
 		// 当作为外部调用时，应命中这里的逻辑
-		$declaration = $classkindred->actual_members[$member_name] ?? null;
+		$declaration = $classkindred->aggregated_members[$member_name] ?? null;
 		if ($declaration) {
 			return $declaration->symbol;
 		}

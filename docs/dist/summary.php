@@ -211,12 +211,14 @@ $i = 0;
 try {
 	while (1) {
 		while (true) {
-			$i = $i + 1;
+			$i += 1;
+
+			if ($i > 5) {
+				continue;
+			}
+
 			if ($i > 10) {
 				break 2;
-			}
-			else {
-				continue 1;
 			}
 		}
 	}

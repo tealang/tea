@@ -78,8 +78,8 @@ str_with_interpolation = 'Unescaped string with interpolation ${5 * 6}'
 str_with_interpolation = "Escaped string with interpolation ${5 * 6}\n"
 
 // 带$的插值，不转义HTML字符；带#的插值，将转义HTML字符
-safe_html = '<strong>Some strong text.</strong>'
-unsafe_html = '<script>alert("XSS!")</script>'
+safe_html = <strong>Some strong text.</strong>
+unsafe_html = <script>alert("XSS!")</script>
 html_escaped_interpolation = "html-unescaped: ${safe_html}. html-escaped: #{unsafe_html}"
 
 // 以#text标记的字符串，其中插值表达式将不被处理
@@ -243,9 +243,11 @@ var ternary_result = uint_num == 1 ? 'one' : (uint_num == 2 ? 'two' : (uint_num 
 ## 08. 流程控制和异常处理结构
 - Tea语言支持 if条件分支、switch条件分支、for-in迭代遍历、for-to/downto区间循环、while条件循环、try异常处理 等结构
 - C风格 for (;;;) 风格循环语句很灵活，但没有被支持，因其易被写出预料之外的代码
-- 我们尝试将else、elseif、catch、finally这些副语句块与上述主语句块进行混搭
-- 目前除了while语句之外的语句都支持elseif、else语句块
-- 目前所有结构都支持catch、finally异常处理语句块
+- 我们尝试将 else/elseif/catch/finally 这些副语句块与上述主语句块进行混搭
+- 目前除了 while 语句之外的语句都支持 elseif/else 语句块
+- 目前所有结构都支持 catch/finally 异常处理语句块
+- 后置条件语句"... when ...", 可用于 throw/condition/break/return/exit 等控制语句中
+  @ref https://github.com/tealang/tea/commit/573a1eaed9d3efd718fe396051f6d8c36fe6c86a
 ---
 
 a = 0
@@ -284,16 +286,22 @@ for i = 9 downto 0 step 2 {
 i = 0
 #outer_loop while 1 {
 	#inner_loop while true {
-		i = i + 1
-		if i > 10 {
-			break #outer_loop
-		}
-		else {
-			continue #inner_loop
-		}
+		i += 1
+
+		// the "when" keyword, use to the post-condition statements
+		// supports throw/condition/break/return/exit
+		// @ref https://github.com/tealang/tea/commit/573a1eaed9d3efd718fe396051f6d8c36fe6c86a
+
+		// it would be continue on i > 5
+		continue #inner_loop when i > 5
+
+		// it would be break on i > 10
+		break #outer_loop when i > 10
 	}
 }
-catch ex {}
+catch ex {
+	// process the Exceptions
+}
 
 ---
 ## 09. 函数
