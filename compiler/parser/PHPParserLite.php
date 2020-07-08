@@ -31,16 +31,22 @@ class PHPParserLite extends BaseParser
 		'__toString' => 'to_string',
 	];
 
-	const OPERATOR_MAP = [
+	const BINARY_OPERATOR_MAP = [
 		'instanceof' => _IS,
 		'.' => _CONCAT,
-		'!' => _NOT,
 		'&&' => _AND,
 		'||' => _OR,
 		'%' => _REMAINDER,
 		'**' => _EXPONENTIATION,
 		'^' => _BITWISE_XOR,
 		'^=' => '^|=',
+	];
+
+	const PREFIX_OPERATOR_MAP = [
+		'!' => _NOT,
+		'-' => '-',
+		'+' => '+',
+		'~' => '~',
 	];
 
 	/**
@@ -163,12 +169,12 @@ class PHPParserLite extends BaseParser
 						break 2;
 
 					default:
-						$op_token = static::OPERATOR_MAP[$token] ?? $token;
-
 						if ($expr === null) {
+							$op_token = static::PREFIX_OPERATOR_MAP[$token] ?? $token;
 							$operator = OperatorFactory::get_prefix_operator($op_token);
 						}
 						else {
+							$op_token = static::BINARY_OPERATOR_MAP[$token] ?? $token;
 							$operator = OperatorFactory::get_normal_operator($op_token);
 						}
 
@@ -473,14 +479,28 @@ class PHPParserLite extends BaseParser
 	{
 		$token = $this->scan_token_ignore_empty();
 
-		if ($token === _BRACKET_OPEN) {
-			$expr = $this->read_bracket_expression(false, $name);
+		if (is_string($token)) {
+			if ($token === _BRACKET_OPEN) {
+				$expr = $this->read_bracket_expression(false, $name);
 
-			if ($this->skip_char_token(_SEMICOLON)) {
-				$this->pos--; // back to ;
-				return $expr instanceof ArrayExpression
-					? TypeFactory::$_array
-					: TypeFactory::$_dict;
+				if ($this->skip_char_token(_SEMICOLON)) {
+					$this->pos--; // back to ;
+					return $expr instanceof ArrayExpression
+						? TypeFactory::$_array
+						: TypeFactory::$_dict;
+				}
+			}
+			elseif (isset(self::PREFIX_OPERATOR_MAP[$token])) {
+				if ($token === '!') {
+					$this->read_expression(); // skip the expression when is bool
+					return TypeFactory::$_bool;
+				}
+
+				return $this->try_detatch_assign_value_type_and_skip($name);
+			}
+			else {
+				// $this->print_token($token);
+				throw $this->new_unexpected_error();
 			}
 		}
 

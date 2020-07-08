@@ -33,7 +33,7 @@ if (!is_string($uint_num)) {
 }
 
 $str_for_find = 'abc123';
-$found = _strpos($str_for_find, 'abc', 0);
+$found = _strpos($str_for_find, 'abc');
 if ($found === -1) {
 	echo '"abc" has not be found in ' . $str_for_find, LF;
 }

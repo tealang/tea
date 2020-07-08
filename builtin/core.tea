@@ -277,24 +277,24 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 
 	// process in dist native mode
 	masked length UInt => strlen(this)
-	masked find(str String, offset Int = 0) => _strpos(this, str, offset)
-	masked find_last(str String, offset Int = 0) => _strrpos(this, str, offset)
+	masked find(str String, offset Int = #default) => _strpos(this, str, offset)
+	masked find_last(str String, offset Int = #default) => _strrpos(this, str, offset)
 	masked copy(start Int, length Int = #default) => substr(this, start, length)
 	masked lower_case() => strtolower(this)
 	masked upper_case() => strtoupper(this)
 
 	// process in byte mode
 	masked byte_length UInt => strlen(this)
-	masked byte_find(str String, offset Int = 0) => _strpos(this, str, offset)
-	masked byte_find_last(str String, offset Int = 0) => _strrpos(this, str, offset)
+	masked byte_find(str String, offset Int = #default) => _strpos(this, str, offset)
+	masked byte_find_last(str String, offset Int = #default) => _strrpos(this, str, offset)
 	masked byte_copy(start Int, length Int = #default) => substr(this, start, length)
 	masked byte_lower() => strtolower(this)
 	masked byte_upper() => strtoupper(this)
 
 	// process in rune mode
 	masked rune_length UInt => iconv_strlen(this)
-	masked rune_find(str String, offset Int = 0) => _iconv_strpos(this, str, offset)
-	masked rune_find_last(str String, offset Int = 0) => _iconv_strrpos(this, str, offset)
+	masked rune_find(str String, offset Int = #default) => _iconv_strpos(this, str, offset)
+	masked rune_find_last(str String, offset Int = #default) => _iconv_strrpos(this, str, offset)
 	masked rune_copy(start Int, length Int = #default) => iconv_substr(this, start, length)
 	masked rune_lower() => mb_strtolower(this)
 	masked rune_upper() => mb_strtoupper(this)

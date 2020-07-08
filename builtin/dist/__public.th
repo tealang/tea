@@ -217,20 +217,20 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 #tea String {
 	masked width UInt
 	masked length UInt
-	masked find(str String, offset Int = 0) Int
-	masked find_last(str String, offset Int = 0) Int
+	masked find(str String, offset Int = #default) Int
+	masked find_last(str String, offset Int = #default) Int
 	masked copy(start Int, length Int = #default) String
 	masked lower_case() String
 	masked upper_case() String
 	masked byte_length UInt
-	masked byte_find(str String, offset Int = 0) Int
-	masked byte_find_last(str String, offset Int = 0) Int
+	masked byte_find(str String, offset Int = #default) Int
+	masked byte_find_last(str String, offset Int = #default) Int
 	masked byte_copy(start Int, length Int = #default) String
 	masked byte_lower() String
 	masked byte_upper() String
 	masked rune_length UInt
-	masked rune_find(str String, offset Int = 0) Int
-	masked rune_find_last(str String, offset Int = 0) Int
+	masked rune_find(str String, offset Int = #default) Int
+	masked rune_find_last(str String, offset Int = #default) Int
 	masked rune_copy(start Int, length Int = #default) String
 	masked rune_lower() String
 	masked rune_upper() String
