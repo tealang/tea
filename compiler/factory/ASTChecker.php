@@ -2188,12 +2188,15 @@ class ASTChecker
 
 				$node_declaration = $node->symbol->declaration;
 				if (!$node_declaration->is_static) {
-					throw $this->new_syntax_error("Invalid to accessing a non-static member.", $node);
+					throw $this->new_syntax_error("Invalid to accessing a non-static member", $node);
 				}
 
 				if (!$node_declaration->is_accessable_for_class($master)) {
-					throw $this->new_syntax_error("Cannot access the private/protected members.", $node);
+					throw $this->new_syntax_error("Cannot accessing the private/protected members", $node);
 				}
+			}
+			elseif ($master_type instanceof UnionType) {
+				throw $this->new_syntax_error("Cannot accessing the 'UnionType' targets", $node);
 			}
 			else {
 				$classkindred = $master_type->symbol->declaration;

@@ -61,33 +61,12 @@ function xrange(int $start, int $end, int $step = 1): \Generator {
 	}
 }
 
-function _iconv_strpos(string $str, string $search, int $offset = 0): int {
-	$pos = iconv_strpos($str, $search, $offset);
-	return $pos === false ? -1 : $pos;
-}
-
-function _iconv_strrpos(string $str, string $search, int $offset = 0): int {
-	$pos = iconv_strrpos($str, $search, $offset);
-	return $pos === false ? -1 : $pos;
-}
-
-function _strpos(string $master, string $search, int $offset = 0): int {
-	$pos = strpos($master, $search, $offset);
-	return $pos === false ? -1 : $pos;
-}
-
-function _strrpos(string $master, string $search, int $offset = 0): int {
-	$pos = strrpos($master, $search, $offset);
-	return $pos === false ? -1 : $pos;
-}
-
 function _str_replace(string $master, string $search, string $replacement): string {
 	return str_replace($search, $replacement, $master);
 }
 
 function _array_search(array $master, $search): int {
-	$index = array_search($search, $master, true);
-	return $index === false ? -1 : $index;
+	return array_search($search, $master, true);
 }
 
 function array_last_index(array $array): int {

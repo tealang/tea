@@ -134,17 +134,9 @@ public xrange(start Int, end Int, step = 1) {
 
 // first pos in default charset
 #php iconv_strpos(str String, search String, offset Int = 0) Int  // would return false on not found
-public _iconv_strpos(str String, search String, offset Int = 0) Int {
-	pos = iconv_strpos(str, search, offset);
-	return pos === false ? -1 : pos  // return -1 on not found
-}
 
 // last pos in default charset
 #php iconv_strrpos(str String, search String, offset Int = 0) Int  // would return false on not found
-public _iconv_strrpos(str String, search String, offset Int = 0) Int {
-	pos = iconv_strrpos(str, search, offset);
-	return pos === false ? -1 : pos  // return -1 on not found
-}
 
 #php mb_strwidth(str String, encoding String = #default)
 #php mb_strtoupper(str String) String
@@ -154,15 +146,7 @@ public _iconv_strrpos(str String, search String, offset Int = 0) Int {
 #php strlen(str String) UInt
 #php substr(str String, start Int, length Int = #default) String
 #php strpos(master String, search String, offset Int = 0) Int  // would return false on not found
-public _strpos(master String, search String, offset Int = 0) Int {
-	pos = strpos(master, search, offset);
-	return pos === false ? -1 : pos  // return -1 on not found
-}
 #php strrpos(master String, search String, offset Int = 0) Int  // would return false on not found
-public _strrpos(master String, search String, offset Int = 0) Int {
-	pos = strrpos(master, search, offset);
-	return pos === false ? -1 : pos  // would return -1 on not found
-}
 #php strtoupper(str String) String
 #php strtolower(str String) String
 
@@ -193,8 +177,7 @@ public _str_replace(master String, search String, replacement String) {
 #php array_search(search, master, strict = false) Int
 
 public _array_search(master Array, search) Int {
-	index = array_search(search, master, true)
-	return index === false ? -1 : index  // would return -1 on not found
+	return array_search(search, master, true)
 }
 
 public array_last_index(array Array) UInt {
@@ -278,24 +261,24 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 #tea String {
 	// process in dist native mode
 	masked length UInt => strlen(this)
-	masked find(str String, offset Int = #default) => _strpos(this, str, offset)
-	masked find_last(str String, offset Int = #default) => _strrpos(this, str, offset)
+	masked find(str String, offset Int = #default) => strpos(this, str, offset)
+	masked find_last(str String, offset Int = #default) => strrpos(this, str, offset)
 	masked copy(start Int, length Int = #default) => substr(this, start, length)
 	masked lower_case() => strtolower(this)
 	masked upper_case() => strtoupper(this)
 
 	// process in byte mode
 	masked byte_length UInt => strlen(this)
-	masked byte_find(str String, offset Int = #default) => _strpos(this, str, offset)
-	masked byte_find_last(str String, offset Int = #default) => _strrpos(this, str, offset)
+	masked byte_find(str String, offset Int = #default) => strpos(this, str, offset)
+	masked byte_find_last(str String, offset Int = #default) => strrpos(this, str, offset)
 	masked byte_copy(start Int, length Int = #default) => substr(this, start, length)
 	masked byte_lower() => strtolower(this)
 	masked byte_upper() => strtoupper(this)
 
 	// process in rune mode
 	masked rune_length UInt => iconv_strlen(this)
-	masked rune_find(str String, offset Int = #default) => _iconv_strpos(this, str, offset)
-	masked rune_find_last(str String, offset Int = #default) => _iconv_strrpos(this, str, offset)
+	masked rune_find(str String, offset Int = #default) => iconv_strpos(this, str, offset)
+	masked rune_find_last(str String, offset Int = #default) => iconv_strrpos(this, str, offset)
 	masked rune_copy(start Int, length Int = #default) => iconv_substr(this, start, length)
 	masked rune_lower() => mb_strtolower(this)
 	masked rune_upper() => mb_strtoupper(this)

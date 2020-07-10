@@ -94,11 +94,7 @@ public xrange(start Int, end Int, step Int = 1) IGenerator
 
 #php iconv_strpos(str String, search String, offset Int = 0) Int
 
-public _iconv_strpos(str String, search String, offset Int = 0) Int
-
 #php iconv_strrpos(str String, search String, offset Int = 0) Int
-
-public _iconv_strrpos(str String, search String, offset Int = 0) Int
 
 #php mb_strwidth(str String, encoding String = #default)
 
@@ -112,11 +108,7 @@ public _iconv_strrpos(str String, search String, offset Int = 0) Int
 
 #php strpos(master String, search String, offset Int = 0) Int
 
-public _strpos(master String, search String, offset Int = 0) Int
-
 #php strrpos(master String, search String, offset Int = 0) Int
-
-public _strrpos(master String, search String, offset Int = 0) Int
 
 #php strtoupper(str String) String
 
@@ -217,7 +209,6 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 }
 
 #tea String {
-	masked width UInt
 	masked length UInt
 	masked find(str String, offset Int = #default) Int
 	masked find_last(str String, offset Int = #default) Int
@@ -236,6 +227,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	masked rune_copy(start Int, length Int = #default) String
 	masked rune_lower() String
 	masked rune_upper() String
+	masked count_width() UInt
 	masked split(delimiter String) Array
 	masked replace(search String, replacement String) String
 }
