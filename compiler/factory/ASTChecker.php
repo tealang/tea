@@ -2171,14 +2171,14 @@ class ASTChecker
 		$master_type = $this->infer_expression($master);
 
 		if ($master_type instanceof BaseType) {
-			if ($master_type === TypeFactory::$_any) {
-				// let member type to Any on master is Any
-				$this->create_any_symbol_for_accessing_identifier($node);
-			}
+			// if ($master_type === TypeFactory::$_any) {
+			// 	// let member type to Any on master is Any
+			// 	$this->create_any_symbol_for_accessing_identifier($node);
+			// }
 			// elseif ($master_type === TypeFactory::$_namespace) {
 			// 	$this->attach_namespace_member_symbol($master->symbol->declaration, $node);
 			// }
-			elseif ($master_type instanceof MetaType) { // includes static call for class members
+			if ($master_type instanceof MetaType) { // includes static call for class members
 				$declaration = $master_type->value_type->symbol->declaration;
 				if (!$declaration instanceof ClassDeclaration) {
 					$declaration = $declaration->type->value_type->symbol->declaration;
@@ -2196,7 +2196,20 @@ class ASTChecker
 				}
 			}
 			else {
-				$node->symbol = $this->require_class_member_symbol($master_type->symbol->declaration, $node);
+				$classkindred = $master_type->symbol->declaration;
+				$symbol = $this->find_member_symbol_in_class($classkindred, $node->name);
+				if ($symbol === null) {
+					if ($master_type === TypeFactory::$_any) {
+						// let member type to Any on master is Any when member not defined
+						$this->create_any_symbol_for_accessing_identifier($node);
+					}
+					else {
+						throw $this->new_syntax_error("Member '{$node->name}' not found in '{$classkindred->name}'", $node);
+					}
+				}
+				else {
+					$node->symbol = $symbol;
+				}
 			}
 		}
 		elseif ($master_type instanceof Identifiable) {

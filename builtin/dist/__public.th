@@ -28,6 +28,8 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 
 #php date(format String, timestamp Int = #default) String
 
+#php str_repeat(input Any, multiplier UInt) String
+
 #php is_int(val Any) Bool
 
 #php is_array(val Any) Bool
@@ -194,10 +196,6 @@ public regex_capture_one(regex Regex, subject String) String.Array
 
 public regex_capture_all(regex Regex, subject String) String.Array.Array
 
-#tea Any {
-	// no any
-}
-
 #tea MetaType {
 	// no any
 }
@@ -211,6 +209,10 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 }
 
 #tea None {
+	// no any
+}
+
+#tea Any: String {
 	// no any
 }
 

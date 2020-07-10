@@ -16,6 +16,8 @@ public LF = "\n"
 #php time() Int
 #php date(format String, timestamp Int = #default) String
 
+#php str_repeat(input, multiplier UInt) String
+
 #php is_int(val) Bool
 #php is_array(val) Bool
 
@@ -262,7 +264,6 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 // 	vclone() Object
 // }
 
-#tea Any {}
 #tea MetaType {}
 #tea UnionType {}
 
@@ -272,9 +273,9 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 
 #tea None {}
 
-#tea String {
-	masked width UInt => mb_strwidth(this)
+#tea Any: String {} // extends String to use the String properties/methods
 
+#tea String {
 	// process in dist native mode
 	masked length UInt => strlen(this)
 	masked find(str String, offset Int = #default) => _strpos(this, str, offset)
@@ -300,6 +301,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 	masked rune_upper() => mb_strtoupper(this)
 
 	// other
+	masked count_width() UInt => mb_strwidth(this)
 	masked split(delimiter String) => explode(delimiter, this)
 	masked replace(search String, replacement String) => _str_replace(this, search, replacement)
 }
