@@ -569,11 +569,11 @@ class ASTChecker
 			foreach ($interface->aggregated_members as $name => $member) {
 				if (isset($node->members[$name])) {
 					// check member declared in current class/interface
-					$this->assert_member_declarations($member, $node->members[$name], true);
+					$this->assert_member_declarations($node->members[$name], $member, true);
 				}
 				elseif (isset($node->aggregated_members[$name])) {
 					// check member declared in baseds class/interfaces
-					$this->assert_member_declarations($member, $node->aggregated_members[$name], true);
+					$this->assert_member_declarations($node->aggregated_members[$name], $member, true);
 
 					// replace to the default method implementation in interface
 					if ($member instanceof FunctionDeclaration && $member->body !== null) {

@@ -28,7 +28,7 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 
 #php date(format String, timestamp Int = #default) String
 
-#php str_repeat(input Any, multiplier UInt) String
+#php str_repeat(input Any, multiplier Int) String
 
 #php is_int(val Any) Bool
 
@@ -159,6 +159,10 @@ public array_last_index(array Array) UInt
 #php array_keys(array Any) String.Array
 
 #php array_values(array Any) Array
+
+#php array_column(record Dict.Array, key String) Array
+
+#php array_sum(nums Any) Float
 
 public dict_get(dict Dict, key String) Any
 

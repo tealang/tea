@@ -16,7 +16,7 @@ public LF = "\n"
 #php time() Int
 #php date(format String, timestamp Int = #default) String
 
-#php str_repeat(input, multiplier UInt) String
+#php str_repeat(input, multiplier Int) String
 
 #php is_int(val) Bool
 #php is_array(val) Bool
@@ -190,6 +190,8 @@ public array_last_index(array Array) UInt {
 #php unset(target) Void
 #php array_keys(array) String.Array
 #php array_values(array) Array
+#php array_column(record Dict.Array, key String) Array
+#php array_sum(nums) Float
 
 public dict_get(dict Dict, key String) {
 	return dict[key] ?? none
