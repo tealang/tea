@@ -1,4 +1,4 @@
-[English](README.md) | [简体中文](README.cn.md) | 繁體中文
+[English](README.md) | [简体中文](README.hans.md) | 繁體中文
 
 
 # 簡要介紹

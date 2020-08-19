@@ -1,4 +1,4 @@
-English | [简体中文](README.cn.md) | [繁體中文](README.zh.md)
+English | [简体中文](README.zh-hans.md) | [繁體中文](README.zh-hant.md)
 
 # Tea
 
