@@ -18,11 +18,25 @@ const _LEAF_TAGS = [
 
 trait TeaXBlockTrait
 {
+	private function read_tag_name()
+	{
+		$token = $this->scan_token();
+		$next = $this->get_token();
+
+		if ($next === '-' || $next === ':') {
+			$this->scan_token();
+			$after = $this->scan_token();
+			$token .= $next . $after;
+		}
+
+		return $token;
+	}
+
 	protected function read_xblock()
 	{
 		$block_previous_spaces = $this->get_heading_spaces_inline();
 
-		$token = $this->scan_token();
+		$token = $this->read_tag_name();
 		if (!TeaHelper::is_xtag_name($token)) {
 			throw $this->new_unexpected_error();
 		}
@@ -33,7 +47,7 @@ trait TeaXBlockTrait
 		while ($this->get_token_closely($skiped_spaces) === _XTAG_OPEN) {
 			$this->scan_token_ignore_empty(); // _XTAG_OPEN
 
-			$token = $this->scan_token(); //
+			$token = $this->read_tag_name(); //
 			if (!TeaHelper::is_xtag_name($token)) {
 				break;
 			}
@@ -155,7 +169,7 @@ trait TeaXBlockTrait
 					}
 
 					// it should be a child tag
-					$next = $this->scan_token();
+					$next = $this->read_tag_name();
 					if (TeaHelper::is_xtag_name($next)) {
 						$items[] = $this->read_xtag($next, $block_previous_spaces);
 					}
@@ -164,7 +178,7 @@ trait TeaXBlockTrait
 						continue 2;
 					}
 					elseif ($next === _SLASH) { // the </
-						if ($this->scan_token() !== $tag) {
+						if ($this->read_tag_name() !== $tag) {
 							// a wrong close tag
 							throw $this->new_parse_error("Unexpected XView close tag '</$tag>'.");
 						}
