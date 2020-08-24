@@ -24,7 +24,7 @@ class Dumper
 	private $max_dump_depth;
 	private $dumped_depth = 0;
 
-	private $stringfing_objects = [];
+	private $stringify_objects = [];
 
 	function __construct(array $ignore_list = [], int $max_dump_depth = 5)
 	{
@@ -32,7 +32,7 @@ class Dumper
 		$this->max_dump_depth = $max_dump_depth;
 	}
 
-	function stringing($data, $indent = 1, $expansion_depth = 1, $max_chars_inline = MAX_CHARS_INLINE)
+	function stringify($data, $indent = 1, $expansion_depth = 1, $max_chars_inline = MAX_CHARS_INLINE)
 	{
 		$this->dumped_depth++;
 
@@ -49,10 +49,10 @@ class Dumper
 			$tmp = $this->quote_string($data);
 		}
 		elseif (is_array($data)) {
-			$tmp = $this->stringing_array($data, $indent, $expansion_depth, $max_chars_inline);
+			$tmp = $this->stringify_array($data, $indent, $expansion_depth, $max_chars_inline);
 		}
 		elseif (is_object($data)) {
-			$tmp = $this->stringing_object($data, $indent, $expansion_depth, $max_chars_inline);
+			$tmp = $this->stringify_object($data, $indent, $expansion_depth, $max_chars_inline);
 		}
 		else {
 			throw new Exception("Unknow data type");
@@ -62,7 +62,7 @@ class Dumper
 		return $tmp;
 	}
 
-	function stringing_array(array $data, $indent_num = 1, $expansion_depth = 1, $max_chars_inline = 120)
+	function stringify_array(array $data, $indent_num = 1, $expansion_depth = 1, $max_chars_inline = 120)
 	{
 		if (empty($data) ) {
 			return '[]';
@@ -76,13 +76,13 @@ class Dumper
 
 			$items = [];
 			foreach ($data as $value) {
-				$items[] = trim($this->stringing($value, $indent_num + 1, $expansion_depth - 1) );
+				$items[] = trim($this->stringify($value, $indent_num + 1, $expansion_depth - 1) );
 			}
 
 			$code = "[{$indents}" . static::INDENT . implode(",{$indents}" . static::INDENT, $items) . "{$indents}]";
 		}
 		else {
-			$code = $this->stringing_as_object('Dict', $data, $indent_num, $expansion_depth, $max_chars_inline);
+			$code = $this->stringify_as_object('Dict', $data, $indent_num, $expansion_depth, $max_chars_inline);
 		}
 
 		// 换行控制
@@ -93,7 +93,7 @@ class Dumper
 		return $code;
 	}
 
-	function stringing_object(object $object, $indent_num = 1, $expansion_depth = 1, $max_chars_inline = MAX_CHARS_INLINE)
+	function stringify_object(object $object, $indent_num = 1, $expansion_depth = 1, $max_chars_inline = MAX_CHARS_INLINE)
 	{
 		$name = get_class($object);
 		if (isset($object->name)) {
@@ -103,7 +103,7 @@ class Dumper
 		if ($this->dumped_depth > $this->max_dump_depth) {
 			return "{$name} {...}";
 		}
-		elseif (in_array($object, $this->stringfing_objects, true)) {
+		elseif (in_array($object, $this->stringify_objects, true)) {
 			return "{$name} {recurrence}";
 		}
 		// elseif (in_array($object, $this->dumped_objects, true)) {
@@ -113,14 +113,14 @@ class Dumper
 		// 	$this->dumped_objects[] = $object;
 		// }
 
-		$this->stringfing_objects[] = $object;
-		$tmp = $this->stringing_as_object($name, $object, $indent_num, $expansion_depth, $max_chars_inline);
-		array_pop($this->stringfing_objects);
+		$this->stringify_objects[] = $object;
+		$tmp = $this->stringify_as_object($name, $object, $indent_num, $expansion_depth, $max_chars_inline);
+		array_pop($this->stringify_objects);
 
 		return $tmp;
 	}
 
-	function stringing_as_object(string $name, $object, $indent_num = 1, $expansion_depth = 1, $max_chars_inline = MAX_CHARS_INLINE)
+	function stringify_as_object(string $name, $object, $indent_num = 1, $expansion_depth = 1, $max_chars_inline = MAX_CHARS_INLINE)
 	{
 		$indents = $indent_num ? str_repeat(static::INDENT, $indent_num) : '';
 		$indents = LF . $indents;
@@ -138,7 +138,7 @@ class Dumper
 				$contents .= ' [ignored]';
 			}
 			else {
-				$contents = trim($this->stringing($value, $indent_num + 1, $expansion_depth - 1) );
+				$contents = trim($this->stringify($value, $indent_num + 1, $expansion_depth - 1) );
 			}
 
 			$items[] = sprintf("%s: %s", $this->quote_key($key), $contents);

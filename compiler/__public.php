@@ -44,7 +44,7 @@ function dump(...$args) {
 	echo LF;
 	$dumper = new Dumper(['unit', 'program']);
 	foreach ($args as $arg) {
-		$str = $dumper->stringing($arg, 0);
+		$str = $dumper->stringify($arg, 0);
 		$str = str_replace('Tea\\', '', $str);
 		echo $str, LF;
 	}
