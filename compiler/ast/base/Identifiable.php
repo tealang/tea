@@ -125,16 +125,11 @@ class ClassKindredIdentifier extends PlainIdentifier
 		$this->name = $name;
 	}
 
-	public function set_namespace(NSIdentifier $ns)
+	public function set_namespace(NamespaceIdentifier $ns)
 	{
 		$this->ns = $ns;
 	}
 }
-
-// class ClassIdentifier extends ClassKindredIdentifier
-// {
-// 	const KIND = 'class_identifier';
-// }
 
 // class UriIdentifier extends Identifiable
 // {

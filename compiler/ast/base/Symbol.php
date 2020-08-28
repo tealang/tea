@@ -22,6 +22,7 @@ class Symbol
 	{
 		$this->name = $declaration->name;
 		$this->declaration = $declaration;
+		$declaration->symbol = $this;
 	}
 }
 
@@ -35,6 +36,7 @@ class NamespaceSymbol extends Symbol
 	{
 		$this->name = $declaration->name;
 		$this->declaration = $declaration;
+		$declaration->symbol = $this;
 	}
 }
 

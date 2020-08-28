@@ -9,16 +9,18 @@
 
 namespace Tea;
 
-class Unit
+class Unit implements IRootDeclaration
 {
 	public $docs;
+
+	public $name;
 
 	public $ns;
 
 	// cache for render
 	public $dist_ns_uri;
 
-	// current unit path, include end with DS
+	// current unit path, include ends with DS
 	public $path;
 
 	public $type; // tea or php
@@ -55,10 +57,10 @@ class Unit
 	public $super_dir_levels;
 
 	/**
-	 * The option for is required to loading when is a foriegn Unit
+	 * The option for is need to load when as a foriegn Unit
 	 * @var bool
 	 */
-	public $required_loading;
+	public $is_need_load;
 
 	/**
 	 * @var bool
@@ -73,21 +75,21 @@ class Unit
 	/**
 	 * @var ASTChecker
 	 */
-	private $checker;
+	// private $checker;
 
 	public function __construct(string $path)
 	{
 		$this->path = $path;
 	}
 
-	public function get_checker(): ASTChecker
-	{
-		if ($this->checker === null) {
-			$this->checker = new ASTChecker($this);
-		}
+	// public function get_checker(): ASTChecker
+	// {
+	// 	if ($this->checker === null) {
+	// 		$this->checker = new ASTChecker($this);
+	// 	}
 
-		return $this->checker;
-	}
+	// 	return $this->checker;
+	// }
 
 	public function append_program(Program $program)
 	{

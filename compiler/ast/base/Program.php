@@ -45,13 +45,15 @@ class Program extends Node
 
 	/**
 	 * just used for PHP scripts
-	 * @var NSIdentifier
+	 * @var NamespaceIdentifier
 	 */
 	public $ns;
 
 	public $depends_native_programs = [];
 
 	public $is_native = false; // for native programs, eg. PHP scripts
+
+	public $is_external = false;
 
 	private $subdirectory_levels;
 

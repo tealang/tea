@@ -9,9 +9,9 @@
 
 namespace Tea;
 
-class NSIdentifier extends Node
+class NamespaceIdentifier extends Node
 {
-	const KIND = 'ns_identifier';
+	const KIND = 'namespace_identifier';
 
 	public $uri;
 
@@ -22,18 +22,17 @@ class NSIdentifier extends Node
 
 	public function __construct(array $names)
 	{
+		$this->set_names($names);
+	}
+
+	public function set_names(array $names)
+	{
 		$this->names = $names;
 		$this->uri = join(_SLASH, $names);
 	}
 
-	// public static function create_with_uri(string $uri)
-	// {
-	// 	$names = explode(_SLASH, $uri);
-
-	// 	if (count($names) === 1 && !TeaHelper::is_identifier_name($names[0])) {
-	// 		throw new \Exception("Invalid namespace URI '$uri'.");
-	// 	}
-
-	// 	return new static($names);
-	// }
+	public function get_last_name()
+	{
+		return $this->names[count($this->names) - 1];
+	}
 }

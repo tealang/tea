@@ -23,15 +23,31 @@ class TeaHeaderCoder extends TeaCoder
 		return $items;
 	}
 
+	public function render_class_constant_declaration(ClassConstantDeclaration $node)
+	{
+		if ($node->modifier === _PRIVATE || $node->modifier === _INTERNAL) {
+			return null;
+		}
+
+		return parent::render_class_constant_declaration($node);
+	}
+
 	public function render_property_declaration(PropertyDeclaration $node)
 	{
-		$code = $this->generate_property_header($node);
+		if ($node->modifier === _PRIVATE || $node->modifier === _INTERNAL) {
+			return null;
+		}
 
+		$code = $this->generate_property_header($node);
 		return $code . static::CLASS_MEMBER_TERMINATOR;
 	}
 
 	public function render_function_declaration(FunctionDeclaration $node)
 	{
+		if ($node->modifier === _PRIVATE || $node->modifier === _INTERNAL) {
+			return null;
+		}
+
 		return $this->render_function_protocol($node);
 	}
 

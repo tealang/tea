@@ -10,6 +10,7 @@ The syntax tests for Tea
 // 	}
 // }
 
+#use tea/tests/xview
 #use tea/tests/xview { BaseView, IViewDemo }
 #use tea/tests/PHPDemoUnit { BaseInterface, PHPClassDemo, PHP_CONST_DEMO, php_function_demo }
 

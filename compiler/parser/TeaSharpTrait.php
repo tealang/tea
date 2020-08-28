@@ -40,7 +40,7 @@ trait TeaSharpTrait
 				return;
 
 			case _CO:
-				return $this->read_coroutine_expression();
+				return $this->read_coroutine();
 
 			default:
 				$node = $this->read_other_label_statement_with($token);
@@ -50,7 +50,7 @@ trait TeaSharpTrait
 		return $node;
 	}
 
-	protected function read_coroutine_expression()
+	protected function read_coroutine()
 	{
 		$block = $this->factory->create_coroutine_block();
 		$block->pos = $this->pos;
@@ -211,8 +211,8 @@ trait TeaSharpTrait
 			throw $this->new_parse_error("The '#unit' label could not be used at here.");
 		}
 
-		$namespace = $this->read_ns_identifier();
-		$this->factory->set_namespace($namespace);
+		$ns = $this->read_namespace_identifier();
+		$this->factory->set_namespace($ns);
 
 		if ($this->skip_token_ignore_space(_BRACE_OPEN)) {
 			$this->read_unit_options();
@@ -244,7 +244,7 @@ trait TeaSharpTrait
 		}
 	}
 
-	protected function read_ns_identifier()
+	protected function read_namespace_identifier()
 	{
 		$domain = $this->read_domain_name();
 
@@ -267,7 +267,10 @@ trait TeaSharpTrait
 			throw $this->new_parse_error(sprintf("It's too many namespace levels, the max levels is %d.", _MAX_NS_LEVELS));
 		}
 
-		return $this->factory->create_ns_identifier($names);
+		$ns = new NamespaceIdentifier($names);
+		$ns->pos = $this->pos;
+
+		return $ns;
 	}
 
 	private function read_domain_name(): ?string
@@ -296,21 +299,21 @@ trait TeaSharpTrait
 			throw $this->new_parse_error("The '#use' statements can only be used in the __unit.th or __public.th files.");
 		}
 
-		$ns = $this->read_ns_identifier();
+		$ns = $this->read_namespace_identifier();
 
 		if ($this->skip_token_ignore_space(_BLOCK_BEGIN)) {
 			$targets = $this->read_use_targets($ns);
 			$this->expect_block_end();
-
-			$this->factory->create_use_statement($ns, $targets);
 		}
 		else {
-			throw $this->new_parse_error("Expected the use targets {...}.");
-		// 	$this->factory->create_use_statement($ns);
+			// throw $this->new_parse_error("Expected the use targets {...}.");
+			$targets = [];
 		}
+
+		$this->factory->create_use_statement($ns, $targets);
 	}
 
-	private function read_use_targets(NSIdentifier $ns): array
+	private function read_use_targets(NamespaceIdentifier $ns): array
 	{
 		$targets = [];
 		while ($token = $this->scan_token_ignore_empty()) {
@@ -324,11 +327,9 @@ trait TeaSharpTrait
 					throw $this->new_parse_error("Invalid name format token '$alias' for the use statement.");
 				}
 
-				// $targets[$token] = $alias;
 				$target = $this->factory->append_use_target($ns, $alias, $token);
 			}
 			else {
-				// $targets[] = $token;
 				$target = $this->factory->append_use_target($ns, $token);
 			}
 

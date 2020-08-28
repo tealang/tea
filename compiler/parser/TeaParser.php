@@ -13,8 +13,6 @@ class TeaParser extends BaseParser
 {
 	use TeaTokenTrait, TeaStringTrait, TeaXBlockTrait, TeaSharpTrait, TeaDocsTrait;
 
-	protected const IS_IN_HEADER = false;
-
 	protected $is_declare_mode = false;
 
 	protected $root_statements = [];

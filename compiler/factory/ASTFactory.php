@@ -73,13 +73,14 @@ class ASTFactory
 		$this->unit->as_main_unit = true;
 	}
 
-	public function set_namespace(NSIdentifier $ns)
+	public function set_namespace(NamespaceIdentifier $ns)
 	{
 		if ($this->unit->ns) {
 			throw $this->parser->new_parse_error("Cannot redeclare the unit namespace.");
 		}
 
 		$this->unit->ns = $ns;
+		$this->unit->name = $ns->uri;
 	}
 
 	public function set_unit_option(string $key, string $value)
@@ -87,20 +88,30 @@ class ASTFactory
 		$this->unit->{$key} = $value;
 	}
 
-	public function create_use_statement(NSIdentifier $ns, array $targets = [])
+	public function create_use_statement(NamespaceIdentifier $ns, array $targets)
 	{
 		// add to unit uses
 		$this->unit->use_units[$ns->uri] = $ns;
 
-		return $this->program->uses[] = new UseStatement($ns, $targets);
+		$statement = new UseStatement($ns, $targets);
+		$this->program->uses[] = $statement;
+
+		// add namespace it self as a target when not has any targets
+		if (!$targets) {
+			$use = $this->append_use_target($ns);
+		}
+
+		return $statement;
 	}
 
-	public function append_use_target(NSIdentifier $ns, string $target_name, string $source_name = null)
+	public function append_use_target(NamespaceIdentifier $ns, string $target_name = null, string $source_name = null)
 	{
 		$declaration = new UseDeclaration($ns, $target_name, $source_name);
+		$this->parser->attach_position($declaration);
+
 		$symbol = new Symbol($declaration);
 
-		if ($this->program->name === '__unit') {
+		if ($this->parser::IS_IN_HEADER) {
 			$this->create_global_symbol($declaration, $symbol);
 		}
 		else {
@@ -113,11 +124,6 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_ns_identifier(array $names)
-	{
-		return new NSIdentifier($names);
-	}
-
 	public function create_accessing_identifier(BaseExpression $master, string $name)
 	{
 		return new AccessingIdentifier($master, $name);
@@ -127,6 +133,7 @@ class ASTFactory
 	{
 		$identifier = new ClassKindredIdentifier($name);
 		$this->set_defer_check($identifier);
+
 		return $identifier;
 	}
 
@@ -663,7 +670,8 @@ class ASTFactory
 
 	public function begin_class_member(IClassMemberDeclaration $declaration)
 	{
-		$declaration->symbol = new Symbol($declaration);
+		new Symbol($declaration);
+
 		if (!$this->class->append_member($declaration)) {
 			throw $this->parser->new_parse_error("Class member '{$declaration->name}' of '{$this->class->name}' has duplicated.");
 		}
@@ -856,9 +864,6 @@ class ASTFactory
 		if (!$symbol) {
 			$symbol = new Symbol($declaration);
 		}
-
-		// it is useful for check
-		// $declaration->symbol = $symbol;
 
 		$this->add_program_symbol($symbol);
 		$this->add_unit_symbol($symbol);

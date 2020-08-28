@@ -181,7 +181,7 @@ class TeaCoder
 		if ($node->is_static) $items[] = _STATIC;
 
 		$items[] = $node->name;
-		$items[] = $node->type->render($this);
+		$node->type and $items[] = $node->type->render($this);
 
 		return join(' ', $items);
 	}
@@ -606,19 +606,15 @@ class TeaCoder
 	public function render_classkindred_identifier(ClassKindredIdentifier $node)
 	{
 		$name = $node->name;
+
 		if ($node->ns) {
-			return $this->render_ns_identifier($node->ns) . static::NS_SEPARATOR . $name;
+			return $this->render_namespace_identifier($node->ns) . static::NS_SEPARATOR . $name;
 		}
 
 		return $name;
 	}
 
-	// public function render_class_identifier(ClassIdentifier $node)
-	// {
-	// 	return $this->render_classkindred_identifier($node);
-	// }
-
-	public function render_ns_identifier(NSIdentifier $node)
+	public function render_namespace_identifier(NamespaceIdentifier $node)
 	{
 		return $node->uri;
 	}
@@ -984,7 +980,7 @@ class TeaCoder
 
 	public function render_use_statement(UseStatement $node)
 	{
-		$ns = $this->render_ns_identifier($node->ns);
+		$ns = $this->render_namespace_identifier($node->ns);
 
 		$code = static::USE_DECLARE_PREFIX . $ns;
 

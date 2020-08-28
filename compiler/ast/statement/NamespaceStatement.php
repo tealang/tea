@@ -9,23 +9,14 @@
 
 namespace Tea;
 
-class UseStatement extends BaseStatement
+class NamespaceStatement extends BaseStatement
 {
-	const KIND = 'use_statement';
+	const KIND = 'namespace_statement';
 
 	public $ns;
-	public $targets;
 
-	public function __construct(NamespaceIdentifier $ns, array $targets = [])
+	public function __construct(NamespaceIdentifier $ns)
 	{
 		$this->ns = $ns;
-		$this->targets = $targets;
-	}
-
-	public function append_target(UseDeclaration $target)
-	{
-		if (!in_array($target, $this->targets, true)) {
-			$this->targets[] = $target;
-		}
 	}
 }

@@ -63,7 +63,7 @@ const
 	_IS = 'is', // for check Type
 	_IN = 'in', _TO = 'to', _DOWNTO = 'downto', _STEP = 'step', // just use in the 'for' block
 
-	// _REFERENCE = '&',
+	_REFERENCE = '&',
 	_NEGATION = '-', // -1, -num
 	_ADDITION = '+', _SUBTRACTION = '-', _MULTIPLICATION = '*', _DIVISION = '/', _REMAINDER = 'rem', _EXPONENTIATION = '^',
 	_BITWISE_NOT = '~', _BITWISE_AND = '&', _BITWISE_OR = '|', _BITWISE_XOR = '^|', //bitwise

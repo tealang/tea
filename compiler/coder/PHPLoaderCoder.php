@@ -9,12 +9,12 @@
 
 namespace Tea;
 
-class PHPPublicCoder extends PHPCoder
+class PHPLoaderCoder extends PHPCoder
 {
 	private $constants = [];
 	private $functions = [];
 
-	public function render_public_program(Program $header_program, array $normal_programs)
+	public function render_loader_program(Program $header_program, array $normal_programs)
 	{
 		$this->program = $header_program;
 
@@ -46,7 +46,7 @@ class PHPPublicCoder extends PHPCoder
 
 			// load the foriegn units
 			foreach ($unit->use_units as $foreign_unit) {
-				if ($foreign_unit->required_loading) {
+				if ($foreign_unit->is_need_load) {
 					$items[] = "require_once \$super_path . '{$foreign_unit->loading_file}';";
 				}
 			}

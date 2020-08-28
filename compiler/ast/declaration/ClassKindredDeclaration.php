@@ -13,11 +13,11 @@ abstract class ClassKindredDeclaration extends Node implements IRootDeclaration,
 {
 	use DeclarationTrait;
 
+	public $ns;
+
 	public $modifier;
 
 	public $is_abstract;
-
-	public $ns;
 
 	public $origin_name;
 

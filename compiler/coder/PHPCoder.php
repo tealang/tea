@@ -1157,7 +1157,7 @@ class PHPCoder extends TeaCoder
 	{
 		if ($node->ns) {
 			$name = $this->get_normalized_name($node->name);
-			$name = $this->render_plain_identifier($node->ns) . static::NS_SEPARATOR . $name;
+			$name = $this->render_namespace_identifier($node->ns) . static::NS_SEPARATOR . $name;
 		}
 		else {
 			$name = $this->get_classkindred_identifier_name($node);
@@ -1190,12 +1190,12 @@ class PHPCoder extends TeaCoder
 		return static::NS_SEPARATOR . $name;
 	}
 
-	public function render_ns_identifier(NSIdentifier $node)
+	public function render_namespace_identifier(NamespaceIdentifier $node)
 	{
 		return static::ns_to_string($node);
 	}
 
-	public static function ns_to_string(NSIdentifier $identifier)
+	public static function ns_to_string(NamespaceIdentifier $identifier)
 	{
 		// use root namespace for tea builtins
 		if ($identifier->uri === _BUILTIN_NS) {

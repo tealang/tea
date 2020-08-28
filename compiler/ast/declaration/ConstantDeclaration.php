@@ -15,6 +15,8 @@ trait IConstantDeclarationTrait
 {
 	use DeclarationTrait;
 
+	public $ns;
+
 	public $modifier;
 
 	public $value;

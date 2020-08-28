@@ -37,6 +37,8 @@ class FunctionDeclaration extends Node implements IScopeBlock, IClassMemberDecla
 
 	const KIND = 'function_declaration';
 
+	public $ns;
+
 	// public $modifier;
 
 	public $callbacks;

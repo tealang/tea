@@ -171,8 +171,8 @@ class Compiler
 		$this->prepare_for_render();
 
 		// prepare for render
-		$header_coder = new PHPPublicCoder();
-		$this->unit->dist_ns_uri = $header_coder->render_ns_identifier($this->unit->ns);
+		$header_coder = new PHPLoaderCoder();
+		$this->unit->dist_ns_uri = $header_coder->render_namespace_identifier($this->unit->ns);
 		if ($this->unit->dist_ns_uri) {
 			// use to generate the autoloads classmap
 			$this->unit_dist_ns_prefix = $this->unit->dist_ns_uri . PHPCoder::NS_SEPARATOR;
@@ -182,9 +182,9 @@ class Compiler
 		$this->render_all();
 
 		// the global constants and functions would be render to the loading file
-		$this->render_unit_header($header_coder);
+		$this->render_loader_file($header_coder);
 
-		$this->render_public_declarations();
+		$this->render_public_header();
 
 		return count($this->normal_programs);
 	}
@@ -217,10 +217,20 @@ class Compiler
 	{
 		self::echo_start('Parsing programs...');
 
+		$unit_uri = $this->unit->ns->uri;
+
+		// parse native programs
 		foreach ($this->native_program_files as $file) {
-			$this->native_programs[] = $this->parse_php_program($file);
+			$program = $this->parse_php_program($file);
+			if (!$program->ns or $program->ns->uri !== $unit_uri) {
+				$program->is_external = true;
+				continue;
+			}
+
+			$this->native_programs[] = $program;
 		}
 
+		// parse normal programs
 		foreach ($this->normal_program_files as $file) {
 			$this->normal_programs[] = $this->parse_tea_program($file);
 		}
@@ -242,7 +252,7 @@ class Compiler
 		$this->prepare_paths($this->unit->ns);
 	}
 
-	private function prepare_paths(NSIdentifier $ns)
+	private function prepare_paths(NamespaceIdentifier $ns)
 	{
 		$reversed_ns_names = array_reverse($ns->names);
 		$dir_names = [];
@@ -302,6 +312,8 @@ class Compiler
 	{
 		self::echo_start('Checking AST...', LF);
 
+		ASTChecker::init_checkers($this->unit);
+
 		// check depends units first
 		foreach ($this->unit->use_units as $dep_unit) {
 			$this->check_ast_for_unit($dep_unit);
@@ -315,18 +327,28 @@ class Compiler
 
 	private function check_ast_for_unit(Unit $unit)
 	{
-		$checker = $unit->get_checker();
+		// $checker = $unit->get_checker();
+		$normal_checker = ASTChecker::get_checker($this->header_program);
 
+		// collect uses targets for Tea programs
 		foreach ($unit->programs as $program) {
 			if (!$program->is_native) {
-				$checker->collect_program_uses($program);
+				$normal_checker->collect_program_uses($program);
 			}
 		}
 
+		// the native programs
+		$native_checker = ASTChecker::get_native_checker();
+		foreach ($this->native_programs as $program) {
+			self::echo_start(" - {$program->file}", LF);
+			$native_checker->check_program($program);
+		}
+
+		// the Tea programs
 		foreach ($unit->programs as $program) {
 			if (!$program->is_native) {
 				self::echo_start(" - {$program->file}", LF);
-				$checker->check_program($program);
+				$normal_checker->check_program($program);
 			}
 		}
 	}
@@ -345,19 +367,27 @@ class Compiler
 
 	private function load_dependences(Unit $unit)
 	{
+		$current_unit_uri = $this->unit->ns->uri;
+
 		foreach ($unit->use_units as $uri => $target) {
-			if (!$target instanceof Unit) {
+			if ($target instanceof Unit) {
+				//
+			}
+			elseif ($target->uri !== '' and $target->uri !== $current_unit_uri) {
 				$use_unit = $this->load_unit($target);
 
-				// 框架内部名称空间由框架加载
-				$use_unit->required_loading = !self::is_framework_internal_namespaces($use_unit->ns);
+				// 框架内部名称空间的，无需添加载入语句，由框架加载即可
+				$use_unit->is_need_load = !self::is_framework_internal_namespaces($use_unit->ns);
 
 				$unit->use_units[$uri] = $use_unit;
+			}
+			else {
+				unset($unit->use_units[$uri]);
 			}
 		}
 	}
 
-	private function load_unit(NSIdentifier $ns): Unit
+	private function load_unit(NamespaceIdentifier $ns): Unit
 	{
 		$uri = $ns->uri;
 
@@ -386,7 +416,7 @@ class Compiler
 		return $unit;
 	}
 
-	private function find_unit_public_dir(NSIdentifier $ns)
+	private function find_unit_public_dir(NamespaceIdentifier $ns)
 	{
 		$dir_names = $ns->names;
 
@@ -473,7 +503,7 @@ class Compiler
 		}
 
 		foreach ($this->native_programs as $program) {
-			$ns_prefix = PHPCoder::ns_to_string($program->ns) . PHPCoder::NS_SEPARATOR;
+			$ns_prefix = $program->ns ? PHPCoder::ns_to_string($program->ns) . PHPCoder::NS_SEPARATOR : null;
 			$this->collect_autoloads_map($program, $program->file, $ns_prefix);
 		}
 
@@ -485,12 +515,12 @@ class Compiler
 		self::echo_success(count($this->normal_programs) . ' programs rendered success.');
 	}
 
-	private function render_unit_header(PHPCoder $coder)
+	private function render_loader_file(PHPCoder $coder)
 	{
-		$dist_code = $coder->render_public_program($this->header_program, $this->normal_programs);
+		$dist_code = $coder->render_loader_program($this->header_program, $this->normal_programs);
 
 		// the autoloads for classes/interfaces/traits
-		$dist_code .= PHPPublicCoder::render_autoloads_code($this->autoloads_map);
+		$dist_code .= PHPLoaderCoder::render_autoloads_code($this->autoloads_map);
 
 		file_put_contents($this->unit_dist_loader_file, $dist_code);
 	}
@@ -518,18 +548,20 @@ class Compiler
 		return $file_path;
 	}
 
-	private function render_public_declarations()
+	private function render_public_header()
 	{
-		self::echo_start('Rendering public declarations...');
+		self::echo_start('Rendering public headers...');
 
 		$program = new Program(PUBLIC_HEADER_NAME, $this->unit);
 		$program->uses = $this->header_program->uses;
 
 		foreach ($this->unit->symbols as $symbol) {
 			$declaration = $symbol->declaration;
-			if (isset($declaration->modifier)
-				&& $declaration->modifier === _PUBLIC
-				&& $declaration->program->unit === $this->unit) {
+			$belong_program = $declaration->program;
+			if (isset($declaration->modifier) && $declaration->modifier === _PUBLIC
+				&& $belong_program->unit === $this->unit
+				&& !$belong_program->is_external
+			) {
 				$program->append_declaration($declaration);
 			}
 		}
@@ -539,7 +571,7 @@ class Compiler
 		file_put_contents($this->unit_public_file, $code);
 
 		$count = count($program->declarations);
-		self::echo_success("$count declarations rendered success.");
+		self::echo_success("$count public headers rendered success.");
 	}
 
 	private function collect_autoloads_map(Program $program, string $dist_file_path, string $name_prefix = null)
@@ -625,7 +657,7 @@ class Compiler
 		return $parser->read_program();
 	}
 
-	private static function is_framework_internal_namespaces(NSIdentifier $ns)
+	private static function is_framework_internal_namespaces(NamespaceIdentifier $ns)
 	{
 		return in_array($ns->names[0], self::FRAMEWORK_INTERNAL_NAMESPACES, true);
 	}

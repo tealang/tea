@@ -11,6 +11,8 @@ namespace Tea;
 
 abstract class BaseParser
 {
+	const IS_IN_HEADER = false;
+
 	protected $file;
 
 	/**
@@ -107,6 +109,11 @@ abstract class BaseParser
 		}
 
 		return $message;
+	}
+
+	public function attach_position(Node $node)
+	{
+		$node->pos = $this->pos;
 	}
 
 	private static function tab2spaces(string $str)
