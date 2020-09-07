@@ -41,13 +41,13 @@ class PHPLoaderCoder extends PHPCoder
 
 			// load the builtins
 			if ($unit->as_main_unit) {
-				$items[] = sprintf("require_once \$super_path . '%s'; // the builtins", Compiler::BUILTIN_LOADING_FILE);
+				$items[] = sprintf("require_once \$super_path . '%s'; // the builtins", Compiler::BUILTIN_LOADER_FILE);
 			}
 
 			// load the foriegn units
 			foreach ($unit->use_units as $foreign_unit) {
 				if ($foreign_unit->is_need_load) {
-					$items[] = "require_once \$super_path . '{$foreign_unit->loading_file}';";
+					$items[] = "require_once \$super_path . '{$foreign_unit->loader_file}';";
 				}
 			}
 
@@ -55,7 +55,7 @@ class PHPLoaderCoder extends PHPCoder
 		}
 
 		// render constants and function defined in current Unit
-		// because of them can not be autoloaded like classes
+		// because of them can not be autoloaded like Classes
 		$constants = [];
 		$functions = [];
 
@@ -106,7 +106,7 @@ class PHPLoaderCoder extends PHPCoder
 
 	public static function render_autoloads_code(array $autoloads)
 	{
-		$autoloads = self::stringfy_autoloads($autoloads);
+		$autoloads = self::stringify_autoloads($autoloads);
 
 		return "
 // autoloads
@@ -120,7 +120,7 @@ spl_autoload_register(function (\$class) {
 ";
 	}
 
-	private static function stringfy_autoloads(array $autoloads)
+	private static function stringify_autoloads(array $autoloads)
 	{
 		$items = [];
 		foreach ($autoloads as $class => $file) {

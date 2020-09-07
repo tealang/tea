@@ -19,13 +19,15 @@ class Compiler
 
 	const BUILTIN_PROGRAM = self::BUILTIN_PATH . 'core.tea';
 
-	const BUILTIN_LOADING_FILE = 'tea/builtin/dist/__public.php';
+	const BUILTIN_LOADER_FILE = 'tea/builtin/dist/__public.php';
 
-	const UNIT_HEADER_FILE_NAME = UNIT_HEADER_NAME . '.' . TEA_HEADER_EXT_NAME;
+	const UNIT_HEADER_FILE_NAME = '__unit.th';
 
-	const PUBLIC_HEADER_FILE_NAME = PUBLIC_HEADER_NAME . '.' . TEA_HEADER_EXT_NAME;
+	const PUBLIC_HEADER_FILE_NAME = '__public.th';
 
-	const PUBLIC_LOADER_FILE_NAME = PUBLIC_HEADER_NAME . '.' . PHP_EXT_NAME;
+	const PUBLIC_LOADER_FILE_NAME = '__public.php';
+
+	const DIR_SCAN_SKIP_ITEMS = ['.', '..', 'dist', 'bin', '__public.php'];
 
 	// the special namespaces for some framework
 	const FRAMEWORK_INTERNAL_NAMESPACES = ['App', 'Model', 'Lib'];
@@ -104,7 +106,7 @@ class Compiler
 	// the builtin symbols cache
 	private $builtin_symbols;
 
-	// autoload classes/interfaces/traits for render php loading code
+	// autoload classes/interfaces/traits for render Autoload
 	private $autoloads_map = [];
 
 	// current unit is builtin-libs unit or not?
@@ -181,7 +183,7 @@ class Compiler
 		// render programs
 		$this->render_all();
 
-		// the global constants and functions would be render to the loading file
+		// the global Constants and Functions would be render to the loader file
 		$this->render_loader_file($header_coder);
 
 		$this->render_public_header();
@@ -215,22 +217,26 @@ class Compiler
 
 	private function parse_programs()
 	{
-		self::echo_start('Parsing programs...');
+		self::echo_start('Parsing programs...', LF);
 
 		$unit_uri = $this->unit->ns->uri;
 
 		// parse native programs
-		foreach ($this->native_program_files as $file) {
-			$program = $this->parse_php_program($file);
-			if (!$program->ns or $program->ns->uri !== $unit_uri) {
-				$program->is_external = true;
-				continue;
+		if ($this->native_program_files) {
+			foreach ($this->native_program_files as $file) {
+				$program = $this->parse_php_program($file);
+				if (!$program->ns or $program->ns->uri !== $unit_uri) {
+					$program->is_external = true;
+					continue;
+				}
+
+				$this->native_programs[] = $program;
 			}
 
-			$this->native_programs[] = $program;
+			self::echo_success(count($this->native_programs) . ' PHP programs parsed success.');
 		}
 
-		// parse normal programs
+		// parse tea programs
 		foreach ($this->normal_program_files as $file) {
 			$this->normal_programs[] = $this->parse_tea_program($file);
 		}
@@ -310,7 +316,7 @@ class Compiler
 
 	private function check_ast()
 	{
-		self::echo_start('Checking AST...', LF);
+		self::echo_start('Checking...', LF);
 
 		ASTChecker::init_checkers($this->unit);
 
@@ -322,7 +328,7 @@ class Compiler
 		// check current unit
 		$this->check_ast_for_unit($this->unit);
 
-		self::echo_success('Tea programs checked success.' . LF);
+		self::echo_success('Programs checked success.' . LF);
 	}
 
 	private function check_ast_for_unit(Unit $unit)
@@ -403,7 +409,7 @@ class Compiler
 		$this->units_pool[$uri] = $unit; // add to pool, so do not need to reload
 
 		// for render require_once statments
-		$unit->loading_file = $unit_dir . '/' . self::PUBLIC_LOADER_FILE_NAME;
+		$unit->loader_file = $unit_dir . '/' . self::PUBLIC_LOADER_FILE_NAME;
 
 		$unit->symbols = $this->builtin_symbols;
 
@@ -550,7 +556,7 @@ class Compiler
 
 	private function render_public_header()
 	{
-		self::echo_start('Rendering public headers...');
+		self::echo_start('Rendering public header file...');
 
 		$program = new Program(PUBLIC_HEADER_NAME, $this->unit);
 		$program->uses = $this->header_program->uses;
@@ -571,7 +577,7 @@ class Compiler
 		file_put_contents($this->unit_public_file, $code);
 
 		$count = count($program->declarations);
-		self::echo_success("$count public headers rendered success.");
+		self::echo_success("$count public declarations rendered success.");
 	}
 
 	private function collect_autoloads_map(Program $program, string $dist_file_path, string $name_prefix = null)
@@ -592,22 +598,18 @@ class Compiler
 		}
 	}
 
-	const SCAN_SKIP_ITEMS = ['.', '..', 'dist', 'bin', '__public.php'];
 	private function scan_program_files(string $path, int $levels = 0)
 	{
 		$items = scandir($path);
 
-		if ($levels) {
-			// check is a sub-unit
-			if (array_search(self::UNIT_HEADER_FILE_NAME, $items) !== false
-				|| array_search(self::PUBLIC_HEADER_FILE_NAME, $items) !== false) {
-				echo "\nWarring: The sub-diretory '$path' has be ignored, because of it has '__unit.th' or '__public.th'.\n\n";
-				return; // ignore these sub-unit
-			}
+		// check is a sub-unit
+		if ($levels > 0 && (in_array(self::UNIT_HEADER_FILE_NAME, $items) || in_array(self::PUBLIC_HEADER_FILE_NAME, $items)) ) {
+			echo "\nWarring: The sub-diretory '$path' has be ignored, because of it has '__unit.th' or '__public.th'.\n\n";
+			return; // ignore these sub-unit
 		}
 
 		foreach ($items as $item) {
-			if (in_array($item, self::SCAN_SKIP_ITEMS, true)) {
+			if (in_array($item, self::DIR_SCAN_SKIP_ITEMS, true)) {
 				continue;
 			}
 
@@ -626,7 +628,8 @@ class Compiler
 
 			$ext_name = substr($item, $ext_pos + 1);
 
-			// we not care the upper-case ext-names
+			// the valid ext-names must be named in lower-case
+			// ignore the upper-case ext-names
 			if ($ext_name === TEA_EXT_NAME) {
 				$this->normal_program_files[] = $item;
 			}

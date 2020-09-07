@@ -60,7 +60,9 @@ class PHPParserLite extends BaseParser
 
 	public function read_program(): Program
 	{
-		// while ($this->pos + 1 < $this->tokens_count) {
+		$max_pos = $this->tokens_count - 1;
+
+		// while ($this->pos < $max_pos) {
 		// 	$this->pos++;
 		// 	$this->print_token();
 		// }
@@ -68,7 +70,7 @@ class PHPParserLite extends BaseParser
 
 		$this->program->is_native = true;
 
-		while ($this->pos + 1 < $this->tokens_count) {
+		while ($this->pos < $max_pos) {
 			$item = $this->read_root_statement();
 			if ($item instanceof IRootDeclaration) {
 				$this->program->append_declaration($item);
@@ -281,7 +283,7 @@ class PHPParserLite extends BaseParser
 		// var_dump($this->file);
 		$expr = null;
 		while (($token = $this->scan_token_ignore_empty()) !== null) {
-			// $this->print_token($token);
+			// the string token
 			if (is_string($token)) {
 				if (in_array($token, static::EXPRESSION_ENDINGS, true)) {
 					$this->pos--;
@@ -321,12 +323,14 @@ class PHPParserLite extends BaseParser
 						else {
 							$expr = new BinaryOperation($operator, $expr, $right_expr);
 						}
+
 						break;
 				}
 
 				continue;
 			}
 
+			// the typed token
 			$token_type = $token[0];
 			$token_content = $token[1];
 			switch ($token_type) {
@@ -473,9 +477,8 @@ class PHPParserLite extends BaseParser
 			$token = $this->scan_typed_token_ignore_empty();
 		}
 
-		$is_static = false;
-		if ($token[0] === T_STATIC) {
-			$is_static = true;
+		$is_static = $token[0] === T_STATIC;
+		if ($is_static) {
 			$token = $this->scan_typed_token_ignore_empty();
 		}
 

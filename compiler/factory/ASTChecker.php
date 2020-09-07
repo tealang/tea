@@ -241,7 +241,8 @@ class ASTChecker
 			$is_constant = true;
 		}
 		elseif ($node instanceof Identifiable) {
-			$is_constant = $node->symbol->declaration instanceof IConstantDeclaration;
+			$declaration = $node->symbol->declaration;
+			$is_constant = $declaration instanceof IConstantDeclaration || $declaration instanceof ClassKindredDeclaration;
 		}
 		elseif ($node instanceof BinaryOperation) {
 			$is_constant = $this->check_is_constant_expression($node->left) && $this->check_is_constant_expression($node->right);
@@ -1742,21 +1743,29 @@ class ASTChecker
 				$this->infer_expression($argument);
 			}
 
-			return TypeFactory::$_any;
+			$infered = TypeFactory::$_any;
 		}
 		else {
 			$this->check_call_arguments($node);
-		}
 
-		if ($callee->symbol->declaration instanceof ClassKindredDeclaration) {
-			if (!$callee->symbol->declaration instanceof ClassDeclaration) {
-				throw $this->new_syntax_error("Invalid call for: '{$callee->symbol->declaration->name}'", $node);
+			if ($callee->symbol->declaration instanceof ClassKindredDeclaration) {
+				if (!$callee->symbol->declaration instanceof ClassDeclaration) {
+					throw $this->new_syntax_error("Invalid call for: '{$callee->symbol->declaration->name}'", $node);
+				}
+
+				$infered = $callee;
 			}
+			else {
+				$infered = $declar->type;
 
-			return $callee;
+				// the actual called return type of MetaType is it's value type
+				if ($infered instanceof MetaType) {
+					$infered = $infered->value_type;
+				}
+			}
 		}
 
-		return $declar->type;
+		return $infered;
 	}
 
 	private function merge_callbacks_to_arguments(array &$arguments, array $callbacks, array $parameters)
@@ -1792,6 +1801,11 @@ class ASTChecker
 		// if is a variable, use it's type declaration
 		if ($src_callee_declar instanceof IVariableDeclaration) {
 			$callee_declar = $src_callee_declar->type;
+
+			// the MetaType
+			if ($callee_declar instanceof MetaType) {
+				$callee_declar = $callee_declar->value_type->symbol->declaration;
+			}
 		}
 		else {
 			$callee_declar = $src_callee_declar;
@@ -2148,6 +2162,9 @@ class ASTChecker
 			}
 			elseif ($declar->type === TypeFactory::$_callable) {
 				// for Callable type parameters
+			}
+			elseif ($declar->type instanceof MetaType and $declar->type->value_type instanceof ClassKindredIdentifier) {
+				$declar = $this->require_classkindred_declaration($declar->type->value_type);
 			}
 			else {
 				throw $this->new_syntax_error("Invalid callable expression.", $node);

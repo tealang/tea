@@ -44,7 +44,7 @@ class PHPLoaderMaker
 	public static function render_autoloads_code(array $autoloads, string $unit_path)
 	{
 		$tag = self::GENERATES_TAG;
-		$autoloads = static::stringfy_autoloads($autoloads);
+		$autoloads = static::stringify_autoloads($autoloads);
 
 		return "
 {$tag}
@@ -75,7 +75,7 @@ const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 ");
 	}
 
-	protected static function stringfy_autoloads(array $autoloads)
+	protected static function stringify_autoloads(array $autoloads)
 	{
 		$items = [];
 		foreach ($autoloads as $class => $file) {

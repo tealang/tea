@@ -88,7 +88,7 @@ const
 	// reserved words
 	_UNIT_PATH = 'UNIT_PATH',
 	_VAL_NONE = 'none', _VAL_TRUE = 'true', _VAL_FALSE = 'false',
-	_VAR = 'var', _MUT = 'mut', _YIELD = 'yield',
+	_VAR = 'var', _MUT = 'mut', _YIELD = 'yield', _GLOBAL = 'global',
 	_IF = 'if', _ELSE = 'else', _ELSEIF = 'elseif', _SWITCH = 'switch', _CASE = 'case',
 	_FOR = 'for', _WHILE = 'while', _LOOP = 'loop',
 	_TRY = 'try', _CATCH = 'catch', _FINALLY = 'finally',

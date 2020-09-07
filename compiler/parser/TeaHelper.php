@@ -25,6 +25,7 @@ const _OTHER_RESERVEDS = [
 	_CONSTRUCT, _DESTRUCT, _STATIC,
 	_ELSEIF, _ELSE, _CATCH, _FINALLY,
 	_WHEN,
+	_GLOBAL,
 ];
 
 define('_TEA_RESERVEDS', array_merge(
