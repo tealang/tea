@@ -1758,8 +1758,8 @@ class ASTChecker
 			else {
 				$infered = $declar->type;
 
-				// the actual called return type of MetaType is it's value type
-				if ($infered instanceof MetaType) {
+				// the actual called return type of MetaType for Variable is it's value type
+				if ($infered instanceof MetaType and $callee->symbol->declaration instanceof VariableDeclaration) {
 					$infered = $infered->value_type;
 				}
 			}
@@ -1865,6 +1865,8 @@ class ASTChecker
 				if (!is_int($key)) {
 					$key = "'$key'";
 				}
+
+				// dump(get_class($infered_type));exit;
 
 				throw $this->new_syntax_error("Type of argument $key does not matched the parameter for '{$callee_name}', expected '{$expected_type_name}', supplied '{$infered_type_name}'.", $argument);
 			}
