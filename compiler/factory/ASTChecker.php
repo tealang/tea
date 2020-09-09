@@ -1629,7 +1629,7 @@ class ASTChecker
 	private function check_type(IType $type)
 	{
 		if ($type instanceof BaseType) {
-			if ($type instanceof ValuedType) {
+			if ($type instanceof ValueGenericType) {
 				// check the value type
 				$type->value_type !== null && $this->check_type($type->value_type);
 			}
@@ -1802,7 +1802,7 @@ class ASTChecker
 		if ($src_callee_declar instanceof IVariableDeclaration) {
 			$callee_declar = $src_callee_declar->type;
 
-			// the MetaType
+			// if is MetaType, use the Declaration of it's value type
 			if ($callee_declar instanceof MetaType) {
 				$callee_declar = $callee_declar->value_type->symbol->declaration;
 			}

@@ -53,9 +53,55 @@ class SuperVariableDeclaration extends VariableDeclaration implements IRootDecla
 	public $is_reassignable = false;
 }
 
+// The rules to supports the declarative programming
+class RuleOptions
+{
+	/**
+	 * The max|[min, max] for Int/UInt/Float
+	 * @var int|array
+	 */
+	public $range;
+
+	/**
+	 * The max length|[min length, max length] for String
+	 * @var int|array
+	 */
+	public $length;
+
+	/**
+	 * The pattern for String
+	 * @var string
+	 */
+	public $regex;
+
+	/**
+	 * The custom defineds ...
+	 */
+	// public $other;
+
+	public function __construct(array $options)
+	{
+		foreach ($options as $key => $value) {
+			$this->$key = $value;
+		}
+	}
+}
+
 class ParameterDeclaration extends BaseVariableDeclaration implements IVariableDeclaration
 {
 	const KIND = 'parameter_declaration';
+
 	public $is_value_mutable = false;
+
+	/**
+	 * @var RuleOptions
+	 */
+	public $rule_options;
+
+	public function set_rule_options(RuleOptions $rule_options)
+	{
+		$this->rule_options = $rule_options;
+	}
 }
 
+// //

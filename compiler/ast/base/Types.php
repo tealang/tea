@@ -92,7 +92,7 @@ class BaseType extends Node implements IType
 	}
 }
 
-abstract class ValuedType extends BaseType
+abstract class ValueGenericType extends BaseType
 {
 	/**
 	 * the value type
@@ -104,10 +104,6 @@ abstract class ValuedType extends BaseType
 	public function __construct(IType $value_type = null) {
 		$this->value_type = $value_type;
 	}
-
-	// public function set_value_type(IType $target) {
-	// 	$this->value_type = $target;
-	// }
 
 	public function is_accept_single_type(IType $target) {
 		if ($target === $this || $target === TypeFactory::$_none) {
@@ -143,6 +139,10 @@ abstract class ValuedType extends BaseType
 		}
 
 		return false;
+	}
+
+	public function is_same_or_based_with(IType $target) {
+		return $this->symbol === $target->symbol && $this->value_type->is_same_or_based_with($target->value_type);
 	}
 }
 
@@ -274,14 +274,9 @@ class UnionType extends BaseType
 	}
 }
 
-class MetaType extends ValuedType
+class MetaType extends ValueGenericType
 {
 	public $name = _METATYPE;
-
-	public function is_same_or_based_with(IType $target) {
-		return $this->symbol === $target->symbol
-			&& $this->value_type->is_same_or_based_with($target->value_type);
-	}
 }
 
 class VoidType extends BaseType {
@@ -329,7 +324,7 @@ class StringType extends BaseType {
 }
 
 class FloatType extends BaseType {
-	const ACCEPT_TYPES = [_INT, _UINT];  // Int/UInt作为Float时可能会丢失精度
+	const ACCEPT_TYPES = [_INT, _UINT];  // Int/UInt 作为 Float 时可能会丢失精度
 	public $name = _FLOAT;
 }
 
@@ -338,10 +333,12 @@ class IntType extends BaseType {
 	public $name = _INT;
 }
 
-class UIntType extends BaseType {
+class UIntType extends BaseType
+{
 	public $name = _UINT;
 
-	public function is_same_or_based_with(IType $target) {
+	public function is_same_or_based_with(IType $target)
+	{
 		return $this->symbol === $target->symbol || TypeFactory::$_int->symbol === $target->symbol;
 	}
 }
@@ -350,7 +347,7 @@ class BoolType extends BaseType {
 	public $name = _BOOL;
 }
 
-class IterableType extends ValuedType
+class IterableType extends ValueGenericType
 {
 	public $name = _ITERABLE;
 
@@ -444,6 +441,10 @@ class XViewType extends BaseType
 
 		return $target->symbol->declaration->is_same_or_based_with_symbol(TypeFactory::$_iview_symbol);
 	}
+}
+
+class ChanType extends ValueGenericType {
+	public $name = _CHANNEL;
 }
 
 class NamespaceType extends BaseType {

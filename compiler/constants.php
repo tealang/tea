@@ -36,7 +36,7 @@ const
 	_STRING = 'String',
 	_INT = 'Int', _UINT = 'UInt', _FLOAT = 'Float', _BOOL = 'Bool',
 	_ITERABLE = 'Iterable', _DICT = 'Dict', _ARRAY = 'Array', // 'Pair', 'Matrix', 'Tensor'
-	_OBJECT = 'Object', _XVIEW = 'XView', _REGEX = 'Regex',
+	_OBJECT = 'Object', _XVIEW = 'XView', _REGEX = 'Regex', _CHANNEL = 'Chan',
 	_CALLABLE = 'Callable', _NAMESPACE = 'Namespace', // _CLASS = 'Class',
 	_BUILTIN_TYPE_NAMES = [
 		_UNIONTYPE, _METATYPE, _ANY, _VOID, _NONE,
