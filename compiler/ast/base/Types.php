@@ -92,17 +92,17 @@ class BaseType extends Node implements IType
 	}
 }
 
-abstract class ValueGenericType extends BaseType
+abstract class SingleGenericType extends BaseType
 {
 	/**
-	 * the value type
+	 * The generic type
 	 * default to Any when is null
 	 * @var IType
 	 */
-	public $value_type;
+	public $generic_type;
 
-	public function __construct(IType $value_type = null) {
-		$this->value_type = $value_type;
+	public function __construct(IType $generic_type = null) {
+		$this->generic_type = $generic_type;
 	}
 
 	public function is_accept_single_type(IType $target) {
@@ -120,20 +120,20 @@ abstract class ValueGenericType extends BaseType
 		}
 
 		// if current value type is Any, then accept any types
-		if ($this->value_type === null || $this->value_type === TypeFactory::$_any) {
+		if ($this->generic_type === null || $this->generic_type === TypeFactory::$_any) {
 			return true;
 		}
 
-		if ($target->value_type === null) {
+		if ($target->generic_type === null) {
 			return false;
 		}
 
-		return $this->value_type->is_accept_type($target->value_type);
+		return $this->generic_type->is_accept_type($target->generic_type);
 	}
 
 	public function is_same_with(IType $target) {
 		if ($this->symbol === $target->symbol) {
-			if ($this->value_type === null || $this->value_type->is_same_with($target->value_type ?? TypeFactory::$_any)) {
+			if ($this->generic_type === null || $this->generic_type->is_same_with($target->generic_type ?? TypeFactory::$_any)) {
 				return true;
 			}
 		}
@@ -142,7 +142,7 @@ abstract class ValueGenericType extends BaseType
 	}
 
 	public function is_same_or_based_with(IType $target) {
-		return $this->symbol === $target->symbol && $this->value_type->is_same_or_based_with($target->value_type);
+		return $this->symbol === $target->symbol && $this->generic_type->is_same_or_based_with($target->generic_type);
 	}
 }
 
@@ -274,8 +274,7 @@ class UnionType extends BaseType
 	}
 }
 
-class MetaType extends ValueGenericType
-{
+class MetaType extends SingleGenericType {
 	public $name = _METATYPE;
 }
 
@@ -333,12 +332,11 @@ class IntType extends BaseType {
 	public $name = _INT;
 }
 
-class UIntType extends BaseType
-{
+class UIntType extends BaseType {
+
 	public $name = _UINT;
 
-	public function is_same_or_based_with(IType $target)
-	{
+	public function is_same_or_based_with(IType $target) {
 		return $this->symbol === $target->symbol || TypeFactory::$_int->symbol === $target->symbol;
 	}
 }
@@ -347,8 +345,8 @@ class BoolType extends BaseType {
 	public $name = _BOOL;
 }
 
-class IterableType extends ValueGenericType
-{
+class IterableType extends SingleGenericType {
+
 	public $name = _ITERABLE;
 
 	/**
@@ -360,7 +358,7 @@ class IterableType extends ValueGenericType
 
 	public function is_same_or_based_with(IType $target) {
 		return ($this->symbol === $target->symbol || $target->symbol === TypeFactory::$_iterable->symbol)
-			&& $this->value_type->is_same_or_based_with($target->value_type);
+			&& $this->generic_type->is_same_or_based_with($target->generic_type);
 	}
 }
 
@@ -375,22 +373,20 @@ class DictType extends IterableType {
 	// public $key_type; // just support String for Dict keys now
 }
 
-class CallableType extends BaseType implements ICallableDeclaration
-{
+class CallableType extends BaseType implements ICallableDeclaration {
+
 	public $name = _CALLABLE;
 
 	public $type;
 
 	public $parameters = [];
 
-	public function __construct(IType $return_type = null, array $parameters = [])
-	{
+	public function __construct(IType $return_type = null, array $parameters = []) {
 		$this->type = $return_type;
 		$this->parameters = $parameters;
 	}
 
-	public function is_accept_single_type(IType $target)
-	{
+	public function is_accept_single_type(IType $target) {
 		if ($target === TypeFactory::$_none || $this === TypeFactory::$_callable) {
 			return true;
 		}
@@ -430,12 +426,14 @@ class RegexType extends BaseType {
 	public $name = _REGEX;
 }
 
-class XViewType extends BaseType
-{
+class XViewType extends BaseType {
+
 	public $name = _XVIEW;
 
 	public function is_accept_single_type(IType $target) {
-		if ($target === $this || $target === TypeFactory::$_none || $target->symbol->declaration === $this->symbol->declaration) {
+		if ($target === $this
+			|| $target === TypeFactory::$_none
+			|| $target->symbol->declaration === $this->symbol->declaration) {
 			return true;
 		}
 
@@ -443,7 +441,7 @@ class XViewType extends BaseType
 	}
 }
 
-class ChanType extends ValueGenericType {
+class ChanType extends SingleGenericType {
 	public $name = _CHANNEL;
 }
 

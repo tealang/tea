@@ -575,8 +575,8 @@ class TeaCoder
 			return null;
 		}
 		elseif ($node instanceof IterableType) {
-			if ($node->value_type) {
-				return $node->value_type->render($this) . '.' . $node->name;
+			if ($node->generic_type) {
+				return $node->generic_type->render($this) . '.' . $node->name;
 			}
 		}
 		elseif ($node instanceof CallableType) {

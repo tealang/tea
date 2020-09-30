@@ -196,26 +196,26 @@ class TypeFactory
 		return $type_object;
 	}
 
-	static function create_collector_type(IType $value_type)
+	static function create_collector_type(IType $generic_type)
 	{
-		$type = new ArrayType($value_type);
+		$type = new ArrayType($generic_type);
 		$type->symbol = self::$_array->symbol;
 		$type->is_collect_mode = true;
 
 		return $type;
 	}
 
-	static function create_array_type(IType $value_type)
+	static function create_array_type(IType $generic_type)
 	{
-		$type = new ArrayType($value_type);
+		$type = new ArrayType($generic_type);
 		$type->symbol = self::$_array->symbol;
 
 		return $type;
 	}
 
-	static function create_dict_type(IType $value_type)
+	static function create_dict_type(IType $generic_type)
 	{
-		$type = new DictType($value_type);
+		$type = new DictType($generic_type);
 		$type->symbol = self::$_dict->symbol;
 
 		return $type;
@@ -229,9 +229,9 @@ class TypeFactory
 		return $type;
 	}
 
-	static function create_meta_type(IType $value_type)
+	static function create_meta_type(IType $generic_type)
 	{
-		$type = new MetaType($value_type);
+		$type = new MetaType($generic_type);
 		$type->symbol = self::$_metatype->symbol;
 
 		return $type;

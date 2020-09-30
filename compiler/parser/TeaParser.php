@@ -1904,9 +1904,9 @@ class TeaParser extends BaseParser
 		return $type;
 	}
 
-	protected function read_dots_style_compound_type(IType $value_type): IType
+	protected function read_dots_style_compound_type(IType $generic_type): IType
 	{
-		$type = $value_type;
+		$type = $generic_type;
 		$i = 0;
 		while ($this->skip_token(_DOT)) {
 			if ($i === _MAX_STRUCT_DIMENSIONS) {
@@ -1933,9 +1933,9 @@ class TeaParser extends BaseParser
 		return $type;
 	}
 
-	protected function read_bracket_style_compound_type(IType $value_type): IType
+	protected function read_bracket_style_compound_type(IType $generic_type): IType
 	{
-		$type = $value_type;
+		$type = $generic_type;
 		$i = 0;
 		while ($this->skip_token(_BRACKET_OPEN)) {
 			if ($i === _MAX_STRUCT_DIMENSIONS) {

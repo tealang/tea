@@ -462,7 +462,7 @@ class ASTChecker
 			}
 			elseif ($declared_type instanceof ArrayType && $declared_type->is_collect_mode) {
 				// process the auto collect return data logic
-				$builder = new ReturnBuilder($node, $declared_type->value_type);
+				$builder = new ReturnBuilder($node, $declared_type->generic_type);
 				$node->fixed_body = $builder->build_return_statements();
 			}
 			elseif ($declared_type !== TypeFactory::$_void && $declared_type !== TypeFactory::$_igenerator) {
@@ -883,8 +883,8 @@ class ASTChecker
 		}
 
 		// the value type, default is Any
-		if ($iterable_type instanceof IterableType and $iterable_type->value_type) {
-			$node->value_var->symbol->declaration->type = $iterable_type->value_type;
+		if ($iterable_type instanceof IterableType and $iterable_type->generic_type) {
+			$node->value_var->symbol->declaration->type = $iterable_type->generic_type;
 		}
 
 		$result_type = $this->infer_block($node);
@@ -1131,8 +1131,8 @@ class ASTChecker
 
 		// check the value type is valid
 		$infered_type = $this->infer_expression($node->value);
-		if ($master_type !== TypeFactory::$_any && $master_type->value_type) {
-			$this->assert_type_compatible($master_type->value_type, $infered_type, $node->value);
+		if ($master_type !== TypeFactory::$_any && $master_type->generic_type) {
+			$this->assert_type_compatible($master_type->generic_type, $infered_type, $node->value);
 		}
 	}
 
@@ -1311,7 +1311,7 @@ class ASTChecker
 				throw $this->new_syntax_error("Index type for Array accessing should be UInt, '{$right_type->name}' supplied.", $node->right);
 			}
 
-			$infered_type = $left_type->value_type;
+			$infered_type = $left_type->generic_type;
 		}
 		elseif ($left_type instanceof DictType) {
 			if (TypeFactory::is_dict_key_directly_supported_type($right_type)) {
@@ -1327,7 +1327,7 @@ class ASTChecker
 				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$right_type->name}' supplied.", $node->right);
 			}
 
-			$infered_type = $left_type->value_type;
+			$infered_type = $left_type->generic_type;
 		}
 		elseif ($left_type instanceof AnyType) {
 			// 仅允许将实际类型为Dict的用于这类情况
@@ -1359,12 +1359,12 @@ class ASTChecker
 				throw $this->new_syntax_error("Cannot use key accessing for type '{$type_name}'.", $node);
 			}
 
-			$value_types = [];
+			$member_types = [];
 			foreach ($left_type->types as $member_type) {
-				$value_types[] = $member_type;
+				$member_types[] = $member_type;
 			}
 
-			$infered_type = $this->reduce_types($value_types);
+			$infered_type = $this->reduce_types($member_types);
 		}
 		else {
 			$type_name = $this->get_type_name($left_type);
@@ -1575,14 +1575,14 @@ class ASTChecker
 			return TypeFactory::$_array;
 		}
 
-		$infered_value_types = [];
+		$infered_item_types = [];
 		foreach ($node->items as $item) {
-			$infered_value_types[] = $this->infer_expression($item);
+			$infered_item_types[] = $this->infer_expression($item);
 		}
 
-		$value_type = $this->reduce_types($infered_value_types);
+		$item_type = $this->reduce_types($infered_item_types);
 
-		return TypeFactory::create_array_type($value_type);
+		return TypeFactory::create_array_type($item_type);
 	}
 
 	private function infer_dict_expression(DictExpression $node, string $name = null): IType
@@ -1609,9 +1609,9 @@ class ASTChecker
 			$infered_value_types[] = $this->infer_expression($item->value);
 		}
 
-		$value_type = $this->reduce_types($infered_value_types);
+		$generic_type = $this->reduce_types($infered_value_types);
 
-		return TypeFactory::create_dict_type($value_type);
+		return TypeFactory::create_dict_type($generic_type);
 	}
 
 	private function infer_callback_argument(CallbackArgument $node): ?IType
@@ -1629,9 +1629,9 @@ class ASTChecker
 	private function check_type(IType $type)
 	{
 		if ($type instanceof BaseType) {
-			if ($type instanceof ValueGenericType) {
+			if ($type instanceof SingleGenericType) {
 				// check the value type
-				$type->value_type !== null && $this->check_type($type->value_type);
+				$type->generic_type !== null && $this->check_type($type->generic_type);
 			}
 			elseif ($type instanceof UnionType) {
 				foreach ($type->types as $member) {
@@ -1760,7 +1760,7 @@ class ASTChecker
 
 				// the actual called return type of MetaType for Variable is it's value type
 				if ($infered instanceof MetaType and $callee->symbol->declaration instanceof VariableDeclaration) {
-					$infered = $infered->value_type;
+					$infered = $infered->generic_type;
 				}
 			}
 		}
@@ -1804,7 +1804,7 @@ class ASTChecker
 
 			// if is MetaType, use the Declaration of it's value type
 			if ($callee_declar instanceof MetaType) {
-				$callee_declar = $callee_declar->value_type->symbol->declaration;
+				$callee_declar = $callee_declar->generic_type->symbol->declaration;
 			}
 		}
 		else {
@@ -2165,8 +2165,8 @@ class ASTChecker
 			elseif ($declar->type === TypeFactory::$_callable) {
 				// for Callable type parameters
 			}
-			elseif ($declar->type instanceof MetaType and $declar->type->value_type instanceof ClassKindredIdentifier) {
-				$declar = $this->require_classkindred_declaration($declar->type->value_type);
+			elseif ($declar->type instanceof MetaType and $declar->type->generic_type instanceof ClassKindredIdentifier) {
+				$declar = $this->require_classkindred_declaration($declar->type->generic_type);
 			}
 			else {
 				throw $this->new_syntax_error("Invalid callable expression.", $node);
@@ -2238,9 +2238,9 @@ class ASTChecker
 			// 	$this->attach_namespace_member_symbol($master->symbol->declaration, $node);
 			// }
 			if ($master_type instanceof MetaType) { // includes static call for class members
-				$declaration = $master_type->value_type->symbol->declaration;
+				$declaration = $master_type->generic_type->symbol->declaration;
 				if (!$declaration instanceof ClassDeclaration) {
-					$declaration = $declaration->type->value_type->symbol->declaration;
+					$declaration = $declaration->type->generic_type->symbol->declaration;
 				}
 
 				$node->symbol = $this->require_class_member_symbol($declaration, $node);
@@ -2568,18 +2568,18 @@ class ASTChecker
 	static function get_type_name(IType $type)
 	{
 		if ($type instanceof IterableType) {
-			if ($type->value_type === null) {
-				$value_type_name = _ANY;
+			if ($type->generic_type === null) {
+				$generic_type_name = _ANY;
 			}
 			else {
-				$value_type_name = self::get_type_name($type->value_type);
+				$generic_type_name = self::get_type_name($type->generic_type);
 			}
 
-			$name = "{$value_type_name}.{$type->name}";
+			$name = "{$generic_type_name}.{$type->name}";
 		}
 		elseif ($type instanceof MetaType) {
-			$value_type_name = self::get_type_name($type->value_type);
-			$name = "{$value_type_name}." . _DOT_SIGN_METATYPE;
+			$generic_type_name = self::get_type_name($type->generic_type);
+			$name = "{$generic_type_name}." . _DOT_SIGN_METATYPE;
 		}
 		elseif ($type instanceof ICallableDeclaration) {
 			$args = [];
