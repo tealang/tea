@@ -14,8 +14,8 @@ const
 	DS = '/',
 
 	// some basic settings
-	_MAX_NS_LEVELS = 3,
-	_MAX_STRUCT_DIMENSIONS = 12,
+	_NS_LEVELS_MAX = 3,
+	_STRUCT_DIMENSIONS_MAX = 12,
 	_BUILTIN_NS = 'tea/builtin',
 	_UNIT_OPTIONAL_KEYS = ['type', 'loader'],
 

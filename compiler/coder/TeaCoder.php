@@ -1038,7 +1038,7 @@ class TeaCoder
 		$body = $this->render_control_structure_body($node);
 
 		return $node->do_the_first
-			? "while is first $test $body"
+			? "while #first $test $body"
 			: "while $test $body";
 	}
 

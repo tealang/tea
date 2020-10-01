@@ -1024,8 +1024,8 @@ class PHPParserLite extends BaseParser
 
 		$i = 0;
 		foreach ($names as $kind) {
-			if ($i === _MAX_STRUCT_DIMENSIONS) {
-				throw $this->new_parse_error('The dimensions of Array/Dict exceeds, the max is ' . _MAX_STRUCT_DIMENSIONS);
+			if ($i === _STRUCT_DIMENSIONS_MAX) {
+				throw $this->new_parse_error('The dimensions of Array/Dict exceeds, the max is ' . _STRUCT_DIMENSIONS_MAX);
 			}
 
 			if ($kind === _DOT_SIGN_ARRAY) {

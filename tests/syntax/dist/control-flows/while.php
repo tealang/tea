@@ -15,11 +15,6 @@ catch (\Exception $ex) {
 	// no any
 }
 
-do {
-	$i -= 1;
-	break;
-} while ($i > 5);
-
 $i = 0;
 while (1) {
 	while (true) {

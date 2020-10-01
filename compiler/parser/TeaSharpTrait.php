@@ -263,8 +263,8 @@ trait TeaSharpTrait
 		}
 
 		array_unshift($names, $domain);
-		if (count($names) > _MAX_NS_LEVELS) {
-			throw $this->new_parse_error(sprintf("It's too many namespace levels, the max levels is %d.", _MAX_NS_LEVELS));
+		if (count($names) > _NS_LEVELS_MAX) {
+			throw $this->new_parse_error(sprintf("It's too many namespace levels, the max levels is %d.", _NS_LEVELS_MAX));
 		}
 
 		$ns = new NamespaceIdentifier($names);

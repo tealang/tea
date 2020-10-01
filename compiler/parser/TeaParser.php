@@ -773,16 +773,16 @@ class TeaParser extends BaseParser
 	protected function read_while_block(string $label = null)
 	{
 		// while test_expression {}
-		// while #first or test_expression {}
+		// while #first or test_expression {} // less useful, removed
 
-		$do_the_first = false;
-		if ($this->skip_token_ignore_space(_SHARP)) {
-			if (!$this->skip_token_ignore_space(_FIRST) || !$this->skip_token_ignore_space(_OR)) {
-				throw $this->new_unexpected_error();
-			}
+		// $do_the_first = false;
+		// if ($this->skip_token_ignore_space(_SHARP)) {
+		// 	if (!$this->skip_token_ignore_space(_FIRST) || !$this->skip_token_ignore_space(_OR)) {
+		// 		throw $this->new_unexpected_error();
+		// 	}
 
-			$do_the_first = true;
-		}
+		// 	$do_the_first = true;
+		// }
 
 		$test = $this->read_expression();
 		$master_block = $this->factory->create_while_block($test);
@@ -790,12 +790,12 @@ class TeaParser extends BaseParser
 
 		$this->read_block_body($master_block);
 
-		if ($do_the_first) {
-			$master_block->do_the_first = true;
-			if ($this->skip_token_ignore_empty(_ELSE) || $this->skip_token_ignore_empty(_ELSEIF)) {
-				throw $this->new_unexpected_error();
-			}
-		}
+		// if ($do_the_first) {
+		// 	$master_block->do_the_first = true;
+		// 	if ($this->skip_token_ignore_empty(_ELSE) || $this->skip_token_ignore_empty(_ELSEIF)) {
+		// 		throw $this->new_unexpected_error();
+		// 	}
+		// }
 		// else { // do not support else/elseif in while-block
 		// 	// the while condition would be test in every loop, so need a tmp var to record is looped
 		// 	$else_block = $this->try_read_else_block();
@@ -1909,8 +1909,8 @@ class TeaParser extends BaseParser
 		$type = $generic_type;
 		$i = 0;
 		while ($this->skip_token(_DOT)) {
-			if ($i === _MAX_STRUCT_DIMENSIONS) {
-				throw $this->new_parse_error('The dimensions of Array/Dict exceeds, the max is ' . _MAX_STRUCT_DIMENSIONS);
+			if ($i === _STRUCT_DIMENSIONS_MAX) {
+				throw $this->new_parse_error('The dimensions of Array/Dict exceeds, the max is ' . _STRUCT_DIMENSIONS_MAX);
 			}
 
 			$kind = $this->scan_token();
@@ -1938,8 +1938,8 @@ class TeaParser extends BaseParser
 		$type = $generic_type;
 		$i = 0;
 		while ($this->skip_token(_BRACKET_OPEN)) {
-			if ($i === _MAX_STRUCT_DIMENSIONS) {
-				throw $this->new_parse_error('The dimensions of Array/Dict exceeds, the max is ' . _MAX_STRUCT_DIMENSIONS);
+			if ($i === _STRUCT_DIMENSIONS_MAX) {
+				throw $this->new_parse_error('The dimensions of Array/Dict exceeds, the max is ' . _STRUCT_DIMENSIONS_MAX);
 			}
 
 			if ($this->skip_token(_COLON)) {

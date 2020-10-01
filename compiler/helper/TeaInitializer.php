@@ -50,8 +50,8 @@ class TeaInitializer
 		}
 
 		$levels = count($components);
-		if ($levels > _MAX_NS_LEVELS) {
-			throw new Exception(sprintf("It's too many namespace levels, the max levels is %d.", _MAX_NS_LEVELS));
+		if ($levels > _NS_LEVELS_MAX) {
+			throw new Exception(sprintf("It's too many namespace levels, the max levels is %d.", _NS_LEVELS_MAX));
 		}
 
 		for ($i = 1; $i < $levels; $i++) {

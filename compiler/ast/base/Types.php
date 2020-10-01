@@ -286,6 +286,7 @@ class VoidType extends BaseType {
 }
 
 class NoneType extends BaseType {
+
 	public $name = _NONE;
 
 	public function get_nullable_instance(): IType {
@@ -323,7 +324,7 @@ class StringType extends BaseType {
 }
 
 class FloatType extends BaseType {
-	const ACCEPT_TYPES = [_INT, _UINT];  // Int/UInt 作为 Float 时可能会丢失精度
+	const ACCEPT_TYPES = [_INT, _UINT];  // Int/UInt 实际转换为 Float 时可能会丢失精度
 	public $name = _FLOAT;
 }
 
