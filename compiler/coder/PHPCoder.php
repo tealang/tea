@@ -812,14 +812,22 @@ class PHPCoder extends TeaCoder
 
 	public function render_normal_assignment(Assignment $node)
 	{
-		$master = $node->master instanceof SquareAccessing
-			? $node->master->expression->render($this) . '[]'
-			: $node->master->render($this);
+		$master = $node->master;
+		$right = $node->value->render($this);
 
-		return sprintf('%s = %s',
-			$master,
-			$node->value->render($this)
-		) . static::STATEMENT_TERMINATOR;
+		if ($master instanceof SquareAccessing) {
+			$expr = $node->master->expression->render($this);
+			if ($master->is_prefix) {
+				return "array_unshift($expr, $right)" . static::STATEMENT_TERMINATOR;
+			}
+
+			$master =  "{$expr}[]";
+		}
+		else {
+			$master = $master->render($this);
+		}
+
+		return sprintf('%s = %s', $master, $right) . static::STATEMENT_TERMINATOR;
 	}
 
 	public function render_html_escape_expression(HTMLEscapeExpression $node)

@@ -2,15 +2,23 @@
 namespace tea\tests\syntax;
 
 // ---------
-$list = ['a', 'b'];
+$items = ['a', 'b'];
 
-$list[] = 'c';
+$items[] = 'c';
 
-var_dump($list);
+var_dump($items);
 
-$last_element = array_pop($list);
+$last_element = array_pop($items);
 
 var_dump($last_element);
+
+array_unshift($items, 'd');
+
+var_dump($items);
+
+$first_element = array_shift($items);
+
+var_dump($first_element, $items);
 // ---------
 
 // program end

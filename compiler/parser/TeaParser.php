@@ -1229,8 +1229,18 @@ class TeaParser extends BaseParser
 		if ($next === LF || $next === _INLINE_COMMENT_MARK) {
 			$is_vertical_layout = true;
 		}
-		elseif ($next === _BRACKET_CLOSE) {
-			//
+		elseif ($next === _BRACKET_CLOSE and $this->skip_token(_BRACKET_CLOSE)) {
+			if ($next = $this->get_token() and TeaHelper::is_identifier_name($next)) {
+				$this->scan_token();
+				$identifer = $this->factory->create_identifier($next);
+				$identifer->pos = $this->pos;
+				$expr = new SquareAccessing($identifer, true);
+			}
+			else {
+				$expr = new ArrayLiteral();
+			}
+
+			return $expr;
 		}
 		elseif ($next === _COLON) {
 			// that is an empty Dict
