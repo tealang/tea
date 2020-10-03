@@ -1037,9 +1037,9 @@ class TeaCoder
 		$test = $node->condition->render($this);
 		$body = $this->render_control_structure_body($node);
 
-		return $node->do_the_first
-			? "while #first $test $body"
-			: "while $test $body";
+		// return $node->do_the_first ? "while #first $test $body" : "while $test $body";
+
+		return "while $test $body";
 	}
 
 	public function render_loop_block(LoopBlock $node)

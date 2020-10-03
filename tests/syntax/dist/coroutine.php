@@ -10,7 +10,7 @@ function co_test() {
 	foreach (\xrange(1, 5) as $i) {
 		\Swoole\Coroutine::create(function () use(&$count, &$i) {
 			foreach (\xrange(1, 5) as $j) {
-				usleep(10000);
+				usleep(1000);
 
 				$count += 1;
 

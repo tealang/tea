@@ -40,7 +40,7 @@ class TeaHelper
 {
 	/**
 	 * Check token is a number
-	 * and return the number base type when is a number format
+	 * return the number base type when is a number format
 	 *
 	 * @return string 	the number base type (_BASE_DECIMAL, _BASE_HEX, _BASE_OCTAL, _BASE_BINARY)
 	 */

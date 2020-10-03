@@ -213,6 +213,7 @@ const __AUTOLOADS = [
 	'Tea\SuperVariableDeclaration' => 'ast/declaration/VariableDeclaration.php',
 	'Tea\RuleOptions' => 'ast/declaration/VariableDeclaration.php',
 	'Tea\ParameterDeclaration' => 'ast/declaration/VariableDeclaration.php',
+	'Tea\SquareAccessing' => 'ast/expression/Accessing.php',
 	'Tea\KeyAccessing' => 'ast/expression/Accessing.php',
 	'Tea\MemberAccessing' => 'ast/expression/Accessing.php',
 	'Tea\ArrayExpression' => 'ast/expression/ArrayDictExpression.php',

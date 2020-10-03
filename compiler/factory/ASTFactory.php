@@ -257,7 +257,8 @@ class ASTFactory
 				$this->remove_defer_check($assignable);
 			}
 		}
-		elseif ($assignable instanceof AccessingIdentifier || $assignable instanceof KeyAccessing) {
+		elseif ($assignable instanceof IAssignable) {
+			// includes AccessingIdentifier / KeyAccessing / SquareAccessing
 			// post-check required
 		}
 		else {

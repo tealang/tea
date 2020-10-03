@@ -414,7 +414,8 @@ class PHPCoder extends TeaCoder
 			// 	$item = '&' . $item;
 			// }
 
-			// 统一处理成引用，因为这些变量的作用域应是属于延伸，故不能处理成拷贝
+			// 某些情况下不能检测出是否有被改变，如调用了外部实现的时候
+			// 统一处理成引用，因为这些变量的作用域应是属于延伸，处理成拷贝语意也不合理
 			$item = '&' . $item;
 
 			$items[] = $item;
@@ -757,12 +758,12 @@ class PHPCoder extends TeaCoder
 		$test = $node->condition->render($this);
 		$body = $this->render_control_structure_body($node);
 
-		if ($node->do_the_first) {
-			$code = sprintf('do %s while (%s);', $body, $test);
-		}
-		else {
+		// if ($node->do_the_first) {
+		// 	$code = sprintf('do %s while (%s);', $body, $test);
+		// }
+		// else {
 			$code = sprintf('while (%s) %s', $test, $body);
-		}
+		// }
 
 		if ($node->except) {
 			$code = $this->wrap_with_except_block($node->except, $code);
@@ -807,6 +808,18 @@ class PHPCoder extends TeaCoder
 		$value = $node->value->render($this);
 
 		return "{$master}[{$key}] = {$value}" . static::STATEMENT_TERMINATOR;
+	}
+
+	public function render_normal_assignment(Assignment $node)
+	{
+		$master = $node->master instanceof SquareAccessing
+			? $node->master->expression->render($this) . '[]'
+			: $node->master->render($this);
+
+		return sprintf('%s = %s',
+			$master,
+			$node->value->render($this)
+		) . static::STATEMENT_TERMINATOR;
 	}
 
 	public function render_html_escape_expression(HTMLEscapeExpression $node)
@@ -1235,9 +1248,28 @@ class PHPCoder extends TeaCoder
 		return $code;
 	}
 
+	public function render_square_accessing(SquareAccessing $node)
+	{
+		$master = $this->render_master_expression($node->expression);
+
+		if ($node->is_prefix) {
+			$code = "array_shift({$master})";
+		}
+		else {
+			$code = "array_pop({$master})";
+		}
+
+		return $code;
+	}
+
 	public function render_key_accessing(KeyAccessing $node)
 	{
 		$master = $this->render_master_expression($node->left);
+
+		if ($node->right === null) {
+			return "{$master}[]";
+		}
+
 		$key = $node->right->render($this);
 
 		if (isset($node->right->infered_type)) {

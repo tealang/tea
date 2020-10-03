@@ -19,7 +19,7 @@ class WhileBlock extends ControlBlock implements IExceptAble, ILoopKindredBlock,
 
 	public $condition;
 
-	public $do_the_first;
+	// public $do_the_first;
 
 	public function __construct(BaseExpression $condition)
 	{

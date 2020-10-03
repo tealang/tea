@@ -43,6 +43,10 @@ class ASTHelper
 			return true;
 		}
 
+		if ($expr instanceof SquareAccessing && self::is_value_mutable($expr->expression)) {
+			return true;
+		}
+
 		return false;
 	}
 

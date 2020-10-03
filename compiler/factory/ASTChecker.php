@@ -1145,30 +1145,38 @@ class ASTChecker
 		}
 
 		$master = $node->master;
-		if ($master instanceof KeyAccessing) {
+
+		if ($master instanceof AccessingIdentifier) {
+			$master_type = $this->infer_accessing_identifier($master);
+		}
+		elseif ($master instanceof KeyAccessing) {
 			$master_type = $this->infer_key_accessing($master); // it should be not null
 
-			// for generates the use-variables for lambda
-			if (isset($master->left->lambda)) {
-				$master->left->lambda->mutating_variable_names[] = $master->left->name;
-			}
+			// // for generates the use-variables for lambda
+			// if (isset($master->left->lambda)) {
+			// 	$master->left->lambda->mutating_variable_names[] = $master->left->name;
+			// }
 		}
-		elseif ($master instanceof AccessingIdentifier) {
-			$master_type = $this->infer_accessing_identifier($master);
+		elseif ($master instanceof SquareAccessing) {
+			$master_type = $this->infer_square_accessing($master); // it should be not null
 		}
 		else {
 			// the PlainIdentifier
 			$master_type = $master->symbol->declaration->type;
 
-			// for generates the use-variables for lambda
-			if (isset($master->lambda)) {
-				$master->lambda->mutating_variable_names[] = $master->name;
-			}
+			// // for generates the use-variables for lambda
+			// if (isset($master->lambda)) {
+			// 	$master->lambda->mutating_variable_names[] = $master->name;
+			// }
 		}
 
 		if (!ASTHelper::is_reassignable_expression($master)) {
 			if ($master instanceof KeyAccessing) {
 				throw $this->new_syntax_error("Cannot change a immutable item.", $master->left);
+			}
+			elseif ($master instanceof SquareAccessing) {
+				dump($master);
+				throw $this->new_syntax_error("Cannot change a immutable item.", $master);
 			}
 			else {
 				throw $this->new_syntax_error("Cannot assign to a final/non-assignable item.", $master);
@@ -1211,9 +1219,6 @@ class ASTChecker
 			case DictLiteral::KIND:
 				$infered_type = $this->infer_dict_expression($node);
 				break;
-			case KeyAccessing::KIND:
-				$infered_type = $this->infer_key_accessing($node);
-				break;
 			case UnescapedStringLiteral::KIND:
 			case EscapedStringLiteral::KIND:
 				$infered_type = TypeFactory::$_string;
@@ -1229,6 +1234,12 @@ class ASTChecker
 			// -------
 			case AccessingIdentifier::KIND:
 				$infered_type = $this->infer_accessing_identifier($node);
+				break;
+			case KeyAccessing::KIND:
+				$infered_type = $this->infer_key_accessing($node);
+				break;
+			case SquareAccessing::KIND:
+				$infered_type = $this->infer_square_accessing($node);
 				break;
 			case VariableIdentifier::KIND:
 				$infered_type = $this->infer_variable_identifier($node);
@@ -1301,19 +1312,54 @@ class ASTChecker
 		return $infered_type;
 	}
 
+	private function infer_square_accessing(SquareAccessing $node): IType
+	{
+		$body_type = $this->infer_expression($node->expression);
+
+		if ($body_type instanceof ArrayType) {
+			$infered_type = $body_type->generic_type;
+		}
+		elseif ($body_type instanceof AnyType) {
+			$infered_type = TypeFactory::$_any;
+		}
+		elseif ($body_type instanceof UnionType) {
+			if (!$body_type->is_all_array_types()) {
+				$type_name = $this->get_type_name($body_type);
+				throw $this->new_syntax_error("Cannot use square accessing for type '{$type_name}'.", $node);
+			}
+
+			$member_value_types = [];
+			foreach ($body_type->types as $member) {
+				$member_value_types[] = $member->generic_type;
+			}
+
+			$infered_type = $this->reduce_types($member_value_types);
+		}
+		else {
+			$type_name = $this->get_type_name($body_type);
+			throw $this->new_syntax_error("Cannot use square accessing for type '{$type_name}'.", $node);
+		}
+
+		return $infered_type ?? TypeFactory::$_any;
+	}
+
 	private function infer_key_accessing(KeyAccessing $node): IType
 	{
 		$left_type = $this->infer_expression($node->left);
-		$right_type = $this->infer_expression($node->right);
+		$right_type = $node->right ? $this->infer_expression($node->right) : null;
 
 		if ($left_type instanceof ArrayType) {
-			if ($right_type !== TypeFactory::$_uint) {
+			if ($node->right and $right_type !== TypeFactory::$_uint) {
 				throw $this->new_syntax_error("Index type for Array accessing should be UInt, '{$right_type->name}' supplied.", $node->right);
 			}
 
 			$infered_type = $left_type->generic_type;
 		}
 		elseif ($left_type instanceof DictType) {
+			if ($node->right === null) {
+				throw $this->new_syntax_error("Invalid accessing for Dict.", $node);
+			}
+
 			if (TypeFactory::is_dict_key_directly_supported_type($right_type)) {
 				// okay
 			}
@@ -1324,14 +1370,16 @@ class ASTChecker
 			// 	$node->right->infered_type = $right_type;
 			// }
 			else {
-				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$right_type->name}' supplied.", $node->right);
+				$type_name = $this->get_type_name($right_type);
+				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$type_name}' supplied.", $node->right);
 			}
 
 			$infered_type = $left_type->generic_type;
 		}
 		elseif ($left_type instanceof AnyType) {
-			// 仅允许将实际类型为Dict的用于这类情况
-			if (!TypeFactory::is_dict_key_directly_supported_type($right_type)) {
+			// 无key时，为数组访问
+			// 否则仅允许将实际类型为Dict的用于这类情况
+			if ($node->right and !TypeFactory::is_dict_key_directly_supported_type($right_type)) {
 				$type_name = $this->get_type_name($right_type);
 				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$type_name}' supplied.", $node->right);
 			}
@@ -1359,12 +1407,12 @@ class ASTChecker
 				throw $this->new_syntax_error("Cannot use key accessing for type '{$type_name}'.", $node);
 			}
 
-			$member_types = [];
-			foreach ($left_type->types as $member_type) {
-				$member_types[] = $member_type;
+			$member_value_types = [];
+			foreach ($left_type->types as $member) {
+				$member_value_types[] = $member->generic_type;
 			}
 
-			$infered_type = $this->reduce_types($member_types);
+			$infered_type = $this->reduce_types($member_value_types);
 		}
 		else {
 			$type_name = $this->get_type_name($left_type);
@@ -2007,7 +2055,8 @@ class ASTChecker
 		$member = $this->require_accessing_identifier_declaration($node);
 		switch ($member::KIND) {
 			case FunctionDeclaration::KIND:
-				return TypeFactory::$_callable;
+				$infered = TypeFactory::$_callable;
+				break;
 
 			case MaskedDeclaration::KIND:
 				if ($member->parameters !== null) {
@@ -2017,14 +2066,18 @@ class ASTChecker
 			case PropertyDeclaration::KIND:
 			case ClassConstantDeclaration::KIND:
 			case ClassDeclaration::KIND:
-				return $member->type;
+				$infered = $member->type;
+				break;
 
 			// case NamespaceDeclaration::KIND:
-			// 	return TypeFactory::$_namespace;
+			// 	$infered = TypeFactory::$_namespace;
+			// 	break;
 
 			default:
 				throw new UnexpectNode($member);
 		}
+
+		return $infered;
 	}
 
 	private function infer_regular_expression(RegularExpression $node): IType
@@ -2565,7 +2618,7 @@ class ASTChecker
 		return $declaration->name;
 	}
 
-	static function get_type_name(IType $type)
+	static function get_type_name(?IType $type)
 	{
 		if ($type instanceof IterableType) {
 			if ($type->generic_type === null) {
@@ -2598,7 +2651,7 @@ class ASTChecker
 			$name = join('|', $names);
 		}
 		else {
-			$name = $type->name;
+			$name = $type ? $type->name : '-';
 		}
 
 		return $name;

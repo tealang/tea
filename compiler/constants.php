@@ -71,7 +71,8 @@ const
 	_ASSIGN = '=', _EQUAL = '==', _NOT_EQUAL = '!=', _IDENTICAL = '===', _NOT_IDENTICAL = '!==',
 	_NOT = 'not', _AND = 'and', _OR = 'or', // bool
 	_NONE_COALESCING = '??', _CONDITIONAL = '?',
-	_DOT = '.', _NOTIFY = '->', _ARROW = '=>', _RELAY = '==>', _DOUBLE_COLON = '::',
+	_DOT = '.', _DOUBLE_COLON = '::',
+	_PUT = '<-', _NOTIFY = '->', _ARROW = '=>', _RELAY = '==>',
 	_COLLECT = '>>',
 	_SHIFT_LEFT = '<<', _SHIFT_RIGHT = '>>',
 

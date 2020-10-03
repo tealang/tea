@@ -772,8 +772,8 @@ class TeaParser extends BaseParser
 
 	protected function read_while_block(string $label = null)
 	{
-		// while test_expression {}
-		// while #first or test_expression {} // less useful, removed
+		// eg. while test_expression {}
+		// eg. while #first or test_expression {} // less useful, removed
 
 		// $do_the_first = false;
 		// if ($this->skip_token_ignore_space(_SHARP)) {
@@ -872,7 +872,7 @@ class TeaParser extends BaseParser
 				break;
 
 			case _BRACKET_OPEN:
-				$expression = $this->read_arraylike_expression();
+				$expression = $this->read_bracket_expression();
 				break;
 
 			// case _BRACE_OPEN: // the object declaration begin
@@ -1223,17 +1223,16 @@ class TeaParser extends BaseParser
 		return $token;
 	}
 
-	protected function read_arraylike_expression()
+	protected function read_bracket_expression()
 	{
-		$is_associative = false;
-		$has_non_literal_key = false;
-		$has_non_literal_value = false;
-
-		$check_token = $this->get_token_ignore_space();
-		if ($check_token === LF || $check_token === _INLINE_COMMENT_MARK) {
+		$next = $this->get_token_ignore_space();
+		if ($next === LF || $next === _INLINE_COMMENT_MARK) {
 			$is_vertical_layout = true;
 		}
-		elseif ($check_token === _COLON) {
+		elseif ($next === _BRACKET_CLOSE) {
+			//
+		}
+		elseif ($next === _COLON) {
 			// that is an empty Dict
 			$this->scan_token_ignore_space(); // skip colon
 			$this->expect_token(_BRACKET_CLOSE);
@@ -1251,15 +1250,13 @@ class TeaParser extends BaseParser
 			}
 		}
 		else {
-			// non read anything, that should be an empty Array
+			// that should be an empty Array
 			$expr = new ArrayLiteral();
 		}
 
 		isset($is_vertical_layout) and $expr->is_vertical_layout = $is_vertical_layout;
 
 		$this->expect_token_ignore_empty(_BRACKET_CLOSE);
-
-		$expr->pos = $this->pos;
 
 		return $expr;
 	}
@@ -1390,7 +1387,7 @@ class TeaParser extends BaseParser
 
 		if ($expression instanceof ArrayElementAssignment) {
 			if ($prev_operator) {
-				throw $this->new_parse_error("ArrayElementAssignment cannot use in BinaryOperation.");
+				throw $this->new_parse_error("The ArrayElementAssignment cannot use in BinaryOperation.");
 			}
 
 			return $expression;
@@ -1424,10 +1421,13 @@ class TeaParser extends BaseParser
 		$this->skip_token(_BRACKET_CLOSE);
 
 		if ($key === null) {
-			return $this->read_array_element_assignment($master);
+			// return $this->read_array_element_assignment($master);
+			$expression = new SquareAccessing($master, false);
+		}
+		else {
+			$expression = new KeyAccessing($master, $key);
 		}
 
-		$expression = new KeyAccessing($master, $key);
 		$expression->pos = $this->pos;
 
 		return $this->read_expression_combination($expression, $prev_operator);

@@ -17,7 +17,7 @@ internal co_test() {
 		// use the #co label to create a Coroutine
 		#co for j = 1 to 5 {
 			// usleep would be hooked by Swoole, and became to Coroutine inside mode
-			usleep(10000)
+			usleep(1000)
 
 			count += 1
 
@@ -27,6 +27,7 @@ internal co_test() {
 
 			// send data to the Channel
 			// put chan, str
+			// chan[] = str
 		}
 	}
 
@@ -35,6 +36,7 @@ internal co_test() {
 	// 	// receive data from the Channel
 	// 	// it would be infered to String type
 	// 	received = take chan
+		// received = []chan
 
 	// 	echo 'received: $received'
 	// }

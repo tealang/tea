@@ -20,10 +20,13 @@ const _PREFIX_OP_PRECEDENCES = [
 
 const _BINARY_OP_PRECEDENCES = [
 	// L1
-	_DOT => 1,  // class/object
-	_NOTIFY => 1, // the callback notify
+	_DOT => 1,  		// class/object
 	// () []
 	_DOUBLE_COLON => 1, // type cast
+
+	// L2
+	// _PUT => 2,		// for Channel
+	// _NOTIFY => 2, 	// for Channel and Callback
 
 	// L3
 	_EXPONENTIATION => 3, // math
@@ -63,7 +66,9 @@ const _BINARY_OP_PRECEDENCES = [
 class OperatorFactory
 {
 	static $_dot;
-	// static $_notify; // has parsed in the parser
+
+	// static $_put;
+	// static $_notify;
 
 	static $_negation;
 	static $_bitwise_not; // eg. ~0 == -1
@@ -127,9 +132,10 @@ class OperatorFactory
 		self::$_bool_not = self::create_prefix_operator(_NOT);
 
 		self::$_dot = self::create_normal_operator(_DOT);
-		// self::$_notify = self::create_normal_operator(_NOTIFY);
-
 		self::$_cast = self::create_normal_operator(_DOUBLE_COLON);
+
+		// self::$_put = self::create_normal_operator(_PUT);
+		// self::$_notify = self::create_normal_operator(_NOTIFY);
 
 		self::$_exponentiation = self::create_normal_operator(_EXPONENTIATION);
 

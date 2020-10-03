@@ -9,6 +9,28 @@
 
 namespace Tea;
 
+// eg. list[], []list
+class SquareAccessing extends BaseExpression implements IAssignable
+{
+	const KIND = 'square_accessing';
+
+	/**
+	 * @var BaseExpression
+	 */
+	public $expression;
+
+	/**
+	 * @var bool
+	 */
+	public $is_prefix;
+
+	public function __construct(BaseExpression $expression, bool $is_prefix)
+	{
+		$this->expression = $expression;
+		$this->is_prefix = $is_prefix;
+	}
+}
+
 class KeyAccessing extends BaseExpression implements IAssignable
 {
 	const KIND = 'key_accessing';
@@ -16,23 +38,24 @@ class KeyAccessing extends BaseExpression implements IAssignable
 	public $left;
 	public $right;
 
-	public function __construct(BaseExpression $left, BaseExpression $right)
+	public function __construct(BaseExpression $left, BaseExpression $right = null)
 	{
 		$this->left = $left;
 		$this->right = $right;
 	}
 }
 
-class MemberAccessing extends BaseExpression implements IAssignable
-{
-	const KIND = 'member_accessing';
+// use AccessingIdentifier instead
+// class MemberAccessing extends BaseExpression implements IAssignable
+// {
+// 	const KIND = 'member_accessing';
 
-	public $left;
-	public $right;
+// 	public $left;
+// 	public $right;
 
-	public function __construct(BaseExpression $left, BaseExpression $right)
-	{
-		$this->left = $left;
-		$this->right = $right;
-	}
-}
+// 	public function __construct(BaseExpression $left, BaseExpression $right)
+// 	{
+// 		$this->left = $left;
+// 		$this->right = $right;
+// 	}
+// }
