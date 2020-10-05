@@ -772,8 +772,8 @@ class TeaParser extends BaseParser
 
 	protected function read_while_block(string $label = null)
 	{
-		// eg. while test_expression {}
-		// eg. while #first or test_expression {} // less useful, removed
+		// e.g. while test_expression {}
+		// e.g. while #first or test_expression {} // less useful, removed
 
 		// $do_the_first = false;
 		// if ($this->skip_token_ignore_space(_SHARP)) {
@@ -1083,14 +1083,14 @@ class TeaParser extends BaseParser
 				$token .= _DOT . $fractional_part; // the real type number
 
 				if ($token[-1] === _LOW_CASE_E || $token[-1] === _UP_CASE_E) {
-					// eg. 0.123e-6 or 0.123E-6
+					// e.g. 0.123e-6 or 0.123E-6
 					return $this->read_scientific_notation_number_with($token);
 				}
 
 				return new FloatLiteral($token);
 			}
 			elseif ($token[-1] === _LOW_CASE_E || $token[-1] === _UP_CASE_E) {
-				// eg. 123e-6 or 123E-6
+				// e.g. 123e-6 or 123E-6
 				return $this->read_scientific_notation_number_with($token);
 			}
 		}
@@ -1100,7 +1100,7 @@ class TeaParser extends BaseParser
 
 	protected function read_scientific_notation_number_with(string $prefix)
 	{
-		// eg. 123e-6 or 123e+6
+		// e.g. 123e-6 or 123e+6
 
 		// '+' or '-'
 		$modifier = $this->get_token();
@@ -1520,8 +1520,8 @@ class TeaParser extends BaseParser
 		if ($this->skip_colon()) {
 			// assign or lambda mode
 
-			// eg. -> done: done_callable
-			// eg. -> done: () => {}  // a normal style lambda declaration
+			// e.g. -> done: done_callable
+			// e.g. -> done: () => {}  // a normal style lambda declaration
 			$callable = $this->read_expression();
 			if ($callable) {
 				return $this->create_callback_argument($name, $callable);
@@ -1684,8 +1684,8 @@ class TeaParser extends BaseParser
 
 	// protected function read_argument_expression()
 	// {
-	// 	// eg. &identifier
-	// 	// eg. expression
+	// 	// e.g. &identifier
+	// 	// e.g. expression
 
 	// 	if ($this->skip_token_ignore_empty(_REFERENCE)) {
 	// 		$expression = $this->read_expression();
@@ -1837,7 +1837,7 @@ class TeaParser extends BaseParser
 			return null;
 		}
 
-		// the collector feature, eg. IView >> Array
+		// the collector feature, e.g. IView >> Array
 		if ($this->skip_token_ignore_space(_COLLECT)) {
 			$target_type = $this->scan_token_ignore_space();
 			if ($target_type !== _ARRAY) {

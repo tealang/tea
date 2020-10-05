@@ -185,9 +185,9 @@ class PHPParserLite extends BaseParser
 
 	private function read_use_statement()
 	{
-		// eg. use NS\Target;
-		// eg. use NS\Target as AliasName1;
-		// eg. use NS1\NS2\{Target1, Target2 as AliasName2};
+		// e.g. use NS\Target;
+		// e.g. use NS\Target as AliasName1;
+		// e.g. use NS1\NS2\{Target1, Target2 as AliasName2};
 
 		$token = $this->scan_token_ignore_empty();
 

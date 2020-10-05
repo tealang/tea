@@ -52,7 +52,7 @@ const
 	_LOW_CASE_E = 'e', _UP_CASE_E = 'E', _ZERO = '0',
 
 	// blank chars
-	// some blank chars did not supported now, eg. \f, \v, [0x2000 - 0x200B], line separator \u2028, paragraph separator \u2029
+	// some blank chars did not supported now, e.g. \f, \v, [0x2000 - 0x200B], line separator \u2028, paragraph separator \u2029
 	_NOTHING = '', _SPACE = ' ', _TAB = "\t", _CR = "\r",
 
 	// syntax chars, operators

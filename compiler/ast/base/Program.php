@@ -51,7 +51,7 @@ class Program extends Node
 
 	public $depends_native_programs = [];
 
-	public $is_native = false; // for native programs, eg. PHP scripts
+	public $is_native = false; // for native programs, e.g. PHP scripts
 
 	public $is_external = false;
 

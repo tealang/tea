@@ -71,7 +71,7 @@ class OperatorFactory
 	// static $_notify;
 
 	static $_negation;
-	static $_bitwise_not; // eg. ~0 == -1
+	static $_bitwise_not; // e.g. ~0 == -1
 	// static $_reference;
 
 	static $_cast;

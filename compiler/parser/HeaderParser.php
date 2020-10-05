@@ -60,7 +60,7 @@ class HeaderParser extends TeaParser
 		$next = $this->get_token_ignore_space();
 		if ($next === _DOT) {
 			// the name path feature, just for class
-			// eg. Name0.Name1.KeyName
+			// e.g. Name0.Name1.KeyName
 
 			$namepath = $this->read_dot_name_components($name);
 			$name = array_pop($namepath);
@@ -80,7 +80,7 @@ class HeaderParser extends TeaParser
 		// the alias feature
 		// just for class?
 		if ($next === _AS) {
-			// eg. NS1.NS2.OriginName as DestinationName
+			// e.g. NS1.NS2.OriginName as DestinationName
 
 			if (isset($namepath)) {
 				$namepath[] = $name;

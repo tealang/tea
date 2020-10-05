@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-// eg. list[], []list
+// e.g. list[], []list
 class SquareAccessing extends BaseExpression implements IAssignable
 {
 	const KIND = 'square_accessing';

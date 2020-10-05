@@ -57,7 +57,7 @@ class ReturnBuilder
 			if ($subnode instanceof NormalStatement) {
 				$expr = $subnode->expression;
 
-				// eg. View().color('red')
+				// e.g. View().color('red')
 				if ($expr instanceof CallExpression) {
 					$this->collect_call_statement($subnode, $fixeds);
 					continue;
@@ -70,14 +70,14 @@ class ReturnBuilder
 				}
 			}
 			elseif ($subnode instanceof IAssignment) {
-				// eg. View().text = 'abc'
+				// e.g. View().text = 'abc'
 				if ($subnode->master instanceof AccessingIdentifier) {
 					$this->collect_accessing_master_assignment($subnode, $fixeds);
 					continue;
 				}
 			}
 			elseif ($subnode instanceof ControlBlock) {
-				// eg. for-in, if-elseif-else, try-catch-finally, ...
+				// e.g. for-in, if-elseif-else, try-catch-finally, ...
 				$to_fix_block = clone $subnode;
 				$to_fix_block->body = $this->collect_block($to_fix_block);
 				$subnode = $to_fix_block;

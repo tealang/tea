@@ -52,10 +52,10 @@ class IntegerLiteral extends BaseExpression implements ILiteral
 
 	/**
 	 * The string format integer data
-	 * eg. decimal 999
-	 * eg. octal 0777
-	 * eg. hex 0xfff
-	 * eg. binary 0b101010
+	 * e.g. decimal 999
+	 * e.g. octal 0777
+	 * e.g. hex 0xfff
+	 * e.g. binary 0b101010
 	 *
 	 * @var string
 	 */
