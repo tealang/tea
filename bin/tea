@@ -51,6 +51,10 @@ try {
 		halt(USAGE);
 	}
 
+	if (!is_dir($realpath)) {
+		throw new Exception("The target path '{$realpath}' is not a valid Unit directory.");
+	}
+
 	echo LF;
 	$realpath = FileHelper::normalize_path($realpath . DS);
 	$compiler = new Compiler($realpath);
