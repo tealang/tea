@@ -1335,6 +1335,9 @@ class ASTChecker
 
 			$infered_type = $this->reduce_types($member_value_types);
 		}
+		elseif ($body_type instanceof AccessingIdentifier and $body_type->symbol === TypeFactory::$_chan->symbol) {
+			$infered_type = $body_type->master;
+		}
 		else {
 			$type_name = $this->get_type_name($body_type);
 			throw $this->new_syntax_error("Cannot use square accessing for type '{$type_name}'.", $node);
@@ -2277,7 +2280,42 @@ class ASTChecker
 		return $node->symbol->declaration;
 	}
 
-	private function require_accessing_identifier_declaration(AccessingIdentifier $node): IMemberDeclaration
+	private function attach_symbol_for_metatype_node(Node $node, MetaType $master_type) {
+		$declaration = $master_type->generic_type->symbol->declaration;
+		// if (!$declaration instanceof ClassDeclaration) {
+		// 	$declaration = $declaration->type->generic_type->symbol->declaration;
+		// }
+
+		// find static member for classes
+		$symbol = $this->find_member_symbol_in_class($declaration, $node->name);
+		if ($symbol === null) {
+			if ($node->name === _DOT_SIGN_CHAN) {
+				// for Chan type
+				$chan_type = TypeFactory::create_chan_type($master_type);
+				$node->symbol = $chan_type->symbol;
+				return;
+			}
+			else {
+				throw $this->new_syntax_error("Member '{$node->name}' not found in '{$declaration->name}'", $node);
+			}
+		}
+
+		// check static member
+
+		$node->symbol = $symbol;
+		$node_declaration = $symbol->declaration;
+		if (!$node_declaration->is_static) {
+			throw $this->new_syntax_error("Invalid to accessing a non-static member", $node);
+		}
+
+		if (!$node_declaration->is_accessable_for_class($node->master)) {
+			throw $this->new_syntax_error("Cannot accessing the private/protected members", $node);
+		}
+	}
+
+	// includes BuiltinTypeClassDeclaration
+	private function require_accessing_identifier_declaration(AccessingIdentifier $node): IDeclaration
+	// private function require_accessing_identifier_declaration(AccessingIdentifier $node): IMemberDeclaration
 	{
 		$master = $node->master;
 		$master_type = $this->infer_expression($master);
@@ -2290,22 +2328,8 @@ class ASTChecker
 			// elseif ($master_type === TypeFactory::$_namespace) {
 			// 	$this->attach_namespace_member_symbol($master->symbol->declaration, $node);
 			// }
-			if ($master_type instanceof MetaType) { // includes static call for class members
-				$declaration = $master_type->generic_type->symbol->declaration;
-				if (!$declaration instanceof ClassDeclaration) {
-					$declaration = $declaration->type->generic_type->symbol->declaration;
-				}
-
-				$node->symbol = $this->require_class_member_symbol($declaration, $node);
-
-				$node_declaration = $node->symbol->declaration;
-				if (!$node_declaration->is_static) {
-					throw $this->new_syntax_error("Invalid to accessing a non-static member", $node);
-				}
-
-				if (!$node_declaration->is_accessable_for_class($master)) {
-					throw $this->new_syntax_error("Cannot accessing the private/protected members", $node);
-				}
+			if ($master_type instanceof MetaType) {
+				$this->attach_symbol_for_metatype_node($node, $master_type);
 			}
 			elseif ($master_type instanceof UnionType) {
 				throw $this->new_syntax_error("Cannot accessing the 'UnionType' targets", $node);

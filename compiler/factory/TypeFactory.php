@@ -31,6 +31,7 @@ class TypeFactory
 	static $_iterable;
 	static $_array;
 	static $_dict;
+	static $_chan;
 
 	static $_xview;
 	static $_regex;
@@ -70,6 +71,7 @@ class TypeFactory
 		self::$_iterable = self::create_type(IterableType::class);
 		self::$_array = self::create_type(ArrayType::class);
 		self::$_dict = self::create_type(DictType::class);
+		self::$_chan = self::create_type(ChanType::class);
 
 		self::$_xview = self::create_type(XViewType::class);
 		self::$_regex = self::create_type(RegexType::class);
@@ -217,6 +219,14 @@ class TypeFactory
 	{
 		$type = new DictType($generic_type);
 		$type->symbol = self::$_dict->symbol;
+
+		return $type;
+	}
+
+	static function create_chan_type(IType $generic_type)
+	{
+		$type = new ChanType($generic_type);
+		$type->symbol = self::$_chan->symbol;
 
 		return $type;
 	}

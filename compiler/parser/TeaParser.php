@@ -299,7 +299,7 @@ class TeaParser extends BaseParser
 				$node = $this->read_throw_statement();
 				break;
 			case _EXIT:
-				$node = $this->read_exit_declaration();
+				$node = $this->read_exit_statement();
 				break;
 
 			case _IF:
@@ -450,7 +450,7 @@ class TeaParser extends BaseParser
 		return $statement;
 	}
 
-	protected function read_exit_declaration()
+	protected function read_exit_statement()
 	{
 		// exit
 		// exit int expression
@@ -1890,7 +1890,7 @@ class TeaParser extends BaseParser
 			return null;
 		}
 
-		// try read Dict or Array
+		// try read Dict/Array/Chan
 		$next = $this->get_token();
 		if ($next === _BRACKET_OPEN) {
 			// the String[][:] style compound type
@@ -1916,6 +1916,10 @@ class TeaParser extends BaseParser
 
 	protected function read_dots_style_compound_type(IType $generic_type): IType
 	{
+		// e.g. String.Dict
+		// e.g. String.Array
+		// e.g. String.Chan
+
 		$type = $generic_type;
 		$i = 0;
 		while ($this->skip_token(_DOT)) {
@@ -1929,6 +1933,10 @@ class TeaParser extends BaseParser
 			}
 			elseif ($kind === _DOT_SIGN_DICT) {
 				$type = TypeFactory::create_dict_type($type);
+			}
+			elseif ($kind === _DOT_SIGN_CHAN) {
+				$type = TypeFactory::create_chan_type($type);
+				dump($type);
 			}
 			elseif ($kind === _DOT_SIGN_METATYPE) {
 				$type = TypeFactory::create_meta_type($type);

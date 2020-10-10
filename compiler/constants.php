@@ -45,7 +45,7 @@ const
 	],
 
 	// dot signs of compound types
-	_DOT_SIGN_ARRAY = 'Array', _DOT_SIGN_DICT = 'Dict', _DOT_SIGN_METATYPE = 'Type',
+	_DOT_SIGN_ARRAY = 'Array', _DOT_SIGN_DICT = 'Dict', _DOT_SIGN_CHAN = 'Chan', _DOT_SIGN_METATYPE = 'Type',
 
 	// number system
 	_BASE_BINARY = 'b', _BASE_OCTAL = 'o', _BASE_DECIMAL = '', _BASE_HEX = 'x',

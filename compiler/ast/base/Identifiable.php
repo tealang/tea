@@ -45,7 +45,7 @@ abstract class Identifiable extends BaseExpression implements ICallee, IAssignab
 	}
 }
 
-class AccessingIdentifier extends Identifiable
+class AccessingIdentifier extends Identifiable implements IType
 {
 	const KIND = 'accessing_identifier';
 

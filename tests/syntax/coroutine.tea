@@ -7,39 +7,40 @@ It would be auto add the Swoole Coroutine statements when used Coroutines
 
 #php usleep(micro_seconds UInt)
 
+internal LOOP_TIMES = 3
+
 internal co_test() {
-	// declare and initialize a String type Channel variable
-	// var chan = String.Chan()
+	// declare and initialize an Array type Channel variable
+	var chan = Array.Chan()
 
 	// produce data
-	var count
-	for i = 1 to 5 {
+	var count = 0
+	#co for i = 1 to LOOP_TIMES {
 		// use the #co label to create a Coroutine
-		#co for j = 1 to 5 {
+		for j = 1 to LOOP_TIMES {
 			// usleep would be hooked by Swoole, and became to Coroutine inside mode
-			usleep(1000)
+			usleep(10)
 
-			count += 1
-
-			// the value of variable 'i' would be aways 5 at here
-			// because currently in the process of Coroutine, that's an async mode
-			str = "No.$count\t$i\t$j"
+			// currently in the process of Coroutine, that's an async mode
+			message = [count, i, j]
 
 			// send data to the Channel
-			// put chan, str
-			// chan[] = str
+			chan[] = message
+
+			count += 1
 		}
 	}
 
 	// consume data
-	// while 1 {
-	// 	// receive data from the Channel
-	// 	// it would be infered to String type
-	// 	received = take chan
-		// received = []chan
+	#co while true {
+		usleep(200000)
 
-	// 	echo 'received: $received'
-	// }
+		// receive data from the Channel
+		// it would be infered to Array type
+		received = []chan
+
+		var_dump(received)
+	}
 
 	echo 'the Coroutine running...'
 }

@@ -244,7 +244,7 @@ class PHPParserLite extends BaseParser
 		}
 
 		// 由于PHP项目中使用的库来源多，且不一定都满足编译规则，故不能将所有"use ..."的都加入解析
-		// 确实需要解析的，需要在 __unit.th 中显示声明
+		// 确实需要解析的，需要在 __unit.th 中显式声明
 
 		$statement = new UseStatement($ns, $targets);
 		return $statement;
