@@ -37,9 +37,9 @@ class PHPParserLite extends BaseParser
 		'&&' => _AND,
 		'||' => _OR,
 		'%' => _REMAINDER,
-		'**' => _EXPONENTIATION,
-		'^' => _BITWISE_XOR,
-		'^=' => '^|=',
+		// '**' => _EXPONENTIATION,
+		// '^' => _BITWISE_XOR,
+		// '^=' => '^|=',
 	];
 
 	const PREFIX_OPERATOR_MAP = [

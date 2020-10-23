@@ -63,9 +63,8 @@ class PHPCoder extends TeaCoder
 		_AND => '&&',
 		_OR => '||',
 		_REMAINDER => '%',
-		_EXPONENTIATION => '**',
-		_BITWISE_XOR => '^',
-		'^|=' => '^=',
+		// _EXPONENTIATION => '**',
+		// _BITWISE_XOR => '^',
 	];
 
 	// precedences for MultiOperation

@@ -629,8 +629,8 @@ class TeaParser extends BaseParser
 		$this->expect_block_begin_inline();
 
 		$branches = [];
+		$i = 0;
 		while ($argument = $this->read_case_argument()) {
-
 			$this->expect_token_ignore_space(_COLON);
 			$case_branch = $this->factory->create_case_branch_block($argument);
 
@@ -638,7 +638,8 @@ class TeaParser extends BaseParser
 			while (($item = $this->read_normal_statement()) !== null) {
 				$statements[] = $item;
 
-				while ($this->skip_token_ignore_space(_INLINE_COMMENT_MARK)) {
+				// while ($this->skip_token_ignore_space(_INLINE_COMMENT_MARK)) {
+				while ($this->skip_token_ignore_empty(_INLINE_COMMENT_MARK)) {
 					$this->skip_current_line();
 				}
 
@@ -1936,7 +1937,6 @@ class TeaParser extends BaseParser
 			}
 			elseif ($kind === _DOT_SIGN_CHAN) {
 				$type = TypeFactory::create_chan_type($type);
-				dump($type);
 			}
 			elseif ($kind === _DOT_SIGN_METATYPE) {
 				$type = TypeFactory::create_meta_type($type);

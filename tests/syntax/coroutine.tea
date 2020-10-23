@@ -7,19 +7,20 @@ It would be auto add the Swoole Coroutine statements when used Coroutines
 
 #php usleep(micro_seconds UInt)
 
-internal LOOP_TIMES = 3
+internal LOOP_TIMES = 9
 
 internal co_test() {
 	// declare and initialize an Array type Channel variable
 	var chan = Array.Chan()
 
-	// produce data
 	var count = 0
+
+	// produce data
+	// use #co to create a Coroutine
 	#co for i = 1 to LOOP_TIMES {
-		// use the #co label to create a Coroutine
 		for j = 1 to LOOP_TIMES {
 			// usleep would be hooked by Swoole, and became to Coroutine inside mode
-			usleep(10)
+			usleep(1000)
 
 			// currently in the process of Coroutine, that's an async mode
 			message = [count, i, j]
@@ -33,7 +34,7 @@ internal co_test() {
 
 	// consume data
 	#co while true {
-		usleep(200000)
+		usleep(100000)
 
 		// receive data from the Channel
 		// it would be infered to Array type
@@ -46,5 +47,7 @@ internal co_test() {
 }
 
 co_test()
+
+usleep(300000)
 
 // end
