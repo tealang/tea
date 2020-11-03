@@ -337,6 +337,9 @@ class PHPParserLite extends BaseParser
 				case T_STRING:
 					$expr = $this->factory->create_identifier($token_content);
 					break;
+				case T_NS_SEPARATOR:
+					$expr = $this->read_classkindred_identifier($token);
+					break;
 				case T_CONSTANT_ENCAPSED_STRING:
 					$quote = $token_content[0];
 					$quote_content = substr($token_content, 1, -1);
@@ -360,7 +363,7 @@ class PHPParserLite extends BaseParser
 				case T_COMMENT:
 					continue 2;
 				default:
-					// $this->print_token($token);
+					$this->print_token($token);
 					throw $this->new_unexpected_error();
 			}
 		}
@@ -942,14 +945,16 @@ class PHPParserLite extends BaseParser
 		return $value;
 	}
 
-	private function read_classkindred_identifier()
+	private function read_classkindred_identifier($token = null)
 	{
 		// NS1\NS2\Target
 		// \NS1\NS2\Target
 
 		$names = [];
 
-		$token = $this->scan_token_ignore_empty();
+		if ($token === null) {
+			$token = $this->scan_token_ignore_empty();
+		}
 
 		if ($token[0] === T_NS_SEPARATOR) {
 			$names[] = _NOTHING;
