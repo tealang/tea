@@ -122,7 +122,7 @@ public _str_replace(master String, search String, replacement String) String
 
 #php implode(glue String, pieces Any) String
 
-#php explode(delimiter String, master String) Array
+#php explode(delimiter String, master String) String.Array
 
 #php count(array Any) UInt
 
@@ -232,7 +232,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	masked rune_lower() String
 	masked rune_upper() String
 	masked count_width() UInt
-	masked split(delimiter String) Array
+	masked split(delimiter String) String.Array
 	masked replace(search String, replacement String) String
 }
 

@@ -9,6 +9,11 @@
 
 namespace Tea;
 
+// support PHP8
+if (!defined('T_NAME_QUALIFIED')) {
+	define('T_NAME_QUALIFIED', 1001);  // has defined in PHP8
+}
+
 /**
  * A lite Parser uses to supported the Mixed Programming
  */
@@ -1136,7 +1141,7 @@ class PHPParserLite extends BaseParser
 
 	private function assert_identifier_token($token)
 	{
-		if (is_string($token) || $token[0] !== T_STRING) {
+		if (is_string($token) || ($token[0] !== T_STRING and $token[0] !== T_NAME_QUALIFIED)) {
 			// $this->print_token($token);
 			throw $this->new_unexpected_error();
 		}
