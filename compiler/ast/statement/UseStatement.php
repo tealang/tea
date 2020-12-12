@@ -24,8 +24,8 @@ class UseStatement extends BaseStatement
 
 	public function append_target(UseDeclaration $target)
 	{
-		if (!in_array($target, $this->targets, true)) {
-			$this->targets[] = $target;
+		if (!isset($this->targets[$target->name])) {
+			$this->targets[$target->name] = $target;
 		}
 	}
 }

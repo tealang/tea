@@ -88,6 +88,11 @@ class ASTFactory
 		$this->unit->{$key} = $value;
 	}
 
+	public function exists_use_unit(NamespaceIdentifier $ns)
+	{
+		return isset($this->unit->use_units[$ns->uri]);
+	}
+
 	public function create_use_statement(NamespaceIdentifier $ns, array $targets)
 	{
 		// add to unit uses
@@ -150,7 +155,7 @@ class ASTFactory
 		return $identifier;
 	}
 
-	private function create_builtin_identifier(string $token): BaseExpression
+	public function create_builtin_identifier(string $token): BaseExpression
 	{
 		if ($token === _THIS) {
 			$identifier = new PlainIdentifier($token);
@@ -220,14 +225,11 @@ class ASTFactory
 			$this->declaration->set_defer_check_identifier($identifier);
 		}
 		elseif (!$this->seek_symbol_in_function($identifier)) {
+			if ($this->class) {
+				$this->class->set_defer_check_identifier($identifier);
+			}
+
 			$this->declaration->set_defer_check_identifier($identifier);
-			// // add to check list
-			// if ($this->function) {
-			// 	$this->function->set_defer_check_identifier($identifier);
-			// }
-			// else {
-			// 	$this->program->set_defer_check_identifier($identifier);
-			// }
 		}
 	}
 

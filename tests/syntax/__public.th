@@ -6,6 +6,14 @@
 #use tea/tests/xview { BaseView, IViewDemo }
 #use tea/tests/PHPDemoUnit { BaseInterface, PHPClassDemo, PHP_CONST_DEMO, php_function_demo }
 
+public PHPClassInMixed1 {
+	protected PREFIX String
+	public construct(caller String = #default, items Any, some Bool = #default)
+	public get_message() String
+}
+
+public php_get_num() Int
+
 #php range(start Int, end Int, step Int = 1) Array
 
 #php usleep(micro_seconds UInt)

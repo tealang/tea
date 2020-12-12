@@ -81,9 +81,9 @@ class ASTChecker
 	private function collect_declaration_uses(IDeclaration $declaration)
 	{
 		foreach ($declaration->defer_check_identifiers as $identifier) {
-			$symbol = $this->find_symbol_with_program($this->program, $identifier->name);
+			$symbol = $identifier->symbol ?: $this->find_symbol_with_program($this->program, $identifier->name);
 			if ($symbol === null) {
-				throw $this->new_syntax_error("Symbol of '{$identifier->name}' not found.", $identifier);
+				throw $this->new_syntax_error("Symbol of '{$identifier->name}' not found", $identifier);
 			}
 
 			$dependence = $symbol->declaration;
@@ -1175,7 +1175,6 @@ class ASTChecker
 				throw $this->new_syntax_error("Cannot change a immutable item.", $master->left);
 			}
 			elseif ($master instanceof SquareAccessing) {
-				dump($master);
 				throw $this->new_syntax_error("Cannot change a immutable item.", $master);
 			}
 			else {
@@ -2471,8 +2470,7 @@ class ASTChecker
 			if ($symbol->declaration instanceof UseDeclaration) {
 				$symbol->declaration = $this->get_source_declaration_for_use($symbol->declaration);
 			}
-
-			if (!$symbol->declaration instanceof ClassKindredDeclaration) {
+			elseif (!$symbol->declaration instanceof ClassKindredDeclaration) {
 				throw $this->new_syntax_error("Declaration of '{$identifier->name}' not a classkindred declaration.", $identifier);
 			}
 

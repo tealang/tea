@@ -305,6 +305,13 @@ class AnyType extends BaseType {
 	}
 }
 
+class ObjectType extends BaseType {
+	public $name = _OBJECT;
+	public function is_accept_single_type(IType $target) {
+		return $target->symbol->declaration instanceof ClassKindredIdentifier;
+	}
+}
+
 // class ScalarType extends BaseType {
 // 	const ACCEPT_TYPES = [_STRING, _INT, _UINT, _BOOL, _XVIEW];
 // 	public $name = _SCALAR;

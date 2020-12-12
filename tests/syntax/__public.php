@@ -28,6 +28,7 @@ function demo_range(int $start, int $end): \Generator {
 
 // autoloads
 const __AUTOLOADS = [
+	'tea\tests\syntax\PHPClassInMixed1' => '_mixed1.php',
 	'tea\tests\syntax\IDemo' => 'dist/class.php',
 	'tea\tests\syntax\IDemoTrait' => 'dist/class.php',
 	'tea\tests\syntax\BaseClass' => 'dist/class.php',

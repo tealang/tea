@@ -338,16 +338,24 @@ class Compiler
 
 		// collect uses targets for Tea programs
 		foreach ($unit->programs as $program) {
-			if (!$program->is_native) {
+			// if (!$program->is_native) {
 				$normal_checker->collect_program_uses($program);
-			}
+			// }
 		}
 
-		// the native programs
 		$native_checker = ASTChecker::get_native_checker();
-		foreach ($this->native_programs as $program) {
-			self::echo_start(" - {$program->file}", LF);
-			$native_checker->check_program($program);
+		// // the native programs
+		// foreach ($this->native_programs as $program) {
+		// 	self::echo_start(" - {$program->file}", LF);
+		// 	$native_checker->check_program($program);
+		// }
+
+		// the Native programs
+		foreach ($unit->programs as $program) {
+			if ($program->is_native) {
+				self::echo_start(" - {$program->file}", LF);
+				$native_checker->check_program($program);
+			}
 		}
 
 		// the Tea programs
@@ -456,7 +464,7 @@ class Compiler
 			$message = "The public file of unit '{$ns->uri}' not found in paths: $try_paths.";
 		}
 		else {
-			$message = "The directory of unit '{$ns->uri}' not found.";
+			$message = "The directory of depends unit '{$ns->uri}' not found.";
 		}
 
 		throw new Exception($message);

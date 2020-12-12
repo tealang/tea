@@ -13,8 +13,35 @@ class TeaHeaderCoder extends TeaCoder
 {
 	const PROGRAM_HEADER = "// the public declarations\n";
 
+	protected function process_use_statments(Program $program)
+	{
+		foreach ($program->declarations as $node) {
+			$this->collect_use_statements($program, $node);
+		}
+	}
+
+	protected function collect_use_statements(Program $program, IDeclaration $declaration)
+	{
+		foreach ($declaration->uses as $use) {
+			$uri = $use->ns->uri;
+
+			// if ($use->target_name) {
+			// 	$uri .= '!'; // just to differentiate, avoid conflict with no targets use statements
+			// }
+
+			// URI相同的将合并到一条
+			if (!isset($program->uses[$uri])) {
+				$program->uses[$uri] = new UseStatement($use->ns);
+			}
+
+			$program->uses[$uri]->append_target($use);
+		}
+	}
+
 	protected function render_program_statements(Program $program)
 	{
+		$this->process_use_statments($program);
+
 		$items = parent::render_program_statements($program);
 
 		$unit_declaration = "#unit {$program->unit->ns->uri}\n";

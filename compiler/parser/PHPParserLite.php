@@ -9,9 +9,10 @@
 
 namespace Tea;
 
-// support PHP8
+// define the PHP8 constants to compatible
 if (!defined('T_NAME_QUALIFIED')) {
-	define('T_NAME_QUALIFIED', 1001);  // has defined in PHP8
+	define('T_NAME_QUALIFIED', 1001);
+	define('T_NAME_FULLY_QUALIFIED', 1002);
 }
 
 /**
@@ -28,6 +29,7 @@ class PHPParserLite extends BaseParser
 		'array' => _DICT,
 		'iterable' => _ITERABLE,
 		'callable' => _CALLABLE,
+		'object' => _OBJECT,
 	];
 
 	const METHOD_MAP = [
@@ -159,19 +161,8 @@ class PHPParserLite extends BaseParser
 			throw $this->new_parse_error("Cannot redeclare a new namespace");
 		}
 
-		$names[] = $this->expect_identifier_name();
-
-		while ($token = $this->scan_token()) {
-			if ($token === _SEMICOLON) {
-				break;
-			}
-			elseif ($token[0] === T_NS_SEPARATOR) {
-				$names[] = $this->expect_identifier_name();
-			}
-			else {
-				throw $this->new_unexpected_error();
-			}
-		}
+		$token = $this->scan_token();
+		$names = $this->read_qualified_name_with($token);
 
 		$ns = $this->create_namespace_identifier($names);
 		$this->program->ns = $ns;
@@ -201,7 +192,13 @@ class PHPParserLite extends BaseParser
 			$token = $this->scan_token_ignore_empty();
 		}
 
-		$names[] = $token[1];
+		if ($token[0] === T_NAME_QUALIFIED || $token[0] === T_NAME_FULLY_QUALIFIED) {
+			$names = explode('\\', $token[1]);
+		}
+		else {
+			$names[] = $token[1];
+		}
+
 		$alias_name = null;
 		$targets = null;
 
@@ -220,8 +217,7 @@ class PHPParserLite extends BaseParser
 					break;
 				}
 				else {
-					$this->assert_identifier_token($next);
-					$names[] = $next[1];
+					$names[] = $this->get_identifier_name($next);
 				}
 			}
 			elseif ($token[0] === T_AS) {
@@ -251,7 +247,8 @@ class PHPParserLite extends BaseParser
 		// 由于PHP项目中使用的库来源多，且不一定都满足编译规则，故不能将所有"use ..."的都加入解析
 		// 确实需要解析的，需要在 __unit.th 中显式声明
 
-		$statement = new UseStatement($ns, $targets);
+		$statement = $this->create_use_statement_when_not_exists($ns, $targets);
+
 		return $statement;
 	}
 
@@ -338,12 +335,22 @@ class PHPParserLite extends BaseParser
 			// the typed token
 			$token_type = $token[0];
 			$token_content = $token[1];
+
 			switch ($token_type) {
 				case T_STRING:
-					$expr = $this->factory->create_identifier($token_content);
+					if ($token_content === 'null') {
+						$expr = $this->factory->create_builtin_identifier('none');
+					}
+					else {
+						$expr = $this->factory->create_identifier($token_content);
+					}
 					break;
 				case T_NS_SEPARATOR:
 					$expr = $this->read_classkindred_identifier($token);
+					break;
+				case T_NAME_QUALIFIED:
+				case T_NAME_FULLY_QUALIFIED:
+					$expr = $this->read_qualified_identifier_with($token);
 					break;
 				case T_CONSTANT_ENCAPSED_STRING:
 					$quote = $token_content[0];
@@ -371,6 +378,8 @@ class PHPParserLite extends BaseParser
 					$this->print_token($token);
 					throw $this->new_unexpected_error();
 			}
+
+			$expr->pos = $this->pos;
 		}
 
 		return $expr;
@@ -618,7 +627,7 @@ class PHPParserLite extends BaseParser
 		//  */
 
 		if (preg_match('/\s+\*\s+@' . $kind . '\s+([^\s]+)/', $doc, $match)) {
-			return $this->create_type_identifier($match[1]);
+			return $this->create_doc_type_identifier($match[1]);
 		}
 
 		return null;
@@ -686,8 +695,13 @@ class PHPParserLite extends BaseParser
 				$type = TypeFactory::$_string;
 				break;
 
+			case T_NAME_FULLY_QUALIFIED:
+			case T_NAME_QUALIFIED:
+				$type = null;
+				break;
+
 			default:
-				// $this->print_token($token);
+				$this->print_token($token);
 				throw $this->new_unexpected_error();
 		}
 
@@ -859,7 +873,6 @@ class PHPParserLite extends BaseParser
 		}
 
 		if ($token[0] !== T_VARIABLE) {
-			$this->print_token($token);exit;
 			throw $this->new_unexpected_error();
 		}
 
@@ -955,43 +968,49 @@ class PHPParserLite extends BaseParser
 		// NS1\NS2\Target
 		// \NS1\NS2\Target
 
-		$names = [];
-
 		if ($token === null) {
 			$token = $this->scan_token_ignore_empty();
 		}
 
-		if ($token[0] === T_NS_SEPARATOR) {
-			$names[] = _NOTHING;
-			$names[] = $this->expect_identifier_name();
-		}
-		else {
-			$this->assert_identifier_token($token);
-			$names[] = $token[1];
-		}
-
-		while (($next = $this->get_token()) && $next[0] === T_NS_SEPARATOR) {
-			$this->scan_token();
-			$names[] = $this->expect_identifier_name();
-		}
-
-		$identifier = $this->create_classkindred_identifier(array_pop($names), $names);
+		$components = $this->read_qualified_name_with($token);
+		$identifier = $this->create_classkindred_identifier(array_pop($components), $components);
 
 		return $identifier;
 	}
 
-	private function create_classkindred_identifier(string $name, array $names = null)
+	private function create_classkindred_identifier(string $name, array $ns_components = null)
 	{
-		$identifier = new ClassKindredIdentifier($name);
+		$identifier = $this->factory->create_classkindred_identifier($name);
 		$identifier->pos = $this->pos;
 
-		if ($names) {
-			$identifier->ns = $this->create_namespace_identifier($names);
+		if ($ns_components) {
+			if ($ns_components[0] === _NOTHING) {
+				array_shift($ns_components);
+			}
+
+			$ns = $this->create_namespace_identifier($ns_components);
+
+			$target = $this->factory->append_use_target($ns, $name);
+
+			$statement = $this->create_use_statement_when_not_exists($ns, [$target]);
 		}
 
 		$this->program->set_defer_check_identifier($identifier);
 
 		return $identifier;
+	}
+
+	private function create_use_statement_when_not_exists(NamespaceIdentifier $ns, array $targets = [])
+	{
+		if ($this->factory->exists_use_unit($ns)) {
+			$statement = null;
+		}
+		else {
+			$statement = new UseStatement($ns, $targets);
+			$statement->pos = $this->pos;
+		}
+
+		return $statement;
 	}
 
 	private function read_type_identifier()
@@ -1004,25 +1023,37 @@ class PHPParserLite extends BaseParser
 
 	private function create_type_identifier(string $name, bool $nullable = false)
 	{
-		if (strpos($name, _DOT)) {
-			$identifier = $this->create_dots_style_compound_type($name);
+		$lower_case_name = strtolower($name);
+		if (isset(static::TYPE_MAP[$lower_case_name])) {
+			$name = static::TYPE_MAP[$lower_case_name];
+			$identifier = TypeFactory::get_type($name);
+		}
+		elseif (strpos($name, _BACK_SLASH) !== false) {
+			$names = explode(_BACK_SLASH, $name);
+			$identifier = $this->create_classkindred_identifier(array_pop($names), $names);
 		}
 		else {
-			$lower_case_name = strtolower($name);
-			if (isset(static::TYPE_MAP[$lower_case_name])) {
-				$name = static::TYPE_MAP[$lower_case_name];
-				$identifier = TypeFactory::get_type($name);
-			}
-			elseif (strpos($name, _BACK_SLASH) !== false) {
-				$names = explode(_BACK_SLASH, $name);
-				$identifier = $this->create_classkindred_identifier(array_pop($names), $names);
-			}
-			else {
-				$identifier = $this->create_classkindred_identifier($name);
-			}
+			$identifier = $this->create_classkindred_identifier($name);
 		}
 
 		$identifier->nullable = $nullable;
+		$identifier->pos = $this->pos;
+
+		return $identifier;
+	}
+
+	private function create_doc_type_identifier(string $name, bool $nullable = false)
+	{
+		if (strpos($name, _DOT)) {
+			$identifier = $this->create_dots_style_compound_type($name);
+			$identifier->nullable = $nullable;
+		}
+		else {
+			$identifier = $this->create_type_identifier($name, $nullable);
+		}
+
+		$identifier->pos = $this->pos;
+
 		return $identifier;
 	}
 
@@ -1092,11 +1123,53 @@ class PHPParserLite extends BaseParser
 		return $token;
 	}
 
+	private function read_qualified_identifier_with(array $token)
+	{
+		$identifier = new PlainIdentifier($token[1]);
+		$identifier->pos = $this->pos;
+		return $identifier;
+	}
+
+	private function read_qualified_name_with($token)
+	{
+		switch ($token[0]) {
+			case T_NS_SEPARATOR:
+				$names = $this->read_names_with_component(_NOTHING);
+				break;
+
+			case T_STRING:
+				$names = $this->read_names_with_component($token[1]);
+				break;
+
+			case T_NAME_QUALIFIED:
+			case T_NAME_FULLY_QUALIFIED:
+				$names = explode('\\', $token[1]);
+				break;
+
+			default:
+				// $this->print_token($token);
+				throw $this->new_unexpected_error();
+		}
+
+		return $names;
+	}
+
+	private function read_names_with_component(string $component)
+	{
+		$names = [$component];
+
+		while (($next = $this->get_token()) && $next[0] === T_NS_SEPARATOR) {
+			$this->scan_token();
+			$names[] = $this->expect_identifier_name();
+		}
+
+		return $names;
+	}
+
 	private function expect_identifier_name()
 	{
 		$token = $this->scan_token_ignore_empty();
-		$this->assert_identifier_token($token);
-		return $token[1];
+		return $this->get_identifier_name($token);
 	}
 
 	private function expect_member_identifier_name()
@@ -1139,12 +1212,13 @@ class PHPParserLite extends BaseParser
 		return false;
 	}
 
-	private function assert_identifier_token($token)
+	private function get_identifier_name($token)
 	{
-		if (is_string($token) || ($token[0] !== T_STRING and $token[0] !== T_NAME_QUALIFIED)) {
-			// $this->print_token($token);
+		if (is_string($token) || $token[0] !== T_STRING) {
 			throw $this->new_unexpected_error();
 		}
+
+		return $token[1];
 	}
 
 	private function assert_member_identifier_token($token)
@@ -1187,7 +1261,13 @@ class PHPParserLite extends BaseParser
 	private function scan_token()
 	{
 		$this->pos++;
-		return $this->tokens[$this->pos] ?? null;
+		$token = $this->tokens[$this->pos] ?? null;
+
+		if ($token[0] === T_WHITESPACE) {
+			return $this->scan_token();
+		}
+
+		return $token;
 	}
 
 	private function get_token_ignore_empty()

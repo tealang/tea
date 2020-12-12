@@ -20,6 +20,7 @@ class TypeFactory
 	static $_any;
 	static $_none;
 	static $_void;
+	static $_object;
 
 	// static $_scalar;
 	static $_string;
@@ -60,6 +61,7 @@ class TypeFactory
 		self::$_void = self::create_type(VoidType::class);
 		self::$_none = self::create_type(NoneType::class);
 		self::$_any = self::create_type(AnyType::class);
+		self::$_object = self::create_type(ObjectType::class);
 
 		// self::$_scalar = self::create_type(ScalarType::class);
 		self::$_string = self::create_type(StringType::class);
