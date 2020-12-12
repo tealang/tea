@@ -282,7 +282,6 @@ class PHPParserLite extends BaseParser
 	{
 		// we do not care about the contents, just skip ...
 
-		// var_dump($this->file);
 		$expr = null;
 		while (($token = $this->scan_token_ignore_empty()) !== null) {
 			// the string token
@@ -342,7 +341,7 @@ class PHPParserLite extends BaseParser
 						$expr = $this->factory->create_builtin_identifier('none');
 					}
 					else {
-						$expr = $this->factory->create_identifier($token_content);
+						$expr = $this->create_uncheck_identifier($token_content);
 					}
 					break;
 				case T_NS_SEPARATOR:
@@ -350,7 +349,7 @@ class PHPParserLite extends BaseParser
 					break;
 				case T_NAME_QUALIFIED:
 				case T_NAME_FULLY_QUALIFIED:
-					$expr = $this->read_qualified_identifier_with($token);
+					$expr = $this->create_uncheck_identifier($token_content);
 					break;
 				case T_CONSTANT_ENCAPSED_STRING:
 					$quote = $token_content[0];
@@ -383,6 +382,13 @@ class PHPParserLite extends BaseParser
 		}
 
 		return $expr;
+	}
+
+	private function create_uncheck_identifier(string $name)
+	{
+		$identifier = new PlainIdentifier($name);
+		$identifier->pos = $this->pos;
+		return $identifier;
 	}
 
 	private function read_bracket_expression(bool $not_opened = false, $debug_name = null)
@@ -1121,13 +1127,6 @@ class PHPParserLite extends BaseParser
 		}
 
 		return $token;
-	}
-
-	private function read_qualified_identifier_with(array $token)
-	{
-		$identifier = new PlainIdentifier($token[1]);
-		$identifier->pos = $this->pos;
-		return $identifier;
 	}
 
 	private function read_qualified_name_with($token)

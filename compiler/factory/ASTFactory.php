@@ -225,11 +225,10 @@ class ASTFactory
 			$this->declaration->set_defer_check_identifier($identifier);
 		}
 		elseif (!$this->seek_symbol_in_function($identifier)) {
-			if ($this->class) {
-				$this->class->set_defer_check_identifier($identifier);
-			}
-
 			$this->declaration->set_defer_check_identifier($identifier);
+			// if ($this->declaration->super_block instanceof ClassKindredDeclaration) {
+			// 	$this->class->set_defer_check_identifier($identifier);
+			// }
 		}
 	}
 

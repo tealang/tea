@@ -5,6 +5,8 @@
 #use tea/tests/xview
 #use tea/tests/xview { BaseView, IViewDemo }
 #use tea/tests/PHPDemoUnit { BaseInterface, PHPClassDemo, PHP_CONST_DEMO, php_function_demo }
+#use tea/tests/PHPDemoUnit { PHP_CONST_DEMO }
+#use tea/tests/xview { BaseView }
 
 public PHPClassInMixed1 {
 	protected PREFIX String
