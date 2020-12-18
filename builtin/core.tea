@@ -52,7 +52,7 @@ public is_uint(val) Bool {
 
 public uint_ensure(num Int) {
 	if num < 0 {
-		throw ErrorException('Cannot use $num as a UInt value.')
+		throw ErrorException('Cannot use $num as a UInt value')
 	}
 
 	return num
@@ -101,7 +101,7 @@ public xrange(start Int, end Int, step = 1) {
 		}
 	}
 	else {
-		throw LogicException('Parameter "step" should not be 0.');
+		throw LogicException('Parameter "step" should not be 0');
 	}
 }
 
@@ -111,7 +111,7 @@ public xrange(start Int, end Int, step = 1) {
 #php basename(path String, suffix String = #default) String
 #php realpath(path String) String
 #php file_get_contents(file String) String
-#php file_set_contents(file String, data String, flags Int = #default) UInt
+#php file_put_contents(file String, data String, flags Int = #default) UInt
 #php FILE_APPEND Int
 #php LOCK_EX Int
 

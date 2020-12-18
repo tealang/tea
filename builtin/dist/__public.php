@@ -10,7 +10,7 @@ function is_uint($val): bool {
 
 function uint_ensure(int $num): int {
 	if ($num < 0) {
-		throw new \ErrorException('Cannot use ' . $num . ' as a UInt value.');
+		throw new \ErrorException('Cannot use ' . $num . ' as a UInt value');
 	}
 
 	return $num;
@@ -57,7 +57,7 @@ function xrange(int $start, int $end, int $step = 1): \Generator {
 		}
 	}
 	else {
-		throw new \LogicException('Parameter "step" should not be 0.');
+		throw new \LogicException('Parameter "step" should not be 0');
 	}
 }
 

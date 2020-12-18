@@ -154,7 +154,7 @@ class ASTChecker
 
 			default:
 				$kind = $node::KIND;
-				throw $this->new_syntax_error("Unexpect declaration kind: '{$kind}'.", $node);
+				throw $this->new_syntax_error("Unexpect declaration kind: '{$kind}'", $node);
 		}
 
 		$this->program = $temp_program;
@@ -197,7 +197,7 @@ class ASTChecker
 				$this->check_type($node->type, $node);
 			}
 			else {
-				throw $this->new_syntax_error("The type for declaration of constant '{$node->name}' required.", $node);
+				throw $this->new_syntax_error("The type for declaration of constant '{$node->name}' required", $node);
 			}
 
 			return;
@@ -207,22 +207,22 @@ class ASTChecker
 
 		$infered_type = $this->infer_expression($value);
 		if (!$infered_type) {
-			throw $this->new_syntax_error("The type for declaration of constant '{$node->name}' required.", $node);
+			throw $this->new_syntax_error("The type for declaration of constant '{$node->name}' required", $node);
 		}
 
 		if (!$this->check_is_constant_expression($value)) {
-			throw $this->new_syntax_error("Invalid value expression for constant declaration.", $value);
+			throw $this->new_syntax_error("Invalid value expression for constant declaration", $value);
 		}
 
 		if ($value instanceof BinaryOperation) {
 			if ($value->operator === OperatorFactory::$_concat) {
 				$left_type = $this->infer_expression($value->left);
 				if ($left_type instanceof ArrayType) {
-					throw $this->new_syntax_error("Array concat operation cannot use for constant value.", $value);
+					throw $this->new_syntax_error("Array concat operation cannot use for constant value", $value);
 				}
 			}
 			// elseif ($value->operator === OperatorFactory::$_merge) {
-			// 	throw $this->new_syntax_error("Array/Dict merge operation cannot use for constant value.", $value);
+			// 	throw $this->new_syntax_error("Array/Dict merge operation cannot use for constant value", $value);
 			// }
 		}
 
@@ -372,7 +372,7 @@ class ASTChecker
 	 					continue;
 					}
 
-					throw $this->new_syntax_error("Identifier '{$item->name}' not defined in MaskedDeclaration.", $item);
+					throw $this->new_syntax_error("Identifier '{$item->name}' not defined in MaskedDeclaration", $item);
 				}
 
 				// the argument from masking call
@@ -386,7 +386,7 @@ class ASTChecker
 				continue;
 			}
 			else {
-				throw $this->new_syntax_error("Unexpect expression in MaskedDeclaration.", $item);
+				throw $this->new_syntax_error("Unexpect expression in MaskedDeclaration", $item);
 			}
 		}
 	}
@@ -429,7 +429,7 @@ class ASTChecker
 
 			if ($identifier->symbol->declaration instanceof IVariableDeclaration) {
 				if ($identifier->name === _THIS || $identifier->name === _SUPER) {
-					throw $this->new_syntax_error("'{$identifier->name}' cannot use in lambda functions.", $node);
+					throw $this->new_syntax_error("'{$identifier->name}' cannot use in lambda functions", $node);
 				}
 
 				// for lambda use in php
@@ -457,7 +457,7 @@ class ASTChecker
 			$this->check_type($declared_type, $node);
 			if ($infered_type !== null) {
 				if (!$declared_type->is_accept_type($infered_type)) {
-					throw $this->new_syntax_error("Function '{$node->name}' returns type is '{$infered_type->name}', do not compatibled with the declared '{$declared_type->name}'.", $node);
+					throw $this->new_syntax_error("Function '{$node->name}' returns type is '{$infered_type->name}', do not compatibled with the declared '{$declared_type->name}'", $node);
 				}
 			}
 			elseif ($declared_type instanceof ArrayType && $declared_type->is_collect_mode) {
@@ -466,7 +466,7 @@ class ASTChecker
 				$node->fixed_body = $builder->build_return_statements();
 			}
 			elseif ($declared_type !== TypeFactory::$_void && $declared_type !== TypeFactory::$_igenerator) {
-				throw $this->new_syntax_error("Function required return type '{$declared_type->name}'.", $declared_type);
+				throw $this->new_syntax_error("Function required return type '{$declared_type->name}'", $node);
 			}
 		}
 		else {
@@ -497,7 +497,7 @@ class ASTChecker
 	{
 		if ($node->value === null && $node->type === null) {
 			$node->type = TypeFactory::$_any;
-			// throw $this->new_syntax_error("The type hint required when not setted default value for property.", $node);
+			// throw $this->new_syntax_error("The type hint required when not setted default value for property", $node);
 		}
 
 		$infered_type = $node->value ? $this->infer_expression($node->value) : null;
@@ -517,7 +517,7 @@ class ASTChecker
 			$node->type = $infered_type;
 		}
 		else {
-			throw $this->new_syntax_error("Type required for class constant '{$node->name}'.", $node);
+			throw $this->new_syntax_error("Type required for class constant '{$node->name}'", $node);
 		}
 	}
 
@@ -631,7 +631,7 @@ class ASTChecker
 			foreach ($node->aggregated_members as $name => $member) {
 				if ($member instanceof FunctionDeclaration && $member->body === null) {
 					$interface = $member->super_block;
-					throw $this->new_syntax_error("Method protocol '{$interface->name}.{$name}' required an implementation in class '{$node->name}'.", $node);
+					throw $this->new_syntax_error("Method protocol '{$interface->name}.{$name}' required an implementation in class '{$node->name}'", $node);
 				}
 			}
 		}
@@ -649,7 +649,7 @@ class ASTChecker
 			$node_return_type = $this->get_type_name($node->type);
 			$super_return_type = $this->get_type_name($super->type);
 
-			throw $this->new_syntax_error("The return type '{$node_return_type}' in '{$node->super_block->name}.{$node->name}' must be compatibled with '$super_return_type' in '{$super->super_block->name}.{$super->name}'", $node->super_block);
+			throw $this->new_syntax_error("The return type '{$node_return_type}' in '{$node->super_block->name}.{$node->name}' must be compatibled with '$super_return_type' in '{$super->super_block->name}.{$super->name}'", $node);
 		}
 
 		// the accessing modifer
@@ -661,18 +661,18 @@ class ASTChecker
 
 		if ($super instanceof FunctionDeclaration) {
 			if (!$node instanceof FunctionDeclaration) {
-				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatibled with '{$super->super_block->name}.{$super->name}'.", $node);
+				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatibled with '{$super->super_block->name}.{$super->name}'", $node);
 			}
 
 			$this->assert_classkindred_method_parameters($node, $super);
 		}
 		elseif ($super instanceof PropertyDeclaration) {
 			if (!$node instanceof PropertyDeclaration) {
-				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatibled with '{$super->super_block->name}.{$super->name}'.", $node);
+				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatibled with '{$super->super_block->name}.{$super->name}'", $node);
 			}
 		}
 		elseif ($super instanceof ClassConstantDeclaration && $is_interface) {
-			throw $this->new_syntax_error("Cannot override interface constant '{$super->super_block->name}.{$super->name}' in '{$node->super_block->name}'.", $node);
+			throw $this->new_syntax_error("Cannot override interface constant '{$super->super_block->name}.{$super->name}' in '{$node->super_block->name}'", $node);
 		}
 	}
 
@@ -833,7 +833,7 @@ class ASTChecker
 	{
 		$testing_type = $this->infer_expression($node->test);
 		if (!TypeFactory::is_when_testable_type($testing_type)) {
-			throw $this->new_syntax_error("The testing expression for when-statement should be String/Int/UInt.", $node->test);
+			throw $this->new_syntax_error("The testing expression for when-statement should be String/Int/UInt", $node->test);
 		}
 
 		$infered_types = [];
@@ -842,14 +842,14 @@ class ASTChecker
 				foreach ($branch->rule->items as $rule_sub_expr) {
 					$matching_type = $this->infer_expression($rule_sub_expr);
 					if ($testing_type !== $matching_type) {
-						throw $this->new_syntax_error("The type of matching expression should be same as testing.", $rule_sub_expr);
+						throw $this->new_syntax_error("The type of matching expression should be same as testing", $rule_sub_expr);
 					}
 				}
 			}
 			else {
 				$matching_type = $this->infer_expression($branch->rule);
 				if ($testing_type !== $matching_type) {
-					throw $this->new_syntax_error("The type of matching expression should be same as testing.", $branch->rule);
+					throw $this->new_syntax_error("The type of matching expression should be same as testing", $branch->rule);
 				}
 			}
 
@@ -874,7 +874,7 @@ class ASTChecker
 		$iterable_type = $this->infer_expression($node->iterable);
 		if (!TypeFactory::is_iterable_type($iterable_type)) {
 			$type_name = self::get_type_name($iterable_type);
-			throw $this->new_syntax_error("Expect a Iterable type, '{$type_name}' supplied.", $node->iterable);
+			throw $this->new_syntax_error("Expect a Iterable type, '{$type_name}' supplied", $node->iterable);
 		}
 
 		// the key type, default is String
@@ -1060,7 +1060,7 @@ class ASTChecker
 
 			default:
 				$kind = $node::KIND;
-				throw $this->new_syntax_error("Unknow statement kind: '{$kind}'.", $node);
+				throw $this->new_syntax_error("Unknow statement kind: '{$kind}'", $node);
 		}
 
 		return null;
@@ -1072,7 +1072,7 @@ class ASTChecker
 		if (!in_array($infered_type, $types, true)) {
 			$names = array_column($types, 'name');
 			$names = join(' or ', $names);
-			throw $this->new_syntax_error("Expect type $names, but supplied type {$infered_type->name}.", $node);
+			throw $this->new_syntax_error("Expect type $names, but supplied type {$infered_type->name}", $node);
 		}
 
 		return $infered_type;
@@ -1115,17 +1115,17 @@ class ASTChecker
 		$master_type = $this->infer_expression($node->master);
 
 		if (!$master_type) {
-			throw $this->new_syntax_error("identifier '{$node->master->name}' not defined.", $node->master);
+			throw $this->new_syntax_error("identifier '{$node->master->name}' not defined", $node->master);
 		}
 
 		if (!$master_type instanceof ArrayType && $master_type !== TypeFactory::$_any) {
-			throw $this->new_syntax_error("Cannot assign with element accessing for type '{$master_type->name}' expression.", $node->master);
+			throw $this->new_syntax_error("Cannot assign with element accessing for type '{$master_type->name}' expression", $node->master);
 		}
 
 		if ($node->key) {
 			$key_type = $this->infer_expression($node->key);
 			if ($key_type !== TypeFactory::$_uint) {
-				throw $this->new_syntax_error("Type for Array key expression should be int.", $node);
+				throw $this->new_syntax_error("Type for Array key expression should be int", $node);
 			}
 		}
 
@@ -1141,7 +1141,7 @@ class ASTChecker
 		$infered_type = $this->infer_expression($node->value);
 
 		if ($infered_type === TypeFactory::$_void) {
-			throw $this->new_syntax_error("Cannot use the Void type as a value.", $node->value);
+			throw $this->new_syntax_error("Cannot use the Void type as a value", $node->value);
 		}
 
 		$master = $node->master;
@@ -1172,13 +1172,13 @@ class ASTChecker
 
 		if (!ASTHelper::is_reassignable_expression($master)) {
 			if ($master instanceof KeyAccessing) {
-				throw $this->new_syntax_error("Cannot change a immutable item.", $master->left);
+				throw $this->new_syntax_error("Cannot change a immutable item", $master->left);
 			}
 			elseif ($master instanceof SquareAccessing) {
-				throw $this->new_syntax_error("Cannot change a immutable item.", $master);
+				throw $this->new_syntax_error("Cannot change a immutable item", $master);
 			}
 			else {
-				throw $this->new_syntax_error("Cannot assign to a final/non-assignable item.", $master);
+				throw $this->new_syntax_error("Cannot assign to a final/non-assignable item", $master);
 			}
 		}
 
@@ -1305,7 +1305,7 @@ class ASTChecker
 			// 	break;
 			default:
 				$kind = $node::KIND;
-				throw $this->new_syntax_error("Unknow expression kind: '{$kind}'.", $node);
+				throw $this->new_syntax_error("Unknow expression kind: '{$kind}'", $node);
 		}
 
 		return $infered_type;
@@ -1324,7 +1324,7 @@ class ASTChecker
 		elseif ($body_type instanceof UnionType) {
 			if (!$body_type->is_all_array_types()) {
 				$type_name = $this->get_type_name($body_type);
-				throw $this->new_syntax_error("Cannot use square accessing for type '{$type_name}'.", $node);
+				throw $this->new_syntax_error("Cannot use square accessing for type '{$type_name}'", $node);
 			}
 
 			$member_value_types = [];
@@ -1339,7 +1339,7 @@ class ASTChecker
 		}
 		else {
 			$type_name = $this->get_type_name($body_type);
-			throw $this->new_syntax_error("Cannot use square accessing for type '{$type_name}'.", $node);
+			throw $this->new_syntax_error("Cannot use square accessing for type '{$type_name}'", $node);
 		}
 
 		return $infered_type ?? TypeFactory::$_any;
@@ -1352,14 +1352,14 @@ class ASTChecker
 
 		if ($left_type instanceof ArrayType) {
 			if ($node->right and $right_type !== TypeFactory::$_uint) {
-				throw $this->new_syntax_error("Index type for Array accessing should be UInt, '{$right_type->name}' supplied.", $node->right);
+				throw $this->new_syntax_error("Index type for Array accessing should be UInt, '{$right_type->name}' supplied", $node->right);
 			}
 
 			$infered_type = $left_type->generic_type;
 		}
 		elseif ($left_type instanceof DictType) {
 			if ($node->right === null) {
-				throw $this->new_syntax_error("Invalid accessing for Dict.", $node);
+				throw $this->new_syntax_error("Invalid accessing for Dict", $node);
 			}
 
 			if (TypeFactory::is_dict_key_directly_supported_type($right_type)) {
@@ -1373,7 +1373,7 @@ class ASTChecker
 			// }
 			else {
 				$type_name = $this->get_type_name($right_type);
-				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$type_name}' supplied.", $node->right);
+				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$type_name}' supplied", $node->right);
 			}
 
 			$infered_type = $left_type->generic_type;
@@ -1383,12 +1383,12 @@ class ASTChecker
 			// 否则仅允许将实际类型为Dict的用于这类情况
 			if ($node->right and !TypeFactory::is_dict_key_directly_supported_type($right_type)) {
 				$type_name = $this->get_type_name($right_type);
-				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$type_name}' supplied.", $node->right);
+				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$type_name}' supplied", $node->right);
 			}
 		}
 		elseif ($left_type instanceof StringType) {
 			if ($right_type !== TypeFactory::$_uint && $right_type !== TypeFactory::$_int) {
-				throw $this->new_syntax_error("Index type for String should be Int/UInt, '{$right_type->name}' supplied.", $node);
+				throw $this->new_syntax_error("Index type for String should be Int/UInt, '{$right_type->name}' supplied", $node);
 			}
 
 			$infered_type = TypeFactory::$_string;
@@ -1396,17 +1396,17 @@ class ASTChecker
 		elseif ($left_type instanceof UnionType) {
 			if ($left_type->is_all_array_types()) {
 				if ($right_type !== TypeFactory::$_uint) {
-					throw $this->new_syntax_error("Index type for Array accessing should be UInt, '{$right_type->name}' supplied.", $node->right);
+					throw $this->new_syntax_error("Index type for Array accessing should be UInt, '{$right_type->name}' supplied", $node->right);
 				}
 			}
 			elseif ($left_type->is_all_dict_types()) {
 				if (!TypeFactory::is_dict_key_directly_supported_type($right_type)) {
-					throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$right_type->name}' supplied.", $node->right);
+					throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$right_type->name}' supplied", $node->right);
 				}
 			}
 			else {
 				$type_name = $this->get_type_name($left_type);
-				throw $this->new_syntax_error("Cannot use key accessing for type '{$type_name}'.", $node);
+				throw $this->new_syntax_error("Cannot use key accessing for type '{$type_name}'", $node);
 			}
 
 			$member_value_types = [];
@@ -1418,7 +1418,7 @@ class ASTChecker
 		}
 		else {
 			$type_name = $this->get_type_name($left_type);
-			throw $this->new_syntax_error("Cannot use key accessing for type '{$type_name}'.", $node);
+			throw $this->new_syntax_error("Cannot use key accessing for type '{$type_name}'", $node);
 		}
 
 		return $infered_type ?? TypeFactory::$_any;
@@ -1433,12 +1433,12 @@ class ASTChecker
 		if (OperatorFactory::is_number_operator($operator)) {
 			if (!TypeFactory::is_number_type($left_type)) {
 				$type_name = $this->get_type_name($left_type);
-				throw $this->new_syntax_error("Math operation cannot use for '$type_name' type expressions.", $node->left);
+				throw $this->new_syntax_error("Math operation cannot use for '$type_name' type expressions", $node->left);
 			}
 
 			if (!TypeFactory::is_number_type($right_type)) {
 				$type_name = $this->get_type_name($right_type);
-				throw $this->new_syntax_error("Math operation cannot use for '$type_name' type expressions.", $node->right);
+				throw $this->new_syntax_error("Math operation cannot use for '$type_name' type expressions", $node->right);
 			}
 
 			if ($operator === OperatorFactory::$_division || $left_type === TypeFactory::$_float || $right_type === TypeFactory::$_float) {
@@ -1463,7 +1463,7 @@ class ASTChecker
 			}
 			elseif ($left_type === TypeFactory::$_any || $left_type instanceof DictType) {
 				$type_name = $this->get_type_name($left_type);
-				throw $this->new_syntax_error("'concat' operation cannot use for '$type_name' type targets.", $node);
+				throw $this->new_syntax_error("'concat' operation cannot use for '$type_name' type targets", $node);
 			}
 			else {
 				$node->infered_type = TypeFactory::$_string;
@@ -1472,7 +1472,7 @@ class ASTChecker
 		// elseif ($operator === OperatorFactory::$_merge) {
 		// 	// array or dict
 		// 	if (!$left_type instanceof ArrayType && !$left_type instanceof DictType) {
-		// 		throw $this->new_syntax_error("'merge' operation just support Array/Dict type targets.", $node);
+		// 		throw $this->new_syntax_error("'merge' operation just support Array/Dict type targets", $node);
 		// 	}
 
 		// 	$this->assert_type_compatible($left_type, $right_type, $node->right, _MERGE);
@@ -1496,7 +1496,7 @@ class ASTChecker
 		$cast_type = $node->right;
 
 		if (!$cast_type instanceof IType) {
-			throw $this->new_syntax_error("Invalid 'as' expression '{$node->right->name}'.", $node);
+			throw $this->new_syntax_error("Invalid 'as' expression '{$node->right->name}'", $node);
 		}
 
 		return $cast_type;
@@ -1511,7 +1511,7 @@ class ASTChecker
 
 		if (!$assert_type instanceof IType) {
 			$kind = $node->right::KIND;
-			throw $this->new_syntax_error("Invalid 'is' expression '{$kind}'.", $node);
+			throw $this->new_syntax_error("Invalid 'is' expression '{$kind}'", $node);
 		}
 
 		return $assert_type;
@@ -1653,7 +1653,7 @@ class ASTChecker
 			// }
 			else {
 				$type_name = $this->get_type_name($key_type);
-				throw $this->new_syntax_error("Key type for Dict should be String/Int, '{$type_name}' supplied.", $item->key);
+				throw $this->new_syntax_error("Key type for Dict should be String/Int, '{$type_name}' supplied", $item->key);
 			}
 
 			$infered_value_types[] = $this->infer_expression($item->value);
@@ -1698,12 +1698,12 @@ class ASTChecker
 			$infered_type = $this->infer_plain_identifier($type);
 			if ($type->symbol and !$type->symbol->declaration instanceof ClassKindredDeclaration) {
 				$declare_name = $this->get_declaration_name($type->symbol->declaration);
-				throw $this->new_syntax_error("Cannot use '$declare_name' as a Type.", $type);
+				throw $this->new_syntax_error("Cannot use '$declare_name' as a Type", $type);
 			}
 		}
 		else {
 			$kind = $type::KIND;
-			throw $this->new_syntax_error("Unknow type kind '$kind'.", $type);
+			throw $this->new_syntax_error("Unknow type kind '$kind'", $type);
 		}
 	}
 
@@ -1754,7 +1754,7 @@ class ASTChecker
 				$param_name = $parameter->name;
 				$symbol = $node->symbols[$param_name] ?? $this->find_symbol_by_name($param_name);
 				if ($symbol === null) {
-					throw $including->unit->new_syntax_error("Expected var '{$param_name}' to #include({$node->target}).", $node);
+					throw $including->unit->new_syntax_error("Expected var '{$param_name}' to #include({$node->target})", $node);
 				}
 			}
 
@@ -1773,7 +1773,7 @@ class ASTChecker
 	{
 		$program = $this->unit->programs[$name] ?? null;
 		if (!$program) {
-			throw $this->new_syntax_error("'{$ref_node->target}' not found.", $ref_node);
+			throw $this->new_syntax_error("'{$ref_node->target}' not found", $ref_node);
 		}
 
 		// $program->unit->get_checker()->check_program($program);
@@ -1833,7 +1833,7 @@ class ASTChecker
 			}
 
 			if (!$first_callback_parameter_on_tail) {
-				throw $this->new_syntax_error("Unknow which parameter for callback.", $callbacks[0]);
+				throw $this->new_syntax_error("Unknow which parameter for callback", $callbacks[0]);
 			}
 
 			$callbacks[0]->name = $first_callback_parameter_on_tail->name;
@@ -1875,7 +1875,7 @@ class ASTChecker
 			$callee_declar = $this->require_construct_declaration_for_class($callee_declar, $node);
 			if ($callee_declar === null) {
 				if ($arguments) {
-					throw $this->new_syntax_error("Cannot use arguments to create a non-construct class instance.", $argument);
+					throw $this->new_syntax_error("Cannot use arguments to create a non-construct class instance", $argument);
 				}
 				return;
 			}
@@ -1894,7 +1894,7 @@ class ASTChecker
 			if (is_numeric($key)) {
 				$parameter = $parameters[$key] ?? null;
 				if (!$parameter) {
-					throw $this->new_syntax_error("Argument $key does not matched the parameter defined in '{$src_callee_declar->name}'.", $argument);
+					throw $this->new_syntax_error("Argument $key does not matched the parameter defined in '{$src_callee_declar->name}'", $argument);
 				}
 
 				$idx = $key;
@@ -1918,18 +1918,18 @@ class ASTChecker
 
 				// dump(get_class($infered_type));exit;
 
-				throw $this->new_syntax_error("Type of argument $key does not matched the parameter for '{$callee_name}', expected '{$expected_type_name}', supplied '{$infered_type_name}'.", $argument);
+				throw $this->new_syntax_error("Type of argument $key does not matched the parameter for '{$callee_name}', expected '{$expected_type_name}', supplied '{$infered_type_name}'", $argument);
 			}
 
 			// if ($parameter->is_referenced) {
 			// 	if (!ASTHelper::is_reassignable_expression($argument)) {
-			// 		throw $this->new_syntax_error("Argument $key is invalid for the referenced parameter defined in '{$src_callee_declar->name}'.", $argument);
+			// 		throw $this->new_syntax_error("Argument $key is invalid for the referenced parameter defined in '{$src_callee_declar->name}'", $argument);
 			// 	}
 			// }
 
 			if ($parameter->is_value_mutable) {
 				if (!ASTHelper::is_value_mutable($argument)) {
-					throw $this->new_syntax_error("Argument $key is invalid for the value-mutable parameter defined in '{$src_callee_declar->name}'.", $argument);
+					throw $this->new_syntax_error("Argument $key is invalid for the value-mutable parameter defined in '{$src_callee_declar->name}'", $argument);
 				}
 			}
 
@@ -1940,7 +1940,7 @@ class ASTChecker
 		foreach ($parameters as $idx => $parameter) {
 			if ($parameter->value === null && !isset($normalizeds[$idx])) {
 				$callee_name = self::get_declaration_name($callee_declar);
-				throw $this->new_syntax_error("Missed argument $idx to call '{$callee_name}'.", $node);
+				throw $this->new_syntax_error("Missed argument $idx to call '{$callee_name}'", $node);
 			}
 		}
 
@@ -1968,7 +1968,7 @@ class ASTChecker
 
 		if (!$symbol) {
 			if ($call->arguments || $call->callbacks) {
-				throw $this->new_syntax_error("'construct' of class '{$class->name}' not found.", $class);
+				throw $this->new_syntax_error("'construct' of class '{$class->name}' not found", $class);
 			}
 
 			return; // no any to check
@@ -1994,9 +1994,13 @@ class ASTChecker
 	private function assert_type_compatible(IType $left, IType $right, Node $value_node, string $kind = 'assign')
 	{
 		if (!$this->check_type_compatible($left, $right, $value_node)) {
+			if ($left === TypeFactory::$_none) {
+				throw $this->new_syntax_error("It's required a type hint", $value_node);
+			}
+
 			$left = self::get_type_name($left);
 			$right = self::get_type_name($right);
-			throw $this->new_syntax_error("It's not compatible for type '{$left}' {$kind} with '{$right}'.", $value_node);
+			throw $this->new_syntax_error("It's not compatible for type '{$left}' {$kind} with '{$right}'", $value_node);
 		}
 	}
 
@@ -2009,7 +2013,7 @@ class ASTChecker
 			}
 		}
 
-		throw $this->new_syntax_error("Argument '$name' deliver to callee '{$callee_node->name}' not found in declaration.", $callee_node);
+		throw $this->new_syntax_error("Argument '$name' deliver to callee '{$callee_node->name}' not found in declaration", $callee_node);
 	}
 
 	// return [index, CallbackProtocol]
@@ -2021,7 +2025,7 @@ class ASTChecker
 			}
 		}
 
-		throw $this->new_syntax_error("Callback argument '$name' deliver to callee '{$callee_node->name}' not found in declaration.", $callee_node);
+		throw $this->new_syntax_error("Callback argument '$name' deliver to callee '{$callee_node->name}' not found in declaration", $callee_node);
 	}
 
 	protected function infer_plain_identifier(PlainIdentifier $node): IType
@@ -2034,7 +2038,7 @@ class ASTChecker
 
 		if ($declaration instanceof VariableDeclaration || $declaration instanceof ConstantDeclaration || $declaration instanceof ParameterDeclaration || $declaration instanceof ClassKindredDeclaration) {
 			if (!$declaration->type) {
-				throw $this->new_syntax_error("Declaration of '{$node->name}' not found.", $node);
+				throw $this->new_syntax_error("Declaration of '{$node->name}' not found", $node);
 			}
 
 			$type = $declaration->type;
@@ -2147,7 +2151,7 @@ class ASTChecker
 	{
 		$symbol = $this->find_symbol_by_name($node->name, $node);
 		if ($symbol === null) {
-			throw $this->new_syntax_error("Symbol of '{$node->name}' not found.", $node);
+			throw $this->new_syntax_error("Symbol of '{$node->name}' not found", $node);
 		}
 
 		$node->symbol = $symbol;
@@ -2161,7 +2165,7 @@ class ASTChecker
 		// find for 'super'
 		if ($symbol === null && $name === _SUPER) {
 			if ($this->current_function->super_block->inherits === null) {
-				throw $this->new_syntax_error("There are not inherits a class/interface for 'super' reference.", $node);
+				throw $this->new_syntax_error("There are not inherits a class/interface for 'super' reference", $node);
 			}
 
 			$inherits_class = $this->current_function->super_block->inherits->symbol->declaration;
@@ -2224,7 +2228,7 @@ class ASTChecker
 				$declar = $this->require_classkindred_declaration($declar->type->generic_type);
 			}
 			else {
-				throw $this->new_syntax_error("Invalid callable expression.", $node);
+				throw $this->new_syntax_error("Invalid callable expression", $node);
 			}
 		}
 		elseif ($node instanceof ClassKindredIdentifier) {
@@ -2232,7 +2236,7 @@ class ASTChecker
 		}
 		else {
 			$kind = $node::KIND;
-			throw $this->new_syntax_error("Unknow callee kind: '$kind'.", $node);
+			throw $this->new_syntax_error("Unknow callee kind: '$kind'", $node);
 		}
 
 		return $declar;
@@ -2241,7 +2245,7 @@ class ASTChecker
 	private function check_callable_declaration(ICallableDeclaration $node)
 	{
 		if ($node->is_checking) {
-			throw $this->new_syntax_error("Function '{$node->name}' has a circular checking, needs a return type.", $node);
+			throw $this->new_syntax_error("Function '{$node->name}' has a circular checking, needs a return type", $node);
 		}
 
 		$node->is_checking = true;
@@ -2260,7 +2264,7 @@ class ASTChecker
 
 			default:
 				$kind = $node::KIND;
-				throw $this->new_syntax_error("Unexpect callable declaration kind: '{$kind}'.", $node);
+				throw $this->new_syntax_error("Unexpect callable declaration kind: '{$kind}'", $node);
 		}
 	}
 
@@ -2268,7 +2272,7 @@ class ASTChecker
 	{
 		if (!$node->symbol) {
 			if (!isset($this->unit->symbols[$node->name])) {
-				throw $this->new_syntax_error("Symbol '{$node->name}' not found.", $node);
+				throw $this->new_syntax_error("Symbol '{$node->name}' not found", $node);
 			}
 
 			$node->symbol = $this->unit->symbols[$node->name];
@@ -2354,12 +2358,12 @@ class ASTChecker
 			// the master would be an object expression
 			$node->symbol = $this->require_class_member_symbol($master_type->symbol->declaration, $node);
 			if (!$node->symbol->declaration->is_accessable_for_object($master)) {
-				throw $this->new_syntax_error("Cannot access the private/protected members.", $node);
+				throw $this->new_syntax_error("Cannot access the private/protected members", $node);
 			}
 		}
 		else {
 			$type_name = $this->get_type_name($master_type);
-			throw $this->new_syntax_error("Invalid accessable type '$type_name'.", $master);
+			throw $this->new_syntax_error("Invalid accessable type '$type_name'", $master);
 		}
 
 		return $node->symbol->declaration;
@@ -2436,7 +2440,7 @@ class ASTChecker
 	// {
 	// 	$node->symbol = $ns_declaration->symbols[$node->name] ?? null;
 	// 	if (!$node->symbol) {
-	// 		throw $this->new_syntax_error("Symbol '{$node->name}' not found in '{$ns_declaration->name}'.", $node);
+	// 		throw $this->new_syntax_error("Symbol '{$node->name}' not found in '{$ns_declaration->name}'", $node);
 	// 	}
 
 	// 	return $node->symbol;
@@ -2464,14 +2468,14 @@ class ASTChecker
 		if (!$symbol) {
 			$symbol = $this->get_symbol_for_classkindred_identifier($identifier);
 			if ($symbol === null) {
-				throw $this->new_syntax_error("Symbol '{$identifier->name}' not found.", $identifier);
+				throw $this->new_syntax_error("Symbol '{$identifier->name}' not found", $identifier);
 			}
 
 			if ($symbol->declaration instanceof UseDeclaration) {
 				$symbol->declaration = $this->get_source_declaration_for_use($symbol->declaration);
 			}
 			elseif (!$symbol->declaration instanceof ClassKindredDeclaration) {
-				throw $this->new_syntax_error("Declaration of '{$identifier->name}' not a classkindred declaration.", $identifier);
+				throw $this->new_syntax_error("Declaration of '{$identifier->name}' not a classkindred declaration", $identifier);
 			}
 
 			$identifier->symbol = $symbol;
@@ -2523,7 +2527,7 @@ class ASTChecker
 		if ($use->source_declaration === null) {
 			$unit = $this->get_uses_unit_declaration($use->ns);
 			if ($unit === null) {
-				throw $this->new_syntax_error("Unit '{$use->ns->uri}' not found.", $use->ns);
+				throw $this->new_syntax_error("Unit '{$use->ns->uri}' not found", $use->ns);
 			}
 
 			$this->attach_source_declaration_for_use($use, $unit);
@@ -2540,7 +2544,7 @@ class ASTChecker
 			// find from the Unit symbols
 			$symbol = $unit->symbols[$name] ?? null;
 			if ($symbol === null) {
-				throw $this->new_syntax_error("Target '{$name}' for use not found in unit '{$unit->name}'.", $use);
+				throw $this->new_syntax_error("Target '{$name}' for use not found in unit '{$unit->name}'", $use);
 			}
 
 			$target_declaration = $symbol->declaration;
@@ -2622,7 +2626,7 @@ class ASTChecker
 				$place .= " of '$node->name'";
 			}
 
-			$place = "Near $place.";
+			$place = "Near $place";
 		}
 
 		$message = "Syntax check error:\n{$place}\n{$message}";
@@ -2654,7 +2658,7 @@ class ASTChecker
 		}
 		elseif ($type instanceof MetaType) {
 			$generic_type_name = self::get_type_name($type->generic_type);
-			$name = "{$generic_type_name}." . _DOT_SIGN_METATYPE;
+			$name = "{$generic_type_name}" . _DOT_SIGN_METATYPE;
 		}
 		elseif ($type instanceof ICallableDeclaration) {
 			$args = [];
@@ -2685,7 +2689,7 @@ class UnexpectNode extends \Exception
 	public function __construct(Node $node)
 	{
 		$kind = $node::KIND;
-		$this->message = new \Exception("Unexpect node kind: '$kind'.");
+		$this->message = new \Exception("Unexpect node kind: '$kind'");
 	}
 }
 

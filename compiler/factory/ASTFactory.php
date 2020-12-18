@@ -76,7 +76,7 @@ class ASTFactory
 	public function set_namespace(NamespaceIdentifier $ns)
 	{
 		if ($this->unit->ns) {
-			throw $this->parser->new_parse_error("Cannot redeclare the unit namespace.");
+			throw $this->parser->new_parse_error("Cannot redeclare the unit namespace");
 		}
 
 		$this->unit->ns = $ns;
@@ -161,24 +161,31 @@ class ASTFactory
 			$identifier = new PlainIdentifier($token);
 			if ($this->class) {
 				if ($this->function !== $this->scope) { // it is would be in a lambda block
-					throw $this->parser->new_parse_error("Cannot use '$token' identifier in lambda functions.");
+					throw $this->parser->new_parse_error("Cannot use '$token' identifier in lambda functions");
 				}
-
-				$identifier->symbol = $this->function->is_static ? $this->class->this_class_symbol : $this->class->this_object_symbol;
+				elseif ($this->function) {
+					$identifier->symbol = $this->function->is_static ? $this->class->this_class_symbol : $this->class->this_object_symbol;
+				}
+				else {
+					// 不支持在类成员声明中使用this关键字, 因为编译器将静态的指向到当前类, 而按一般理解可能是需要指向到运行时的实际对象
+					// the const/property declaration
+					// $identifier->symbol = $this->declaration->is_static ? $this->class->this_class_symbol : $this->class->this_object_symbol;
+					throw $this->parser->new_parse_error("Can not use 'this' on class member declaration");
+				}
 			}
 			elseif (!$this->seek_symbol_in_function($identifier)) { // it would be has an #expect
-				throw $this->parser->new_parse_error("Identifier '$token' not defined.");
+				throw $this->parser->new_parse_error("Identifier '$token' not defined");
 			}
 		}
 		elseif ($token === _SUPER) {
 			$identifier = new PlainIdentifier($token);
 			if ($this->class) {
 				if ($this->function !== $this->scope) { // it is would be in a lambda block
-					throw $this->parser->new_parse_error("Cannot use '$token' identifier in lambda functions.");
+					throw $this->parser->new_parse_error("Cannot use '$token' identifier in lambda functions");
 				}
 			}
 			else {
-				throw $this->parser->new_parse_error("Identifier '$token' cannot use without in a class.");
+				throw $this->parser->new_parse_error("Identifier '$token' cannot use without in a class");
 			}
 		}
 		elseif ($token === _VAL_TRUE) {
@@ -195,7 +202,7 @@ class ASTFactory
 			$identifier->symbol = $this->unit_path_symbol;
 		}
 		else {
-			throw $this->parser->new_parse_error("Unknow builtin identifier '$token'.");
+			throw $this->parser->new_parse_error("Unknow builtin identifier '$token'");
 		}
 
 		return $identifier;
@@ -276,7 +283,7 @@ class ASTFactory
 	private function auto_declare_for_assigning_identifier(BaseExpression $identifier)
 	{
 		if (!TeaHelper::is_declarable_variable_name($identifier->name)) {
-			throw $this->parser->new_parse_error("Identifier '$identifier->name' not a valid variable name.");
+			throw $this->parser->new_parse_error("Identifier '$identifier->name' not a valid variable name");
 		}
 
 		$declaration = new VariableDeclaration($identifier->name);
@@ -316,10 +323,10 @@ class ASTFactory
 	{
 		$main_function = $this->program->main_function;
 		if ($main_function->parameters) {
-			throw $this->parser->new_parse_error("'#expect' statement has duplicated.");
+			throw $this->parser->new_parse_error("'#expect' statement has duplicated");
 		}
 		elseif (!$parameters) {
-			throw $this->parser->new_parse_error("'#expect' statement required parameters.");
+			throw $this->parser->new_parse_error("'#expect' statement required parameters");
 		}
 
 		foreach ($parameters as $parameter) {
@@ -594,12 +601,12 @@ class ASTFactory
 			}
 
 			if (!$block) {
-				throw $this->parser->new_parse_error("Block of label '$label' not found.");
+				throw $this->parser->new_parse_error("Block of label '$label' not found");
 			}
 		}
 
 		if ($is_continue_statement && !$block instanceof IContinueAble) {
-			throw $this->parser->new_parse_error("Block of label '$label' cannot use to the continue statement.");
+			throw $this->parser->new_parse_error("Block of label '$label' cannot use to the continue statement");
 		}
 
 		return $layer;
@@ -675,7 +682,7 @@ class ASTFactory
 		new Symbol($declaration);
 
 		if (!$this->class->append_member($declaration)) {
-			throw $this->parser->new_parse_error("Class member '{$declaration->name}' of '{$this->class->name}' has duplicated.");
+			throw $this->parser->new_parse_error("Class member '{$declaration->name}' of '{$this->class->name}' has duplicated");
 		}
 
 		if ($declaration instanceof FunctionDeclaration) {
@@ -762,7 +769,7 @@ class ASTFactory
 	private function check_global_modifier(?string $modifier, string $type_label)
 	{
 		if ($modifier && !in_array($modifier, self::GLOBAL_MODIFIERS, true)) {
-			throw $this->parser->new_parse_error("Cannot use modifier '{$modifier}' for $type_label.");
+			throw $this->parser->new_parse_error("Cannot use modifier '{$modifier}' for $type_label");
 		}
 	}
 
@@ -884,7 +891,7 @@ class ASTFactory
 	// 	if ($ns_symbol) {
 	// 		// maybe already used as a class
 	// 		if (!$ns_symbol instanceof NamespaceSymbol) {
-	// 			throw $this->parser->new_parse_error("'$ns_name' is already in use, cannot reuse to declare {$declaration->name}.");
+	// 			throw $this->parser->new_parse_error("'$ns_name' is already in use, cannot reuse to declare {$declaration->name}");
 	// 		}
 	// 	}
 	// 	else {
@@ -913,7 +920,7 @@ class ASTFactory
 	// 	$sub_ns_symbol = $super_symbol->declaration->symbols[$sub_ns_name] ?? null;
 	// 	if ($sub_ns_symbol) {
 	// 		if (!$sub_ns_symbol instanceof NamespaceSymbol) {
-	// 			throw $this->parser->new_parse_error("'$sub_ns_name' is already in use, cannot reuse to declare a namespace.");
+	// 			throw $this->parser->new_parse_error("'$sub_ns_name' is already in use, cannot reuse to declare a namespace");
 	// 		}
 	// 	}
 	// 	else {
@@ -927,7 +934,7 @@ class ASTFactory
 	private function add_unit_symbol(Symbol $symbol)
 	{
 		if (isset($this->unit->symbols[$symbol->name])) {
-			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use, cannot redeclare.");
+			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use, cannot redeclare");
 		}
 
 		$this->unit->symbols[$symbol->name] = $symbol;
@@ -936,7 +943,7 @@ class ASTFactory
 	private function add_program_symbol(Symbol $symbol)
 	{
 		if (isset($this->program->symbols[$symbol->name])) {
-			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in current program, cannot redeclare.");
+			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in current program, cannot redeclare");
 		}
 
 		$this->program->symbols[$symbol->name] = $symbol;
@@ -945,7 +952,7 @@ class ASTFactory
 	private function add_scope_symbol(Symbol $symbol)
 	{
 		if (isset($this->scope->symbols[$symbol->name])) {
-			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in current function, cannot redeclare.");
+			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in current function, cannot redeclare");
 		}
 
 		$this->scope->symbols[$symbol->name] = $symbol;
@@ -954,7 +961,7 @@ class ASTFactory
 	private function add_block_symbol(Symbol $symbol)
 	{
 		if (isset($this->block->symbols[$symbol->name])) {
-			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in local block, cannot redeclare.");
+			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in local block, cannot redeclare");
 		}
 
 		$this->block->symbols[$symbol->name] = $symbol;

@@ -25,10 +25,6 @@ class TeaHeaderCoder extends TeaCoder
 		foreach ($declaration->uses as $use) {
 			$uri = $use->ns->uri;
 
-			// if ($use->target_name) {
-			// 	$uri .= '!'; // just to differentiate, avoid conflict with no targets use statements
-			// }
-
 			// URI相同的将合并到一条
 			if (!isset($program->uses[$uri])) {
 				$program->uses[$uri] = new UseStatement($use->ns);

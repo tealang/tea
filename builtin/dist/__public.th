@@ -68,7 +68,7 @@ public xrange(start Int, end Int, step Int = 1) IGenerator
 
 #php file_get_contents(file String) String
 
-#php file_set_contents(file String, data String, flags Int = #default) UInt
+#php file_put_contents(file String, data String, flags Int = #default) UInt
 
 #php max(n1 Any, n2 Any, n3 Any = #default) Any
 
