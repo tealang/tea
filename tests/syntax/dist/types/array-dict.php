@@ -7,6 +7,8 @@ require_once dirname(__DIR__, 2) . '/__public.php';
 
 // ---------
 $str_dict_list = [['a' => 'abc', 'b' => '123.1']];
+unset($str_dict_list[0]['a']);
+
 $int_dict = [];
 
 $str_list = [];

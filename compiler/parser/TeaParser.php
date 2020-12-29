@@ -301,6 +301,9 @@ class TeaParser extends BaseParser
 			case _EXIT:
 				$node = $this->read_exit_statement();
 				break;
+			case _UNSET:
+				$node = $this->read_unset_statement();
+				break;
 
 			case _IF:
 				$node = $this->read_if_block();
@@ -397,6 +400,21 @@ class TeaParser extends BaseParser
 		}
 
 		return $this->factory->create_variable_declaration($name, $type, $value);
+	}
+
+	protected function read_unset_statement()
+	{
+		// unset
+		// unset variable expression
+
+		$argument = $this->read_expression_inline();
+		if ($argument instanceof Parentheses) {
+			$argument = $argument->expression;
+		}
+
+		$statement = new UnsetStatement($argument);
+
+		return $statement;
 	}
 
 	protected function try_attach_post_condition(PostConditionAbleStatement $statement)

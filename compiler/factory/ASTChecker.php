@@ -1026,6 +1026,10 @@ class ASTChecker
 				$node->condition && $this->check_condition_clause($node);
 				break;
 
+			case UnsetStatement::KIND:
+				$this->check_unset_statement($node);
+				break;
+
 			case IfBlock::KIND:
 				return $this->infer_if_block($node);
 
@@ -1090,6 +1094,16 @@ class ASTChecker
 		$node->condition && $this->check_condition_clause($node);
 
 		return $infered_type;
+	}
+
+	private function check_unset_statement(UnsetStatement $node)
+	{
+		$argument = $node->argument;
+		$this->infer_expression($argument);
+
+		if (!$argument instanceof KeyAccessing) {
+			throw $this->new_syntax_error("The unset target must be a KeyAccessing", $argument);
+		}
 	}
 
 	private function check_exit_statement(ExitStatement $node)

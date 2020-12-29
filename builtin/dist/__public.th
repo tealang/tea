@@ -154,8 +154,6 @@ public array_last_index(array Array) UInt
 
 #php array_key_exists(key Any, arr Dict) Bool
 
-#php unset(target Any)
-
 #php array_keys(array Any) String.Array
 
 #php array_values(array Any) Array

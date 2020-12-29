@@ -400,6 +400,11 @@ class TeaCoder
 		return $expr;
 	}
 
+	public function render_unset_statement(UnsetStatement $node)
+	{
+		return 'unset ' . $node->argument->render($this) . static::STATEMENT_TERMINATOR;
+	}
+
 	public function render_array_element_assignment(ArrayElementAssignment $node)
 	{
 		$master = $node->master->render($this);

@@ -12,7 +12,7 @@ namespace Tea;
 const _PATTERN_MODIFIER_REGEX = '/[imu]+/';
 
 const _STRUCTURE_KEYS = [
-	_VAR,
+	_VAR, _UNSET,
 	_IF, _SWITCH, _FOR, _WHILE, _TRY, // _LOOP
 	_ECHO, _PRINT, _RETURN, _EXIT, _BREAK, _CONTINUE, _THROW,
 ];

@@ -484,6 +484,11 @@ class PHPCoder extends TeaCoder
 		return $expr;
 	}
 
+	public function render_unset_statement(UnsetStatement $node)
+	{
+		return 'unset(' . $node->argument->render($this) . ')' . static::STATEMENT_TERMINATOR;
+	}
+
 // ---
 
 	public function render_class_declaration(ClassDeclaration $node)

@@ -187,7 +187,6 @@ public array_last_index(array Array) UInt {
 #php array_key_exists(key, arr Dict) Bool
 
 // assoc array
-#php unset(target) Void
 #php array_keys(array) String.Array
 #php array_values(array) Array
 #php array_column(record Dict.Array, key String) Array
@@ -345,8 +344,6 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 
 	masked get(key String) => dict_get(this, key)
 	masked find(val) => dict_search(this, val) // find the key with supported value
-
-	// masked remove(key String) => unset(this[key])
 
 	masked join(glue String = LF) => implode(glue, this)
 }
