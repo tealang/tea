@@ -8,18 +8,21 @@ The builtin libs for Tea
 public LF = "\n"
 
 #php isset(expr Any) Bool
+#php is_int(val) Bool
+#php is_array(val) Bool
+#php is_numeric(val) Bool
+
 #php empty(expr Any) Bool
 #php var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default)
 #php print_r(expr, is_return Bool = #default)
 #php header(info String, replace = true, http_response_code Int = #default)
 
+// dates & times
 #php time() Int
 #php date(format String, timestamp Int = #default) String
+#php strtotime(datetime, now Int = #default) Int
 
 #php str_repeat(input, multiplier Int) String
-
-#php is_int(val) Bool
-#php is_array(val) Bool
 
 // php builtin constants
 #php __DIR__ String
@@ -202,6 +205,7 @@ public dict_search(master Dict, search) String {
 }
 
 #php JSON_UNESCAPED_UNICODE Int
+#php JSON_PRETTY_PRINT Int
 #php json_encode(data, flags Int = 0, depth UInt = 512) String
 #php json_decode(data, assoc Bool = false, depth UInt = 512, flags Int = 0) Dict
 

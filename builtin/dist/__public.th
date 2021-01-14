@@ -16,6 +16,12 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 
 #php isset(expr Any) Bool
 
+#php is_int(val Any) Bool
+
+#php is_array(val Any) Bool
+
+#php is_numeric(val Any) Bool
+
 #php empty(expr Any) Bool
 
 #php var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default)
@@ -28,11 +34,9 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 
 #php date(format String, timestamp Int = #default) String
 
+#php strtotime(datetime Any, now Int = #default) Int
+
 #php str_repeat(input Any, multiplier Int) String
-
-#php is_int(val Any) Bool
-
-#php is_array(val Any) Bool
 
 #php Exception {
 	public construct(message String, code Int = 0)

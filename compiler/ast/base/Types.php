@@ -228,7 +228,7 @@ class UnionType extends BaseType
 	}
 
 	public function is_same_with(IType $target) {
-		if (count($this->types) !== count($target->types)) {
+		if (!$target instanceof UnionType or count($this->types) !== count($target->types)) {
 			return false;
 		}
 
