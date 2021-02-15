@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-const _PATTERN_MODIFIER_REGEX = '/[imu]+/';
+const _PATTERN_MODIFIER_REGEX = '/^[imu]+$/';
 
 const _STRUCTURE_KEYS = [
 	_VAR, _UNSET,

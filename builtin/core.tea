@@ -362,8 +362,8 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 	// match in target string, returns is matched
 	masked test(string String) Bool => regex_test(this, string)
 
-	// use this pattern to untie a string, returns the untied items
-	masked untie(string String) String.Array => preg_split(this, string)
+	// use this pattern to separate a string, returns the separated items
+	masked separate(string String) String.Array => preg_split(this, string)
 
 	// match in target string, returns the first captured item
 	masked capture_one(string String) String.Array => regex_capture_one(this, string)

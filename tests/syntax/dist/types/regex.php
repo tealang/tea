@@ -19,6 +19,9 @@ var_dump($result1);
 
 $result2 = preg_split($regex, 'ab cd|e,f');
 var_dump($result2);
+
+$is_matched = regex_test('/^a-z$/iu', 'abcABC');
+var_dump($is_matched);
 // ---------
 
 \Swoole\Event::wait();

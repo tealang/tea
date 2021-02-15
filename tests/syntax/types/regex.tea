@@ -12,6 +12,11 @@ var_dump(result0)
 result1 = regex.capture_all('ab cd|e,f') // result: [' ', '|', ',']
 var_dump(result1)
 
-// use the regex to untie a text
-result2 = regex.untie('ab cd|e,f') // result: ['ab', 'cd', 'e', 'f']
+// use the regex to separate a text
+result2 = regex.separate('ab cd|e,f') // result: ['ab', 'cd', 'e', 'f']
 var_dump(result2)
+
+// test a string
+is_matched = /^a-z$/iu.test('abcABC')
+var_dump(is_matched)
+
