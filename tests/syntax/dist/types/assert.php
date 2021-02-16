@@ -1,8 +1,6 @@
 <?php
 namespace tea\tests\syntax;
 
-\Swoole\Runtime::enableCoroutine();
-
 require_once dirname(__DIR__, 2) . '/__public.php';
 
 // ---------
@@ -49,7 +47,5 @@ foreach ($dict as $key => $value) {
 	var_dump($result);
 }
 // ---------
-
-\Swoole\Event::wait();
 
 // program end

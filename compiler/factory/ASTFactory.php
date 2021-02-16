@@ -220,8 +220,8 @@ class ASTFactory
 
 	public function create_yield_expression(BaseExpression $argument)
 	{
-		// force set type IGenerator to current function
-		$this->function->type = TypeFactory::$_igenerator;
+		// force set type YieldGenerator to current function
+		$this->function->type = TypeFactory::$_yield_generator;
 
 		return new YieldExpression($argument);
 	}
@@ -505,7 +505,7 @@ class ASTFactory
 
 	public function create_coroutine_block(array $parameters = [])
 	{
-		$this->unit->is_used_coroutine = true;
+		$this->program->is_using_coroutine = true;
 
 		$block = new CoroutineBlock(null, $parameters);
 

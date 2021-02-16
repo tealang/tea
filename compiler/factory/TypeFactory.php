@@ -40,14 +40,15 @@ class TypeFactory
 	static $_callable;
 	static $_namespace;
 
-	static $_igenerator;
+	static $_iiterator;
+	static $_yield_generator;
 
 	// for check XView accepts
 	static $_iview_symbol;
 
 	// for check Iterable type accepts
 	static $_iiterator_symbol;
-	static $_igenerator_symbol;
+	static $_yield_generator_symbol;
 
 	private static $type_map = [];
 
@@ -83,7 +84,9 @@ class TypeFactory
 
 		self::$_dict_key_type = self::create_union_type([self::$_string, self::$_int]);
 
-		self::$_igenerator = new ClassKindredIdentifier('IGenerator');
+		self::$_iiterator = new ClassKindredIdentifier('IIterator');
+		self::$_yield_generator = self::$_iiterator;
+		// self::$_yield_generator = new ClassKindredIdentifier('YieldGenerator');
 	}
 
 	static function is_iterable_type(IType $type)
@@ -179,7 +182,8 @@ class TypeFactory
 
 		self::$_iview_symbol = $unit->symbols['IView'];
 		self::$_iiterator_symbol = $unit->symbols['IIterator'];
-		self::$_igenerator_symbol = $unit->symbols['IGenerator'];
+		// self::$_yield_generator_symbol = $unit->symbols['YieldGenerator'];
+		self::$_yield_generator_symbol = self::$_iiterator_symbol;
 	}
 
 	static function exists_type(string $name): bool

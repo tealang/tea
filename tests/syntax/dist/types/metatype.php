@@ -1,8 +1,6 @@
 <?php
 namespace tea\tests\syntax;
 
-\Swoole\Runtime::enableCoroutine();
-
 require_once dirname(__DIR__, 2) . '/__public.php';
 
 #internal
@@ -33,7 +31,5 @@ $class_type = TestForMetaType0::class;
 TestForMetaType0::test_class_argument($class_type);
 TestForMetaType0::test_class_argument(TestForMetaType1::class);
 // ---------
-
-\Swoole\Event::wait();
 
 // program end

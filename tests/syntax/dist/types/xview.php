@@ -3,8 +3,6 @@ namespace tea\tests\syntax;
 
 use tea\tests\xview\{ BaseView };
 
-\Swoole\Runtime::enableCoroutine();
-
 require_once dirname(__DIR__, 2) . '/__public.php';
 
 #internal
@@ -88,7 +86,5 @@ $abc = new DemoList('name', 'title', ['A', 'B', 'C'], function () {
 	echo $str, $num, LF;
 });
 // ---------
-
-\Swoole\Event::wait();
 
 // program end

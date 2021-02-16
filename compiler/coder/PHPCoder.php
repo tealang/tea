@@ -160,7 +160,7 @@ class PHPCoder extends TeaCoder
 		$items = $this->render_heading_statements($program);
 
 		if ($program->as_main_program) {
-			if ($program->unit->is_used_coroutine) {
+			if ($program->is_using_coroutine) {
 				$items[] = '\Swoole\Runtime::enableCoroutine();';
 				$items[] = '';
 			}
@@ -196,7 +196,7 @@ class PHPCoder extends TeaCoder
 			$items[] = '// ---------';
 			$items[] = '';
 
-			if ($program->as_main_program && $program->unit->is_used_coroutine) {
+			if ($program->as_main_program && $program->is_using_coroutine) {
 				$items[] = '\Swoole\Event::wait();';
 				$items[] = '';
 			}

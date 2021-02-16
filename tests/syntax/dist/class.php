@@ -3,8 +3,6 @@ namespace tea\tests\syntax;
 
 use tea\tests\PHPDemoUnit\{ BaseInterface };
 
-\Swoole\Runtime::enableCoroutine();
-
 require_once dirname(__DIR__, 1) . '/__public.php';
 
 #internal
@@ -228,7 +226,5 @@ $a = new Test3();
 
 Test4::fx(new Test3());
 // ---------
-
-\Swoole\Event::wait();
 
 // program end

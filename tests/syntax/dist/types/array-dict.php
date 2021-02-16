@@ -1,8 +1,6 @@
 <?php
 namespace tea\tests\syntax;
 
-\Swoole\Runtime::enableCoroutine();
-
 require_once dirname(__DIR__, 2) . '/__public.php';
 
 // ---------
@@ -82,7 +80,5 @@ $filtered = array_filter([0, 1, 2, 3, 4, 5], function ($item) {
 });
 var_dump($filtered);
 // ---------
-
-\Swoole\Event::wait();
 
 // program end

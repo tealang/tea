@@ -42,7 +42,7 @@ function is_strict_dict($it): bool {
 	return $keys !== array_keys($keys);
 }
 
-function xrange(int $start, int $end, int $step = 1): \Generator {
+function xrange(int $start, int $end, int $step = 1): \Iterator {
 	$i = $start;
 	if ($step > 0) {
 		while ($i <= $end) {

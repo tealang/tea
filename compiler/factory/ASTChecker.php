@@ -465,7 +465,7 @@ class ASTChecker
 				$builder = new ReturnBuilder($node, $declared_type->generic_type);
 				$node->fixed_body = $builder->build_return_statements();
 			}
-			elseif ($declared_type !== TypeFactory::$_void && $declared_type !== TypeFactory::$_igenerator) {
+			elseif ($declared_type !== TypeFactory::$_void && $declared_type !== TypeFactory::$_yield_generator) {
 				throw $this->new_syntax_error("Function required return type '{$declared_type->name}'", $node);
 			}
 		}

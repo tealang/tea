@@ -65,11 +65,6 @@ class Unit implements IRootDeclaration
 	/**
 	 * @var bool
 	 */
-	public $is_used_coroutine;
-
-	/**
-	 * @var bool
-	 */
 	public $is_mixed_mode;
 
 	/**

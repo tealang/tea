@@ -1,7 +1,7 @@
 #main
 
 // a int range generator that implementeds with yield
-public demo_range(start Int, end Int) {
+internal demo_range(start Int, end Int) {
 	i = start
 	while i <= end {
 		yield i
@@ -9,6 +9,6 @@ public demo_range(start Int, end Int) {
 	}
 }
 
-for v in demo_range(0, 9) {
+for v in demo_range(0, 5) {
 	echo v
 }

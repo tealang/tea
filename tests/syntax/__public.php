@@ -15,14 +15,6 @@ function fn0($str): string {
 	return PHP_CONST_DEMO;
 }
 
-function demo_range(int $start, int $end): \Generator {
-	$i = $start;
-	while ($i <= $end) {
-		yield $i;
-		$i += 1;
-	}
-}
-
 
 // program end
 

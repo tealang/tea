@@ -1,8 +1,6 @@
 <?php
 namespace tea\tests\syntax;
 
-\Swoole\Runtime::enableCoroutine();
-
 require_once dirname(__DIR__, 1) . '/__public.php';
 
 function fn1(callable $callee) {
@@ -49,7 +47,5 @@ echo fn3('any...', function (string $caller) {
 	return "{$caller} has called!";
 }), LF;
 // ---------
-
-\Swoole\Event::wait();
 
 // program end

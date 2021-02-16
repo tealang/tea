@@ -11,6 +11,7 @@ public __FUNCTION__ UInt
 public FILE_APPEND Int
 public LOCK_EX Int
 public JSON_UNESCAPED_UNICODE Int
+public JSON_PRETTY_PRINT Int
 public ENT_QUOTES Int
 public PREG_SPLIT_DELIM_CAPTURE Int
 
@@ -60,7 +61,7 @@ public is_strict_array(it Any) Bool
 
 public is_strict_dict(it Any) Bool
 
-public xrange(start Int, end Int, step Int = 1) IGenerator
+public xrange(start Int, end Int, step Int = 1) IIterator
 
 #php file_exists(filename String) Bool
 
@@ -291,7 +292,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 
 #tea Regex {
 	masked test(string String) Bool
-	masked untie(string String) String.Array
+	masked separate(string String) String.Array
 	masked capture_one(string String) String.Array
 	masked capture_all(string String) String.Array.Array
 }
@@ -318,11 +319,6 @@ public IView {
 	next()
 	rewind()
 	valid() Bool
-}
-
-#php Generator as IGenerator: IIterator {
-	send(value Any) Any
-	throw(exception Exception)
 }
 
 // program end

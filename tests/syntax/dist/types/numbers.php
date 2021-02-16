@@ -1,8 +1,6 @@
 <?php
 namespace tea\tests\syntax;
 
-\Swoole\Runtime::enableCoroutine();
-
 require_once dirname(__DIR__, 2) . '/__public.php';
 
 // ---------
@@ -30,7 +28,5 @@ $float_num3 = 0.1231e-10;
 $num_str = (string)$dec;
 $num_str = (string)123.1;
 // ---------
-
-\Swoole\Event::wait();
 
 // program end

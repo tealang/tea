@@ -1,8 +1,6 @@
 <?php
 namespace tea\tests\syntax;
 
-\Swoole\Runtime::enableCoroutine();
-
 require_once dirname(__DIR__, 2) . '/__public.php';
 
 // ---------
@@ -61,7 +59,5 @@ $v_11 = 123;
 $v_20 = null;
 $v_21 = "sth.";
 // ---------
-
-\Swoole\Event::wait();
 
 // program end

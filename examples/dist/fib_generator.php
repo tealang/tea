@@ -3,7 +3,7 @@ namespace tea\examples;
 
 require_once __DIR__ . '/__public.php';
 
-function fib_generator(int $num = 9): \Generator {
+function fib_generator(int $num = 9): \Iterator {
 	$a = 0;
 	$b = 1;
 	foreach (\xrange(0, $num) as $i) {

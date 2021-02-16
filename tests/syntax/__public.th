@@ -35,6 +35,4 @@ public DemoList: BaseView {
 	render() String
 }
 
-public demo_range(start Int, end Int) IGenerator
-
 // program end

@@ -1,8 +1,6 @@
 <?php
 namespace tea\tests\syntax;
 
-\Swoole\Runtime::enableCoroutine();
-
 require_once dirname(__DIR__, 1) . '/__public.php';
 
 #internal
@@ -64,7 +62,5 @@ $d = 0 ? 1 : (2 + $a ? $a : 3);
 
 $e = $a ?? 1 ? $a ?? 2 : $a ?? 3;
 // ---------
-
-\Swoole\Event::wait();
 
 // program end

@@ -1,8 +1,6 @@
 <?php
 namespace tea\tests\syntax;
 
-\Swoole\Runtime::enableCoroutine();
-
 require_once dirname(__DIR__, 2) . '/__public.php';
 
 // ---------
@@ -20,10 +18,8 @@ var_dump($result1);
 $result2 = preg_split($regex, 'ab cd|e,f');
 var_dump($result2);
 
-$is_matched = regex_test('/^a-z$/iu', 'abcABC');
+$is_matched = regex_test('/^a-z$/i', 'abcABC');
 var_dump($is_matched);
 // ---------
-
-\Swoole\Event::wait();
 
 // program end

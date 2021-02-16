@@ -1,8 +1,6 @@
 <?php
 namespace tea\tests\syntax;
 
-\Swoole\Runtime::enableCoroutine();
-
 require_once dirname(__DIR__, 2) . '/__public.php';
 
 #internal
@@ -60,7 +58,5 @@ function collector1(): array {
 $result = collector1();
 var_dump($result);
 // ---------
-
-\Swoole\Event::wait();
 
 // program end

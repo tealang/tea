@@ -17,6 +17,8 @@ class Program extends Node
 
 	public $as_main_program = false;
 
+	public $is_using_coroutine = false;
+
 	public $docs;
 
 	public $name;
