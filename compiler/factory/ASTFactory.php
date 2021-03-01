@@ -698,7 +698,6 @@ class ASTFactory
 	public function end_class_member()
 	{
 		// $this->program->append_defer_check_identifiers($this->declaration);
-
 		$this->class->append_defer_check_identifiers($this->declaration);
 
 		$this->declaration = $this->class;

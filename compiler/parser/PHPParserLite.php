@@ -582,6 +582,8 @@ class PHPParserLite extends BaseParser
 
 		$declaration->is_static = $is_static;
 
+		$this->factory->end_class_member();
+
 		return $declaration;
 	}
 
@@ -874,7 +876,12 @@ class PHPParserLite extends BaseParser
 				$token = $this->scan_token_ignore_empty();
 			}
 		}
+		elseif ($token_type === T_NAME_FULLY_QUALIFIED) {
+			$type = $this->read_classkindred_identifier($token);
+			$token = $this->scan_token_ignore_empty();
+		}
 		else {
+			// $this->print_token($token);exit;
 			$type = TypeFactory::$_any;
 		}
 
@@ -1359,10 +1366,6 @@ class PHPParserLite extends BaseParser
 			echo $token, LF;
 		}
 		else {
-			if (!isset($token[1])) {
-				dump($token);exit;
-			}
-
 			echo token_name($token[0]), " '$token[1]'\n";
 		}
 	}
