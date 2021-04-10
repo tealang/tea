@@ -149,14 +149,5 @@ class InterfaceDeclaration extends ClassKindredDeclaration
 	 * 是否有默认实现的成员
 	 * @var bool
 	 */
-	public $has_default_implementations;
-
-	public function append_member(IClassMemberDeclaration $member)
-	{
-		if ($member instanceof PropertyDeclaration || ($member instanceof FunctionDeclaration && $member->body !== null)) {
-			$this->has_default_implementations = true;
-		}
-
-		return parent::append_member($member);
-	}
+	public $has_default_implementations = false;
 }

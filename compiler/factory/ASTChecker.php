@@ -537,6 +537,15 @@ class ASTChecker
 			$this->check_class_member_declaration($member);
 		}
 
+		// check is has default implementations for Interface
+		if ($node instanceof InterfaceDeclaration) {
+			foreach ($node->members as $member) {
+				if ($member instanceof PropertyDeclaration || ($member instanceof FunctionDeclaration && $member->body !== null)) {
+					$node->has_default_implementations = true;
+				}
+			}
+		}
+
 		// 检查本类与继承类的成员是否匹配
 		if ($node->inherits) {
 			$this->check_inherts_for_class_declaration($node);
