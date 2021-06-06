@@ -63,17 +63,21 @@ public is_strict_dict(it Any) Bool
 
 public xrange(start Int, end Int, step Int = 1) IIterator
 
-#php file_exists(filename String) Bool
+#php file_exists(filename Any) Bool
 
-#php dirname(path String, levels UInt = #default) String
+#php dirname(path Any, levels UInt = #default) String
 
-#php basename(path String, suffix String = #default) String
+#php basename(path Any, suffix String = #default) String
 
-#php realpath(path String) String
+#php realpath(path Any) String
 
-#php file_get_contents(file String) String
+#php chdir(dir Any) Bool
 
-#php file_put_contents(file String, data String, flags Int = #default) UInt
+#php unlink(file Any) Bool
+
+#php file_get_contents(file Any) String
+
+#php file_put_contents(file Any, data String, flags Int = #default) UInt
 
 #php max(n1 Any, n2 Any, n3 Any = #default) Any
 
@@ -107,23 +111,23 @@ public xrange(start Int, end Int, step Int = 1) IIterator
 
 #php mb_strtolower(str String) String
 
-#php strlen(str String) UInt
+#php strlen(str Any) UInt
 
-#php substr(str String, start Int, length Int = #default) String
+#php substr(str Any, start Int, length Int = #default) String
 
-#php strpos(master String, search String, offset Int = 0) Int
+#php strpos(master Any, search Any, offset Int = 0) Int
 
-#php strrpos(master String, search String, offset Int = 0) Int
+#php strrpos(master Any, search Any, offset Int = 0) Int
 
-#php strtoupper(str String) String
+#php strtoupper(str Any) String
 
-#php strtolower(str String) String
+#php strtolower(str Any) String
 
 #php strtr(master String, changes Dict) String
 
 #php str_replace(search Any, replacement Any, master String) String
 
-public _str_replace(master String, search String, replacement String) String
+public _str_replace(master String, search Any, replacement Any) String
 
 #php implode(glue String, pieces Any) String
 
@@ -173,7 +177,7 @@ public dict_search(master Dict, search Any) String
 
 #php json_encode(data Any, flags Int = 0, depth UInt = 512) String
 
-#php json_decode(data Any, assoc Bool = false, depth UInt = 512, flags Int = 0) Dict
+#php json_decode(data Any, assoc Bool = false, depth UInt = 512, flags Int = 0) Any
 
 #php htmlspecialchars(string Any, flags Int = #default, encoding String = #default, double_encode Any = #default) String
 
@@ -236,7 +240,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	masked rune_upper() String
 	masked count_width() UInt
 	masked split(delimiter String) String.Array
-	masked replace(search String, replacement String) String
+	masked replace(search Any, replacement Any) String
 }
 
 #tea Int: String {

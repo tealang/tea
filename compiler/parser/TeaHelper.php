@@ -127,7 +127,7 @@ class TeaHelper
 
 	static function is_strict_less_function_name(?string $token)
 	{
-		return preg_match('/^[_a-z]+[a-zA-Z0-9_]*$/', $token);
+		return preg_match('/^[_a-z]+[a-z0-9_]*$/i', $token);
 	}
 
 	static function is_classkindred_name(?string $token)

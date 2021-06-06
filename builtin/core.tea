@@ -109,12 +109,14 @@ public xrange(start Int, end Int, step = 1) {
 }
 
 // file
-#php file_exists(filename String) Bool
-#php dirname(path String, levels UInt = #default) String
-#php basename(path String, suffix String = #default) String
-#php realpath(path String) String
-#php file_get_contents(file String) String
-#php file_put_contents(file String, data String, flags Int = #default) UInt
+#php file_exists(filename) Bool
+#php dirname(path, levels UInt = #default) String
+#php basename(path, suffix String = #default) String
+#php realpath(path) String
+#php chdir(dir) Bool
+#php unlink(file) Bool
+#php file_get_contents(file) String
+#php file_put_contents(file, data String, flags Int = #default) UInt
 #php FILE_APPEND Int
 #php LOCK_EX Int
 
@@ -146,17 +148,17 @@ public xrange(start Int, end Int, step = 1) {
 #php mb_strtolower(str String) String
 
 // bytes mode functions
-#php strlen(str String) UInt
-#php substr(str String, start Int, length Int = #default) String
-#php strpos(master String, search String, offset Int = 0) Int  // would return false on not found
-#php strrpos(master String, search String, offset Int = 0) Int  // would return false on not found
-#php strtoupper(str String) String
-#php strtolower(str String) String
+#php strlen(str) UInt
+#php substr(str, start Int, length Int = #default) String
+#php strpos(master, search, offset Int = 0) Int  // would return false on not found
+#php strrpos(master, search, offset Int = 0) Int  // would return false on not found
+#php strtoupper(str) String
+#php strtolower(str) String
 
 // replace in binary mode
 #php strtr(master String, changes Dict) String
 #php str_replace(search, replacement, master String) String
-public _str_replace(master String, search String, replacement String) {
+public _str_replace(master String, search, replacement) {
 	return str_replace(search, replacement, master);
 }
 
@@ -261,7 +263,8 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 
 #tea None {}
 
-#tea Any: String {} // extends String to use the String properties/methods
+// extends String to use the String properties/methods
+#tea Any: String {}
 
 #tea String {
 	// process in dist native mode
@@ -291,7 +294,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array {
 	// other
 	masked count_width() UInt => mb_strwidth(this)
 	masked split(delimiter String) => explode(delimiter, this)
-	masked replace(search String, replacement String) => _str_replace(this, search, replacement)
+	masked replace(search, replacement) => _str_replace(this, search, replacement)
 }
 
 #tea Int: String {

@@ -2030,10 +2030,14 @@ class TeaParser extends BaseParser
 
 		$header_pos = $this->pos;
 
-		if (TeaHelper::is_constant_name($token)) {
+		if ($token === _VAR) {
+			$token = $this->scan_token_ignore_space();
+			$declaration = $this->read_property_declaration($token, $modifier, $static);
+		}
+		elseif (TeaHelper::is_constant_name($token)) {
 			$declaration = $this->read_class_constant_declaration($token, $modifier);
 		}
-		elseif (TeaHelper::is_strict_less_function_name($token)) { // 因为需要支持PHP库，这里放开为宽松的命名规范
+		elseif (TeaHelper::is_strict_less_function_name($token)) {
 			if ($this->get_token() === _PAREN_OPEN) {
 				$declaration = $this->read_method_declaration($token, $modifier, $static);
 			}

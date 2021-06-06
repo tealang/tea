@@ -66,13 +66,20 @@ class HeaderParser extends TeaParser
 			$name = array_pop($namepath);
 			$next = $this->get_token_ignore_space();
 		}
-		elseif (TeaHelper::is_strict_less_function_name($name)) {
+		elseif ($next === _COLON) {
+			//
+		}
+		elseif ($next === _PAREN_OPEN) {
+			if (!TeaHelper::is_strict_less_function_name($name)) {
+				throw $this->new_parse_error("Invalid function name.");
+			}
+
 			// function
 			$this->assert_not_reserveds_word($name);
 			return $this->read_function_declaration($name, $modifier, true);
 		}
 		elseif (TeaHelper::is_constant_name($name)) {
-			if ($next !== _BLOCK_BEGIN && $next !== _COLON && $next !== _AS) {
+			if ($next !== _BLOCK_BEGIN && $next !== _AS) {
 				return $this->read_constant_declaration_without_value($name, $modifier);
 			}
 		}

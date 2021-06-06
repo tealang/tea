@@ -1777,7 +1777,8 @@ class ASTChecker
 				$param_name = $parameter->name;
 				$symbol = $node->symbols[$param_name] ?? $this->find_symbol_by_name($param_name);
 				if ($symbol === null) {
-					throw $including->unit->new_syntax_error("Expected var '{$param_name}' to #include({$node->target})", $node);
+					$checker = self::get_checker($including);
+					throw $checker->new_syntax_error("Expected var '{$param_name}' to #include('{$node->target}')", $node);
 				}
 			}
 

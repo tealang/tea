@@ -61,7 +61,7 @@ function xrange(int $start, int $end, int $step = 1): \Iterator {
 	}
 }
 
-function _str_replace(string $master, string $search, string $replacement): string {
+function _str_replace(string $master, $search, $replacement): string {
 	return str_replace($search, $replacement, $master);
 }
 
