@@ -1399,11 +1399,11 @@ class PHPCoder extends TeaCoder
 			if (is_string($item)) {
 				$items[] = $item;
 			}
-			elseif (($item instanceof Identifiable && !$item->symbol->declaration instanceof IConstantDeclaration) || $item instanceof KeyAccessing) {
+			elseif ($this->is_interpolated($item)) {
 				$item = $item->render($this);
 				$items[] = "{{$item}}";
 			}
-			elseif ($item) {
+			else {
 				$item = $this->render_instring_expression($item);
 				if (count($items) === 1) {
 					$items = [$item . ' . "'];
@@ -1424,6 +1424,26 @@ class PHPCoder extends TeaCoder
 
 		$code = join($items);
 		return $this->new_string_placeholder($code);
+	}
+
+	private function is_interpolated(BaseExpression $item)
+	{
+		if ($item instanceof PlainIdentifier) {
+			if ($item->symbol->declaration instanceof IVariableDeclaration) {
+				return true;
+			}
+		}
+		elseif ($item instanceof KeyAccessing) {
+			return true;
+		}
+		elseif ($item instanceof AccessingIdentifier) {
+			$declaration = $item->symbol->declaration;
+			if ($declaration instanceof PropertyDeclaration and !$declaration->is_static) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	protected function render_instring_expression(BaseExpression $expr)
