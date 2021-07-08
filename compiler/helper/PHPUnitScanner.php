@@ -26,7 +26,7 @@ class PHPUnitScanner
 
 	public function scan_sub_directories(string $path)
 	{
-		$items = array_diff(scandir($path), ['..', '.', 'test', 'www']);
+		$items = array_diff(scandir($path), ['..', '.']);
 		foreach ($items as $item) {
 			$sub_path = $path . $item;
 			if (is_dir($sub_path)) {

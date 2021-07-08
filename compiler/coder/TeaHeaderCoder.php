@@ -15,6 +15,8 @@ class TeaHeaderCoder extends TeaCoder
 
 	protected function process_use_statments(Program $program)
 	{
+		$program->uses = []; // clear the custom use items
+
 		foreach ($program->declarations as $node) {
 			$this->collect_use_statements($program, $node);
 		}
@@ -25,7 +27,6 @@ class TeaHeaderCoder extends TeaCoder
 		foreach ($declaration->uses as $use) {
 			$uri = $use->ns->uri;
 
-			// URI相同的将合并到一条
 			if (!isset($program->uses[$uri])) {
 				$program->uses[$uri] = new UseStatement($use->ns);
 			}
