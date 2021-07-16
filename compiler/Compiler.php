@@ -68,6 +68,8 @@ class Compiler
 	//  */
 	// private $is_mixed_mode = false;
 
+	private $is_src_dir = false;
+
 	/**
 	 * the instance of current Unit
 	 * @var Unit
@@ -134,7 +136,18 @@ class Compiler
 
 	public function make()
 	{
-		$this->scan_program_files($this->unit_path);
+		// for generate the autoload maps
+		$this->unit_path_prefix_len = strlen($this->unit_path);
+
+		$scan_path = $this->unit_path;
+
+		// if has "src" directory, ignore others
+		if (file_exists($scan_path . SRC_DIR_NAME)) {
+			$scan_path .= SRC_DIR_NAME . DS;
+			$this->is_src_dir = true;
+		}
+
+		$this->scan_program_files($scan_path);
 
 		// $this->is_mixed_mode = !empty($this->native_program_files);
 
@@ -228,13 +241,12 @@ class Compiler
 			throw new Exception("#unit declaration not found in Unit header file: {$this->header_file_path}");
 		}
 
-		// require the Unit namespace
-		$this->prepare_paths($this->unit->ns);
+		$this->prepare_paths_for_unit($this->unit);
 	}
 
-	private function prepare_paths(NamespaceIdentifier $ns)
+	private function prepare_paths_for_unit(Unit $unit)
 	{
-		$reversed_ns_names = array_reverse($ns->names);
+		$reversed_ns_names = array_reverse($unit->ns->names);
 		$dir_names = [];
 		$checking_path = $this->unit_path;
 		foreach ($reversed_ns_names as $ns_name) {
@@ -247,8 +259,8 @@ class Compiler
 			array_unshift($dir_names, $dir_name);
 		}
 
-		if (self::is_framework_internal_namespaces($ns)) {
-			// 框架内部名称空间，其base_path应为往上一级
+		if (self::is_framework_internal_namespaces($unit->ns)) {
+			// base_path for framework is the project path
 			$this->base_path = $checking_path . DS;
 			$this->super_path = dirname($checking_path) . DS;
 		}
@@ -258,11 +270,8 @@ class Compiler
 			$this->super_path = $checking_path . DS;
 		}
 
-		// {unit-path}/dist/
-		$this->unit_dist_path = $this->unit_path . DIST_DIR_NAME . DS;
-
 		// set the dist paths
-		$this->unit_path_prefix_len = strlen($this->unit_path);
+		$this->unit_dist_path = $this->unit_path . DIST_DIR_NAME . DS;
 		$this->unit_public_file = $this->unit_path . PUBLIC_HEADER_FILE_NAME;
 		$this->unit_loader_file = $this->unit_path . PUBLIC_LOADER_FILE_NAME;
 	}
@@ -398,7 +407,7 @@ class Compiler
 	{
 		$dir_names = $ns->names;
 
-		// 框架内部的名称空间，上一层才是base_path
+		// add the project name when the Unit in a framework
 		if (self::is_framework_internal_namespaces($ns)) {
 			$base_dir_name = basename($this->base_path);
 			array_unshift($dir_names, $base_dir_name);
@@ -494,17 +503,21 @@ class Compiler
 
 	private function render_program(Program $program)
 	{
-		$dest_file = $this->get_dist_file_path($program->name);
+		$dist_file = $this->get_dist_file_path($program->name);
 
 		$coder = new PHPCoder();
 		$dist_code = $coder->render_program($program);
 
-		file_put_contents($dest_file, $dist_code);
-		return $dest_file;
+		file_put_contents($dist_file, $dist_code);
+		return $dist_file;
 	}
 
 	private function get_dist_file_path(string $name)
 	{
+		if ($this->is_src_dir) {
+			$name = substr($name, 4); // trim the 'src/' prefix
+		}
+
 		$file_path = $this->unit_dist_path . $name . '.' . PHP_EXT_NAME;
 
 		$dir_path = dirname($file_path);
@@ -636,3 +649,5 @@ class Compiler
 		echo $message, LF;
 	}
 }
+
+// program end
