@@ -90,8 +90,6 @@ class PHPCoder extends TeaCoder
 
 	const PROGRAM_HEADER = '<?php';
 
-	public $include_prefix;
-
 	protected $uses = [];
 
 	protected function process_use_statments(array $declarations)
@@ -149,7 +147,7 @@ class PHPCoder extends TeaCoder
 	{
 		$declarations = [];
 		foreach ($program->declarations as $node) {
-			// 公用常量和函数都生成到了__public.php中
+			// the common consts and functions would be render to the loader file
 			if (!$node->is_unit_level || $node instanceof ClassKindredDeclaration) {
 				$declarations[] = $node;
 			}
@@ -165,15 +163,15 @@ class PHPCoder extends TeaCoder
 				$items[] = '';
 			}
 
-			$levels = $program->get_subdirectory_levels();
+			$levels = $program->count_subdirectory_levels();
 			if ($levels) {
-				// 在Unit子目录中
-				$items[] = "require_once dirname(__DIR__, {$levels}) . '/__public.php';\n";
+				$path_token = "dirname(__DIR__, {$levels})";
 			}
 			else {
-				// 在Unit根目录中
-				$items[] = "require_once __DIR__ . '/__public.php';\n";
+				$path_token = "__DIR__";
 			}
+
+			$items[] = "require_once $path_token . '/" . PUBLIC_LOADER_FILE_NAME . "';\n";
 		}
 
 		// include dependencies

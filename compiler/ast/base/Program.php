@@ -76,19 +76,16 @@ class Program extends Node
 		$this->depends_native_programs[$program->name] = $program;
 	}
 
-	public function get_subdirectory_levels()
+	public function count_subdirectory_levels()
 	{
-		$unit_dir_path = rtrim($this->unit->path, DS);
-		$count_path = dirname($this->file);
+		$unit_path = rtrim($this->unit->path, DS);
 
-		$i = 0;
-		while ($unit_dir_path !== $count_path) {
+		$i = 1;
+
+		$count_path = dirname($this->file);
+		while ($unit_path !== $count_path) {
 			$i++;
 			$count_path = dirname($count_path);
-		}
-
-		if ($this->unit->is_mixed_mode) {
-			$i++;
 		}
 
 		return $i;

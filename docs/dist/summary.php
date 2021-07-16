@@ -1,7 +1,7 @@
 <?php
 namespace tea\docs;
 
-require_once __DIR__ . '/__public.php';
+require_once dirname(__DIR__, 1) . '/__public.php';
 
 function demo_function1(string $message) {
 	echo 'this function can only be called by local unit', LF;
@@ -62,7 +62,7 @@ class DemoPublicClass extends DemoBaseClass implements IDemo, DemoInterface {
 // ---------
 echo "Hello, 世界", LF;
 
-echo '雷总: Are you OK?', "米粉: I'm very OK!", LF;
+echo 'Hello, ', '世界', LF;
 
 echo 'string1', 'string2', 'string3';
 

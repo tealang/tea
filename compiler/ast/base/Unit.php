@@ -57,15 +57,15 @@ class Unit implements IRootDeclaration
 	public $super_dir_levels;
 
 	/**
-	 * The option for is need to load when as a foriegn Unit
+	 * is need to be load when current as a foriegn Unit
 	 * @var bool
 	 */
 	public $is_need_load;
 
-	/**
-	 * @var bool
-	 */
-	public $is_mixed_mode;
+	// /**
+	//  * @var bool
+	//  */
+	// public $is_mixed_mode;
 
 	/**
 	 * @var ASTChecker

@@ -9,6 +9,7 @@
 
 namespace Tea;
 
+require __DIR__ . '/config.php';
 require __DIR__ . '/constants.php';
 
 const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;

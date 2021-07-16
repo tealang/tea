@@ -1,7 +1,7 @@
 <?php
 namespace tea\examples;
 
-require_once __DIR__ . '/__public.php';
+require_once dirname(__DIR__, 1) . '/__public.php';
 
 function say_hello(string $name = 'World') {
 	echo 'Hello, ' . $name . '!', LF;

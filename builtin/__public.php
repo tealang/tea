@@ -111,7 +111,7 @@ function regex_capture_all(string $regex, string $subject): array {
 
 // autoloads
 const __AUTOLOADS = [
-	'IView' => 'core.php'
+	'IView' => 'dist/core.php'
 ];
 
 spl_autoload_register(function ($class) {

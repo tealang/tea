@@ -37,9 +37,9 @@ try {
 	}
 
 	$realpath = FileHelper::normalize_path($realpath . DS);
-	$loader_file = $realpath . PHPLoaderMaker::LOADER_FILE;
+	$loader_file = $realpath . PUBLIC_LOADER_FILE_NAME;
 	if (!file_exists($loader_file)) {
-		halt(sprintf("The '%s' not found in '%s'.", PHPLoaderMaker::LOADER_FILE, $realpath));
+		halt(sprintf("The '%s' not found in '%s'.", PUBLIC_LOADER_FILE_NAME, $realpath));
 	}
 
 	$scanner = new PHPUnitScanner();

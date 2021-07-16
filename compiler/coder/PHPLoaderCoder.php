@@ -41,7 +41,7 @@ class PHPLoaderCoder extends PHPCoder
 
 			// load the builtins
 			if ($unit->as_main_unit) {
-				$items[] = sprintf("require_once \$super_path . '%s'; // the builtins", Compiler::BUILTIN_LOADER_FILE);
+				$items[] = sprintf("require_once \$super_path . '%s'; // the builtins", BUILTIN_LOADER_FILE);
 			}
 
 			// load the foriegn units

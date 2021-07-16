@@ -9,29 +9,8 @@
 
 namespace Tea;
 
-const TEA_EXT_NAME = 'tea', TEA_HEADER_EXT_NAME = 'th', PHP_EXT_NAME = 'php',
-	UNIT_HEADER_NAME = '__unit', PUBLIC_HEADER_NAME = '__public',
-	DIST_DIR_NAME = 'dist';
-
 class Compiler
 {
-	const BUILTIN_PATH = BASE_PATH . 'builtin/';
-
-	const BUILTIN_PROGRAM = self::BUILTIN_PATH . 'core.tea';
-
-	const BUILTIN_LOADER_FILE = 'tea/builtin/dist/__public.php';
-
-	const UNIT_HEADER_FILE_NAME = '__unit.th';
-
-	const PUBLIC_HEADER_FILE_NAME = '__public.th';
-
-	const PUBLIC_LOADER_FILE_NAME = '__public.php';
-
-	const DIR_SCAN_SKIP_ITEMS = ['.', '..', 'dist', 'bin', '__public.php'];
-
-	// the special namespaces for some framework
-	const FRAMEWORK_INTERNAL_NAMESPACES = ['App', 'Model', 'Lib'];
-
 	// the path of current compiling unit
 	private $unit_path;
 
@@ -39,14 +18,14 @@ class Compiler
 	private $unit_dist_path;
 
 	// the prefix length use to trim path prefix
-	private $unit_dist_path_len;
+	private $unit_path_prefix_len;
 
 	// use to generate the autoloads classmap
 	private $unit_dist_ns_prefix;
 
 	private $unit_public_file;
 
-	private $unit_dist_loader_file;
+	private $unit_loader_file;
 
 	// the project path of current unit
 	// use to find the depencence units in current project, and find the unit_dist_path
@@ -84,10 +63,10 @@ class Compiler
 	 */
 	private $native_program_files = [];
 
-	/**
-	 * @var bool
-	 */
-	private $is_mixed_mode = false;
+	// /**
+	//  * @var bool
+	//  */
+	// private $is_mixed_mode = false;
 
 	/**
 	 * the instance of current Unit
@@ -126,7 +105,7 @@ class Compiler
 
 	private function init_unit(string $unit_path)
 	{
-		$this->header_file_path = $unit_path . self::UNIT_HEADER_FILE_NAME;
+		$this->header_file_path = $unit_path . UNIT_HEADER_FILE_NAME;
 		if (!file_exists($this->header_file_path)) {
 			throw new Exception("The Unit header file '{$this->header_file_path}' not found.");
 		}
@@ -144,10 +123,10 @@ class Compiler
 	{
 		// some Operation Systems are Case regardless
 		if (in_array(PHP_OS, self::CASE_REGARDLESS_OS_LIST)) {
-			$result = strtolower(self::BUILTIN_PATH) === strtolower($unit_path);
+			$result = strtolower(BUILTIN_PATH) === strtolower($unit_path);
 		}
 		else {
-			$result = self::BUILTIN_PATH === $unit_path;
+			$result = BUILTIN_PATH === $unit_path;
 		}
 
 		return $result;
@@ -157,7 +136,7 @@ class Compiler
 	{
 		$this->scan_program_files($this->unit_path);
 
-		$this->is_mixed_mode = !empty($this->native_program_files);
+		// $this->is_mixed_mode = !empty($this->native_program_files);
 
 		$this->parse_unit_header();
 
@@ -193,23 +172,18 @@ class Compiler
 
 	private function prepare_for_render()
 	{
-		// 当前Unit的dist目录往上的层数
-		$super_dir_levels = count($this->unit->ns->names) + 1;
+		// the super dir levels for the Unit
+		$super_dir_levels = count($this->unit->ns->names);
 
 		if (self::is_framework_internal_namespaces($this->unit->ns)) {
 			$super_dir_levels++;
 		}
 
-		if ($this->is_mixed_mode) {
-			// for include expression
-			$this->unit->include_prefix = DIST_DIR_NAME . DS;
-			$this->unit->super_dir_levels = $super_dir_levels - 1;
+		// for include expression
+		$this->unit->include_prefix = DIST_DIR_NAME . DS;
 
-			$this->unit->is_mixed_mode = true;
-		}
-		else {
-			$this->unit->super_dir_levels = $super_dir_levels;
-		}
+		// for generate the $super_path
+		$this->unit->super_dir_levels = $super_dir_levels;
 
 		// for faster processing the operations
 		OperatorFactory::set_render_options(PHPCoder::OPERATOR_MAP, PHPCoder::OPERATOR_PRECEDENCES);
@@ -287,20 +261,10 @@ class Compiler
 		// {unit-path}/dist/
 		$this->unit_dist_path = $this->unit_path . DIST_DIR_NAME . DS;
 
-		// set the dist path
-		if ($this->is_mixed_mode) {
-			// mixed programming mode
-			$this->unit_dist_path_len = strlen($this->unit_path);
-			$this->unit_public_file = $this->unit_path . self::PUBLIC_HEADER_FILE_NAME;
-			$this->unit_dist_loader_file = $this->unit_path . self::PUBLIC_LOADER_FILE_NAME;
-		}
-		else {
-			// normal mode
-			// $this->unit_dist_path = $this->find_unit_dist_path(join(DS, $dir_names));
-			$this->unit_dist_path_len = strlen($this->unit_dist_path);
-			$this->unit_public_file = $this->unit_dist_path . self::PUBLIC_HEADER_FILE_NAME;
-			$this->unit_dist_loader_file = $this->get_dist_file_path(PUBLIC_HEADER_NAME);
-		}
+		// set the dist paths
+		$this->unit_path_prefix_len = strlen($this->unit_path);
+		$this->unit_public_file = $this->unit_path . PUBLIC_HEADER_FILE_NAME;
+		$this->unit_loader_file = $this->unit_path . PUBLIC_LOADER_FILE_NAME;
 	}
 
 	// private function find_unit_dist_path(string $dir)
@@ -371,7 +335,7 @@ class Compiler
 	{
 		self::echo_start('Loading builtins...');
 
-		$program = $this->parse_tea_program(self::BUILTIN_PROGRAM);
+		$program = $this->parse_tea_program(BUILTIN_PROGRAM);
 		$program->unit = null;
 
 		$this->builtin_symbols = $program->symbols;
@@ -411,13 +375,13 @@ class Compiler
 
 		$unit_dir = $this->find_unit_public_dir($ns);
 		$unit_path = $this->super_path . $unit_dir . DS;
-		$unit_public_file = $unit_path . self::PUBLIC_HEADER_FILE_NAME;
+		$unit_public_file = $unit_path . PUBLIC_HEADER_FILE_NAME;
 
 		$unit = new Unit($unit_path);
 		$this->units_pool[$uri] = $unit; // add to pool, so do not need to reload
 
 		// for render require_once statments
-		$unit->loader_file = $unit_dir . '/' . self::PUBLIC_LOADER_FILE_NAME;
+		$unit->loader_file = $unit_dir . '/' . PUBLIC_LOADER_FILE_NAME;
 
 		$unit->symbols = $this->builtin_symbols;
 
@@ -441,17 +405,6 @@ class Compiler
 		}
 
 		$try_paths = [];
-
-		$unit_dir = $this->find_public_file_dir_with_names($dir_names, $try_paths);
-		if ($unit_dir !== false) {
-			return $unit_dir;
-		}
-
-		// find in dist directory
-		// $first_name = $dir_names[0];
-		// $dir_names[0] = DIST_DIR_NAME;
-		// array_unshift($dir_names, $first_name);
-		$dir_names[] = DIST_DIR_NAME;
 
 		$unit_dir = $this->find_public_file_dir_with_names($dir_names, $try_paths);
 		if ($unit_dir !== false) {
@@ -493,7 +446,7 @@ class Compiler
 		}
 
 		// check public file
-		$unit_public_file = $path . self::PUBLIC_HEADER_FILE_NAME;
+		$unit_public_file = $path . PUBLIC_HEADER_FILE_NAME;
 		if (file_exists($unit_public_file)) {
 			// use the real dir names for render
 			return join(DS, $real_names);
@@ -536,7 +489,7 @@ class Compiler
 		// the autoloads for classes/interfaces/traits
 		$dist_code .= PHPLoaderCoder::render_autoloads_code($this->autoloads_map);
 
-		file_put_contents($this->unit_dist_loader_file, $dist_code);
+		file_put_contents($this->unit_loader_file, $dist_code);
 	}
 
 	private function render_program(Program $program)
@@ -590,7 +543,7 @@ class Compiler
 
 	private function collect_autoloads_map(Program $program, string $dist_file_path, string $name_prefix = null)
 	{
-		$dist_file_path = substr($dist_file_path, $this->unit_dist_path_len);
+		$dist_file_path = substr($dist_file_path, $this->unit_path_prefix_len);
 
 		foreach ($program->declarations as $node) {
 			if ($node instanceof ClassKindredDeclaration && !$node instanceof BuiltinTypeClassDeclaration && $node->label !== _PHP) {
@@ -611,13 +564,13 @@ class Compiler
 		$items = scandir($path);
 
 		// check is a sub-unit
-		if ($levels > 0 && (in_array(self::UNIT_HEADER_FILE_NAME, $items) || in_array(self::PUBLIC_HEADER_FILE_NAME, $items)) ) {
+		if ($levels > 0 && (in_array(UNIT_HEADER_FILE_NAME, $items) || in_array(PUBLIC_HEADER_FILE_NAME, $items)) ) {
 			echo "\nWarring: The sub-diretory '$path' has be ignored, because of it has '__unit.th' or '__public.th'.\n\n";
 			return; // ignore these sub-unit
 		}
 
 		foreach ($items as $item) {
-			if (in_array($item, self::DIR_SCAN_SKIP_ITEMS, true)) {
+			if (in_array($item, DIR_SCAN_SKIP_ITEMS, true)) {
 				continue;
 			}
 
@@ -670,7 +623,7 @@ class Compiler
 
 	private static function is_framework_internal_namespaces(NamespaceIdentifier $ns)
 	{
-		return in_array($ns->names[0], self::FRAMEWORK_INTERNAL_NAMESPACES, true);
+		return in_array($ns->names[0], FRAMEWORK_INTERNAL_NAMESPACES, true);
 	}
 
 	private static function echo_start(string $message, string $ending = "\t")
