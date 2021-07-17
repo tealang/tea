@@ -33,7 +33,9 @@ arr2 = [4, 5, 6]
 arr3 = arr1 concat arr2
 
 var dict = [:]
-dict[1.1::String] = 1
+dict[1.1#String] = 1
+
+var_dump(dict)
 
 var key = 1
 var key1 Any = 1
@@ -42,13 +44,13 @@ var key3 = false
 
 dict1 = [
 	key: "abc", // some comments
-	key1::String: "abc", // some comments
-	key3::String: "abc", // some comments
+	key1#String: "abc", // some comments
+	key3#String: "abc", // some comments
 	"k1": "v1", /* some comments */
 ]
 
 dict2 = [
-	key2::String: "abc", /* some comments
+	key2#String: "abc", /* some comments
 	 */
 	"k1": "v1", // some comments
 ]
@@ -65,7 +67,7 @@ var users = [
 
 var id2name = [:]
 for user in users {
-	id2name[user['id']::String] = user['name']
+	id2name[user['id']#String] = user['name']
 }
 
 // array map
@@ -76,14 +78,17 @@ var_dump(mapped)
 
 // array reduce
 var reduced = [1, 2, 3].reduce((carry, item) => {
-	return carry::Int + item::Int
+	return carry#Int + item#Int
 }, 10)
 var_dump(reduced)
 
 // array filter
 var filtered = [0, 1, 2, 3, 4, 5].filter((item) => {
-	if item::Int rem 2 == 0 {
+	if item#Int rem 2 == 0 {
 		return true
 	}
 })
+
 var_dump(filtered)
+
+

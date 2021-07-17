@@ -1275,6 +1275,9 @@ class ASTChecker
 			case CallExpression::KIND:
 				$infered_type = $this->infer_call_expression($node);
 				break;
+			case PipeCallExpression::KIND:
+				$infered_type = $this->infer_pipecall_expression($node);
+				break;
 			case BinaryOperation::KIND:
 				$infered_type = $this->infer_binary_operation($node);
 				break;
@@ -1715,6 +1718,10 @@ class ASTChecker
 				$this->check_callable_type($type);
 			}
 
+			if (!$type->symbol) {
+				$type->symbol = $this->find_symbol_by_name($type->name, $type);
+			}
+
 			// no any other need to check
 		}
 		elseif ($type instanceof PlainIdentifier) {
@@ -1806,93 +1813,79 @@ class ASTChecker
 		return $program;
 	}
 
+	private function infer_pipecall_expression(PipeCallExpression $node): ?IType
+	{
+		return $this->infer_basecall_expression($node);
+	}
+
 	private function infer_call_expression(CallExpression $node): ?IType
 	{
-		$callee = $node->callee;
-		$declar = $this->require_callee_declaration($callee);
+		return $this->infer_basecall_expression($node);
+	}
 
-		if ($declar->type === TypeFactory::$_callable && $declar instanceof IVariableDeclaration) {
-			// Callable 类型的参数或变量，该种参数或变量可接受任意能调用的值
+	private function infer_basecall_expression(BaseCallExpression $node): ?IType
+	{
+		$callee_declar = $this->require_callee_declaration($node->callee);
+
+		// if $callee_declar is AnyType, do not has the type property
+		$callee_type = $callee_declar->type ?? TypeFactory::$_any;
+
+		// // if is a variable, use it's type declaration
+		// if ($callee_declar instanceof IVariableDeclaration) {
+		// 	if ($callee_type instanceof MetaType) {
+		// 		// if is MetaType, use the Declaration of it's value type
+		// 		$callee_declar = $callee_declar->generic_type->symbol->declaration;
+		// 	}
+		// }
+
+		// cache for render
+		$node->infered_callee_declaration = $callee_declar;
+
+		if ($callee_type === TypeFactory::$_any || $callee_declar === TypeFactory::$_callable) {
+			// the Any-Callable type do not need to match parameters
 			foreach ($node->arguments as $argument) {
 				$this->infer_expression($argument);
 			}
 
-			$infered = TypeFactory::$_any;
+			// return; // ignore check parameters for type Any
 		}
 		else {
-			$this->check_call_arguments($node);
+			// check arguments
+			$this->check_call_arguments($node, $callee_declar);
+		}
 
-			if ($callee->symbol->declaration instanceof ClassKindredDeclaration) {
-				if (!$callee->symbol->declaration instanceof ClassDeclaration) {
-					throw $this->new_syntax_error("Invalid call for: '{$callee->symbol->declaration->name}'", $node);
-				}
-
-				$infered = $callee;
+		if ($callee_declar instanceof ClassKindredDeclaration) {
+			if (!$callee_declar instanceof ClassDeclaration) {
+				throw $this->new_syntax_error("Invalid call for: '{$callee_declar->name}'", $node);
 			}
-			else {
-				$infered = $declar->type;
 
-				// the actual called return type of MetaType for Variable is it's value type
-				if ($infered instanceof MetaType and $callee->symbol->declaration instanceof VariableDeclaration) {
-					$infered = $infered->generic_type;
-				}
+			$infered = $node->callee;
+			if ($infered->symbol->declaration instanceof IVariableDeclaration) {
+				$infered = $infered->symbol->declaration->type->generic_type;
 			}
+		}
+		else {
+			$infered = $callee_type;
+
+			// if ($infered->symbol and $infered->symbol->declaration instanceof IVariableDeclaration) {
+			// 	$infered = $infered->symbol->declaration->type;
+			// 	if ($infered instanceof MetaType) {
+			// 		$infered = $infered->generic_type;
+			// 	}
+			// }
+
+			// // the actual called return type of MetaType for Variable is it's value type
+			// if ($infered instanceof MetaType and $callee_declar instanceof VariableDeclaration) {
+			// 	$infered = $infered->generic_type;
+			// }
 		}
 
 		return $infered;
 	}
 
-	private function merge_callbacks_to_arguments(array &$arguments, array $callbacks, array $parameters)
+	private function check_call_arguments(BaseCallExpression $node, IDeclaration $callee_declar)
 	{
-		if (count($callbacks) === 1 && $callbacks[0]->name === null) {
-			$first_callback_parameter_on_tail = null;
-			for ($i = count($parameters) - 1; $i >=0; $i--) {
-				$parameter = $parameters[$i];
-				if ($parameter->type instanceof CallableType) {
-					$first_callback_parameter_on_tail = $parameter;
-				}
-				else {
-					break;
-				}
-			}
-
-			if (!$first_callback_parameter_on_tail) {
-				throw $this->new_syntax_error("Unknow which parameter for callback", $callbacks[0]);
-			}
-
-			$callbacks[0]->name = $first_callback_parameter_on_tail->name;
-		}
-
-		foreach ($callbacks as $cb) {
-			$arguments[$cb->name] = $cb->value;
-		}
-	}
-
-	private function check_call_arguments(CallExpression $node)
-	{
-		$src_callee_declar = $node->callee->symbol->declaration;
-
-		// if is a variable, use it's type declaration
-		if ($src_callee_declar instanceof IVariableDeclaration) {
-			$callee_declar = $src_callee_declar->type;
-
-			// if is MetaType, use the Declaration of it's value type
-			if ($callee_declar instanceof MetaType) {
-				$callee_declar = $callee_declar->generic_type->symbol->declaration;
-			}
-		}
-		else {
-			$callee_declar = $src_callee_declar;
-		}
-
 		$arguments = $node->arguments;
-		if ($callee_declar === TypeFactory::$_any || $callee_declar === TypeFactory::$_callable) {
-			foreach ($arguments as $argument) {
-				$this->infer_expression($argument);
-			}
-
-			return; // ignore check parameters for type Any
-		}
 
 		// if is a class, use it's construct declaration
 		if ($callee_declar instanceof ClassDeclaration) {
@@ -1901,30 +1894,33 @@ class ASTChecker
 				if ($arguments) {
 					throw $this->new_syntax_error("Cannot use arguments to create a non-construct class instance", $argument);
 				}
+
 				return;
 			}
 		}
 
 		$parameters = $callee_declar->parameters;
 
-		// the -> style callbacks
-		if ($node->callbacks) {
+		// the -> style callbacks for normal call
+		if (isset($node->callbacks)) {
 			$this->merge_callbacks_to_arguments($arguments, $node->callbacks, $parameters);
 		}
 
-		$used_arg_names = false;
+		$has_named_arguments = false;
+
 		$normalizeds = [];
 		foreach ($arguments as $key => $argument) {
 			if (is_numeric($key)) {
 				$parameter = $parameters[$key] ?? null;
 				if (!$parameter) {
-					throw $this->new_syntax_error("Argument $key does not matched the parameter defined in '{$src_callee_declar->name}'", $argument);
+					$declar_name = $this->get_declaration_name($callee_declar);
+					throw $this->new_syntax_error("Argument $key does not matched the parameter defined in '{$declar_name}'", $argument);
 				}
 
 				$idx = $key;
 			}
 			else {
-				$used_arg_names = true;
+				$has_named_arguments = true;
 				list($idx, $parameter) = $this->require_parameter_by_name($key, $parameters, $node->callee);
 			}
 
@@ -1969,7 +1965,7 @@ class ASTChecker
 		}
 
 		// fill the default value when needed
-		if ($used_arg_names) {
+		if ($has_named_arguments) {
 			$last_idx = array_key_last($normalizeds);
 
 			$i = 0;
@@ -1986,13 +1982,39 @@ class ASTChecker
 		}
 	}
 
-	private function require_construct_declaration_for_class(ClassDeclaration $class, CallExpression $call)
+	private function merge_callbacks_to_arguments(array &$arguments, array $callbacks, array $parameters)
+	{
+		if (count($callbacks) === 1 && $callbacks[0]->name === null) {
+			$first_callback_parameter_on_tail = null;
+			for ($i = count($parameters) - 1; $i >=0; $i--) {
+				$parameter = $parameters[$i];
+				if ($parameter->type instanceof CallableType) {
+					$first_callback_parameter_on_tail = $parameter;
+				}
+				else {
+					break;
+				}
+			}
+
+			if (!$first_callback_parameter_on_tail) {
+				throw $this->new_syntax_error("Unknow which parameter for callback", $callbacks[0]);
+			}
+
+			$callbacks[0]->name = $first_callback_parameter_on_tail->name;
+		}
+
+		foreach ($callbacks as $cb) {
+			$arguments[$cb->name] = $cb->value;
+		}
+	}
+
+	private function require_construct_declaration_for_class(ClassDeclaration $class, BaseCallExpression $call)
 	{
 		$symbol = $this->find_member_symbol_in_class($class, _CONSTRUCT);
 
 		if (!$symbol) {
 			if ($call->arguments || $call->callbacks) {
-				throw $this->new_syntax_error("'construct' of class '{$class->name}' not found", $class);
+				throw $this->new_syntax_error("'construct' in '{$class->name}' not found", $call);
 			}
 
 			return; // no any to check
@@ -2058,23 +2080,23 @@ class ASTChecker
 			$this->attach_symbol($node);
 		}
 
-		$declaration = $node->symbol->declaration;
+		$declar = $node->symbol->declaration;
 
-		if ($declaration instanceof VariableDeclaration || $declaration instanceof ConstantDeclaration || $declaration instanceof ParameterDeclaration || $declaration instanceof ClassKindredDeclaration) {
-			if (!$declaration->type) {
+		if ($declar instanceof VariableDeclaration || $declar instanceof ConstantDeclaration || $declar instanceof ParameterDeclaration || $declar instanceof ClassKindredDeclaration) {
+			if (!$declar->type) {
 				throw $this->new_syntax_error("Declaration of '{$node->name}' not found", $node);
 			}
 
-			$type = $declaration->type;
+			$type = $declar->type;
 		}
-		elseif ($declaration instanceof ICallableDeclaration) {
+		elseif ($declar instanceof ICallableDeclaration) {
 			$type = TypeFactory::$_callable;
 		}
-		// elseif ($declaration instanceof NamespaceDeclaration) {
+		// elseif ($declar instanceof NamespaceDeclaration) {
 		// 	$type = TypeFactory::$_namespace;
 		// }
 		else {
-			throw new UnexpectNode($declaration);
+			throw new UnexpectNode($declar);
 		}
 
 		return $type;
@@ -2230,37 +2252,49 @@ class ASTChecker
 		return $symbol;
 	}
 
-	private function require_callee_declaration(ICallee $node): IDeclaration
+	private function require_callee_declaration(BaseExpression $node): IDeclaration
 	{
 		if ($node instanceof AccessingIdentifier) {
 			$declar = $this->require_accessing_identifier_declaration($node);
 		}
 		elseif ($node instanceof PlainIdentifier) {
-			$node->symbol || $this->attach_symbol($node);
-
-			$declar = $node->symbol->declaration;
-			if ($declar instanceof ICallableDeclaration) {
-				$declar->type === null && $this->check_callable_declaration($declar);
-			}
-			elseif ($declar->type instanceof ICallableDeclaration) {
-				$declar = $declar->type;
-			}
-			elseif ($declar->type === TypeFactory::$_callable) {
-				// for Callable type parameters
-			}
-			elseif ($declar->type instanceof MetaType and $declar->type->generic_type instanceof ClassKindredIdentifier) {
-				$declar = $this->require_classkindred_declaration($declar->type->generic_type);
-			}
-			else {
-				throw $this->new_syntax_error("Invalid callable expression", $node);
-			}
+			$declar = $this->require_callable_declaration($node);
 		}
 		elseif ($node instanceof ClassKindredIdentifier) {
 			$declar = $this->require_classkindred_declaration($node);
 		}
 		else {
-			$kind = $node::KIND;
-			throw $this->new_syntax_error("Unknow callee kind: '$kind'", $node);
+			$infered_type = $this->infer_expression($node);
+			if (!$infered_type instanceof ICallableDeclaration) {
+				$kind = $node::KIND;
+				throw $this->new_syntax_error("Unknow callee kind: '$kind'", $node);
+			}
+
+			$declar = $infered_type;
+		}
+
+		return $declar;
+	}
+
+	private function require_callable_declaration(BaseExpression $node)
+	{
+		$node->symbol || $this->attach_symbol($node);
+
+		$declar = $node->symbol->declaration;
+		if ($declar instanceof ICallableDeclaration) {
+			$declar->type === null && $this->check_callable_declaration($declar);
+		}
+		elseif ($declar->type instanceof ICallableDeclaration) {
+			$declar = $declar->type;
+		}
+		elseif ($declar->type === TypeFactory::$_callable) {
+			// for Callable type parameters
+		}
+		elseif ($declar->type instanceof MetaType and $declar->type->generic_type instanceof ClassKindredIdentifier) {
+			$declar = $this->require_classkindred_declaration($declar->type->generic_type);
+		}
+		else {
+			throw $this->new_syntax_error("Invalid callable expression", $node);
 		}
 
 		return $declar;
@@ -2307,7 +2341,71 @@ class ASTChecker
 		return $node->symbol->declaration;
 	}
 
-	private function attach_symbol_for_metatype_node(Node $node, MetaType $master_type) {
+	// includes BuiltinTypeClassDeclaration,
+	private function require_accessing_identifier_declaration(AccessingIdentifier $node): IDeclaration
+	{
+		$master = $node->master;
+		$master_type = $this->infer_expression($master);
+
+		if ($master_type instanceof BaseType) {
+			$this->attach_symbol_for_basetype_accessing_identifier($node, $master_type);
+		}
+		elseif ($master_type instanceof Identifiable) {
+			// the master would be an object expression, or variable of MetaType
+			$master_declar = $master_type->symbol->declaration;
+			if ($master_declar instanceof VariableDeclaration) {
+				$master_declar = $master_declar->type->generic_type->symbol->declaration;
+			}
+
+			$node->symbol = $this->require_class_member_symbol($master_declar, $node);
+
+			if (!$node->symbol->declaration->is_accessable_for_object($master)) {
+				throw $this->new_syntax_error("Cannot access the private/protected members", $node);
+			}
+		}
+		else {
+			$type_name = $this->get_type_name($master_type);
+			throw $this->new_syntax_error("Invalid accessable type '$type_name'", $master);
+		}
+
+		return $node->symbol->declaration;
+	}
+
+	private function attach_symbol_for_basetype_accessing_identifier(Node $node, BaseType $master_type)
+	{
+		// if ($master_type === TypeFactory::$_any) {
+		// 	// let member type to Any on master is Any
+		// 	$this->create_any_symbol_for_accessing_identifier($node);
+		// }
+		// elseif ($master_type === TypeFactory::$_namespace) {
+		// 	$this->attach_namespace_member_symbol($node->master->symbol->declaration, $node);
+		// }
+		if ($master_type instanceof MetaType) {
+			$this->attach_symbol_for_metatype_accessing_identifier($node, $master_type);
+		}
+		elseif ($master_type instanceof UnionType) {
+			throw $this->new_syntax_error("Cannot accessing the 'UnionType' targets", $node);
+		}
+		else {
+			// dump($master_type);
+			$classkindred = $master_type->symbol->declaration;
+			$symbol = $this->find_member_symbol_in_class($classkindred, $node->name);
+			if ($symbol === null) {
+				if ($master_type === TypeFactory::$_any) {
+					// let member type to Any on master is Any when member not defined
+					$this->create_any_symbol_for_accessing_identifier($node);
+				}
+				else {
+					throw $this->new_syntax_error("Member '{$node->name}' not found in '{$classkindred->name}'", $node);
+				}
+			}
+			else {
+				$node->symbol = $symbol;
+			}
+		}
+	}
+
+	private function attach_symbol_for_metatype_accessing_identifier(Node $node, MetaType $master_type) {
 		$declaration = $master_type->generic_type->symbol->declaration;
 		// if (!$declaration instanceof ClassDeclaration) {
 		// 	$declaration = $declaration->type->generic_type->symbol->declaration;
@@ -2338,59 +2436,6 @@ class ASTChecker
 		if (!$node_declaration->is_accessable_for_class($node->master)) {
 			throw $this->new_syntax_error("Cannot accessing the private/protected members", $node);
 		}
-	}
-
-	// includes BuiltinTypeClassDeclaration
-	private function require_accessing_identifier_declaration(AccessingIdentifier $node): IDeclaration
-	// private function require_accessing_identifier_declaration(AccessingIdentifier $node): IMemberDeclaration
-	{
-		$master = $node->master;
-		$master_type = $this->infer_expression($master);
-
-		if ($master_type instanceof BaseType) {
-			// if ($master_type === TypeFactory::$_any) {
-			// 	// let member type to Any on master is Any
-			// 	$this->create_any_symbol_for_accessing_identifier($node);
-			// }
-			// elseif ($master_type === TypeFactory::$_namespace) {
-			// 	$this->attach_namespace_member_symbol($master->symbol->declaration, $node);
-			// }
-			if ($master_type instanceof MetaType) {
-				$this->attach_symbol_for_metatype_node($node, $master_type);
-			}
-			elseif ($master_type instanceof UnionType) {
-				throw $this->new_syntax_error("Cannot accessing the 'UnionType' targets", $node);
-			}
-			else {
-				$classkindred = $master_type->symbol->declaration;
-				$symbol = $this->find_member_symbol_in_class($classkindred, $node->name);
-				if ($symbol === null) {
-					if ($master_type === TypeFactory::$_any) {
-						// let member type to Any on master is Any when member not defined
-						$this->create_any_symbol_for_accessing_identifier($node);
-					}
-					else {
-						throw $this->new_syntax_error("Member '{$node->name}' not found in '{$classkindred->name}'", $node);
-					}
-				}
-				else {
-					$node->symbol = $symbol;
-				}
-			}
-		}
-		elseif ($master_type instanceof Identifiable) {
-			// the master would be an object expression
-			$node->symbol = $this->require_class_member_symbol($master_type->symbol->declaration, $node);
-			if (!$node->symbol->declaration->is_accessable_for_object($master)) {
-				throw $this->new_syntax_error("Cannot access the private/protected members", $node);
-			}
-		}
-		else {
-			$type_name = $this->get_type_name($master_type);
-			throw $this->new_syntax_error("Invalid accessable type '$type_name'", $master);
-		}
-
-		return $node->symbol->declaration;
 	}
 
 	private function create_any_symbol_for_accessing_identifier(AccessingIdentifier $node)

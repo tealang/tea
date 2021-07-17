@@ -11,43 +11,52 @@ namespace Tea;
 
 interface ICallee {}
 
-class CallExpression extends BaseExpression
+abstract class BaseCallExpression extends BaseExpression
 {
-	const KIND = 'call_expression';
-
+	/**
+	 * @var BaseExpression
+	 */
 	public $callee;
-	public $arguments; // array of BaseExpression
-	public $callbacks = []; // callback arguments
+
+	/**
+	 * @var []BaseExpression
+	 */
+	public $arguments;
 
 	public $normalized_arguments; // for render to target lang
 
-	public function __construct(ICallee $callee, array $arguments)
+	public $infered_callee_declaration;
+
+	public function __construct(BaseExpression $callee, array $arguments)
 	{
 		$callee->is_call_mode = true;
-
 		$this->callee = $callee;
 		$this->arguments = $arguments;
 	}
 
+	public function is_class_new()
+	{
+		$declar = $this->infered_callee_declaration;
+		return $declar instanceof ClassDeclaration
+			|| ($declar instanceof IVariableDeclaration && $declar->type instanceof MetaType);
+	}
+}
+
+class PipeCallExpression extends BaseCallExpression
+{
+	const KIND = 'pipecall_expression';
+}
+
+// the normal call
+class CallExpression extends BaseCallExpression
+{
+	const KIND = 'call_expression';
+
+	public $callbacks = []; // callback arguments
+
 	public function set_callbacks(CallbackArgument ...$callbacks)
 	{
 		$this->callbacks = $callbacks;
-	}
-
-	public function is_class_new()
-	{
-		$symbol = $this->callee->symbol;
-		if ($symbol === null) {
-			return false;
-		}
-		elseif ($symbol->declaration instanceof ClassDeclaration) {
-			return true;
-		}
-		elseif ($symbol->declaration instanceof IVariableDeclaration && $symbol->declaration->type instanceof MetaType) {
-			return true;
-		}
-
-		return false;
 	}
 }
 

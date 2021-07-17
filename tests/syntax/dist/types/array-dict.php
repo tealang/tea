@@ -31,6 +31,8 @@ $arr3 = array_merge($arr1, $arr2);
 $dict = [];
 $dict[(string)1.1] = 1;
 
+var_dump($dict);
+
 $key = 1;
 $key1 = 1;
 $key2 = 1.1;
@@ -78,6 +80,7 @@ $filtered = array_filter([0, 1, 2, 3, 4, 5], function ($item) {
 		return true;
 	}
 });
+
 var_dump($filtered);
 // ---------
 

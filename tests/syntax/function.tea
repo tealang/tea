@@ -39,7 +39,7 @@ internal fn3(some Any, done (caller String) String, error (message) = none) Stri
 var out_num = 1
 echo fn3(123, (a) => {
 		out_num += 1
-		return a::String concat ' has called'
+		return a#String concat ' has called'
 	},
 	(error) => {}
 )

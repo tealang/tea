@@ -60,10 +60,15 @@ print LF
 var any Any
 any = 1
 any = []
-any = 'abc'
+any = 'abc          '   // string ends with spaces
+
+// the Pipe Call
+var valid_len = any::trim::strlen()
+echo 'the valid strlen is: $valid_len'
+echo 'use Pipe Call to explode strings, then get count: ${'|'::explode('a|b|c').length}'
 
 // 将Any类型值转换成String类型
-var any_as_string = any::String
+var any_as_string = any#String
 
 // 单引号字符串，\n\t\r等字符将当作字面字符
 var str String = 'Unescaped string\n'
@@ -190,7 +195,7 @@ var_without_decared = 123  // 此用例将自动推断成Int类型
 - Tea语言不支持赋值运算作为子表达式，故无需考虑其优先级和结合方向
 
 	优先级	运算符
-	1	. [] () ::						成员访问, Array/Dict元素访问, 函数调用, 类型传唤
+	1	. [] () :: #					成员访问, Array/Dict元素访问, 函数调用, 管道调用, 类型标记
 	2	- ~ ->							数值取负, 按位取反, 回调通知
 	3	**								幂运算
 	4	* / rem << >> &					乘, 除, 取余, 按位左移, 按位右移, 按位与
@@ -217,15 +222,15 @@ var pow_result = -2 ** 2 ** 3  // 相当于 ((-2) ** 2) ** 3
 var string_concat = 'abc' concat 1 + 8 & 2 * 3  // 相当于 'abc' concat (1 + (8 & 2) * 3)
 var array_concat = ['A', 'B'] concat ['A1', 'C1'] // result: ['A', 'B', 'A1', 'C1']
 
-// 类型传唤运算符，当用于基础类型时，将进行类型转换(cast)
-var uint_from_non_negative_string = '123'::UInt  // okay
-// var uint_from_negative_string = '-123'::UInt  // error
-var str_from_uint = 123::String
-var str_from_float = 123.123::String
+// 类型标记运算符，当用于基础类型时，将进行类型转换(cast)
+var uint_from_non_negative_string = '123'#UInt  // okay
+// var uint_from_negative_string = '-123'#UInt  // error
+var str_from_uint = 123#String
+var str_from_float = 123.123#String
 
-// 当::运算符用于类时，将只被用于编译器类型系统检查处理，而不会进行任何转换
+// 当#运算符用于类时，将只被用于编译器类型系统检查处理，而不会进行任何转换
 var ex1 Any
-var ex2 = ex1::Exception
+var ex2 = ex1#Exception
 
 // is运算符，可用于检查变量是否为某个基础类型，或是否是某个类的实例
 1.1 is Int // false
@@ -293,8 +298,8 @@ i = 0
 		// supports throw/condition/break/return/exit
 		// @ref https://github.com/tealang/tea/commit/573a1eaed9d3efd718fe396051f6d8c36fe6c86a
 
-		// it would be continue on i > 5
-		continue #inner_loop when i > 5
+		// it would be continue on i < 5
+		continue #inner_loop when i < 5
 
 		// it would be break on i > 10
 		break #outer_loop when i > 10
@@ -312,10 +317,25 @@ catch ex {
 - 如果为PHP函数，可使用大写字母，但首字符仍必须为小写字母
 ---
 
+internal fn0(str) {
+	echo str
+}
+
+internal fn1(callee Callable) {
+	callee('test call for the Callable argument')
+}
+
+fn1(fn0)
+
 // internal修饰的函数，只能在本Unit中调用
 internal demo_function1(message String) {
 	echo 'this function can only be called by local unit'
+	return (a Int) => {
+		echo 'the number is $a'
+	}
 }
+
+demo_function1('hei')(123)
 
 // public修饰的函数，可在其它Unit中调用
 public demo_function2(message String = 'with a default value') {

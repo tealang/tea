@@ -1377,25 +1377,41 @@ class TeaParser extends BaseParser
 		$token = $this->get_token_ignore_empty();
 
 		if ($token === _PAREN_OPEN) {
-			// 强限制为紧跟的括号才有效
+			// Spaces are not allowed
 			if ($this->get_token() !== _PAREN_OPEN) {
 				return $expression;
 			}
 
-			$call = $this->read_call_expression($expression, $prev_operator);
-			$expression = $this->read_expression_combination($call, $prev_operator);
-		}
-		elseif ($token === _DOT) {
-			$this->scan_token_ignore_empty(); // skip .
-			$expression = $this->read_dot_expression($expression, $prev_operator);
+			$expression = $this->read_call_expression($expression, $prev_operator);
+			$expression = $this->read_expression_combination($expression, $prev_operator);
 		}
 		elseif ($token === _BRACKET_OPEN) {
-			// 强限制为紧跟的括号才有效
+			// Spaces are not allowed
 			if ($this->get_token() !== _BRACKET_OPEN) {
 				return $expression;
 			}
 
 			$expression = $this->read_key_accessing($expression, $prev_operator);
+		}
+		elseif ($token === _DOT) {
+			$this->scan_token_ignore_empty(); // skip the operator
+			$expression = $this->read_dot_expression($expression, $prev_operator);
+			$expression = $this->read_expression_combination($expression, $prev_operator);
+		}
+		elseif ($token === _SHARP) { //  the type mark operation
+			// Spaces are not allowed
+			if ($this->get_token() !== _SHARP) {
+				return $expression;
+			}
+
+			$this->scan_token(); // skip the operator
+			$expression = $this->read_cast_operation($expression);
+ 			$expression = $this->read_expression_combination($expression, $prev_operator);
+		}
+		elseif ($token === _DOUBLE_COLON) { //  the pipe call operation
+			$this->scan_token_ignore_empty(); // skip the operator
+			$expression = $this->read_pipe_call($expression);
+ 			$expression = $this->read_expression_combination($expression, $prev_operator);
 		}
 		elseif ($token === _INLINE_COMMENT_MARK) {
 			$current_pos = $this->pos;
@@ -1414,19 +1430,19 @@ class TeaParser extends BaseParser
 			return $continue_combination;
 		}
 
-		if ($expression instanceof ArrayElementAssignment) {
-			if ($prev_operator) {
-				throw $this->new_parse_error("The ArrayElementAssignment cannot use in BinaryOperation.");
-			}
+		// if ($expression instanceof ArrayElementAssignment) {
+		// 	if ($prev_operator) {
+		// 		throw $this->new_parse_error("The ArrayElementAssignment cannot use in BinaryOperation.");
+		// 	}
 
-			return $expression;
-		}
+		// 	return $expression;
+		// }
 
 		// maybe has a operation at the behind
 		return $this->try_read_operation($expression, $prev_operator);
 	}
 
-	protected function read_dot_expression(BaseExpression $master, Operator $prev_operator = null)
+	protected function read_dot_expression(BaseExpression $master)
 	{
 		// class / object member call
 
@@ -1438,7 +1454,7 @@ class TeaParser extends BaseParser
 		$expression = $this->factory->create_accessing_identifier($master, $member);
 		$expression->pos = $this->pos;
 
-		return $this->read_expression_combination($expression, $prev_operator);
+		return $expression;
 	}
 
 	protected function read_key_accessing(BaseExpression $master, Operator $prev_operator = null)
@@ -1462,17 +1478,17 @@ class TeaParser extends BaseParser
 		return $this->read_expression_combination($expression, $prev_operator);
 	}
 
-	protected function read_array_element_assignment(BaseExpression $master)
-	{
-		$this->expect_token_ignore_empty(_ASSIGN);
+	// protected function read_array_element_assignment(BaseExpression $master)
+	// {
+	// 	$this->expect_token_ignore_empty(_ASSIGN);
 
-		$value = $this->read_expression();
-		if ($value === null) {
-			throw $this->new_unexpected_error();
-		}
+	// 	$value = $this->read_expression();
+	// 	if ($value === null) {
+	// 		throw $this->new_unexpected_error();
+	// 	}
 
-		return new ArrayElementAssignment($master, null, $value);
-	}
+	// 	return new ArrayElementAssignment($master, null, $value);
+	// }
 
 	protected function read_call_expression(BaseExpression $handler, Operator $prev_operator = null)
 	{
@@ -1485,10 +1501,10 @@ class TeaParser extends BaseParser
 				$handler->pos = $this->pos;
 			}
 		}
-		elseif (!$handler instanceof Identifiable) {
-			$this->scan_token_ignore_space(); // 将语法错误定位到下一个token
-			throw $this->new_unexpected_error();
-		}
+		// elseif (!$handler instanceof Identifiable) {
+		// 	$this->scan_token_ignore_space(); // location error to next token
+		// 	throw $this->new_unexpected_error();
+		// }
 
 		$this->skip_token(_PAREN_OPEN);
 		$args = $this->read_call_expression_arguments();
@@ -1580,40 +1596,9 @@ class TeaParser extends BaseParser
 			}
 		}
 
-		if ($operator === OperatorFactory::$_cast) {
+		if ($operator === OperatorFactory::$_is) {
 			$this->scan_token_ignore_empty(); // skip the operator
-
-			if ($this->skip_token(_PAREN_OPEN)) {
-				$as_type = $this->try_read_type_identifier();
-				$this->expect_token(_PAREN_CLOSE);
-			}
-			else {
-				$as_type = $this->try_read_simple_type_identifier();
-			}
-
-			if ($as_type === null) {
-				throw $this->new_unexpected_error();
-			}
-
- 			$expression = new CastOperation($expression, $as_type);
-			$expression->pos = $this->pos;
-
- 			$expression = $this->read_expression_combination($expression, $prev_operator);
- 			if ($expression instanceof ArrayElementAssignment) {
- 				return $expression;
- 			}
-		}
-		elseif ($operator === OperatorFactory::$_is) {
-			$this->scan_token_ignore_empty(); // skip the operator
-			$is_not = $this->skip_token_ignore_space(_NOT);
-
-			$assert_type = $this->try_read_type_identifier();
-			if ($assert_type === null) {
-				throw $this->new_parse_error("Expected a type name for the 'is' expression.");
-			}
-
-			$expression = new IsOperation($expression, $assert_type, $is_not);
-			$expression->pos = $this->pos;
+			$expression = $this->read_is_operation($expression);
 		}
 		elseif ($operator === OperatorFactory::$_conditional) {
 			$this->scan_token_ignore_empty(); // skip the operator
@@ -1624,9 +1609,8 @@ class TeaParser extends BaseParser
 			$expression = $this->read_none_coalescing_with($expression, $operator);
 		}
 		else {
-			// the normal binary operation
-
-			// need spaces for other operations
+			// the normal binary operations
+			// required spaces
 			$this->skip_binary_operator_with_space($token);
 
 			$right_expression = $this->read_expression($operator);
@@ -1635,6 +1619,65 @@ class TeaParser extends BaseParser
 		}
 
 		return $this->try_read_operation($expression, $prev_operator);
+	}
+
+	private function read_is_operation(BaseExpression $expression)
+	{
+		$is_not = $this->skip_token_ignore_space(_NOT);
+
+		$assert_type = $this->try_read_type_identifier();
+		if ($assert_type === null) {
+			throw $this->new_parse_error("Expected a type name for the 'is' expression.");
+		}
+
+		$expression = new IsOperation($expression, $assert_type, $is_not);
+		$expression->pos = $this->pos;
+
+		return $expression;
+	}
+
+	private function read_cast_operation(BaseExpression $expression)
+	{
+		if ($this->skip_token(_PAREN_OPEN)) {
+			$as_type = $this->try_read_type_identifier();
+			$this->expect_token(_PAREN_CLOSE);
+		}
+		else {
+			$as_type = $this->try_read_simple_type_identifier();
+		}
+
+		if ($as_type === null) {
+			throw $this->new_unexpected_error();
+		}
+
+		$expression = new CastOperation($expression, $as_type);
+		$expression->pos = $this->pos;
+
+		return $expression;
+	}
+
+	private function read_pipe_call(BaseExpression $expression)
+	{
+		// only allow a plain identifier after the pipe-operator
+		$token = $this->expect_identifier_token();
+		$callee = $this->factory->create_identifier($token);
+
+		// the arguments
+		if ($this->skip_token(_PAREN_OPEN)) {
+			$args = $this->read_call_expression_arguments();
+			$this->skip_token(_PAREN_CLOSE);
+		}
+		else {
+			$args = [];
+		}
+
+		// lets the base expression as the first argument
+		array_unshift($args, $expression);
+
+		$expression = new PipeCallExpression($callee, $args);
+		$expression->pos = $this->pos;
+
+		return $expression;
 	}
 
 	protected function skip_binary_operator_with_space(string $operator)
@@ -1685,9 +1728,11 @@ class TeaParser extends BaseParser
 					$items[$item->label] = $item;
 					$item->label = null;
 				}
+
+				$has_label = true;
 			}
 			elseif ($has_label) {
-				throw $this->new_parse_error("This argument required a label, because of the prevent has a labeled.");
+				throw $this->new_parse_error("This argument required a label, because of the prevent has labeled.");
 			}
 			else {
 				$items[] = $item;

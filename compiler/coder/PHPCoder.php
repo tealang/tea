@@ -999,7 +999,7 @@ class PHPCoder extends TeaCoder
 			$actual_call->arguments = $actual_arguments;
 			$actual_call->callee->pos = $node->pos; // just for debug
 
-			return $this->render_call_expression($actual_call);
+			return $this->render_basecall_expression($actual_call);
 		}
 		elseif ($masked instanceof PlainIdentifier) {
 			if ($masked->name === _THIS) {
@@ -1065,12 +1065,22 @@ class PHPCoder extends TeaCoder
 		$actual_call->arguments = $actual_arguments;
 		$actual_call->callee->pos = $node->callee->pos; // just for debug
 
-		return $this->render_call_expression($actual_call);
+		return $this->render_basecall_expression($actual_call);
 	}
 
 	public function render_call_expression(CallExpression $node)
 	{
-		if ($node->callee->symbol && $node->callee->symbol->declaration instanceof MaskedDeclaration) {
+		return $this->render_basecall_expression($node);
+	}
+
+	public function render_pipecall_expression(PipeCallExpression $node)
+	{
+		return $this->render_basecall_expression($node);
+	}
+
+	public function render_basecall_expression(BaseCallExpression $node)
+	{
+		if ($node->infered_callee_declaration instanceof MaskedDeclaration) {
 			return $this->render_masked_call($node);
 		}
 
@@ -1080,11 +1090,13 @@ class PHPCoder extends TeaCoder
 		$arguments = $this->render_arguments($arguments);
 
 		if ($node->is_class_new()) {
-			return "new {$callee}($arguments)";
+			$code = "new {$callee}($arguments)";
 		}
 		else {
-			return "{$callee}($arguments)";
+			$code = "{$callee}($arguments)";
 		}
+
+		return $code;
 	}
 
 	protected function render_arguments(array $nodes)

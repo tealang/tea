@@ -3,8 +3,19 @@ namespace tea\docs;
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 
-function demo_function1(string $message) {
+function fn0($str) {
+	echo $str, LF;
+}
+
+function fn1(callable $callee) {
+	$callee('test call for the Callable argument');
+}
+
+function demo_function1(string $message): callable {
 	echo 'this function can only be called by local unit', LF;
+	return function (int $a) {
+		echo 'the number is ' . $a, LF;
+	};
 }
 
 #public
@@ -71,7 +82,11 @@ echo LF;
 $any = null;
 $any = 1;
 $any = [];
-$any = 'abc';
+$any = 'abc          ';
+
+$valid_len = strlen(trim($any));
+echo 'the valid strlen is: ' . $valid_len, LF;
+echo 'use Pipe Call to explode strings, then get count: ' . count(explode('|', 'a|b|c')), LF;
 
 $any_as_string = (string)$any;
 
@@ -213,7 +228,7 @@ try {
 		while (true) {
 			$i += 1;
 
-			if ($i > 5) {
+			if ($i < 5) {
 				continue;
 			}
 
@@ -226,6 +241,10 @@ try {
 catch (\Exception $ex) {
 	// no any
 }
+
+fn1('tea\docs\fn0');
+
+demo_function1('hei')(123);
 
 $ret1 = demo_function_with_a_return_type('some data');
 

@@ -7,14 +7,14 @@ some = 'abc' concat 1 + 2 & 2 * 2 ** 3 / 5 rem 6
 var uint_num = 123
 var int_num Int = 123
 
-var uint_from_string = '123'::UInt
-// var uint_from_string = '-123'::UInt // error
+var uint_from_string = '123'#UInt
+// var uint_from_string = '-123'#UInt // error
 
-var str_from_uint = 123::String
-var str_from_float = 123.123::String
+var str_from_uint = 123#String
+var str_from_float = 123.123#String
 
 var dict = ['a': 1, 'b': '100']
-var val = dict['b']::Int ?? 0
+var val = dict['b']#Int ?? 0
 echo 'Value for ?? expression is: '
 var_dump(val)
 

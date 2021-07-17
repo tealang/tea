@@ -21,8 +21,9 @@ const _PREFIX_OP_PRECEDENCES = [
 const _BINARY_OP_PRECEDENCES = [
 	// L1
 	_DOT => 1,  		// class/object
+	_SHARP => 1, 		// type mark
+	_DOUBLE_COLON => 1, // pipe call
 	// () []
-	_DOUBLE_COLON => 1, // type cast
 
 	// L2
 	// _PUT => 2,		// for Channel
@@ -75,6 +76,7 @@ class OperatorFactory
 	// static $_reference;
 
 	static $_cast;
+	static $_pipe;
 
 	static $_exponentiation;
 
@@ -133,6 +135,7 @@ class OperatorFactory
 
 		self::$_dot = self::create_normal_operator(_DOT);
 		self::$_cast = self::create_normal_operator(_DOUBLE_COLON);
+		// self::$_pipe = self::create_normal_operator(_DOUBLE_COLON);
 
 		// self::$_put = self::create_normal_operator(_PUT);
 		// self::$_notify = self::create_normal_operator(_NOTIFY);
