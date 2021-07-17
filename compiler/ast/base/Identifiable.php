@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-abstract class Identifiable extends BaseExpression implements ICallee, IAssignable
+abstract class Identifiable extends BaseExpression implements IAssignable
 {
 	public $name;
 

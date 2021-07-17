@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class LambdaExpression extends BaseExpression implements IScopeBlock, ICallee
+class LambdaExpression extends BaseExpression implements IScopeBlock
 {
 	use IScopeBlockTrait;
 

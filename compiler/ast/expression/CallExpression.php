@@ -9,8 +9,6 @@
 
 namespace Tea;
 
-interface ICallee {}
-
 abstract class BaseCallExpression extends BaseExpression
 {
 	/**
@@ -67,7 +65,7 @@ class CallbackArgument extends Node
 	public $name;
 	public $value;
 
-	public function __construct(?string $name, ICallee $value)
+	public function __construct(?string $name, BaseExpression $value)
 	{
 		$this->name = $name;
 		$this->value = $value;

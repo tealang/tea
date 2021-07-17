@@ -2051,7 +2051,7 @@ class ASTChecker
 	}
 
 	// @return [index, ParameterDeclaration]
-	private function require_parameter_by_name(string $name, array $parameters, ICallee $callee_node)
+	private function require_parameter_by_name(string $name, array $parameters, BaseExpression $callee_node)
 	{
 		foreach ($parameters as $idx => $parameter) {
 			if ($parameter->name === $name) {
@@ -2059,11 +2059,11 @@ class ASTChecker
 			}
 		}
 
-		throw $this->new_syntax_error("Argument '$name' deliver to callee '{$callee_node->name}' not found in declaration", $callee_node);
+		throw $this->new_syntax_error("Argument '$name' not found in declaration", $callee_node);
 	}
 
 	// return [index, CallbackProtocol]
-	private function require_callback_protocol_by_name(string $name, array $callbacks, ICallee $callee_node)
+	private function require_callback_protocol_by_name(string $name, array $callbacks, BaseExpression $callee_node)
 	{
 		foreach ($callbacks as $idx => $callback) {
 			if ($callback->name === $name) {
@@ -2071,7 +2071,7 @@ class ASTChecker
 			}
 		}
 
-		throw $this->new_syntax_error("Callback argument '$name' deliver to callee '{$callee_node->name}' not found in declaration", $callee_node);
+		throw $this->new_syntax_error("Callback argument '$name' not found in declaration", $callee_node);
 	}
 
 	protected function infer_plain_identifier(PlainIdentifier $node): IType

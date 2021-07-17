@@ -1501,10 +1501,6 @@ class TeaParser extends BaseParser
 				$handler->pos = $this->pos;
 			}
 		}
-		// elseif (!$handler instanceof Identifiable) {
-		// 	$this->scan_token_ignore_space(); // location error to next token
-		// 	throw $this->new_unexpected_error();
-		// }
 
 		$this->skip_token(_PAREN_OPEN);
 		$args = $this->read_call_expression_arguments();
