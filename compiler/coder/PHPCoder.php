@@ -563,6 +563,11 @@ class PHPCoder extends TeaCoder
 	{
 		$members = [];
 		foreach ($declaration->members as $member) {
+			// PHP disallowed private/protected in Interface
+			if ($member->modifier === _PRIVATE or $member->modifier === _PROTECTED) {
+				continue;
+			}
+
 			if ($member instanceof FunctionDeclaration) {
 				$item = $this->render_interface_method($member);
 			}
@@ -961,6 +966,11 @@ class PHPCoder extends TeaCoder
 
 			if ($declaration instanceof PropertyDeclaration) {
 				$name = $this->add_variable_prefix($name);
+			}
+
+			// cannot use '$this' for private member, it will be cause syntax error
+			if ($declaration->modifier === _PRIVATE) {
+				$master = 'self';
 			}
 
 			$operator = static::CLASS_MEMBER_OPERATOR;

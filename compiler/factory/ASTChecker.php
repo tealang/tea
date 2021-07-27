@@ -842,7 +842,7 @@ class ASTChecker
 	{
 		$testing_type = $this->infer_expression($node->test);
 		if (!TypeFactory::is_when_testable_type($testing_type)) {
-			throw $this->new_syntax_error("The testing expression for when-statement should be String/Int/UInt", $node->test);
+			throw $this->new_syntax_error("The case compare expression should be String/Int/UInt", $node->test);
 		}
 
 		$infered_types = [];
