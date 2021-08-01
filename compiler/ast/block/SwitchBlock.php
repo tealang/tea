@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class SwitchBlock extends ControlBlock implements IElseAble, IExceptAble, ILoopKindredBlock
+class SwitchBlock extends ControlBlock implements IElseAble, IExceptAble, IBreakAble
 {
 	use ElseTrait, ExceptTrait;
 

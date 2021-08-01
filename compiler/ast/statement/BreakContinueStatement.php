@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-interface IGotoAbleStatement {}
+interface IBreakAble {}
 interface IContinueAble {}
 
 abstract class PostConditionAbleStatement extends BaseStatement
@@ -20,25 +20,26 @@ abstract class PostConditionAbleStatement extends BaseStatement
 	public $condition;
 }
 
-class BreakStatement extends PostConditionAbleStatement implements IGotoAbleStatement
+class BreakStatement extends PostConditionAbleStatement
 {
 	const KIND = 'break_statement';
 
 	public $argument; // label or break argument
 
-	public $layer_num;
+	public $target_label;
 
-	public $destination_label;
+	public $target_layers = 0;
 
-	public function __construct(string $argument = null, int $layer_num = null)
+	public function __construct(string $argument = null)
 	{
 		$this->argument = $argument;
-		$this->layer_num = $layer_num;
 	}
 }
 
-class ContinueStatement extends BreakStatement implements IGotoAbleStatement
+class ContinueStatement extends BreakStatement
 {
 	const KIND = 'continue_statement';
+	public $switch_layers; // for render PHP code
 }
 
+// end

@@ -9,9 +9,7 @@
 
 namespace Tea;
 
-interface ILoopKindredBlock {}
-
-class WhileBlock extends ControlBlock implements IExceptAble, ILoopKindredBlock, IContinueAble
+class WhileBlock extends ControlBlock implements IExceptAble, IBreakAble, IContinueAble
 {
 	use ExceptTrait;
 
@@ -32,7 +30,7 @@ class WhileBlock extends ControlBlock implements IExceptAble, ILoopKindredBlock,
 	}
 }
 
-class LoopBlock extends ControlBlock implements IExceptAble, ILoopKindredBlock, IContinueAble
+class LoopBlock extends ControlBlock implements IExceptAble, IBreakAble, IContinueAble
 {
 	use ExceptTrait;
 

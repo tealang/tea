@@ -576,40 +576,67 @@ class ASTFactory
 		return $block;
 	}
 
-	public function require_labeled_layer_number(string $label, bool $is_continue_statement = false)
+	public function count_target_block_layers_with_label(string $label, string $block_interface)
 	{
-		$layer = 0;
+		$layers = 1;
+		$switch_layers = 0;
 		$block = $this->block;
 
-		if (!$block instanceof ILoopKindredBlock || $block->label !== $label) {
-			if ($block instanceof ILoopKindredBlock) {
-				$layer++;
+		do {
+			if ($block instanceof IScopeBlock) {
+				throw $this->parser->new_parse_error("Block of label '$label' not found in current function");
 			}
 
-			while ($block = $block->super_block) {
-				if ($block instanceof IScopeBlock) {
-					break;
-				}
-				elseif (!$block instanceof ILoopKindredBlock) {
-					continue;
+			if ($block->label === $label) {
+				if (!is_subclass_of($block, $block_interface)) {
+					throw $this->parser->new_parse_error("Block label '$label' cannot use as target at here");
 				}
 
-				$layer++;
-				if ($block->label === $label) {
-					break;
-				}
+				break;
 			}
 
-			if (!$block) {
-				throw $this->parser->new_parse_error("Block of label '$label' not found");
+			if (is_subclass_of($block, $block_interface)) {
+				$layers++;
+			}
+			elseif ($block instanceof SwitchBlock) {
+				$switch_layers++;
+			}
+
+			$block = $block->super_block;
+			if ($block === null) {
+				throw $this->parser->new_parse_error("An error occurred in the compiler");
 			}
 		}
+		while ($block);
 
-		if ($is_continue_statement && !$block instanceof IContinueAble) {
-			throw $this->parser->new_parse_error("Block of label '$label' cannot use to the continue statement");
+		return [$layers, $switch_layers];
+	}
+
+	public function count_switch_layers_contains_in_block(string $block_interface)
+	{
+		$switch_layers = 0;
+		$block = $this->block;
+
+		do {
+			if ($block instanceof IScopeBlock) {
+				throw $this->parser->new_parse_error("Target block not found");
+			}
+
+			if (is_subclass_of($block, $block_interface)) {
+				break;
+			}
+			elseif ($block instanceof SwitchBlock) {
+				$switch_layers++;
+			}
+
+			$block = $block->super_block;
+			if ($block === null) {
+				throw $this->parser->new_parse_error("An error occurred in the compiler");
+			}
 		}
+		while ($block);
 
-		return $layer;
+		return $switch_layers;
 	}
 
 	public function create_forin_block(BaseExpression $iterable, ?VariableIdentifier $key_var, VariableIdentifier $value_var)

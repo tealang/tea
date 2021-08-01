@@ -12,6 +12,8 @@ namespace Tea;
 interface IBlock {}
 
 trait IBlockTrait {
+	public $label;
+
 	/**
 	 * @var IStatement[] or BaseExpression
 	 */

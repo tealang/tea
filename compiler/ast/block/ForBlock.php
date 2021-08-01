@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class ForInBlock extends ControlBlock implements IElseAble, IExceptAble, ILoopKindredBlock, IContinueAble
+class ForInBlock extends ControlBlock implements IElseAble, IExceptAble, IBreakAble, IContinueAble
 {
 	use ElseTrait, ExceptTrait;
 
@@ -27,7 +27,7 @@ class ForInBlock extends ControlBlock implements IElseAble, IExceptAble, ILoopKi
 	}
 }
 
-class ForToBlock extends ControlBlock implements IElseAble, IExceptAble, ILoopKindredBlock, IContinueAble
+class ForToBlock extends ControlBlock implements IElseAble, IExceptAble, IBreakAble, IContinueAble
 {
 	use ElseTrait, ExceptTrait;
 

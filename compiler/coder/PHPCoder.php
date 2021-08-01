@@ -1680,7 +1680,7 @@ class PHPCoder extends TeaCoder
 
 	public function render_break_statement(Node $node)
 	{
-		$argument = $node->layer_num ? ' ' . $node->layer_num : '';
+		$argument = $node->target_layers > 1 ? ' ' . $node->target_layers : '';
 		$code = 'break' . $argument . static::STATEMENT_TERMINATOR;
 
 		if ($node->condition) {
@@ -1692,7 +1692,17 @@ class PHPCoder extends TeaCoder
 
 	public function render_continue_statement(Node $node)
 	{
-		$argument = $node->layer_num ? ' ' . $node->layer_num : '';
+		// php can continue to switch-block, so needed to ignore switch-blocks
+		$target_layers = $node->target_layers;
+		if ($node->switch_layers) {
+			if ($target_layers == 0) {
+				$target_layers = 1;
+			}
+
+			$target_layers += $node->switch_layers;
+		}
+
+		$argument = $target_layers > 1 ? ' ' . $target_layers : '';
 		$code = 'continue' . $argument . static::STATEMENT_TERMINATOR;
 
 		if ($node->condition) {

@@ -431,25 +431,24 @@ class TeaParser extends BaseParser
 		$statement->condition = $condition;
 	}
 
-	protected function try_attach_goto_label(IGotoAbleStatement $statement, bool $is_continue_statement = false)
-	{
-		if (!$this->skip_token_ignore_space(_SHARP)) {
-			return;
-		}
-
-		$goto_label = $this->expect_identifier_token();
-		$statement->layer_num = $this->factory->require_labeled_layer_number($goto_label, $is_continue_statement);
-		$statement->goto_label = $goto_label;
-	}
-
 	protected function read_continue_statement()
 	{
 		// continue
-		// continue #goto_label
-		// continue #goto_label when condition-expression
+		// continue #target_label
+		// continue #target_label when condition-expression
 
 		$statement = new ContinueStatement();
-		$this->try_attach_goto_label($statement, true);
+
+		// the target label
+		if ($this->skip_token_ignore_space(_SHARP)) {
+			$target_label = $this->expect_identifier_token();
+			[$statement->target_layers, $statement->switch_layers] = $this->factory->count_target_block_layers_with_label($target_label, IContinueAble::class);
+			$statement->target_label = $target_label;
+		}
+		else {
+			$statement->switch_layers = $this->factory->count_switch_layers_contains_in_block(IContinueAble::class);
+		}
+
 		$this->try_attach_post_condition($statement);
 
 		return $statement;
@@ -458,11 +457,21 @@ class TeaParser extends BaseParser
 	protected function read_break_statement()
 	{
 		// break
-		// break #goto_label
-		// break #goto_label when condition-expression
+		// break #target_label
+		// break #target_label when condition-expression
 
 		$statement = new BreakStatement();
-		$this->try_attach_goto_label($statement);
+
+		// the target label
+		if ($this->skip_token_ignore_space(_SHARP)) {
+			$target_label = $this->expect_identifier_token();
+			[$statement->target_layers] = $this->factory->count_target_block_layers_with_label($target_label, IBreakAble::class);
+			$statement->target_label = $target_label;
+		}
+		else {
+			$this->factory->count_switch_layers_contains_in_block(IBreakAble::class);
+		}
+
 		$this->try_attach_post_condition($statement);
 
 		return $statement;
