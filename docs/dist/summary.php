@@ -11,7 +11,7 @@ function fn1(callable $callee) {
 	$callee('test call for the Callable argument');
 }
 
-function demo_function1(string $message): callable {
+function demo_function1(string $message) {
 	echo 'this function can only be called by local unit', LF;
 	return function (int $a) {
 		echo 'the number is ' . $a, LF;

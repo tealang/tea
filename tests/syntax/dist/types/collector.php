@@ -7,19 +7,19 @@ require_once dirname(__DIR__, 2) . '/__public.php';
 class CollectorDemo implements \IView {
 	public $subnode;
 
-	public function text($value): CollectorDemo {
+	public function text($value) {
 		return $this;
 	}
 }
 
 #internal
 class CollectorDemoFactory {
-	public function new_collector_demo(): CollectorDemo {
+	public function new_collector_demo() {
 		return new CollectorDemo();
 	}
 }
 
-function new_collector_demo(): CollectorDemo {
+function new_collector_demo() {
 	return new CollectorDemo();
 }
 

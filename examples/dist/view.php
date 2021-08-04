@@ -6,7 +6,7 @@ interface IBaseView {
 	public function __construct(string $id = null);
 	public function add_subitem($item);
 	public function set_attribute(string $key, string $value);
-	public function build_attributes(): string;
+	public function build_attributes();
 	public function render(): string;
 	public function __toString(): string;
 }
@@ -33,7 +33,7 @@ trait IBaseViewTrait {
 		$this->attributes[$key] = $value;
 	}
 
-	public function build_attributes(): string {
+	public function build_attributes() {
 		$items = [];
 		foreach ($this->attributes as $key => $value) {
 			$items[] = $key . '="' . htmlspecialchars($value, ENT_QUOTES) . '"';
@@ -57,7 +57,7 @@ trait IBaseViewTrait {
 class ListView implements IBaseView {
 	use IBaseViewTrait;
 
-	public function get_subviews(): array {
+	public function get_subviews() {
 		return array_map(function ($item) {
 			return '<li>' . htmlspecialchars($item, ENT_QUOTES) . '</li>';
 		}, $this->subitems);

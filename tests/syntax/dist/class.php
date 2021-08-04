@@ -196,7 +196,7 @@ class Test5 {
 		return $this->a_53;
 	}
 
-	public function m_370(array $arg_1, string $arg_2 = "str"): array {
+	public function m_370(array $arg_1, string $arg_2 = "str") {
 		return [];
 	}
 

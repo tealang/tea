@@ -24,16 +24,9 @@ class BreakStatement extends PostConditionAbleStatement
 {
 	const KIND = 'break_statement';
 
-	public $argument; // label or break argument
-
 	public $target_label;
 
 	public $target_layers = 0;
-
-	public function __construct(string $argument = null)
-	{
-		$this->argument = $argument;
-	}
 }
 
 class ContinueStatement extends BreakStatement

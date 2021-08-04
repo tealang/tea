@@ -10,7 +10,7 @@ require_once $super_path . 'tea/builtin/__public.php'; // the builtins
 require_once $super_path . 'tea/tests/xview/__public.php';
 require_once $super_path . 'tea/tests/PHPDemoUnit/__public.php';
 
-function fn0($str): string {
+function fn0($str) {
 	echo $str, LF;
 	return PHP_CONST_DEMO;
 }

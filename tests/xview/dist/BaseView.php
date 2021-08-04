@@ -24,7 +24,7 @@ class BaseView implements \IView {
 		return $this;
 	}
 
-	protected function build_props(): string {
+	protected function build_props() {
 		$props = '';
 		foreach ($this->props as $key => $value) {
 			$props .= ' ' . htmlspecialchars($key, ENT_QUOTES) . '="' . htmlspecialchars($value, ENT_QUOTES) . '"';

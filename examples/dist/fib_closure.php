@@ -3,7 +3,7 @@ namespace tea\examples;
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 
-function fib_closure(): callable {
+function fib_closure() {
 	$a = 0;
 	$b = 1;
 	return function () use(&$b, &$a) {

@@ -301,7 +301,9 @@ class PHPCoder extends TeaCoder
 
 		$code = "{$modifier}function {$name}({$parameters})";
 
-		if ($node->type !== null && $node->type !== TypeFactory::$_any && $node->type !== TypeFactory::$_void) {
+		// just render return type on tinted
+		// because on untinted, it's not necessary, and sometimes it makes mistakes
+		if ($node->is_tinted_return_type && $node->type !== TypeFactory::$_any && $node->type !== TypeFactory::$_void) {
 			$return_type = $this->render_type($node->type);
 			$return_type and $code .= ": $return_type";
 		}

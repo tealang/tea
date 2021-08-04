@@ -8,7 +8,7 @@ function is_uint($val): bool {
 	return is_int($val) && $val >= 0;
 }
 
-function uint_ensure(int $num): int {
+function uint_ensure(int $num) {
 	if ($num < 0) {
 		throw new \ErrorException('Cannot use ' . $num . ' as a UInt value');
 	}
@@ -61,11 +61,11 @@ function xrange(int $start, int $end, int $step = 1): \Iterator {
 	}
 }
 
-function _str_replace(string $master, $search, $replacement): string {
+function _str_replace(string $master, $search, $replacement) {
 	return str_replace($search, $replacement, $master);
 }
 
-function _array_search(array $master, $search): int {
+function _array_search(array $master, $search) {
 	return array_search($search, $master, true);
 }
 
@@ -82,11 +82,11 @@ function dict_search(array $master, $search): string {
 	return $key === false ? null : $key;
 }
 
-function html_encode($string, int $flags = ENT_QUOTES): string {
+function html_encode($string, int $flags = ENT_QUOTES) {
 	return htmlspecialchars($string, $flags);
 }
 
-function html_decode($string, int $flags = ENT_QUOTES): string {
+function html_decode($string, int $flags = ENT_QUOTES) {
 	return htmlspecialchars_decode($string, $flags);
 }
 

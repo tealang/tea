@@ -416,6 +416,12 @@ class ASTChecker
 		}
 
 		$this->check_parameters_for_callable_declaration($node);
+
+		if ($node->type) {
+			$node->is_tinted_return_type = true;
+			$this->check_type($node->type, $node);
+		}
+
 		$this->check_function_body($node);
 	}
 
@@ -438,6 +444,12 @@ class ASTChecker
 		}
 
 		$this->check_parameters_for_callable_declaration($node);
+
+		if ($node->type) {
+			$node->is_tinted_return_type = true;
+			$this->check_type($node->type, $node);
+		}
+
 		$this->check_function_body($node);
 
 		return TypeFactory::create_callable_type($node->type, $node->parameters);
@@ -454,7 +466,6 @@ class ASTChecker
 
 		$declared_type = $node->type;
 		if ($declared_type) {
-			$this->check_type($declared_type, $node);
 			if ($infered_type !== null) {
 				if (!$declared_type->is_accept_type($infered_type)) {
 					throw $this->new_syntax_error("Function '{$node->name}' returns type is '{$infered_type->name}', do not compatibled with the declared '{$declared_type->name}'", $node);
@@ -481,14 +492,16 @@ class ASTChecker
 
 		$this->check_parameters_for_callable_declaration($node);
 
+		if ($node->type) {
+			$node->is_tinted_return_type = true;
+			$this->check_type($node->type, $node);
+		}
+
 		if ($node->body !== null) {
 			$this->current_function = $node; // for find _SUPER
 			$this->check_function_body($node);
 		}
-		elseif ($node->type) {
-			$this->check_type($node->type, $node);
-		}
-		else {
+		elseif ($node->type === null) {
 			$node->type = TypeFactory::$_void;
 		}
 	}
@@ -1378,7 +1391,8 @@ class ASTChecker
 
 		if ($left_type instanceof ArrayType) {
 			if ($node->right and $right_type !== TypeFactory::$_uint) {
-				throw $this->new_syntax_error("Index type for Array accessing should be UInt, '{$right_type->name}' supplied", $node->right);
+				$type_name = self::get_type_name($right_type);
+				throw $this->new_syntax_error("Index type for Array accessing should be UInt, '{$type_name}' supplied", $node->right);
 			}
 
 			$infered_type = $left_type->generic_type;
@@ -1422,7 +1436,8 @@ class ASTChecker
 		elseif ($left_type instanceof UnionType) {
 			if ($left_type->is_all_array_types()) {
 				if ($right_type !== TypeFactory::$_uint) {
-					throw $this->new_syntax_error("Index type for Array accessing should be UInt, '{$right_type->name}' supplied", $node->right);
+					$type_name = self::get_type_name($right_type);
+					throw $this->new_syntax_error("Index type for Array accessing should be UInt, '{$type_name}' supplied", $node->right);
 				}
 			}
 			elseif ($left_type->is_all_dict_types()) {
@@ -2747,6 +2762,10 @@ class ASTChecker
 		}
 		else {
 			$name = $type ? $type->name : '-';
+		}
+
+		if ($type->nullable) {
+			$name .= '?';
 		}
 
 		return $name;

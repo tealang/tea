@@ -13,11 +13,11 @@ class TeaDemoClass {
 
 	public $prop1 = 'prop1 value';
 
-	public static function static_method(array $some): string {
+	public static function static_method(array $some) {
 		return TeaDemoClass::$static_prop1;
 	}
 
-	public function method1(string $param1): string {
+	public function method1(string $param1) {
 		return $this->prop1;
 	}
 
