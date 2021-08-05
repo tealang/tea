@@ -3,7 +3,7 @@ namespace tea\examples;
 
 #internal
 interface IBaseView {
-	public function __construct(string $id = null);
+	public function __construct(?string $id = null);
 	public function add_subitem($item);
 	public function set_attribute(string $key, string $value);
 	public function build_attributes();
@@ -15,8 +15,8 @@ trait IBaseViewTrait {
 	protected $attributes = [];
 	protected $subitems = [];
 
-	public function __construct(string $id = null) {
-		if ($id !== null) {
+	public function __construct(?string $id = null) {
+		if (is_string($id)) {
 			$this->attributes['id'] = $id;
 		}
 	}

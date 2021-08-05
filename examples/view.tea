@@ -3,7 +3,7 @@ internal IBaseView {
 	protected subitems = []  // infered to Any.Array
 
 	construct(id String = none) {
-		if id !== none {
+		if id is String {
 			this.attributes['id'] = id
 		}
 	}

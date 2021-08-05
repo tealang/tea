@@ -15,6 +15,8 @@ class ReturnStatement extends PostConditionAbleStatement
 
 	public $argument;
 
+	public $block;
+
 	public function __construct(?BaseExpression $argument)
 	{
 		$this->argument = $argument;

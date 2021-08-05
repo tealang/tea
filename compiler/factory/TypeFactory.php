@@ -19,6 +19,8 @@ class TypeFactory
 
 	static $_any;
 	static $_none;
+	static $_default_marker; // use NoneType current
+
 	static $_void;
 	static $_object;
 
@@ -61,6 +63,8 @@ class TypeFactory
 
 		self::$_void = self::create_type(VoidType::class);
 		self::$_none = self::create_type(NoneType::class);
+		self::$_default_marker = self::create_type(NoneType::class);
+
 		self::$_any = self::create_type(AnyType::class);
 		self::$_object = self::create_type(ObjectType::class);
 

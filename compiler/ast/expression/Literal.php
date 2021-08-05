@@ -26,6 +26,8 @@ trait LiteralTraitWithValue
 class NoneLiteral extends BaseExpression implements ILiteral
 {
 	const KIND = 'none_literal';
+
+	public $is_default_value_marker = false;
 }
 
 abstract class StringLiteral extends BaseExpression implements ILiteral

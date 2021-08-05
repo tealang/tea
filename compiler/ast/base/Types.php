@@ -25,6 +25,10 @@ trait ITypeTrait
 		return $copy;
 	}
 
+	public function remove_nullable() {
+		$this->nullable = false;
+	}
+
 	public function is_accept_type(IType $target) {
 		if ($target instanceof UnionType) {
 			$accept = false;
@@ -37,9 +41,9 @@ trait ITypeTrait
 		}
 		else {
 			$accept = $this->is_accept_single_type($target);
-			// if ($target->nullable and !$this->nullable) {
-			// 	$accept = false;
-			// }
+			if ($target->nullable and !$this->nullable and !$this instanceof AnyType) {
+				$accept = false;
+			}
 		}
 
 		return $accept;
@@ -159,6 +163,13 @@ class UnionType extends BaseType
 
 	public function __construct(array $types = []) {
 		$this->types = $types;
+	}
+
+	public function remove_nullable() {
+		$this->nullable = false;
+		foreach ($this->types as $member_type) {
+			$member_type->remove_nullable();
+		}
 	}
 
 	public function is_all_array_types() {

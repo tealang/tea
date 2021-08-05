@@ -288,7 +288,15 @@ class ASTChecker
 	{
 		if ($node->type) {
 			$this->check_type($node->type, $node);
-			$infered_type && $this->assert_type_compatible($node->type, $infered_type, $node->value);
+			if ($infered_type instanceof NoneType) {
+				// set nullable when assigned none
+				if (!$node->type->nullable and $infered_type !== TypeFactory::$_default_marker) {
+					$node->type = $node->type->get_nullable_instance();
+				}
+			}
+			else {
+				$infered_type && $this->assert_type_compatible($node->type, $infered_type, $node->value);
+			}
 		}
 		elseif ($infered_type === TypeFactory::$_uint && $node->value instanceof IntegerLiteral) {
 			// set infered type to Int when value is Integer literal
@@ -468,7 +476,9 @@ class ASTChecker
 		if ($declared_type) {
 			if ($infered_type !== null) {
 				if (!$declared_type->is_accept_type($infered_type)) {
-					throw $this->new_syntax_error("Function '{$node->name}' returns type is '{$infered_type->name}', do not compatibled with the declared '{$declared_type->name}'", $node);
+					$infered_type_name = self::get_type_name($infered_type);
+					$declared_type_name = self::get_type_name($declared_type);
+					throw $this->new_syntax_error("The infered returns type is '{$infered_type_name}', do not compatibled with the declared '{$declared_type_name}'", $node);
 				}
 			}
 			elseif ($declared_type instanceof ArrayType && $declared_type->is_collect_mode) {
@@ -1101,7 +1111,8 @@ class ASTChecker
 		if (!in_array($infered_type, $types, true)) {
 			$names = array_column($types, 'name');
 			$names = join(' or ', $names);
-			throw $this->new_syntax_error("Expect type $names, but supplied type {$infered_type->name}", $node);
+			$infered_type_name = self::get_type_name($infered_type);
+			throw $this->new_syntax_error("Expected type $names, but supplied type {$infered_type_name}", $node);
 		}
 
 		return $infered_type;
@@ -1240,7 +1251,9 @@ class ASTChecker
 			// 	$infered_type = $node;
 			// 	break;
 			case NoneLiteral::KIND:
-				$infered_type = TypeFactory::$_none;
+				$infered_type = $node->is_default_value_marker
+					? TypeFactory::$_default_marker
+					: TypeFactory::$_none;
 				break;
 			case FloatLiteral::KIND:
 				$infered_type = TypeFactory::$_float;
@@ -1634,12 +1647,20 @@ class ASTChecker
 
 	private function infer_none_coalescing_expression(NoneCoalescingOperation $node): IType
 	{
-		$infered_types = [];
+		$types = [];
 		foreach ($node->items as $item) {
-			$infered_types[] = $this->infer_expression($item);
+			$infered = $this->infer_expression($item);
+			$types[] = $infered;
 		}
 
-		return $this->reduce_types($infered_types);
+		$reduced = $this->reduce_types($types);
+
+		// none has been coalesced
+		if (!$infered instanceof NoneType) {
+			$reduced->remove_nullable();
+		}
+
+		return $reduced;
 	}
 
 	private function infer_conditional_expression(ConditionalExpression $node): IType
@@ -2004,7 +2025,7 @@ class ASTChecker
 					$key = "'$key'";
 				}
 
-				throw $this->new_syntax_error("Type of argument $key does not matched the parameter for '{$callee_name}', expected '{$expected_type_name}', supplied '{$infered_type_name}'", $argument);
+				throw $this->new_syntax_error("Type of argument $key does not matched the parameter, expected '{$expected_type_name}', supplied '{$infered_type_name}'", $argument);
 			}
 
 			// if ($parameter->is_referenced) {
@@ -2110,9 +2131,10 @@ class ASTChecker
 				throw $this->new_syntax_error("It's required a type hint", $value_node);
 			}
 
-			$left = self::get_type_name($left);
-			$right = self::get_type_name($right);
-			throw $this->new_syntax_error("It's not compatible for type '{$left}' {$kind} with '{$right}'", $value_node);
+			$left_type_name = self::get_type_name($left);
+			$right_type_name = self::get_type_name($right);
+
+			throw $this->new_syntax_error("It's not compatible for type '{$left_type_name}' {$kind} with '{$right_type_name}'", $value_node);
 		}
 	}
 

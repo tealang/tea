@@ -95,13 +95,13 @@ function regex_test(string $regex, string $subject): bool {
 	return preg_match($regex, $subject) ? true : false;
 }
 
-function regex_capture_one(string $regex, string $subject): array {
+function regex_capture_one(string $regex, string $subject): ?array {
 	$matches = null;
 	$count = preg_match($regex, $subject, $matches);
 	return $count === 0 ? null : $matches;
 }
 
-function regex_capture_all(string $regex, string $subject): array {
+function regex_capture_all(string $regex, string $subject): ?array {
 	$matches = null;
 	$count = preg_match_all($regex, $subject, $matches);
 	return $count === 0 ? null : $matches;
