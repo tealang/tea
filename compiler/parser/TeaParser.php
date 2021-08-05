@@ -490,7 +490,7 @@ class TeaParser extends BaseParser
 			$argument = $this->read_expression_inline();
 		}
 
-		$statement = new ExitStatement($argument);
+		$statement = $this->factory->create_exit_statement($argument);
 		$this->try_attach_post_condition($statement);
 
 		return $statement;
@@ -509,7 +509,7 @@ class TeaParser extends BaseParser
 			$argument = $this->read_expression_inline();
 		}
 
-		$statement = new ReturnStatement($argument);
+		$statement = $this->factory->create_return_statement($argument);
 		$this->try_attach_post_condition($statement);
 
 		return $statement;
@@ -524,7 +524,7 @@ class TeaParser extends BaseParser
 			throw $this->new_parse_error("Required an Exception argument.");
 		}
 
-		$statement = new ThrowStatement($argument);
+		$statement = $this->factory->create_throw_statement($argument);
 		$this->try_attach_post_condition($statement);
 
 		return $statement;

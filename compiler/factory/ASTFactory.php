@@ -129,6 +129,21 @@ class ASTFactory
 		return $declaration;
 	}
 
+	public function create_return_statement(?BaseExpression $argument)
+	{
+		return new ReturnStatement($argument, $this->block);
+	}
+
+	public function create_throw_statement(?BaseExpression $argument)
+	{
+		return new ThrowStatement($argument, $this->block);
+	}
+
+	public function create_exit_statement(?BaseExpression $argument)
+	{
+		return new ExitStatement($argument, $this->block);
+	}
+
 	public function create_accessing_identifier(BaseExpression $master, string $name)
 	{
 		return new AccessingIdentifier($master, $name);
@@ -233,7 +248,7 @@ class ASTFactory
 		}
 		elseif (!$this->seek_symbol_in_function($identifier)) {
 			$this->declaration->set_defer_check_identifier($identifier);
-			// if ($this->declaration->super_block instanceof ClassKindredDeclaration) {
+			// if ($this->declaration->belong_block instanceof ClassKindredDeclaration) {
 			// 	$this->class->set_defer_check_identifier($identifier);
 			// }
 		}
@@ -244,7 +259,7 @@ class ASTFactory
 		$block = $this->scope;
 		$block->remove_defer_check_identifier($identifier);
 
-		while ($block = $block->super_block) {
+		while ($block = $block->belong_block) {
 			if ($block instanceof IScopeBlock) {
 				$block->remove_defer_check_identifier($identifier);
 			}
@@ -602,7 +617,7 @@ class ASTFactory
 				$switch_layers++;
 			}
 
-			$block = $block->super_block;
+			$block = $block->belong_block;
 			if ($block === null) {
 				throw $this->parser->new_parse_error("An error occurred in the compiler");
 			}
@@ -629,7 +644,7 @@ class ASTFactory
 				$switch_layers++;
 			}
 
-			$block = $block->super_block;
+			$block = $block->belong_block;
 			if ($block === null) {
 				throw $this->parser->new_parse_error("An error occurred in the compiler");
 			}
@@ -719,7 +734,7 @@ class ASTFactory
 			$this->function = $declaration;
 		}
 
-		$declaration->super_block = $this->class;
+		$declaration->belong_block = $this->class;
 		$this->declaration = $declaration;
 	}
 
@@ -752,7 +767,7 @@ class ASTFactory
 
 	public function begin_block(IBlock $block)
 	{
-		$block->super_block = $this->block;
+		$block->belong_block = $this->block;
 		$this->block = $block;
 	}
 
@@ -760,8 +775,8 @@ class ASTFactory
 	{
 		$block = $this->block;
 
-		if ($block->super_block) {
-			$this->block = $block->super_block;
+		if ($block->belong_block) {
+			$this->block = $block->belong_block;
 			if ($block instanceof LambdaExpression) {
 				$this->scope = $this->find_super_scope($block);
 			}
@@ -780,7 +795,7 @@ class ASTFactory
 
 	private static function find_super_scope(IBlock $block)
 	{
-		$block= $block->super_block;
+		$block= $block->belong_block;
 		if (!$block || $block instanceof IScopeBlock) {
 			return $block;
 		}
@@ -806,7 +821,7 @@ class ASTFactory
 		$block = $this->block;
 		$symbols = $block->symbols;
 
-		while (($block = $block->super_block) && !$block instanceof ClassKindredDeclaration) {
+		while (($block = $block->belong_block) && !$block instanceof ClassKindredDeclaration) {
 			$symbols = array_merge($symbols, $block->symbols);
 		}
 
@@ -837,8 +852,8 @@ class ASTFactory
 				$identifier->lambda = $seek_block; // for the mutating feature
 			}
 
-			if ($seek_block->super_block && !$seek_block->super_block instanceof ClassKindredDeclaration) {
-				$symbol = $this->seek_symbol_in_function($identifier, $seek_block->super_block);
+			if ($seek_block->belong_block && !$seek_block->belong_block instanceof ClassKindredDeclaration) {
+				$symbol = $this->seek_symbol_in_function($identifier, $seek_block->belong_block);
 			}
 		}
 
@@ -859,7 +874,7 @@ class ASTFactory
 			if ($seek_block instanceof IScopeBlock) {
 				break;
 			}
-		} while ($seek_block = $seek_block->super_block);
+		} while ($seek_block = $seek_block->belong_block);
 
 		return null;
 	}

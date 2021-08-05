@@ -15,10 +15,11 @@ class ReturnStatement extends PostConditionAbleStatement
 
 	public $argument;
 
-	public $block;
+	public $belong_block;
 
-	public function __construct(?BaseExpression $argument)
+	public function __construct(?BaseExpression $argument, IBlock $belong_block)
 	{
 		$this->argument = $argument;
+		$this->belong_block = $belong_block;
 	}
 }

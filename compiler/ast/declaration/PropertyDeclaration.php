@@ -17,11 +17,11 @@ trait IClassMemberDeclarationTrait
 
 	public $is_static = false;
 
-	public $super_block;
+	public $belong_block;
 
 	public function is_accessable_for_object(BaseExpression $expr) {
 		if ($this->modifier === _PRIVATE) {
-			return $expr instanceof PlainIdentifier && $expr->symbol === $this->super_block->this_object_symbol;
+			return $expr instanceof PlainIdentifier && $expr->symbol === $this->belong_block->this_object_symbol;
 		}
 		elseif ($this->modifier === _PROTECTED) {
 			return $expr instanceof PlainIdentifier && ($expr->name === _THIS || $expr->name === _SUPER);
@@ -32,7 +32,7 @@ trait IClassMemberDeclarationTrait
 
 	public function is_accessable_for_class(BaseExpression $expr) {
 		if ($this->modifier === _PRIVATE) {
-			return $expr instanceof PlainIdentifier && $expr->symbol === $this->super_block->this_class_symbol;
+			return $expr instanceof PlainIdentifier && $expr->symbol === $this->belong_block->this_class_symbol;
 		}
 		elseif ($this->modifier === _PROTECTED) {
 			return $expr instanceof PlainIdentifier && ($expr->name === _THIS || $expr->name === _SUPER);

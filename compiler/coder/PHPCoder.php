@@ -272,7 +272,7 @@ class PHPCoder extends TeaCoder
 	protected function generate_function_header(FunctionDeclaration $node)
 	{
 		$modifier = '';
-		if ($node->super_block) {
+		if ($node->belong_block) {
 			if ($node->modifier === _INTERNAL) {
 				// $modifier = "#internal\n";
 			}
@@ -290,7 +290,7 @@ class PHPCoder extends TeaCoder
 		// }
 
 		// thats method
-		if ($node->super_block) {
+		if ($node->belong_block) {
 			$name = $this->get_normalized_class_member_name($node);
 		}
 		else {
@@ -1538,14 +1538,20 @@ class PHPCoder extends TeaCoder
 			}
 
 			$code = "is_{$type_name}($left)";
+			if ($node->is_not) {
+				$code = '!' . $code;
+			}
+		}
+		elseif ($node->right instanceof NoneType) {
+			$operator = $node->is_not ? '!==' : '===';
+			$code = "{$left} $operator null";
 		}
 		else {
 			$right = $this->get_classkindred_identifier_name($node->right);
 			$code = "{$left} instanceof {$right}";
-		}
-
-		if ($node->is_not) {
-			$code = '!' . $code;
+			if ($node->is_not) {
+				$code = '!' . $code;
+			}
 		}
 
 		return $code;

@@ -662,7 +662,7 @@ class ASTChecker
 		if ($node instanceof ClassDeclaration && $node->define_mode) {
 			foreach ($node->aggregated_members as $name => $member) {
 				if ($member instanceof FunctionDeclaration && $member->body === null) {
-					$interface = $member->super_block;
+					$interface = $member->belong_block;
 					throw $this->new_syntax_error("Method protocol '{$interface->name}.{$name}' required an implementation in class '{$node->name}'", $node);
 				}
 			}
@@ -681,36 +681,36 @@ class ASTChecker
 			$node_return_type = $this->get_type_name($node->type);
 			$super_return_type = $this->get_type_name($super->type);
 
-			throw $this->new_syntax_error("The return type '{$node_return_type}' in '{$node->super_block->name}.{$node->name}' must be compatibled with '$super_return_type' in '{$super->super_block->name}.{$super->name}'", $node);
+			throw $this->new_syntax_error("The return type '{$node_return_type}' in '{$node->belong_block->name}.{$node->name}' must be compatibled with '$super_return_type' in '{$super->belong_block->name}.{$super->name}'", $node);
 		}
 
 		// the accessing modifer
 		$super_modifier = $super->modifier ?? _PUBLIC;
 		$this_modifier = $node->modifier ?? _PUBLIC;
 		if ($super_modifier !== $this_modifier) {
-			throw $this->new_syntax_error("Modifier in '{$node->super_block->name}.{$node->name}' must be same as '{$super->super_block->name}.{$super->name}'", $node->super_block);
+			throw $this->new_syntax_error("Modifier in '{$node->belong_block->name}.{$node->name}' must be same as '{$super->belong_block->name}.{$super->name}'", $node->belong_block);
 		}
 
 		if ($super instanceof FunctionDeclaration) {
 			if (!$node instanceof FunctionDeclaration) {
-				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatibled with '{$super->super_block->name}.{$super->name}'", $node);
+				throw $this->new_syntax_error("Kind of '{$node->belong_block->name}.{$node->name}' must be compatibled with '{$super->belong_block->name}.{$super->name}'", $node);
 			}
 
 			// check type hint
 			if ($super->is_hinted_return_type and !$node->is_hinted_return_type) {
 				$super_return_type = $this->get_type_name($super->type);
-				throw $this->new_syntax_error("There are has type hint '{$super_return_type}' in '{$super->super_block->name}.{$super->name}', but not in '{$node->super_block->name}.{$node->name}'", $node);
+				throw $this->new_syntax_error("There are has type hint '{$super_return_type}' in '{$super->belong_block->name}.{$super->name}', but not in '{$node->belong_block->name}.{$node->name}'", $node);
 			}
 
 			$this->assert_classkindred_method_parameters($node, $super);
 		}
 		elseif ($super instanceof PropertyDeclaration) {
 			if (!$node instanceof PropertyDeclaration) {
-				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatibled with '{$super->super_block->name}.{$super->name}'", $node);
+				throw $this->new_syntax_error("Kind of '{$node->belong_block->name}.{$node->name}' must be compatibled with '{$super->belong_block->name}.{$super->name}'", $node);
 			}
 		}
 		elseif ($super instanceof ClassConstantDeclaration && $is_interface) {
-			throw $this->new_syntax_error("Cannot override interface constant '{$super->super_block->name}.{$super->name}' in '{$node->super_block->name}'", $node);
+			throw $this->new_syntax_error("Cannot override interface constant '{$super->belong_block->name}.{$super->name}' in '{$node->belong_block->name}'", $node);
 		}
 	}
 
@@ -722,14 +722,14 @@ class ASTChecker
 
 		// the parameters count
 		if (count($protocol->parameters) !== count($node->parameters)) {
-			throw $this->new_syntax_error("Parameters of '{$node->super_block->name}.{$node->name}' must be compatibled with '{$protocol->super_block->name}.{$protocol->name}'", $node->super_block);
+			throw $this->new_syntax_error("Parameters of '{$node->belong_block->name}.{$node->name}' must be compatibled with '{$protocol->belong_block->name}.{$protocol->name}'", $node->belong_block);
 		}
 
 		// the parameter types
 		foreach ($protocol->parameters as $idx => $protocol_param) {
 			$node_param = $node->parameters[$idx];
 			if (!$this->is_strict_compatible_types($protocol_param->type, $node_param->type)) {
-				throw $this->new_syntax_error("Type of parameter {$idx} in '{$node->super_block->name}.{$node->name}' must be compatibled with '{$protocol->super_block->name}.{$protocol->name}'", $node->super_block);
+				throw $this->new_syntax_error("Type of parameter {$idx} in '{$node->belong_block->name}.{$node->name}' must be compatibled with '{$protocol->belong_block->name}.{$protocol->name}'", $node->belong_block);
 			}
 		}
 	}
@@ -799,9 +799,17 @@ class ASTChecker
 		}
 
 		// it would infer with the asserted then type
-		$asserted_then_type and $left_declaration->type = $asserted_then_type;
+		if ($asserted_then_type) {
+			$left_declaration->type = $asserted_then_type;
+		}
 
+		// check block body
 		$result_type = $this->infer_block($node);
+
+		// if assert none, and returned, means disabled nullable
+		if ($node->is_returned and $asserted_then_type instanceof NoneType and $left_original_type->nullable) {
+			$left_original_type->disabled_nullable = true;
+		}
 
 		if ($node->else) {
 			// it would infer with the asserted else type
@@ -1122,6 +1130,8 @@ class ASTChecker
 	{
 		$this->infer_expression($node->argument);
 		$node->condition && $this->check_condition_clause($node);
+
+		$node->belong_block->is_returned = true;
 	}
 
 	private function infer_return_statement(ReturnStatement $node)
@@ -1129,7 +1139,17 @@ class ASTChecker
 		$infered_type = $node->argument ? $this->infer_expression($node->argument) : null;
 		$node->condition && $this->check_condition_clause($node);
 
+		$node->belong_block->is_returned = true;
+
 		return $infered_type;
+	}
+
+	private function check_exit_statement(ExitStatement $node)
+	{
+		$node->argument === null || $this->expect_infered_type($node->argument, TypeFactory::$_uint, TypeFactory::$_int);
+		$node->condition && $this->check_condition_clause($node);
+
+		$node->belong_block->is_returned = true;
 	}
 
 	private function check_unset_statement(UnsetStatement $node)
@@ -1140,12 +1160,6 @@ class ASTChecker
 		if (!$argument instanceof KeyAccessing) {
 			throw $this->new_syntax_error("The unset target must be a KeyAccessing", $argument);
 		}
-	}
-
-	private function check_exit_statement(ExitStatement $node)
-	{
-		$node->argument === null || $this->expect_infered_type($node->argument, TypeFactory::$_uint, TypeFactory::$_int);
-		$node->condition && $this->check_condition_clause($node);
 	}
 
 	private function check_condition_clause(PostConditionAbleStatement $node)
@@ -2298,11 +2312,11 @@ class ASTChecker
 
 		// find for 'super'
 		if ($symbol === null && $name === _SUPER) {
-			if ($this->current_function->super_block->inherits === null) {
+			if ($this->current_function->belong_block->inherits === null) {
 				throw $this->new_syntax_error("There are not inherits a class/interface for 'super' reference", $node);
 			}
 
-			$inherits_class = $this->current_function->super_block->inherits->symbol->declaration;
+			$inherits_class = $this->current_function->belong_block->inherits->symbol->declaration;
 			if ($this->current_function->is_static) {
 				$symbol = $inherits_class->this_class_symbol;
 			}
@@ -2794,8 +2808,8 @@ class ASTChecker
 
 	static function get_declaration_name(IDeclaration $declaration)
 	{
-		if (isset($declaration->super_block) && $declaration->super_block instanceof ClassDeclaration) {
-			return "{$declaration->super_block->name}.{$declaration->name}";
+		if (isset($declaration->belong_block) && $declaration->belong_block instanceof ClassDeclaration) {
+			return "{$declaration->belong_block->name}.{$declaration->name}";
 		}
 
 		return $declaration->name;

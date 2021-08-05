@@ -15,6 +15,8 @@ trait ITypeTrait
 {
 	public $nullable = false;
 
+	public $disabled_nullable = false;
+
 	public function get_nullable_instance(): IType {
 		if ($this->nullable) {
 			return $this;
@@ -41,7 +43,7 @@ trait ITypeTrait
 		}
 		else {
 			$accept = $this->is_accept_single_type($target);
-			if ($target->nullable and !$this->nullable and !$this instanceof AnyType) {
+			if ($target->nullable and !$this->nullable and !$this instanceof AnyType and !$target->disabled_nullable) {
 				$accept = false;
 			}
 		}

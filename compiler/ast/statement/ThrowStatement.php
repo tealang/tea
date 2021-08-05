@@ -15,8 +15,9 @@ class ThrowStatement extends PostConditionAbleStatement
 
 	public $argument;
 
-	public function __construct(BaseExpression $argument)
+	public function __construct(BaseExpression $argument, IBlock $belong_block)
 	{
 		$this->argument = $argument;
+		$this->belong_block = $belong_block;
 	}
 }

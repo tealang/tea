@@ -19,7 +19,7 @@ class NamespaceDeclaration extends Node implements IRootDeclaration, IMemberDecl
 
 	public $symbols = [];
 
-	public $super_block;
+	public $belong_block;
 
 	public function __construct(string $name)
 	{

@@ -43,8 +43,9 @@ class ReturnBuilder
 		array_unshift($fixeds, $array_var_declaration);
 
 		// the return statement
-		$return = new ReturnStatement($this->vector_identifier);
+		$return = new ReturnStatement($this->vector_identifier, $this->node);
 		$return->leading = LF;
+
 		$fixeds[] = $return;
 
 		return $fixeds;

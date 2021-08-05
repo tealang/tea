@@ -15,8 +15,9 @@ class ExitStatement extends PostConditionAbleStatement
 
 	public $argument;
 
-	public function __construct(BaseExpression $argument = null)
+	public function __construct(BaseExpression $argument = null, IBlock $belong_block)
 	{
 		$this->argument = $argument;
+		$this->belong_block = $belong_block;
 	}
 }

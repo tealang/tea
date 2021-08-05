@@ -21,7 +21,9 @@ trait IBlockTrait {
 
 	public $symbols = [];
 
-	public $super_block;
+	public $belong_block;
+
+	public $is_returned = false;
 
 	public function set_body_with_statements(IStatement ...$statements)
 	{

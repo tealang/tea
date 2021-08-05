@@ -50,7 +50,7 @@ abstract class ClassKindredDeclaration extends Node implements IRootDeclaration,
 	 */
 	// public $symbols = [];
 
-	public $super_block; // aways none
+	public $belong_block; // aways none
 
 	public $this_object_symbol;
 
