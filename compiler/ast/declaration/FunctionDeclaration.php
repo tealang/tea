@@ -17,7 +17,7 @@ trait IScopeBlockTrait
 
 	// public $is_static = false;
 
-	public $is_tinted_return_type = false;
+	public $is_hinted_return_type = false;
 
 	public $parameters;
 

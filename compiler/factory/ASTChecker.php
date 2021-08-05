@@ -418,7 +418,7 @@ class ASTChecker
 		$this->check_parameters_for_callable_declaration($node);
 
 		if ($node->type) {
-			$node->is_tinted_return_type = true;
+			$node->is_hinted_return_type = true;
 			$this->check_type($node->type, $node);
 		}
 
@@ -446,7 +446,7 @@ class ASTChecker
 		$this->check_parameters_for_callable_declaration($node);
 
 		if ($node->type) {
-			$node->is_tinted_return_type = true;
+			$node->is_hinted_return_type = true;
 			$this->check_type($node->type, $node);
 		}
 
@@ -493,7 +493,7 @@ class ASTChecker
 		$this->check_parameters_for_callable_declaration($node);
 
 		if ($node->type) {
-			$node->is_tinted_return_type = true;
+			$node->is_hinted_return_type = true;
 			$this->check_type($node->type, $node);
 		}
 
@@ -666,7 +666,7 @@ class ASTChecker
 			return;
 		}
 
-		// the hint type
+		// check return types
 		if (!$this->is_strict_compatible_types($super->type, $node->type)) {
 			$node_return_type = $this->get_type_name($node->type);
 			$super_return_type = $this->get_type_name($super->type);
@@ -684,6 +684,12 @@ class ASTChecker
 		if ($super instanceof FunctionDeclaration) {
 			if (!$node instanceof FunctionDeclaration) {
 				throw $this->new_syntax_error("Kind of '{$node->super_block->name}.{$node->name}' must be compatibled with '{$super->super_block->name}.{$super->name}'", $node);
+			}
+
+			// check type hint
+			if ($super->is_hinted_return_type and !$node->is_hinted_return_type) {
+				$super_return_type = $this->get_type_name($super->type);
+				throw $this->new_syntax_error("There are has type hint '{$super_return_type}' in '{$super->super_block->name}.{$super->name}', but not in '{$node->super_block->name}.{$node->name}'", $node);
 			}
 
 			$this->assert_classkindred_method_parameters($node, $super);
@@ -1560,26 +1566,55 @@ class ASTChecker
 
 	private function infer_prefix_operation(PrefixOperation $node): IType
 	{
-		$infered_type = $this->infer_expression($node->expression);
+		$expr_type = $this->infer_expression($node->expression);
 
 		if ($node->operator === OperatorFactory::$_bool_not) {
-			return TypeFactory::$_bool;
+			$this->assert_bool_operable($expr_type, $node->expression);
+			$infered = TypeFactory::$_bool;
 		}
 		elseif ($node->operator === OperatorFactory::$_negation) {
-			return $infered_type === TypeFactory::$_uint
+			$this->assert_math_operable($expr_type, $node->expression);
+			$infered = $expr_type === TypeFactory::$_uint
 				? TypeFactory::$_int
-				: $infered_type;
+				: $expr_type;
 		}
 		// elseif ($node->operator === OperatorFactory::$_reference) {
-		// 	return $infered_type;
+		// 	$infered = $expr_type;
 		// }
 		elseif ($node->operator === OperatorFactory::$_bitwise_not) {
-			return $infered_type === TypeFactory::$_uint || $infered_type === TypeFactory::$_int || $infered_type === TypeFactory::$_float
+			$this->assert_bitwise_operable($expr_type, $node->expression);
+			$infered = $expr_type === TypeFactory::$_uint || $expr_type === TypeFactory::$_int || $expr_type === TypeFactory::$_float
 				? TypeFactory::$_int
-				: $infered_type;
+				: $expr_type;
 		}
 		else {
 			throw $this->new_syntax_error("Unknow operator: '{$node->operator->sign}'", $node);
+		}
+
+		return $infered;
+	}
+
+	private function assert_bitwise_operable(IType $type, BaseExpression $node)
+	{
+		if ($type !== TypeFactory::$_uint && $type !== TypeFactory::$_int && $type !== TypeFactory::$_float && $type !== TypeFactory::$_string) {
+			$type_name = $this->get_type_name($type);
+			throw $this->new_syntax_error("The expression value type is '$type_name', cannot use in bitwise operation", $node);
+		}
+	}
+
+	private function assert_math_operable(IType $type, BaseExpression $node)
+	{
+		if ($type !== TypeFactory::$_uint && $type !== TypeFactory::$_int && $type !== TypeFactory::$_float) {
+			$type_name = $this->get_type_name($type);
+			throw $this->new_syntax_error("The expression value type is '$type_name', cannot use in math operation", $node);
+		}
+	}
+
+	private function assert_bool_operable(IType $type, BaseExpression $node)
+	{
+		if ($type !== TypeFactory::$_bool && $type !== TypeFactory::$_uint && $type !== TypeFactory::$_int) {
+			$type_name = $this->get_type_name($type);
+			throw $this->new_syntax_error("The expression value type is '$type_name', cannot use in bool operation", $node);
 		}
 	}
 

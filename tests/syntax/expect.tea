@@ -2,7 +2,7 @@
 // expect variables defined in the including programs
 #expect title String, items Array
 
-return "There no items for title: $title\n" when not items
+return "There no items for title: $title\n" when items::empty
 
 list = []
 for k, v in items {

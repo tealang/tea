@@ -4,7 +4,7 @@ namespace tea\tests\syntax;
 #expect string $title, array $items;
 
 // ---------
-if (!$items) {
+if (empty($items)) {
 	return "There no items for title: {$title}\n";
 }
 

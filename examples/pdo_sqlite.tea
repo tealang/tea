@@ -28,7 +28,7 @@ var sqlite = SQLitePDO('$__DIR__/pdo_sqlite.db')
 rs = sqlite.query('SELECT name FROM sqlite_master ORDER BY name')
 rows = rs.fetchAll(PDO.FETCH_ASSOC)
 
-if not rows {
+if rows::empty {
 	sqlite.exec('CREATE TABLE demo (id int,name string)')
 	echo 'The demo table created'
 }
