@@ -66,8 +66,6 @@ class PlainIdentifier extends Identifiable implements IType
 
 	const KIND = 'plain_identifier';
 
-	public $nullable = false;
-
 	public static function create_with_symbol(Symbol $symbol)
 	{
 		$identifier = new static($symbol->name);

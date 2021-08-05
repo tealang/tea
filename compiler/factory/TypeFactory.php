@@ -11,7 +11,7 @@ namespace Tea;
 
 class TypeFactory
 {
-	static $_dict_key_type;
+	// static $_dict_key_type;
 
 	static $_metatype;
 
@@ -82,7 +82,7 @@ class TypeFactory
 		self::$_callable = self::create_type(CallableType::class);
 		self::$_namespace = self::create_type(NamespaceType::class);
 
-		self::$_dict_key_type = self::create_union_type([self::$_string, self::$_int]);
+		// self::$_dict_key_type = self::create_union_type([self::$_string, self::$_int]);
 
 		self::$_iiterator = new ClassKindredIdentifier('IIterator');
 		self::$_yield_generator = self::$_iiterator;
@@ -115,7 +115,7 @@ class TypeFactory
 
 	static function is_dict_key_directly_supported_type(?IType $type)
 	{
-		if ($type === self::$_string || $type === self::$_uint || $type === self::$_int || $type === self::$_dict_key_type) {
+		if ($type === self::$_string || $type === self::$_uint || $type === self::$_int) {
 			return true;
 		}
 		elseif ($type instanceof StringType || $type instanceof IntType) {

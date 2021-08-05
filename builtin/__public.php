@@ -66,7 +66,8 @@ function _str_replace(string $master, $search, $replacement) {
 }
 
 function _array_search(array $master, $search) {
-	return array_search($search, $master, true);
+	$key = array_search($search, $master, true);
+	return $key === false ? false : $key;
 }
 
 function array_last_index(array $array): int {
@@ -77,9 +78,9 @@ function dict_get(array $dict, string $key) {
 	return $dict[$key] ?? null;
 }
 
-function dict_search(array $master, $search): string {
+function _dict_search(array $master, $search) {
 	$key = array_search($search, $master, true);
-	return $key === false ? null : $key;
+	return $key === false ? false : (string)$key;
 }
 
 function html_encode($string, int $flags = ENT_QUOTES) {

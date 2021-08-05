@@ -22,6 +22,8 @@ class BinaryOperation extends MultiOperation
 {
 	const KIND = 'binary_operation';
 
+	public $type_assertion;  // for type assert in Checker
+
 	public $left;
 	public $right;
 

@@ -13,6 +13,8 @@ interface IType {}
 
 trait ITypeTrait
 {
+	public $nullable = false;
+
 	public function get_nullable_instance(): IType {
 		if ($this->nullable) {
 			return $this;
@@ -35,6 +37,9 @@ trait ITypeTrait
 		}
 		else {
 			$accept = $this->is_accept_single_type($target);
+			// if ($target->nullable and !$this->nullable) {
+			// 	$accept = false;
+			// }
 		}
 
 		return $accept;
@@ -77,8 +82,6 @@ class BaseType extends Node implements IType
 	public $name;
 
 	public $symbol;
-
-	public $nullable = false;
 
 	public function is_based_with(IType $target) {
 		return false;
@@ -151,8 +154,6 @@ class UnionType extends BaseType
 	const KIND = 'union_type_identifier';
 
 	public $name = _UNIONTYPE;
-
-	public $symbol;
 
 	public $types = [];
 

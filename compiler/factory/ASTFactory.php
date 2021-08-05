@@ -645,7 +645,8 @@ class ASTFactory
 		$this->begin_block($block);
 
 		if ($key_var) {
-			$key_declaration = new InvariantDeclaration($key_var->name, TypeFactory::$_dict_key_type);
+			// use String as the default type, because String can be compatible with Int/UInt
+			$key_declaration = new InvariantDeclaration($key_var->name, TypeFactory::$_string);
 			$block->symbols[$key_var->name] = $key_var->symbol = new Symbol($key_declaration);
 		}
 

@@ -734,12 +734,7 @@ class ASTChecker
 
 	private function infer_if_block(IfBlock $node): ?IType
 	{
-		if ($node->condition instanceof IsOperation) {
-			$result_type = $this->infer_base_if_block_with_assert($node);
-		}
-		else {
-			$result_type = $this->infer_base_if_block($node);
-		}
+		$result_type = $this->infer_base_if_block($node);
 
 		if ($node->except) {
 			$result_type = $this->reduce_types_with_except_block($node, $result_type);
@@ -748,31 +743,37 @@ class ASTChecker
 		return $result_type;
 	}
 
-	protected function infer_base_if_block(BaseIfBlock $node): ?IType
+	private function infer_base_if_block(BaseIfBlock $node): ?IType
 	{
 		$this->infer_expression($node->condition);
-		$result_type = $this->infer_block($node);
 
-		if ($node->else) {
-			$result_type = $this->reduce_types_with_else_block($node, $result_type);
+		if ($node->condition instanceof BinaryOperation and $node->condition->type_assertion !== null) {
+			// with type assertion
+			$result_type = $this->infer_base_if_block_with_assertion($node);
+		}
+		else {
+			// without type assertion
+			$result_type = $this->infer_block($node);
+			if ($node->else) {
+				$result_type = $this->reduce_types_with_else_block($node, $result_type);
+			}
 		}
 
 		return $result_type;
 	}
 
-	private function infer_base_if_block_with_assert(BaseIfBlock $node): ?IType
+	private function infer_base_if_block_with_assertion(BaseIfBlock $node): ?IType
 	{
-		$condition = $node->condition;
-		$this->infer_expression($condition);
+		$type_assertion = $node->condition->type_assertion;
 
-		$left_declaration = $condition->left->symbol->declaration;
+		$left_declaration = $type_assertion->left->symbol->declaration;
 		$asserted_then_type = null;
 		$asserted_else_type = null;
 
 		$left_original_type = $left_declaration->type;
-		$asserting_type = $condition->right;
+		$asserting_type = $type_assertion->right;
 
-		if ($condition->is_not) {
+		if ($type_assertion->is_not) {
 			if ($left_original_type instanceof UnionType) {
 				$asserted_then_type = $left_original_type->get_members_type_except($asserting_type);
 			}
@@ -789,6 +790,7 @@ class ASTChecker
 
 		// it would infer with the asserted then type
 		$asserted_then_type and $left_declaration->type = $asserted_then_type;
+
 		$result_type = $this->infer_block($node);
 
 		if ($node->else) {
@@ -816,12 +818,7 @@ class ASTChecker
 	protected function infer_else_block(IElseBlock $node): ?IType
 	{
 		if ($node instanceof ElseIfBlock) {
-			if ($node->condition instanceof IsOperation) {
-				$result_type = $this->infer_base_if_block_with_assert($node);
-			}
-			else {
-				$result_type = $this->infer_base_if_block($node);
-			}
+			$result_type = $this->infer_base_if_block($node);
 		}
 		else {
 			$result_type = $this->infer_block($node);
@@ -1478,15 +1475,8 @@ class ASTChecker
 		$right_type = $this->infer_expression($node->right);
 
 		if (OperatorFactory::is_number_operator($operator)) {
-			if (!TypeFactory::is_number_type($left_type)) {
-				$type_name = $this->get_type_name($left_type);
-				throw $this->new_syntax_error("Math operation cannot use for '$type_name' type expressions", $node->left);
-			}
-
-			if (!TypeFactory::is_number_type($right_type)) {
-				$type_name = $this->get_type_name($right_type);
-				throw $this->new_syntax_error("Math operation cannot use for '$type_name' type expressions", $node->right);
-			}
+			$this->assert_math_operable($left_type, $node->left);
+			$this->assert_math_operable($right_type, $node->right);
 
 			if ($operator === OperatorFactory::$_division || $left_type === TypeFactory::$_float || $right_type === TypeFactory::$_float) {
 				$node->infered_type = TypeFactory::$_float;
@@ -1500,6 +1490,17 @@ class ASTChecker
 		}
 		elseif (OperatorFactory::is_bool_operator($operator)) {
 			$node->infered_type = TypeFactory::$_bool;
+
+			// assign type assertion for and-operation
+			// uses for assert type in if-block/conditional-expression
+			if ($operator === OperatorFactory::$_bool_and) {
+				if ($node->left instanceof BinaryOperation and $node->left->type_assertion) {
+					$node->type_assertion = $node->left->type_assertion;
+				}
+				elseif ($node->right instanceof BinaryOperation and $node->right->type_assertion) {
+					$node->type_assertion = $node->right->type_assertion;
+				}
+			}
 		}
 		elseif ($operator === OperatorFactory::$_concat) {
 			// string or array
@@ -1561,6 +1562,9 @@ class ASTChecker
 			throw $this->new_syntax_error("Invalid 'is' expression '{$kind}'", $node);
 		}
 
+		// it self is a type assertion
+		$node->type_assertion = $node;
+
 		return $assert_type;
 	}
 
@@ -1574,9 +1578,19 @@ class ASTChecker
 		}
 		elseif ($node->operator === OperatorFactory::$_negation) {
 			$this->assert_math_operable($expr_type, $node->expression);
-			$infered = $expr_type === TypeFactory::$_uint
-				? TypeFactory::$_int
-				: $expr_type;
+
+			// if is UInt or contais UInt, it must be become to Int after Negation
+			if ($expr_type === TypeFactory::$_uint) {
+				$infered = TypeFactory::$_int;
+			}
+			elseif ($expr_type instanceof UnionType and $expr_type->is_contains_single_type(TypeFactory::$_uint)) {
+				// we need to clone, to avoid of polluting the original expression
+				$infered = clone $expr_type;
+				$infered->add_single_type(TypeFactory::$_int);
+			}
+			else {
+				$infered = $expr_type;
+			}
 		}
 		// elseif ($node->operator === OperatorFactory::$_reference) {
 		// 	$infered = $expr_type;
@@ -1598,15 +1612,15 @@ class ASTChecker
 	{
 		if ($type !== TypeFactory::$_uint && $type !== TypeFactory::$_int && $type !== TypeFactory::$_float && $type !== TypeFactory::$_string) {
 			$type_name = $this->get_type_name($type);
-			throw $this->new_syntax_error("The expression value type is '$type_name', cannot use in bitwise operation", $node);
+			throw $this->new_syntax_error("Bitwise operation cannot use for '$type_name' type expression", $node);
 		}
 	}
 
 	private function assert_math_operable(IType $type, BaseExpression $node)
 	{
-		if ($type !== TypeFactory::$_uint && $type !== TypeFactory::$_int && $type !== TypeFactory::$_float) {
+		if (!TypeFactory::is_number_type($type, $node)) {
 			$type_name = $this->get_type_name($type);
-			throw $this->new_syntax_error("The expression value type is '$type_name', cannot use in math operation", $node);
+			throw $this->new_syntax_error("Math operation cannot use for '$type_name' type expression", $node);
 		}
 	}
 
@@ -1614,7 +1628,7 @@ class ASTChecker
 	{
 		if ($type !== TypeFactory::$_bool && $type !== TypeFactory::$_uint && $type !== TypeFactory::$_int) {
 			$type_name = $this->get_type_name($type);
-			throw $this->new_syntax_error("The expression value type is '$type_name', cannot use in bool operation", $node);
+			throw $this->new_syntax_error("Bool operation cannot use for '$type_name' type expression", $node);
 		}
 	}
 
@@ -1630,38 +1644,42 @@ class ASTChecker
 
 	private function infer_conditional_expression(ConditionalExpression $node): IType
 	{
-		// infer with type assert
-		if ($node->condition instanceof IsOperation) {
-			return $this->infer_conditional_expression_with_assert($node);
-		}
-
 		$condition_type = $this->infer_expression($node->condition);
 
-		if ($node->then === null) {
-			$then_type = $condition_type;
+		// infer with type assert
+		if ($node->condition instanceof BinaryOperation and $node->condition->type_assertion) {
+			// with type assertion
+			$infered_types = $this->infer_conditional_expression_with_asserttion($node, $condition_type);
 		}
 		else {
-			$then_type = $this->infer_expression($node->then);
+			// without type assertion
+			if ($node->then === null) {
+				$then_type = $condition_type;
+			}
+			else {
+				$then_type = $this->infer_expression($node->then);
+			}
+
+			$else_type = $this->infer_expression($node->else);
+
+			$infered_types = [$then_type, $else_type];
 		}
 
-		$else_type = $this->infer_expression($node->else);
-
-		return $this->reduce_types([$then_type, $else_type]);
+		return $this->reduce_types($infered_types);
 	}
 
-	private function infer_conditional_expression_with_assert(ConditionalExpression $node): IType
+	private function infer_conditional_expression_with_asserttion(ConditionalExpression $node, IType $condition_type): array
 	{
-		$condition = $node->condition;
-		$condition_type = $this->infer_expression($condition);
+		$type_assertion = $node->condition->type_assertion;
 
-		$left_declaration = $condition->left->symbol->declaration;
+		$left_declaration = $type_assertion->left->symbol->declaration;
 		$asserted_then_type = null;
 		$asserted_else_type = null;
 
 		$left_original_type = $left_declaration->type;
-		$asserting_type = $condition->right;
+		$asserting_type = $type_assertion->right;
 
-		if ($condition->is_not) {
+		if ($type_assertion->is_not) {
 			if ($left_original_type instanceof UnionType) {
 				$asserted_then_type = $left_original_type->get_members_type_except($asserting_type);
 			}
@@ -1692,7 +1710,7 @@ class ASTChecker
 		// reset to original type
 		$left_declaration->type = $left_original_type;
 
-		return $this->reduce_types([$then_type, $else_type]);
+		return [$then_type, $else_type];
 	}
 
 	private function infer_array_expression(ArrayExpression $node): IType
@@ -1985,8 +2003,6 @@ class ASTChecker
 				if (!is_int($key)) {
 					$key = "'$key'";
 				}
-
-				// dump(get_class($infered_type));exit;
 
 				throw $this->new_syntax_error("Type of argument $key does not matched the parameter for '{$callee_name}', expected '{$expected_type_name}', supplied '{$infered_type_name}'", $argument);
 			}
