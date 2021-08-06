@@ -288,25 +288,40 @@ class ASTChecker
 	{
 		if ($node->type) {
 			$this->check_type($node->type, $node);
-			if ($infered_type instanceof NoneType) {
-				// set nullable when assigned none
-				if (!$node->type->nullable and $infered_type !== TypeFactory::$_default_marker) {
-					$node->type = $node->type->get_nullable_instance();
-				}
-			}
-			else {
-				$infered_type && $this->assert_type_compatible($node->type, $infered_type, $node->value);
+			if ($infered_type and !$infered_type instanceof NoneType) {
+				$this->assert_type_compatible($node->type, $infered_type, $node->value);
 			}
 		}
 		elseif ($infered_type === TypeFactory::$_uint && $node->value instanceof IntegerLiteral) {
 			// set infered type to Int when value is Integer literal
 			$node->type = TypeFactory::$_int;
 		}
-		elseif ($infered_type === null || $infered_type === TypeFactory::$_none) {
+		elseif ($infered_type === null || $infered_type instanceof NoneType) {
 			$node->type = TypeFactory::$_any;
 		}
 		else {
 			$node->type = $infered_type;
+		}
+
+		// infering to set has null
+		if ($infered_type === null) {
+			// $infered_has_null = ($node instanceof ParameterDeclaration or $node instanceof PropertyDeclaration) ? false : true;
+			$infered_has_null = false; // let false by now
+		}
+		elseif ($infered_type instanceof NoneType) {
+			$infered_has_null = $infered_type !== TypeFactory::$_default_marker;
+		}
+		else {
+			$infered_has_null = $infered_type->has_null;
+		}
+
+		if ($infered_has_null and !$node->type instanceof AnyType and !$node->type->has_null) {
+			// make copy for BaseType
+			if ($node->type instanceof BaseType) {
+				$node->type = clone $node->type;
+			}
+
+			$node->type->has_null = true;
 		}
 	}
 
@@ -534,7 +549,9 @@ class ASTChecker
 
 		if ($node->type) {
 			$this->check_type($node->type, $node);
-			$infered_type && $this->assert_type_compatible($node->type, $infered_type, $node->value);
+			if ($infered_type and !$infered_type instanceof NoneType) {
+				$infered_type && $this->assert_type_compatible($node->type, $infered_type, $node->value);
+			}
 		}
 		elseif ($infered_type) {
 			$node->type = $infered_type;
@@ -806,9 +823,9 @@ class ASTChecker
 		// check block body
 		$result_type = $this->infer_block($node);
 
-		// if assert none, and returned, means disabled nullable
-		if ($node->is_returned and $asserted_then_type instanceof NoneType and $left_original_type->nullable) {
-			$left_original_type->disabled_nullable = true;
+		// if assert none, and returned, means removed null
+		if ($node->is_returned and $asserted_then_type instanceof NoneType and $left_original_type->has_null) {
+			$left_original_type->has_null = false;
 		}
 
 		if ($node->else) {
@@ -1443,7 +1460,7 @@ class ASTChecker
 			// }
 			else {
 				$type_name = $this->get_type_name($right_type);
-				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$type_name}' supplied", $node->right);
+				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, supplied {$type_name}", $node->right);
 			}
 
 			$infered_type = $left_type->generic_type;
@@ -1592,7 +1609,7 @@ class ASTChecker
 		// it self is a type assertion
 		$node->type_assertion = $node;
 
-		return $assert_type;
+		return TypeFactory::$_bool;
 	}
 
 	private function infer_prefix_operation(PrefixOperation $node): IType
@@ -1606,7 +1623,7 @@ class ASTChecker
 		elseif ($node->operator === OperatorFactory::$_negation) {
 			$this->assert_math_operable($expr_type, $node->expression);
 
-			// if is UInt or contais UInt, it must be become to Int after Negation
+			// if is UInt or contais UInt, it must be became to Int after negation
 			if ($expr_type === TypeFactory::$_uint) {
 				$infered = TypeFactory::$_int;
 			}
@@ -1637,7 +1654,7 @@ class ASTChecker
 
 	private function assert_bitwise_operable(IType $type, BaseExpression $node)
 	{
-		if ($type !== TypeFactory::$_uint && $type !== TypeFactory::$_int && $type !== TypeFactory::$_float && $type !== TypeFactory::$_string) {
+		if (!$type instanceof UIntType && !$type instanceof IntType && !$type instanceof FloatType && !$type instanceof StringType) {
 			$type_name = $this->get_type_name($type);
 			throw $this->new_syntax_error("Bitwise operation cannot use for '$type_name' type expression", $node);
 		}
@@ -1653,7 +1670,7 @@ class ASTChecker
 
 	private function assert_bool_operable(IType $type, BaseExpression $node)
 	{
-		if ($type !== TypeFactory::$_bool && $type !== TypeFactory::$_uint && $type !== TypeFactory::$_int) {
+		if (!$type instanceof BoolType && !$type instanceof UIntType && !$type instanceof IntType) {
 			$type_name = $this->get_type_name($type);
 			throw $this->new_syntax_error("Bool operation cannot use for '$type_name' type expression", $node);
 		}
@@ -2039,7 +2056,7 @@ class ASTChecker
 					$key = "'$key'";
 				}
 
-				throw $this->new_syntax_error("Type of argument $key does not matched the parameter, expected '{$expected_type_name}', supplied '{$infered_type_name}'", $argument);
+				throw $this->new_syntax_error("Type of argument $key does not matched the parameter, expected {$expected_type_name}, supplied {$infered_type_name}", $argument);
 			}
 
 			// if ($parameter->is_referenced) {
@@ -2148,7 +2165,7 @@ class ASTChecker
 			$left_type_name = self::get_type_name($left);
 			$right_type_name = self::get_type_name($right);
 
-			throw $this->new_syntax_error("It's not compatible for type '{$left_type_name}' {$kind} with '{$right_type_name}'", $value_node);
+			throw $this->new_syntax_error("It's not compatible for type {$left_type_name}, {$kind} with {$right_type_name}", $value_node);
 		}
 	}
 
@@ -2815,7 +2832,7 @@ class ASTChecker
 		return $declaration->name;
 	}
 
-	static function get_type_name(?IType $type)
+	static function get_type_name(IType $type)
 	{
 		if ($type instanceof IterableType) {
 			if ($type->generic_type === null) {
@@ -2853,6 +2870,10 @@ class ASTChecker
 
 		if ($type->nullable) {
 			$name .= '?';
+		}
+
+		if ($type->has_null) {
+			$name .= ' assigned none';
 		}
 
 		return $name;

@@ -13,9 +13,18 @@ interface IType {}
 
 trait ITypeTrait
 {
-	public $nullable = false;
+	public $nullable;
 
-	public $disabled_nullable = false;
+	public $has_null;
+
+	public function let_nullable() {
+		$this->nullable = true;
+	}
+
+	public function remove_nullable() {
+		$this->nullable = false;
+		$this->has_null = false;
+	}
 
 	public function get_nullable_instance(): IType {
 		if ($this->nullable) {
@@ -23,12 +32,9 @@ trait ITypeTrait
 		}
 
 		$copy = clone $this;
-		$copy->nullable = true;
-		return $copy;
-	}
+		$copy->let_nullable();
 
-	public function remove_nullable() {
-		$this->nullable = false;
+		return $copy;
 	}
 
 	public function is_accept_type(IType $target) {
@@ -43,9 +49,6 @@ trait ITypeTrait
 		}
 		else {
 			$accept = $this->is_accept_single_type($target);
-			if ($target->nullable and !$this->nullable and !$this instanceof AnyType and !$target->disabled_nullable) {
-				$accept = false;
-			}
 		}
 
 		return $accept;
@@ -94,8 +97,16 @@ class BaseType extends Node implements IType
 	}
 
 	public function is_accept_single_type(IType $target) {
+		if ($target->has_null and !$this->nullable and !$this->has_null) {
+			return false;
+		}
+
+		if ($target instanceof NoneType) {
+			return $this->nullable;
+		}
+
 		return $target === $this
-			|| $target === TypeFactory::$_none
+			// || $target === TypeFactory::$_none
 			|| in_array($target->name, static::ACCEPT_TYPES, true)
 			|| $target->symbol->declaration === $this->symbol->declaration;
 	}
@@ -115,7 +126,17 @@ abstract class SingleGenericType extends BaseType
 	}
 
 	public function is_accept_single_type(IType $target) {
-		if ($target === $this || $target === TypeFactory::$_none) {
+		if ($target->has_null and !$this->nullable and !$this->has_null) {
+			return false;
+		}
+
+		if ($target instanceof NoneType) {
+			return $this->nullable;
+		}
+
+		if ($target === $this
+			// || $target === TypeFactory::$_none
+		) {
 			return true;
 		}
 
@@ -169,8 +190,14 @@ class UnionType extends BaseType
 
 	public function remove_nullable() {
 		$this->nullable = false;
-		foreach ($this->types as $member_type) {
-			$member_type->remove_nullable();
+		foreach ($this->types as $key => $type) {
+			if ($type->nullable or $type->has_null) {
+				$type = clone $type; // not to be affected the source
+				$type->remove_nullable();
+
+				// use the cloned one
+				$this->types[$key] = $type;
+			}
 		}
 	}
 
@@ -322,6 +349,14 @@ class AnyType extends BaseType {
 class ObjectType extends BaseType {
 	public $name = _OBJECT;
 	public function is_accept_single_type(IType $target) {
+		if ($target->has_null and !$this->nullable and !$this->has_null) {
+			return false;
+		}
+
+		if ($target instanceof NoneType) {
+			return $this->nullable;
+		}
+
 		return $target->symbol->declaration instanceof ClassKindredIdentifier;
 	}
 }
@@ -409,7 +444,15 @@ class CallableType extends BaseType implements ICallableDeclaration {
 	}
 
 	public function is_accept_single_type(IType $target) {
-		if ($target === TypeFactory::$_none || $this === TypeFactory::$_callable) {
+		if ($target->has_null and !$this->nullable and !$this->has_null) {
+			return false;
+		}
+
+		if ($target instanceof NoneType) {
+			return $this->nullable;
+		}
+
+		if ($this === TypeFactory::$_callable) {
 			return true;
 		}
 
@@ -453,8 +496,16 @@ class XViewType extends BaseType {
 	public $name = _XVIEW;
 
 	public function is_accept_single_type(IType $target) {
+		if ($target->has_null and !$this->nullable and !$this->has_null) {
+			return false;
+		}
+
+		if ($target instanceof NoneType) {
+			return $this->nullable;
+		}
+
 		if ($target === $this
-			|| $target === TypeFactory::$_none
+			// || $target === TypeFactory::$_none
 			|| $target->symbol->declaration === $this->symbol->declaration) {
 			return true;
 		}

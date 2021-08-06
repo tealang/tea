@@ -1975,7 +1975,7 @@ class TeaParser extends BaseParser
 				$type = $type->get_nullable_instance();
 			}
 			else {
-				$type->nullable = true;
+				$type->let_nullable();
 			}
 		}
 

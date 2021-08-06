@@ -47,6 +47,8 @@ abstract class Identifiable extends BaseExpression implements IAssignable
 
 class AccessingIdentifier extends Identifiable implements IType
 {
+	use ITypeTrait;
+
 	const KIND = 'accessing_identifier';
 
 	public $master;
@@ -93,7 +95,16 @@ class PlainIdentifier extends Identifiable implements IType
 
 	public function is_accept_single_type(IType $target)
 	{
-		return $target->symbol === $this->symbol || $target === TypeFactory::$_none
+		if ($target->has_null and !$this->nullable and !$this->has_null) {
+			return false;
+		}
+
+		if ($target instanceof NoneType) {
+			return $this->nullable;
+		}
+
+		return $target->symbol === $this->symbol
+			// || $target === TypeFactory::$_none
 			// for check BuiltinTypeClassDeclaration like String
 			// can not use symbol to compare BuiltinTypeClassDeclaration, because of the symbol maybe 'this'
 			|| $this->symbol->declaration === $target->symbol->declaration

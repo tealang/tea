@@ -159,7 +159,7 @@ class TypeFactory
 
 	static function is_number_type(?IType $type)
 	{
-		if ($type === self::$_int || $type === self::$_uint || $type === self::$_float) {
+		if ($type instanceof IntType || $type instanceof UIntType || $type instanceof FloatType) {
 			return true;
 		}
 
@@ -200,7 +200,17 @@ class TypeFactory
 		return self::$type_map[$name] ?? null;
 	}
 
-	static function create_type(string $class)
+	static function clone_type(string $name)
+	{
+		$type = self::$type_map[$name] ?? null;
+		if ($type !== null) {
+			$type = clone $type;
+		}
+
+		return $type;
+	}
+
+	private static function create_type(string $class)
 	{
 		$type_object = new $class();
 		self::$type_map[$type_object->name] = $type_object;

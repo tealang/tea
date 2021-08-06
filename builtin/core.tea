@@ -226,8 +226,8 @@ public html_decode(string, flags = ENT_QUOTES) {
 
 // regex
 #php PREG_SPLIT_DELIM_CAPTURE Int
-#php preg_match(regex Regex, subject String, matches mut Array = #default, flags Int = #default, offset Int = #default) Bool
-#php preg_match_all(regex Regex, subject String, matches mut Array = #default, flags Int = #default, offset Int = #default) Bool
+#php preg_match(regex Regex, subject String, matches mut Array? = #default, flags Int = #default, offset Int = #default) Bool
+#php preg_match_all(regex Regex, subject String, matches mut Array? = #default, flags Int = #default, offset Int = #default) Bool
 #php preg_split(regex Regex , subject String, limit Int = #default, flags Int = #default) Array
 public regex_test(regex Regex, subject String) Bool {
 	return preg_match(regex, subject) ? true : false

@@ -11,7 +11,7 @@ function set_field(string $key, string $value, array &$dict) {
 	$dict[$key] = $value;
 }
 
-function show_file_path(?string $filename = null) {
+function show_file_path(string $filename = null) {
 	if ($filename === null) {
 		$filename = __FILE__;
 	}

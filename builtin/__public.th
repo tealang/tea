@@ -79,9 +79,9 @@ public xrange(start Int, end Int, step Int = 1) IIterator
 
 #php file_put_contents(file Any, data String, flags Int = #default) UInt
 
-#php max(n1 Any, n2 Any, n3 None = #default) Any
+#php max(n1 Any, n2 Any, n3 Any = #default) Any
 
-#php min(n1 Any, n2 Any, n3 None = #default) Any
+#php min(n1 Any, n2 Any, n3 Any = #default) Any
 
 #php abs(val Any) Float
 
@@ -179,7 +179,7 @@ public _dict_search(master Dict, search Any) Any
 
 #php json_decode(data Any, assoc Bool = false, depth UInt = 512, flags Int = 0) Any
 
-#php htmlspecialchars(string Any, flags Int = #default, encoding String = #default, double_encode None = #default) String
+#php htmlspecialchars(string Any, flags Int = #default, encoding String = #default, double_encode Any = #default) String
 
 #php htmlspecialchars_decode(string Any, flags Int = #default) String
 
