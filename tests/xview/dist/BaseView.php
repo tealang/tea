@@ -9,7 +9,7 @@ class BaseView implements \IView {
 	protected $subviews = [];
 
 	public function __construct(array $props = null) {
-		if ($props) {
+		if (is_array($props)) {
 			$this->props = $props;
 		}
 	}

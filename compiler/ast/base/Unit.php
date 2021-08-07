@@ -67,24 +67,10 @@ class Unit implements IRootDeclaration
 	//  */
 	// public $is_mixed_mode;
 
-	/**
-	 * @var ASTChecker
-	 */
-	// private $checker;
-
 	public function __construct(string $path)
 	{
 		$this->path = $path;
 	}
-
-	// public function get_checker(): ASTChecker
-	// {
-	// 	if ($this->checker === null) {
-	// 		$this->checker = new ASTChecker($this);
-	// 	}
-
-	// 	return $this->checker;
-	// }
 
 	public function append_program(Program $program)
 	{

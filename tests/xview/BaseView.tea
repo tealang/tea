@@ -6,7 +6,7 @@ public BaseView: IView {
 	protected subviews = []
 
 	construct(props Dict = none) {
-		if props {
+		if props is Dict {
 			this.props = props
 		}
 	}

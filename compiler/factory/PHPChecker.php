@@ -33,7 +33,7 @@ class PHPChecker extends ASTChecker
 			$type = TypeFactory::$_callable;
 		}
 		else {
-			throw new UnexpectNode($declaration);
+			throw $this->new_syntax_error('Undexpected declaration for identifier', $node);
 		}
 
 		return $type;

@@ -55,9 +55,20 @@ class ASTChecker
 
 		self::$builtin_checker_instance = $main_checker;
 		self::$native_checker_instance = new PHPChecker($main_unit);
+
 		self::$normal_checker_instances[$main_unit->name] = $main_checker;
 
 		foreach ($main_unit->use_units as $unit) {
+			self::init_checker_for_unit($unit); // direct
+			foreach ($unit->use_units as $indirect_unit) {
+				self::init_checker_for_unit($indirect_unit);
+			}
+		}
+	}
+
+	private static function init_checker_for_unit(Unit $unit)
+	{
+		if (!isset(self::$normal_checker_instances[$unit->name])) {
 			self::$normal_checker_instances[$unit->name] = new ASTChecker($unit);
 		}
 	}
@@ -2201,7 +2212,7 @@ class ASTChecker
 
 		$declar = $node->symbol->declaration;
 
-		if ($declar instanceof VariableDeclaration || $declar instanceof ConstantDeclaration || $declar instanceof ParameterDeclaration || $declar instanceof ClassKindredDeclaration) {
+		if ($declar instanceof VariableDeclaration || $declar instanceof ParameterDeclaration || $declar instanceof ConstantDeclaration || $declar instanceof ClassKindredDeclaration) {
 			if (!$declar->type) {
 				throw $this->new_syntax_error("Declaration of '{$node->name}' not found", $node);
 			}
@@ -2215,7 +2226,7 @@ class ASTChecker
 		// 	$type = TypeFactory::$_namespace;
 		// }
 		else {
-			throw new UnexpectNode($declar);
+			throw $this->new_syntax_error('Undexpected declaration for identifier', $node);
 		}
 
 		return $type;
@@ -2245,7 +2256,7 @@ class ASTChecker
 			// 	break;
 
 			default:
-				throw new UnexpectNode($member);
+				throw $this->new_syntax_error("Unexpected node", $member);
 		}
 
 		return $infered;
@@ -2635,19 +2646,19 @@ class ASTChecker
 	// }
 
 	// includes builtin types, and classes, and namespace
-	private function require_object_declaration(BaseExpression $node): ClassKindredDeclaration
-	{
-		$infered_type = $this->infer_expression($node);
-		if (!$infered_type instanceof IType) {
-			throw new UnexpectNode($node);
-		}
+	// private function require_object_declaration(BaseExpression $node): ClassKindredDeclaration
+	// {
+	// 	$infered_type = $this->infer_expression($node);
+	// 	if (!$infered_type instanceof IType) {
+	// 		throw new UnexpectNode($node);
+	// 	}
 
-		if ($infered_type === TypeFactory::$_namespace) {
-			return $node->declaration;
-		}
+	// 	if ($infered_type === TypeFactory::$_namespace) {
+	// 		return $node->declaration;
+	// 	}
 
-		return $infered_type->symbol->declaration;
-	}
+	// 	return $infered_type->symbol->declaration;
+	// }
 
 	private function require_classkindred_declaration(ClassKindredIdentifier $identifier)
 	{
@@ -2877,15 +2888,6 @@ class ASTChecker
 		}
 
 		return $name;
-	}
-}
-
-class UnexpectNode extends \Exception
-{
-	public function __construct(Node $node)
-	{
-		$kind = $node::KIND;
-		$this->message = new \Exception("Unexpect node kind: '$kind'");
 	}
 }
 

@@ -295,20 +295,19 @@ class Compiler
 
 		// check depends units first
 		foreach ($this->unit->use_units as $dep_unit) {
-			$this->check_ast_for_unit($dep_unit);
+			$normal_checker = ASTChecker::get_checker($dep_unit->programs[PUBLIC_HEADER_NAME]);
+			$this->check_ast_for_unit($dep_unit, $normal_checker);
 		}
 
 		// check current unit
-		$this->check_ast_for_unit($this->unit);
+		$normal_checker = ASTChecker::get_checker($this->header_program);
+		$this->check_ast_for_unit($this->unit, $normal_checker);
 
 		self::echo_success('Programs checked success.' . LF);
 	}
 
-	private function check_ast_for_unit(Unit $unit)
+	private function check_ast_for_unit(Unit $unit, ASTChecker $normal_checker)
 	{
-		// $checker = $unit->get_checker();
-		$normal_checker = ASTChecker::get_checker($this->header_program);
-
 		// collect uses targets for Tea programs
 		foreach ($unit->programs as $program) {
 			// if (!$program->is_native) {
