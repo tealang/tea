@@ -27,16 +27,17 @@ class Compiler
 
 	private $unit_loader_file;
 
-	// the project path of current unit
-	// use to find the depencence units in current project, and find the unit_dist_path
-	private $base_path;
+	// the project dir name, or vendor/units
+	// use to find the depencences
+	private $container_name;
 
-	// the workspace path of current unit
-	// use to find the depencence units in foriegn projects
-	private $super_path;
+	// the workspace path to load units
+	private $workspace_path;
 
 	// header file path of current unit
 	private $header_file_path;
+
+	private $search_paths;
 
 	/**
 	 * @var Program
@@ -185,18 +186,8 @@ class Compiler
 
 	private function prepare_for_render()
 	{
-		// the super dir levels for the Unit
-		$super_dir_levels = count($this->unit->ns->names);
-
-		if (self::is_framework_internal_namespaces($this->unit->ns)) {
-			$super_dir_levels++;
-		}
-
 		// for include expression
 		$this->unit->include_prefix = DIST_DIR_NAME . DS;
-
-		// for generate the $super_path
-		$this->unit->super_dir_levels = $super_dir_levels;
 
 		// for faster processing the operations
 		OperatorFactory::set_render_options(PHPCoder::OPERATOR_MAP, PHPCoder::OPERATOR_PRECEDENCES);
@@ -241,51 +232,61 @@ class Compiler
 			throw new Exception("#unit declaration not found in Unit header file: {$this->header_file_path}");
 		}
 
-		$this->prepare_paths_for_unit($this->unit);
+		$this->prepare_paths();
 	}
 
-	private function prepare_paths_for_unit(Unit $unit)
+	private function prepare_paths()
 	{
-		$reversed_ns_names = array_reverse($unit->ns->names);
-		$dir_names = [];
-		$checking_path = $this->unit_path;
-		foreach ($reversed_ns_names as $ns_name) {
-			$dir_name = basename($checking_path);
-			// if ($ns_name !== $dir_name && strtolower($ns_name) !== $dir_name) {
-			// 	throw new Exception("The dir name '$dir_name' did not matched the unit-namespace '$ns_name'.\nPlease rename to '$ns_name', or rename unit-namespace to '$dir_name'.");
-			// }
+		$unit = $this->unit;
 
+		$checking_path = $this->unit_path;
+		foreach ($unit->ns->names as $ns_name) {
+			$dir_name = basename($checking_path);
 			$checking_path = dirname($checking_path);
-			array_unshift($dir_names, $dir_name);
 		}
+
+		// the super dir levels for the Unit
+		// for generate the $super_path
+		$unit->super_dir_levels = count($unit->ns->names);
 
 		if (self::is_framework_internal_namespaces($unit->ns)) {
-			// base_path for framework is the project path
-			$this->base_path = $checking_path . DS;
-			$this->super_path = dirname($checking_path) . DS;
+			$this->container_name = basename($checking_path);
+			$checking_path = dirname($checking_path);
+			$unit->super_dir_levels += 1;
 		}
 		else {
-			array_shift($dir_names);
-			$this->base_path = $checking_path . DS . $dir_name . DS;
-			$this->super_path = $checking_path . DS;
+			$this->container_name = $dir_name;
 		}
+
+		// paths for search dependences
+		$search_paths = [];
+		$super_dir_name = basename($checking_path);
+		if (in_array($super_dir_name, ['units', 'vendor'])) {
+			$checking_path = dirname($checking_path);
+			if ($super_dir_name === 'units') {
+				$search_paths[] = $checking_path;
+				$search_paths[] = $checking_path . '/vendor/';
+			}
+			elseif ($super_dir_name === 'vendor') {
+				$search_paths[] = $checking_path;
+				$search_paths[] = $checking_path . '/units/';
+			}
+
+			$unit->super_dir_levels += 1;
+		}
+		else {
+			$search_paths[] = $checking_path . '/units/';
+			$search_paths[] = $checking_path . '/vendor/';
+		}
+
+		array_unshift($search_paths, $checking_path . DS);
+		$this->search_paths = $search_paths;
 
 		// set the dist paths
 		$this->unit_dist_path = $this->unit_path . DIST_DIR_NAME . DS;
 		$this->unit_public_file = $this->unit_path . PUBLIC_HEADER_FILE_NAME;
 		$this->unit_loader_file = $this->unit_path . PUBLIC_LOADER_FILE_NAME;
 	}
-
-	// private function find_unit_dist_path(string $dir)
-	// {
-	// 	// check project dist dir
-	// 	$project_dist_path = $this->base_path . DIST_DIR_NAME;
-	// 	if (!is_dir($project_dist_path)) {
-	// 		throw new Exception("The project dist dir '{$project_dist_path}' not found.");
-	// 	}
-
-	// 	return $project_dist_path . DS . $dir . DS;
-	// }
 
 	private function check_ast()
 	{
@@ -381,9 +382,13 @@ class Compiler
 			return $this->units_pool[$uri];
 		}
 
-		$unit_dir = $this->find_unit_public_dir($ns);
-		$unit_path = $this->super_path . $unit_dir . DS;
+		[$unit_path, $unit_dir] = $this->find_unit_public_dir($ns);
 		$unit_public_file = $unit_path . PUBLIC_HEADER_FILE_NAME;
+
+		// check public file
+		if (!file_exists($unit_public_file)) {
+			throw new Exception("The public file of unit '{$ns->uri}' not found at: $unit_path");
+		}
 
 		$unit = new Unit($unit_path);
 		$this->units_pool[$uri] = $unit; // add to pool, so do not need to reload
@@ -404,39 +409,35 @@ class Compiler
 
 	private function find_unit_public_dir(NamespaceIdentifier $ns)
 	{
-		$dir_names = $ns->names;
+		$names = $ns->names;
 
 		// add the project name when the Unit in a framework
 		if (self::is_framework_internal_namespaces($ns)) {
-			$base_dir_name = basename($this->base_path);
-			array_unshift($dir_names, $base_dir_name);
+			array_unshift($names, $this->container_name);
 		}
 
-		$try_paths = [];
+		foreach ($this->search_paths as $path) {
+			if (!is_dir($path)) {
+				continue;
+			}
 
-		$unit_dir = $this->find_public_file_dir_with_names($dir_names, $try_paths);
-		if ($unit_dir !== false) {
-			return $unit_dir;
+			$result = $this->try_look_dir_in_path($path, $names);
+			if ($result) {
+				break;
+			}
 		}
 
-		// error
-		if ($try_paths) {
-			$try_paths = join(', and ', $try_paths);
-			$message = "The public file of unit '{$ns->uri}' not found in paths: $try_paths.";
-		}
-		else {
-			$message = "The directory of depends unit '{$ns->uri}' not found.";
+		if ($result === false) {
+			$paths = join(', and ', $this->search_paths);
+			throw new Exception("The directory of depends unit '{$ns->uri}' not found in $paths");
 		}
 
-		throw new Exception($message);
+		// use the real dir names for render
+		return $result;
 	}
 
-	private function find_public_file_dir_with_names(array $dir_names, array &$try_paths)
+	private function try_look_dir_in_path(string $path, array $dir_names)
 	{
-		$path = $this->super_path;
-
-		// find dir
-		$real_names = [];
 		foreach ($dir_names as $name) {
 			$scan_names = scandir($path);
 
@@ -453,15 +454,7 @@ class Compiler
 			$real_names[] = $name;
 		}
 
-		// check public file
-		$unit_public_file = $path . PUBLIC_HEADER_FILE_NAME;
-		if (file_exists($unit_public_file)) {
-			// use the real dir names for render
-			return join(DS, $real_names);
-		}
-
-		$try_paths[] = $unit_public_file;
-		return false;
+		return [$path, join(DS, $real_names)];
 	}
 
 	private function render_all()
