@@ -37,7 +37,7 @@ class Compiler
 	// header file path of current unit
 	private $header_file_path;
 
-	private $search_paths;
+	private $search_dirs;
 
 	/**
 	 * @var Program
@@ -64,11 +64,6 @@ class Compiler
 	 */
 	private $native_program_files = [];
 
-	// /**
-	//  * @var bool
-	//  */
-	// private $is_mixed_mode = false;
-
 	private $is_src_dir = false;
 
 	/**
@@ -90,9 +85,6 @@ class Compiler
 
 	// autoload classes/interfaces/traits for render Autoload
 	private $autoloads_map = [];
-
-	// current unit is builtin-libs unit or not?
-	// private $target_is_builtin = false;
 
 	public function __construct(string $unit_path)
 	{
@@ -120,12 +112,22 @@ class Compiler
 		$this->unit_path = $unit_path;
 	}
 
-	private const CASE_REGARDLESS_OS_LIST = ['Darwin', 'Windows', 'WINNT', 'WIN32'];
+	private function load_builtins()
+	{
+		self::echo_start('Loading builtins...');
+
+		$program = $this->parse_tea_program(BUILTIN_PROGRAM);
+		$program->unit = null;
+
+		$this->builtin_symbols = $program->symbols;
+
+		self::echo_success();
+	}
 
 	private static function check_is_builtin_unit(string $unit_path)
 	{
 		// some Operation Systems are Case regardless
-		if (in_array(PHP_OS, self::CASE_REGARDLESS_OS_LIST)) {
+		if (in_array(PHP_OS, ['Darwin', 'Windows', 'WINNT', 'WIN32'])) {
 			$result = strtolower(BUILTIN_PATH) === strtolower($unit_path);
 		}
 		else {
@@ -150,47 +152,20 @@ class Compiler
 
 		$this->scan_program_files($scan_path);
 
-		// $this->is_mixed_mode = !empty($this->native_program_files);
-
 		$this->parse_unit_header();
-
 		$this->parse_programs();
 
 		// bind the builtin type symbols
 		TypeFactory::set_symbols($this->unit);
 
-		$this->load_dependences($this->unit);
+		// load deps for compiling unit
+		$this->load_dependences_for_unit($this->unit);
 
 		$this->check_ast();
 
-		$this->prepare_for_render();
-
-		// prepare for render
-		$header_coder = new PHPLoaderCoder();
-		$this->unit->dist_ns_uri = $header_coder->render_namespace_identifier($this->unit->ns);
-		if ($this->unit->dist_ns_uri) {
-			// use to generate the autoloads classmap
-			$this->unit_dist_ns_prefix = $this->unit->dist_ns_uri . PHPCoder::NS_SEPARATOR;
-		}
-
-		// render programs
 		$this->render_all();
 
-		// the global Constants and Functions would be render to the loader file
-		$this->render_loader_file($header_coder);
-
-		$this->render_public_header();
-
 		return count($this->normal_programs);
-	}
-
-	private function prepare_for_render()
-	{
-		// for include expression
-		$this->unit->include_prefix = DIST_DIR_NAME . DS;
-
-		// for faster processing the operations
-		OperatorFactory::set_render_options(PHPCoder::OPERATOR_MAP, PHPCoder::OPERATOR_PRECEDENCES);
 	}
 
 	private function parse_programs()
@@ -232,10 +207,10 @@ class Compiler
 			throw new Exception("#unit declaration not found in Unit header file: {$this->header_file_path}");
 		}
 
-		$this->prepare_paths();
+		$this->prepare_unit_paths();
 	}
 
-	private function prepare_paths()
+	private function prepare_unit_paths()
 	{
 		$unit = $this->unit;
 
@@ -258,29 +233,30 @@ class Compiler
 			$this->container_name = $dir_name;
 		}
 
-		// paths for search dependences
-		$search_paths = [];
+		// dirs for search dependences
+		$search_dirs = [];
 		$super_dir_name = basename($checking_path);
 		if (in_array($super_dir_name, ['units', 'vendor'])) {
 			$checking_path = dirname($checking_path);
 			if ($super_dir_name === 'units') {
-				$search_paths[] = $checking_path;
-				$search_paths[] = $checking_path . '/vendor/';
+				$search_dirs[] = '';
+				$search_dirs[] = 'vendor';
 			}
 			elseif ($super_dir_name === 'vendor') {
-				$search_paths[] = $checking_path;
-				$search_paths[] = $checking_path . '/units/';
+				$search_dirs[] = '';
+				$search_dirs[] = 'units';
 			}
 
 			$unit->super_dir_levels += 1;
 		}
 		else {
-			$search_paths[] = $checking_path . '/units/';
-			$search_paths[] = $checking_path . '/vendor/';
+			$search_dirs[] = '';
+			$search_dirs[] = 'units';
+			$search_dirs[] = 'vendor';
 		}
 
-		array_unshift($search_paths, $checking_path . DS);
-		$this->search_paths = $search_paths;
+		$this->search_dirs = $search_dirs;
+		$this->workspace_path = $checking_path . DS;
 
 		// set the dist paths
 		$this->unit_dist_path = $this->unit_path . DIST_DIR_NAME . DS;
@@ -340,19 +316,7 @@ class Compiler
 		}
 	}
 
-	private function load_builtins()
-	{
-		self::echo_start('Loading builtins...');
-
-		$program = $this->parse_tea_program(BUILTIN_PROGRAM);
-		$program->unit = null;
-
-		$this->builtin_symbols = $program->symbols;
-
-		self::echo_success();
-	}
-
-	private function load_dependences(Unit $unit)
+	private function load_dependences_for_unit(Unit $unit)
 	{
 		$current_unit_uri = $this->unit->ns->uri;
 
@@ -361,7 +325,7 @@ class Compiler
 				//
 			}
 			elseif ($target->uri !== '' and $target->uri !== $current_unit_uri) {
-				$use_unit = $this->load_unit($target);
+				$use_unit = $this->load_unit_for_namespace($target);
 
 				// 框架内部名称空间的，无需添加载入语句，由框架加载即可
 				$use_unit->is_need_load = !self::is_framework_internal_namespaces($use_unit->ns);
@@ -374,40 +338,44 @@ class Compiler
 		}
 	}
 
-	private function load_unit(NamespaceIdentifier $ns): Unit
+	private function load_unit_for_namespace(NamespaceIdentifier $ns): Unit
 	{
 		$uri = $ns->uri;
 
+		// if has a cache
 		if (isset($this->units_pool[$uri])) {
 			return $this->units_pool[$uri];
 		}
 
-		[$unit_path, $unit_dir] = $this->find_unit_public_dir($ns);
-		$unit_public_file = $unit_path . PUBLIC_HEADER_FILE_NAME;
+		// find the target relative path
+		$unit_dir = $this->find_unit_dir_for_namespace($ns);
+		$unit_path = $this->workspace_path . $unit_dir . DS;
 
 		// check public file
+		$unit_public_file = $unit_path . PUBLIC_HEADER_FILE_NAME;
 		if (!file_exists($unit_public_file)) {
-			throw new Exception("The public file of unit '{$ns->uri}' not found at: $unit_path");
+			throw new Exception("The public file of unit '{$ns->uri}' not found at: $unit_public_file");
 		}
 
+		// init it
 		$unit = new Unit($unit_path);
-		$this->units_pool[$uri] = $unit; // add to pool, so do not need to reload
-
-		// for render require_once statments
-		$unit->loader_file = $unit_dir . '/' . PUBLIC_LOADER_FILE_NAME;
-
 		$unit->symbols = $this->builtin_symbols;
+		$unit->loader_file = $unit_dir . '/' . PUBLIC_LOADER_FILE_NAME; // for render the require statements
 
+		// add to pool, so do not need to reload
+		$this->units_pool[$uri] = $unit;
+
+		// parse its public header
 		$ast_factory = new ASTFactory($unit);
 		$this->parse_tea_header($unit_public_file, $ast_factory);
 
-		// 递归载入依赖
-		$this->load_dependences($unit);
+		// load deps for it
+		$this->load_dependences_for_unit($unit);
 
 		return $unit;
 	}
 
-	private function find_unit_public_dir(NamespaceIdentifier $ns)
+	private function find_unit_dir_for_namespace(NamespaceIdentifier $ns)
 	{
 		$names = $ns->names;
 
@@ -416,52 +384,73 @@ class Compiler
 			array_unshift($names, $this->container_name);
 		}
 
-		foreach ($this->search_paths as $path) {
-			if (!is_dir($path)) {
-				continue;
-			}
-
-			$result = $this->try_look_dir_in_path($path, $names);
-			if ($result) {
+		foreach ($this->search_dirs as $dir) {
+			$relative_path = $this->try_look_in_dir($dir, $names);
+			if ($relative_path) {
 				break;
 			}
 		}
 
-		if ($result === false) {
-			$paths = join(', and ', $this->search_paths);
-			throw new Exception("The directory of depends unit '{$ns->uri}' not found in $paths");
+		if ($relative_path === false) {
+			$dirs = join(', and ', $this->search_dirs);
+			throw new Exception("The directory of depends unit '{$ns->uri}' not found in $dirs");
 		}
 
-		// use the real dir names for render
-		return $result;
+		return $relative_path;
 	}
 
-	private function try_look_dir_in_path(string $path, array $dir_names)
+	private function try_look_in_dir(string $dir, array $namespace_components)
 	{
-		foreach ($dir_names as $name) {
-			$scan_names = scandir($path);
+		$dir_components = [];
 
-			// try the origin name in first
-			if (!in_array($name, $scan_names, true)) {
+		$path = $this->workspace_path;
+		if ($dir !== '') {
+			$path .= $dir . DS;
+			$dir_components[] = $dir;
+		}
+
+		if (!is_dir($path)) {
+			return;
+		}
+
+		foreach ($namespace_components as $name) {
+			$scaned_items = scandir($path);
+			if (!in_array($name, $scaned_items, true)) {
 				// try the lower case name
 				$name = strtolower($name);
-				if (!in_array($name, $scan_names, true)) {
+				if (!in_array($name, $scaned_items, true)) {
 					return false;
 				}
 			}
 
 			$path .= $name . DS;
-			$real_names[] = $name;
+			$dir_components[] = $name;
 		}
 
-		return [$path, join(DS, $real_names)];
+		return join(DS, $dir_components);
 	}
 
 	private function render_all()
 	{
 		self::echo_start('Rendering programs...');
 
-		// the depends relation
+		// prepare for include expression
+		$this->unit->include_prefix = DIST_DIR_NAME . DS;
+
+		// prepare for faster processing the operations
+		OperatorFactory::set_render_options(PHPCoder::OPERATOR_MAP, PHPCoder::OPERATOR_PRECEDENCES);
+
+		$header_coder = new PHPLoaderCoder();
+
+		// prepare dist namespace
+		$this->unit->dist_ns_uri = $header_coder->render_namespace_identifier($this->unit->ns);
+
+		// prepare the prefix of namespace, for generate the autoloads classmap
+		if ($this->unit->dist_ns_uri) {
+			$this->unit_dist_ns_prefix = $this->unit->dist_ns_uri . PHPCoder::NS_SEPARATOR;
+		}
+
+		// prepare the depends relation
 		foreach ($this->normal_programs as $program) {
 			foreach ($program->declarations as $node) {
 				if ($node->is_unit_level && !$node instanceof ClassKindredDeclaration) {
@@ -470,16 +459,26 @@ class Compiler
 			}
 		}
 
+		// native programs, just collect autoloads
 		foreach ($this->native_programs as $program) {
 			$ns_prefix = $program->ns ? PHPCoder::ns_to_string($program->ns) . PHPCoder::NS_SEPARATOR : null;
-			$this->collect_autoloads_map($program, $program->file, $ns_prefix);
+			$this->collect_autoloads($program, $program->file, $ns_prefix);
 		}
 
+		// tea programs, render and collect autoloads
 		foreach ($this->normal_programs as $program) {
 			$dist_file_path = $this->render_program($program);
-			$this->collect_autoloads_map($program, $dist_file_path, $this->unit_dist_ns_prefix);
+			$this->collect_autoloads($program, $dist_file_path, $this->unit_dist_ns_prefix);
 		}
 
+		// the loader file for supply to other units
+		// the global Constants and Functions would be render to the loader file
+		$this->render_loader_file($header_coder);
+
+		// the public header for supply to other units
+		$this->render_public_header();
+
+		// rendered success
 		self::echo_success(count($this->normal_programs) . ' programs rendered success.');
 	}
 
@@ -546,7 +545,7 @@ class Compiler
 		self::echo_success("$count public declarations rendered success.");
 	}
 
-	private function collect_autoloads_map(Program $program, string $dist_file_path, string $name_prefix = null)
+	private function collect_autoloads(Program $program, string $dist_file_path, string $name_prefix = null)
 	{
 		$dist_file_path = substr($dist_file_path, $this->unit_path_prefix_len);
 
