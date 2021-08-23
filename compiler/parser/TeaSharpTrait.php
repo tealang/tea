@@ -120,15 +120,15 @@ trait TeaSharpTrait
 		elseif (TeaHelper::is_strict_less_function_name($name)) {
 			$declaration = $this->read_function_declaration($name, _PUBLIC, true);
 		}
-		elseif ($name === _DOLLAR) {
-			$name = $this->expect_identifier_token();
-			$type = $this->try_read_type_identifier();
-			if (!$type) {
-				throw $this->new_parse_error("Expected type for declared super variable '$name'.");
-			}
+		// elseif ($name === _DOLLAR) {
+		// 	$name = $this->expect_identifier_token();
+		// 	$type = $this->try_read_type_identifier();
+		// 	if (!$type) {
+		// 		throw $this->new_parse_error("Expected type for declared super variable '$name'.");
+		// 	}
 
-			$declaration = $this->factory->create_super_variable_declaration($name, $type, null);
-		}
+		// 	$declaration = $this->factory->create_super_variable_declaration($name, $type, null);
+		// }
 		else {
 			throw $this->new_unexpected_error();
 		}

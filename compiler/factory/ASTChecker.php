@@ -159,9 +159,9 @@ class ASTChecker
 				$this->check_expect_declaration($node);
 				break;
 
-			case SuperVariableDeclaration::KIND:
-				$this->check_variable_declaration($node);
-				break;
+			// case SuperVariableDeclaration::KIND:
+			// 	$this->check_variable_declaration($node);
+			// 	break;
 
 			default:
 				$kind = $node::KIND;
@@ -1125,9 +1125,9 @@ class ASTChecker
 			case UseStatement::KIND:
 				break;
 
-			case SuperVariableDeclaration::KIND:
-				$this->check_variable_declaration($node);
-				break;
+			// case SuperVariableDeclaration::KIND:
+			// 	$this->check_variable_declaration($node);
+			// 	break;
 
 			case CoroutineBlock::KIND:
 				$this->check_coroutine_block($node);

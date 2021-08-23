@@ -1276,10 +1276,10 @@ class PHPCoder extends TeaCoder
 		return $code . static::STATEMENT_TERMINATOR;
 	}
 
-	public function render_super_variable_declaration(SuperVariableDeclaration $node)
-	{
-		return null;
-	}
+	// public function render_super_variable_declaration(SuperVariableDeclaration $node)
+	// {
+	// 	return null;
+	// }
 
 	private function render_master_expression(BaseExpression $expr)
 	{

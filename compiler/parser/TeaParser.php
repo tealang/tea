@@ -961,10 +961,10 @@ class TeaParser extends BaseParser
 					$this->skip_inline_comment(); // the // ...
 					return $this->read_expression($prev_operator);
 				}
-				elseif (_DOLLAR === $token) {
-					$expression = $this->read_super_variable_identifier();
-					break;
-				}
+				// elseif (_DOLLAR === $token) {
+				// 	$expression = $this->read_super_variable_identifier();
+				// 	break;
+				// }
 
 				throw $this->new_unexpected_error();
 		}
@@ -990,15 +990,15 @@ class TeaParser extends BaseParser
 		throw $this->new_parse_error("Invalid variable name '{$token}'", 1);
 	}
 
-	protected function read_super_variable_identifier()
-	{
-		$token = $this->scan_token();
-		if (TeaHelper::is_identifier_name($token)) {
-			return new VariableIdentifier($token);
-		}
+	// protected function read_super_variable_identifier()
+	// {
+	// 	$token = $this->scan_token();
+	// 	if (TeaHelper::is_identifier_name($token)) {
+	// 		return new VariableIdentifier($token);
+	// 	}
 
-		throw $this->new_parse_error("Invalid super-variable name '{$token}'", 1);
-	}
+	// 	throw $this->new_parse_error("Invalid super-variable name '{$token}'", 1);
+	// }
 
 	protected function read_prefix_operation(Operator $operator)
 	{

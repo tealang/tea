@@ -489,15 +489,15 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_super_variable_declaration(string $name, IType $type = null)
-	{
-		$declaration = new SuperVariableDeclaration($name, $type);
+	// public function create_super_variable_declaration(string $name, IType $type = null)
+	// {
+	// 	$declaration = new SuperVariableDeclaration($name, $type);
 
-		$this->begin_root_declaration($declaration);
-		$this->create_global_symbol($declaration);
+	// 	$this->begin_root_declaration($declaration);
+	// 	$this->create_global_symbol($declaration);
 
-		return $declaration;
-	}
+	// 	return $declaration;
+	// }
 
 	public function create_variable_declaration(string $name, IType $type = null, BaseExpression $value = null)
 	{

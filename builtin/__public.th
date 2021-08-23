@@ -8,6 +8,11 @@ public __FILE__ String
 public __LINE__ UInt
 public __CLASS__ UInt
 public __FUNCTION__ UInt
+public INPUT_GET Int
+public INPUT_POST Int
+public INPUT_COOKIE Int
+public INPUT_ENV Int
+public INPUT_SERVER Int
 public FILE_APPEND Int
 public LOCK_EX Int
 public JSON_UNESCAPED_UNICODE Int
@@ -38,6 +43,8 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 #php strtotime(datetime Any, now Int = #default) Int
 
 #php str_repeat(input Any, multiplier Int) String
+
+#php filter_input(type Int, key String, filter Int = #default, options Dict = #default) Any
 
 #php Exception {
 	public construct(message String, code Int = 0)

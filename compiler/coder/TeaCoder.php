@@ -369,15 +369,15 @@ class TeaCoder
 		return $code . static::STATEMENT_TERMINATOR;
 	}
 
-	public function render_super_variable_declaration(SuperVariableDeclaration $node)
-	{
-		$code = static::VAR_DECLARE_PREFIX . $node->name;
-		if ($node->value) {
-			$code .= ' = ' . $node->value->render($this);
-		}
+	// public function render_super_variable_declaration(SuperVariableDeclaration $node)
+	// {
+	// 	$code = static::VAR_DECLARE_PREFIX . $node->name;
+	// 	if ($node->value) {
+	// 		$code .= ' = ' . $node->value->render($this);
+	// 	}
 
-		return $code . static::STATEMENT_TERMINATOR;
-	}
+	// 	return $code . static::STATEMENT_TERMINATOR;
+	// }
 
 	public function render_parameter_declaration(ParameterDeclaration $node)
 	{
