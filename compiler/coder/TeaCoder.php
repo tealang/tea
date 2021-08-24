@@ -811,10 +811,11 @@ class TeaCoder
 
 	public function render_dict_expression(DictExpression $node)
 	{
-		return $this->render_dict_with_subitems($node->items, $node->is_vertical_layout);
+		$body = $this->render_dict_body($node->items, $node->is_vertical_layout);
+		return $this->wrap_dict($body);
 	}
 
-	protected function render_dict_with_subitems(array $subnodes, bool $is_vertical_layout)
+	protected function render_dict_body(array $subnodes, bool $is_vertical_layout)
 	{
 		$items = [];
 		foreach ($subnodes as $subnode) {
@@ -823,14 +824,17 @@ class TeaCoder
 			$items[] = $key . static::DICT_KV_OPERATOR . $value;
 		}
 
-		$body = $this->join_member_items($items, $is_vertical_layout);
-
-		return $this->wrap_dict($body);
+		return $this->join_member_items($items, $is_vertical_layout);
 	}
 
 	protected function render_dict_key(BaseExpression $expr)
 	{
 		return $expr->render($this);
+	}
+
+	public function render_dict_key_identifier(DictKeyIdentifier $expr)
+	{
+		return $expr->token;
 	}
 
 	protected function join_member_items(array $items, bool $is_vertical_layout)
@@ -858,20 +862,8 @@ class TeaCoder
 
 	public function render_object_expression(BaseExpression $node)
 	{
-		$items = [];
-		foreach ($subnodes as $key => $value) {
-			$items[] = $this->render_object_item($key, $value);
-		}
-
-		$body = $this->join_member_items($items, $node->is_vertical_layout);
-
+		$body = $this->render_dict_body($node->items, $node->is_vertical_layout);
 		return $this->wrap_object($body);
-	}
-
-	protected function render_object_item(string $key, BaseExpression $value)
-	{
-		$value = $value->render($this);
-		return "$key: $value";
 	}
 
 	// public function render_functional_operation(FunctionalOperation $node)

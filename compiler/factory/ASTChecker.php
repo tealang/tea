@@ -215,12 +215,24 @@ class ASTChecker
 		}
 
 		// has value
-
 		$infered_type = $this->infer_expression($value);
 		if (!$infered_type) {
 			throw $this->new_syntax_error("The type for declaration of constant '{$node->name}' required", $node);
 		}
 
+		$this->assert_compile_time_value($value);
+
+		if ($node->type) {
+			$this->check_type($node->type, $node);
+			$infered_type && $this->assert_type_compatible($node->type, $infered_type, $node->value);
+		}
+		else {
+			$node->type = $infered_type;
+		}
+	}
+
+	private function assert_compile_time_value(BaseExpression $value)
+	{
 		if (!$this->check_is_constant_expression($value)) {
 			throw $this->new_syntax_error("Invalid value expression for constant declaration", $value);
 		}
@@ -229,20 +241,12 @@ class ASTChecker
 			if ($value->operator === OperatorFactory::$_concat) {
 				$left_type = $this->infer_expression($value->left);
 				if ($left_type instanceof ArrayType) {
-					throw $this->new_syntax_error("Array concat operation cannot use for constant value", $value);
+					throw $this->new_syntax_error("Array concat operation cannot use as a compile-time value", $value);
 				}
 			}
 			// elseif ($value->operator === OperatorFactory::$_merge) {
 			// 	throw $this->new_syntax_error("Array/Dict merge operation cannot use for constant value", $value);
 			// }
-		}
-
-		if ($node->type) {
-			$this->check_type($node->type, $node);
-			$infered_type && $this->assert_type_compatible($node->type, $infered_type, $node->value);
-		}
-		else {
-			$node->type = $infered_type;
 		}
 	}
 
@@ -259,7 +263,7 @@ class ASTChecker
 			$is_constant = $this->check_is_constant_expression($node->left) && $this->check_is_constant_expression($node->right);
 		}
 		elseif ($node instanceof PrefixOperation) {
-			$is_constant = $this->check_is_constant_expression($expr->expression);
+			$is_constant = $this->check_is_constant_expression($node->expression);
 		}
 		elseif ($node instanceof ArrayExpression) {
 			$is_constant = true;
@@ -279,6 +283,9 @@ class ASTChecker
 				}
 			}
 		}
+		elseif ($node instanceof XBlock) {
+			$is_constant = !$node->has_interpolation;
+		}
 		else {
 			$is_constant = false;
 		}
@@ -292,10 +299,10 @@ class ASTChecker
 
 		$infered_type = $node->value ? $this->infer_expression($node->value) : null;
 
-		$this->set_variable_similar_declaration_type($node, $infered_type);
+		$this->set_variable_kindred_declaration_type($node, $infered_type);
 	}
 
-	private function set_variable_similar_declaration_type(IDeclaration $node, ?IType $infered_type)
+	private function set_variable_kindred_declaration_type(IDeclaration $node, ?IType $infered_type)
 	{
 		if ($node->type) {
 			$this->check_type($node->type, $node);
@@ -345,6 +352,9 @@ class ASTChecker
 	{
 		foreach ($node->parameters as $parameter) {
 			$this->check_variable_declaration($parameter);
+			if ($parameter->value !== null) {
+				$this->assert_compile_time_value($parameter->value);
+			}
 		}
 	}
 
@@ -544,14 +554,20 @@ class ASTChecker
 
 	private function check_property_declaration(PropertyDeclaration $node)
 	{
-		if ($node->value === null && $node->type === null) {
+		$value = $node->value;
+		if ($value === null && $node->type === null) {
 			$node->type = TypeFactory::$_any;
-			// throw $this->new_syntax_error("The type hint required when not setted default value for property", $node);
 		}
 
-		$infered_type = $node->value ? $this->infer_expression($node->value) : null;
+		if ($value !== null) {
+			$infered_type = $this->infer_expression($value);
+			$this->assert_compile_time_value($value);
+		}
+		else {
+			$infered_type = null;
+		}
 
-		$this->set_variable_similar_declaration_type($node, $infered_type);
+		$this->set_variable_kindred_declaration_type($node, $infered_type);
 	}
 
 	private function check_class_constant_declaration(ClassConstantDeclaration $node)
@@ -1297,11 +1313,16 @@ class ASTChecker
 					? TypeFactory::$_default_marker
 					: TypeFactory::$_none;
 				break;
-			case FloatLiteral::KIND:
-				$infered_type = TypeFactory::$_float;
+			case UnescapedStringLiteral::KIND:
+			case EscapedStringLiteral::KIND:
+			case DictKeyIdentifier::KIND:
+				$infered_type = TypeFactory::$_string;
 				break;
 			case IntegerLiteral::KIND:
 				$infered_type = TypeFactory::$_uint;
+				break;
+			case FloatLiteral::KIND:
+				$infered_type = TypeFactory::$_float;
 				break;
 			case BooleanLiteral::KIND:
 				$infered_type = TypeFactory::$_bool;
@@ -1310,12 +1331,11 @@ class ASTChecker
 				$infered_type = $this->infer_array_expression($node);
 				break;
 			case DictLiteral::KIND:
+			case ObjectLiteral::KIND:
 				$infered_type = $this->infer_dict_expression($node);
 				break;
-			case UnescapedStringLiteral::KIND:
-			case EscapedStringLiteral::KIND:
-				$infered_type = TypeFactory::$_string;
-				break;
+
+			//----
 			case EscapedStringInterpolation::KIND:
 			case UnescapedStringInterpolation::KIND:
 				$infered_type = $this->infer_escaped_string_interpolation($node);
@@ -1374,6 +1394,7 @@ class ASTChecker
 				$infered_type = $this->infer_conditional_expression($node);
 				break;
 			case DictExpression::KIND:
+			case ObjectExpression::KIND:
 				$infered_type = $this->infer_dict_expression($node);
 				break;
 			case ArrayExpression::KIND:
@@ -1792,7 +1813,7 @@ class ASTChecker
 		return TypeFactory::create_array_type($item_type);
 	}
 
-	private function infer_dict_expression(DictExpression $node, string $name = null): IType
+	private function infer_dict_expression(IDict $node): IType
 	{
 		if (!$node->items) {
 			return TypeFactory::$_dict;
@@ -1810,7 +1831,7 @@ class ASTChecker
 			// }
 			else {
 				$type_name = $this->get_type_name($key_type);
-				throw $this->new_syntax_error("Key type for Dict should be String/Int, '{$type_name}' supplied", $item->key);
+				throw $this->new_syntax_error("Key type for Dict/Object should be String/Int, '{$type_name}' supplied", $item->key);
 			}
 
 			$infered_value_types[] = $this->infer_expression($item->value);
@@ -2267,7 +2288,7 @@ class ASTChecker
 		return TypeFactory::$_regex;
 	}
 
-	private function infer_escaped_string_interpolation(EscapedStringInterpolation $node): IType
+	private function infer_escaped_string_interpolation(StringInterpolation $node): IType
 	{
 		foreach ($node->items as $item) {
 			if (is_object($item) && !$item instanceof ILiteral) {

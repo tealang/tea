@@ -1493,15 +1493,14 @@ class PHPCoder extends TeaCoder
 		return $key;
 	}
 
-	protected function render_object_item(string $key, BaseExpression $value)
+	public function render_dict_key_identifier(DictKeyIdentifier $expr)
 	{
-		$value = $value->render($this);
-		return "'$key' => $value";
+		return "'{$expr->token}'";
 	}
 
 	protected function wrap_object(string $body)
 	{
-		return '[' . $body . ']';
+		return '(object)[' . $body . ']';
 	}
 
 	public function render_cast_operation(CastOperation $node, bool $add_parentheses = false)

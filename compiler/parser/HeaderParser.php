@@ -140,7 +140,7 @@ class HeaderParser extends TeaParser
 		$declaration->type = $this->try_read_type_identifier();
 
 		if ($this->skip_token_ignore_space(_ASSIGN)) {
-			$declaration->value = $this->read_literal_expression();
+			$declaration->value = $this->read_compile_time_value();
 		}
 		elseif (!$declaration->type) {
 			throw $this->new_parse_error('Expected type or value assign expression for define constant.');

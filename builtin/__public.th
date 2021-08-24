@@ -13,6 +13,8 @@ public INPUT_POST Int
 public INPUT_COOKIE Int
 public INPUT_ENV Int
 public INPUT_SERVER Int
+public FILTER_INT Int
+public FILTER_EMAIL Int
 public FILE_APPEND Int
 public LOCK_EX Int
 public JSON_UNESCAPED_UNICODE Int

@@ -9,13 +9,10 @@
 
 namespace Tea;
 
-class ArrayExpression extends BaseExpression
-{
-	const KIND = 'array_expression';
+interface IDict {}
 
-	/**
-	 * @var array of IExpession
-	 */
+trait ArrayDictTrait
+{
 	public $items;
 
 	/**
@@ -29,24 +26,28 @@ class ArrayExpression extends BaseExpression
 	}
 }
 
-class DictExpression extends BaseExpression
+class ArrayExpression extends BaseExpression
 {
+	use ArrayDictTrait;
+
+	const KIND = 'array_expression';
+
+	/**
+	 * @var array of IExpession
+	 */
+	public $items;
+}
+
+class DictExpression extends BaseExpression implements IDict
+{
+	use ArrayDictTrait;
+
 	const KIND = 'dict_expression';
 
 	/**
 	 * @var array of DictItem
 	 */
 	public $items;
-
-	/**
-	 * @var bool
-	 */
-	public $is_vertical_layout = false; // for render target code
-
-	public function __construct(array $items = [])
-	{
-		$this->items = $items;
-	}
 }
 
 class DictItem extends Node
@@ -60,6 +61,18 @@ class DictItem extends Node
 	{
 		$this->key = $key;
 		$this->value = $value;
+	}
+}
+
+class DictKeyIdentifier extends BaseExpression
+{
+	const KIND = 'dict_key_identifier';
+
+	public $token;
+
+	public function __construct(string $token)
+	{
+		$this->token = $token;
 	}
 }
 

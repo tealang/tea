@@ -903,9 +903,9 @@ class TeaParser extends BaseParser
 				$expression = $this->read_bracket_expression();
 				break;
 
-			// case _BRACE_OPEN: // the object declaration begin
-			// 	$expression = $this->read_object_expression();
-			// 	break;
+			case _BRACE_OPEN: // the object declaration begin
+				$expression = $this->read_object_expression();
+				break;
 
 			case _XTAG_OPEN:
 				$expression = $this->read_xblock();
@@ -1211,19 +1211,19 @@ class TeaParser extends BaseParser
 		$has_non_literal = false;
 
 		$items = [];
-		while ($key = $this->read_object_key()) {
+		while ($key = $this->read_dict_key()) {
 			$this->expect_token_ignore_space(_COLON);
 
-			$expr = $this->read_expression();
-			if ($expr === null) {
+			$val = $this->read_expression();
+			if ($val === null) {
 				throw $this->new_unexpected_error();
 			}
 
-			if (!$expr instanceof ILiteral) {
+			if (!$val instanceof ILiteral) {
 				$has_non_literal = true;
 			}
 
-			$items[$key] = $expr;
+			$items[] = new DictItem($key, $val);
 
 			if (!$this->skip_comma()) {
 				break;
@@ -1235,29 +1235,45 @@ class TeaParser extends BaseParser
 		return $has_non_literal ? new ObjectExpression($items) : new ObjectLiteral($items);
 	}
 
-	protected function read_object_key()
+	protected function read_dict_key()
 	{
 		$token = $this->get_token_ignore_empty();
 		if ($token === null || $token === _BRACE_CLOSE) {
 			return null;
 		}
 
-		$this->scan_token_ignore_empty();
+		if ($token === _SINGLE_QUOTE) {
+			$item = $this->read_single_quoted_expression();
+			$this->assert_literal_string($item);
+		}
+		elseif ($token === _DOUBLE_QUOTE) {
+			$item = $this->read_double_quoted_expression();
+			$this->assert_literal_string($item);
+		}
+		else {
+			$this->scan_token_ignore_empty();
+			if (!TeaHelper::is_identifier_name($token)) {
+				throw $this->new_unexpected_error();
+			}
 
-		if (!TeaHelper::is_declarable_variable_name($token)) {
-			throw $this->new_unexpected_error();
+			$item = new DictKeyIdentifier($token);
 		}
 
-		return $token;
+		return $item;
+	}
+
+	private function assert_literal_string($expression)
+	{
+		if (!$expression instanceof ILiteral) {
+			throw $this->new_parse_error("Required literal string");
+		}
 	}
 
 	protected function read_bracket_expression()
 	{
 		$next = $this->get_token_ignore_space();
-		if ($next === LF || $next === _INLINE_COMMENT_MARK) {
-			$is_vertical_layout = true;
-		}
-		elseif ($next === _BRACKET_CLOSE and $this->skip_token(_BRACKET_CLOSE)) {
+		if ($next === _BRACKET_CLOSE and $this->skip_token(_BRACKET_CLOSE)) {
+			// SquareAccessing or empty ArrayLiteral
 			if ($next = $this->get_token() and TeaHelper::is_identifier_name($next)) {
 				$this->scan_token();
 				$identifer = $this->factory->create_identifier($next);
@@ -1271,10 +1287,13 @@ class TeaParser extends BaseParser
 			return $expr;
 		}
 		elseif ($next === _COLON) {
-			// that is an empty Dict
+			// empty Dict
 			$this->scan_token_ignore_space(); // skip colon
 			$this->expect_token(_BRACKET_CLOSE);
 			return new DictLiteral();
+		}
+		elseif ($next === LF || $next === _INLINE_COMMENT_MARK) {
+			$is_vertical_layout = true;
 		}
 
 		if ($item = $this->read_expression()) {
@@ -1286,13 +1305,13 @@ class TeaParser extends BaseParser
 				// Array
 				$expr = $this->read_array_with_first_item($item);
 			}
+
+			isset($is_vertical_layout) and $expr->is_vertical_layout = $is_vertical_layout;
 		}
 		else {
 			// that should be an empty Array
 			$expr = new ArrayLiteral();
 		}
-
-		isset($is_vertical_layout) and $expr->is_vertical_layout = $is_vertical_layout;
 
 		$this->expect_token_ignore_empty(_BRACKET_CLOSE);
 
@@ -2116,14 +2135,10 @@ class TeaParser extends BaseParser
 		return $declaration;
 	}
 
-	protected function read_literal_expression()
+	// need defer check
+	protected function read_compile_time_value()
 	{
-		$value = $this->read_expression();
-
-		// require defer check is a literal expression
-		$value->require_literal = true;
-
-		return $value;
+		return $this->read_expression();
 	}
 
 	protected function read_class_constant_declaration(string $name, ?string $modifier)
@@ -2134,7 +2149,7 @@ class TeaParser extends BaseParser
 		$declaration->type = $this->try_read_type_identifier();
 
 		if ($this->skip_token_ignore_space(_ASSIGN)) {
-			$declaration->value = $this->read_literal_expression();
+			$declaration->value = $this->read_compile_time_value();
 		}
 		elseif (!$this->is_declare_mode) {
 			throw $this->new_parse_error('Expected value assign expression.');
@@ -2170,7 +2185,7 @@ class TeaParser extends BaseParser
 		if ($token === _ASSIGN) {
 			// the assign expression
 			$this->scan_token_ignore_space(); // skip =
-			$declaration->value = $this->read_literal_expression();
+			$declaration->value = $this->read_compile_time_value();
 		}
 
 		$declaration->is_static = $static;
@@ -2313,7 +2328,7 @@ class TeaParser extends BaseParser
 
 		if ($next === _ASSIGN) {
 			$this->scan_token_ignore_space();
-			$value = $this->read_literal_expression();
+			$value = $this->read_compile_time_value();
 		}
 
 		$parameter = $this->create_parameter($name, $type, $value);

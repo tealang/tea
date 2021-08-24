@@ -15,6 +15,8 @@ class XBlock extends BaseExpression
 
 	public $items;
 
+	public $has_interpolation;
+
 	public function __construct(XBlockElement ...$items) {
 		$this->items = $items;
 	}

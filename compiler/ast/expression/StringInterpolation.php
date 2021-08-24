@@ -9,10 +9,8 @@
 
 namespace Tea;
 
-class EscapedStringInterpolation extends BaseExpression
+abstract class StringInterpolation extends BaseExpression
 {
-	const KIND = 'escaped_string_interpolation';
-
 	public $items;
 
 	public function __construct(array $items)
@@ -21,7 +19,14 @@ class EscapedStringInterpolation extends BaseExpression
 	}
 }
 
-class UnescapedStringInterpolation extends EscapedStringInterpolation
+class EscapedStringInterpolation extends StringInterpolation
+{
+	const KIND = 'escaped_string_interpolation';
+}
+
+class UnescapedStringInterpolation extends StringInterpolation
 {
 	const KIND = 'unescaped_string_interpolation';
 }
+
+// end

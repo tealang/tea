@@ -38,11 +38,16 @@ public LF = "\n"
 // #php $_SERVER Dict
 
 // the function to get value of $_GET/$_POST/$_COOKIE/$_ENV/$_SERVER
+// input methods
 #php INPUT_GET Int
 #php INPUT_POST Int
 #php INPUT_COOKIE Int
 #php INPUT_ENV Int
 #php INPUT_SERVER Int
+// filter types
+#php FILTER_INT Int
+#php FILTER_EMAIL Int
+
 #php filter_input(type Int, key String, filter Int = #default, options Dict = #default) Any
 
 // exceptions

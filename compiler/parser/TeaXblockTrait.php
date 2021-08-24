@@ -18,22 +18,12 @@ const _LEAF_TAGS = [
 
 trait TeaXBlockTrait
 {
-	private function read_tag_name()
-	{
-		$token = $this->scan_token();
-		$next = $this->get_token();
-
-		if ($next === '-' || $next === ':') {
-			$this->scan_token();
-			$after = $this->scan_token();
-			$token .= $next . $after;
-		}
-
-		return $token;
-	}
+	private $has_interpolation;
 
 	protected function read_xblock()
 	{
+		$this->has_interpolation = false;
+
 		$block_previous_spaces = $this->get_heading_spaces_inline();
 
 		$token = $this->read_tag_name();
@@ -56,10 +46,25 @@ trait TeaXBlockTrait
 			$items[] = $this->read_xtag($token, $block_previous_spaces);
 		}
 
-		$node = new XBlock(...$items);
-		$node->pos = $this->pos;
+		$xblock = new XBlock(...$items);
+		$xblock->has_interpolation = $this->has_interpolation;
+		$xblock->pos = $this->pos;
 
-		return $node;
+		return $xblock;
+	}
+
+	private function read_tag_name()
+	{
+		$token = $this->scan_token();
+		$next = $this->get_token();
+
+		if ($next === '-' || $next === ':') {
+			$this->scan_token();
+			$after = $this->scan_token();
+			$token .= $next . $after;
+		}
+
+		return $token;
 	}
 
 	protected function try_read_xtag(?string $tag, string $block_previous_spaces)
@@ -131,7 +136,7 @@ trait TeaXBlockTrait
 
 			if ($token === _SHARP && $this->skip_token(_BLOCK_BEGIN)) {
 				$expression = $this->read_sharp_interpolation();
-				static::collect_and_reset_temp($items, $string, $expression);
+				$this->reset_items_on_readed_interpolation($items, $string, $expression);
 				continue;
 			}
 			elseif ($token === _DOLLAR) {
@@ -141,7 +146,7 @@ trait TeaXBlockTrait
 					continue;
 				}
 
-				static::collect_and_reset_temp($items, $string, $expression);
+				$this->reset_items_on_readed_interpolation($items, $string, $expression);
 				continue;
 			}
 			elseif ($token === _BACK_SLASH) {
@@ -197,7 +202,7 @@ trait TeaXBlockTrait
 				case _SHARP:
 					if ($this->skip_token(_BLOCK_BEGIN)) {
 						$expression = $this->read_sharp_interpolation();
-						static::collect_and_reset_temp($items, $string, $expression);
+						$this->reset_items_on_readed_interpolation($items, $string, $expression);
 					}
 					else {
 						$string .= $token;
@@ -211,7 +216,7 @@ trait TeaXBlockTrait
 						break;
 					}
 
-					static::collect_and_reset_temp($items, $string, $expression);
+					$this->reset_items_on_readed_interpolation($items, $string, $expression);
 					break;
 
 				case _BACK_SLASH:
@@ -250,6 +255,18 @@ trait TeaXBlockTrait
 		}
 
 		return $string;
+	}
+
+	private function reset_items_on_readed_interpolation(array &$items, string &$string, BaseExpression $expression)
+	{
+		if ($string !== '') {
+			$items[] = $string;
+			$string = ''; // reset
+		}
+
+		$items[] = $expression;
+
+		$this->has_interpolation = true;
 	}
 }
 
