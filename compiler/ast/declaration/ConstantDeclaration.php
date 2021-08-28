@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-interface IConstantDeclaration {}
+interface IConstantDeclaration extends IValuedDeclaration {}
 
 trait IConstantDeclarationTrait
 {

@@ -1208,34 +1208,62 @@ class TeaParser extends BaseParser
 
 	protected function read_object_expression()
 	{
-		$has_non_literal = false;
+		// $has_non_literal = false;
+
+		$class = $this->factory->create_virtual_class_declaration();
 
 		$items = [];
-		while ($key = $this->read_dict_key()) {
+		while ($key = $this->read_object_key()) {
 			$this->expect_token_ignore_space(_COLON);
+
+			$quote_mark = null;
+			if (!is_string($key)) {
+				$quote_mark = _SINGLE_QUOTE;
+				$key = $key->value;
+			}
+
+			if (array_key_exists($key, $items)) {
+				throw $this->new_unexpected_error("Key can not be duplicated");
+			}
+
+			$member = $this->factory->create_property_declaration_for_virtual_class($quote_mark, $key);
+
+			if (!$class->append_member($member)) {
+				throw $this->parser->new_parse_error("Class member '{$member->name}' of '{$class->name}' has duplicated");
+			}
 
 			$val = $this->read_expression();
 			if ($val === null) {
 				throw $this->new_unexpected_error();
 			}
 
-			if (!$val instanceof ILiteral) {
-				$has_non_literal = true;
-			}
+			// if (!$val instanceof ILiteral) {
+			// 	$has_non_literal = true;
+			// }
 
-			$items[] = new DictItem($key, $val);
+			$member->value = $val;
+			$member->pos = $val->pos;
 
 			if (!$this->skip_comma()) {
 				break;
 			}
 		}
 
+		// $this->factory->end_object_class();
+
 		$this->expect_token_ignore_empty(_BRACE_CLOSE);
 
-		return $has_non_literal ? new ObjectExpression($items) : new ObjectLiteral($items);
+		// return $has_non_literal ? new ObjectExpression($items) : new ObjectLiteral($items);
+
+		// if support literal mode, then would be need to support compile-value
+		// example as value for constants, thats a troublesome
+		$object = new ObjectExpression();
+		$object->class_declaration = $class;
+
+		return $object;
 	}
 
-	protected function read_dict_key()
+	protected function read_object_key()
 	{
 		$token = $this->get_token_ignore_empty();
 		if ($token === null || $token === _BRACE_CLOSE) {
@@ -1246,17 +1274,13 @@ class TeaParser extends BaseParser
 			$item = $this->read_single_quoted_expression();
 			$this->assert_literal_string($item);
 		}
-		elseif ($token === _DOUBLE_QUOTE) {
-			$item = $this->read_double_quoted_expression();
-			$this->assert_literal_string($item);
-		}
 		else {
 			$this->scan_token_ignore_empty();
 			if (!TeaHelper::is_identifier_name($token)) {
 				throw $this->new_unexpected_error();
 			}
 
-			$item = new DictKeyIdentifier($token);
+			$item = $token;
 		}
 
 		return $item;
@@ -1349,7 +1373,7 @@ class TeaParser extends BaseParser
 				throw $this->new_parse_error("Value expression for dict required.");
 			}
 
-			$items[] = new DictItem($key, $value);
+			$items[] = new DictMember($key, $value);
 
 			if (!$key instanceof ILiteral || !$value instanceof ILiteral) {
 				$has_non_literal = true;

@@ -13,6 +13,7 @@ interface IDeclaration {}
 interface IRootDeclaration extends IDeclaration {}
 interface ICallableDeclaration extends IDeclaration {}
 interface IMemberDeclaration extends IDeclaration {}
+interface IValuedDeclaration extends IDeclaration {}
 
 trait DeclarationTrait {
 	/**

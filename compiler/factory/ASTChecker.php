@@ -183,6 +183,7 @@ class ASTChecker
 				break;
 
 			case PropertyDeclaration::KIND:
+			case ObjectMember::KIND:
 				$this->check_property_declaration($node);
 				break;
 
@@ -220,7 +221,7 @@ class ASTChecker
 			throw $this->new_syntax_error("The type for declaration of constant '{$node->name}' required", $node);
 		}
 
-		$this->assert_compile_time_value($value);
+		$this->assert_compile_time_value_for($node);
 
 		if ($node->type) {
 			$this->check_type($node->type, $node);
@@ -231,9 +232,11 @@ class ASTChecker
 		}
 	}
 
-	private function assert_compile_time_value(BaseExpression $value)
+	private function assert_compile_time_value_for(IValuedDeclaration $node)
 	{
-		if (!$this->check_is_constant_expression($value)) {
+		$value = $node->value;
+
+		if (!$this->check_is_constant_expression($value) and !$node instanceof ObjectMember) {
 			throw $this->new_syntax_error("Invalid value expression for constant declaration", $value);
 		}
 
@@ -353,7 +356,7 @@ class ASTChecker
 		foreach ($node->parameters as $parameter) {
 			$this->check_variable_declaration($parameter);
 			if ($parameter->value !== null) {
-				$this->assert_compile_time_value($parameter->value);
+				$this->assert_compile_time_value_for($parameter);
 			}
 		}
 	}
@@ -561,7 +564,7 @@ class ASTChecker
 
 		if ($value !== null) {
 			$infered_type = $this->infer_expression($value);
-			$this->assert_compile_time_value($value);
+			$this->assert_compile_time_value_for($node);
 		}
 		else {
 			$infered_type = null;
@@ -919,7 +922,7 @@ class ASTChecker
 	private function infer_switch_block(SwitchBlock $node): ?IType
 	{
 		$testing_type = $this->infer_expression($node->test);
-		if (!TypeFactory::is_when_testable_type($testing_type)) {
+		if (!TypeFactory::is_case_testable_type($testing_type)) {
 			throw $this->new_syntax_error("The case compare expression should be String/Int/UInt", $node->test);
 		}
 
@@ -1315,7 +1318,6 @@ class ASTChecker
 				break;
 			case UnescapedStringLiteral::KIND:
 			case EscapedStringLiteral::KIND:
-			case DictKeyIdentifier::KIND:
 				$infered_type = TypeFactory::$_string;
 				break;
 			case IntegerLiteral::KIND:
@@ -1331,9 +1333,11 @@ class ASTChecker
 				$infered_type = $this->infer_array_expression($node);
 				break;
 			case DictLiteral::KIND:
-			case ObjectLiteral::KIND:
 				$infered_type = $this->infer_dict_expression($node);
 				break;
+			// case ObjectLiteral::KIND:
+			// 	$infered_type = $this->infer_object_expression($node);
+			// 	break;
 
 			//----
 			case EscapedStringInterpolation::KIND:
@@ -1394,8 +1398,10 @@ class ASTChecker
 				$infered_type = $this->infer_conditional_expression($node);
 				break;
 			case DictExpression::KIND:
-			case ObjectExpression::KIND:
 				$infered_type = $this->infer_dict_expression($node);
+				break;
+			case ObjectExpression::KIND:
+				$infered_type = $this->infer_object_expression($node);
 				break;
 			case ArrayExpression::KIND:
 				$infered_type = $this->infer_array_expression($node);
@@ -1484,12 +1490,6 @@ class ASTChecker
 			if (TypeFactory::is_dict_key_directly_supported_type($right_type)) {
 				// okay
 			}
-			// elseif (TypeFactory::is_dict_key_castable_type($right_type)) {
-			// 	// 一些类型值作为下标调用时，PHP中有一些隐式的转换规则，这些规则往往不那么清晰，容易出问题，故我们需要显示的转换
-			// 	// 如false将转换为0，但实际情况可能需要的是''
-			// 	// 而float如0.1将转换为0，但实际情况可能需要的是'0.1'
-			// 	$node->right->infered_type = $right_type;
-			// }
 			else {
 				$type_name = $this->get_type_name($right_type);
 				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, supplied {$type_name}", $node->right);
@@ -1498,8 +1498,7 @@ class ASTChecker
 			$infered_type = $left_type->generic_type;
 		}
 		elseif ($left_type instanceof AnyType) {
-			// 无key时，为数组访问
-			// 否则仅允许将实际类型为Dict的用于这类情况
+			// if non key, that's Array access, else just allow Dict as the actual type
 			if ($node->right and !TypeFactory::is_dict_key_directly_supported_type($right_type)) {
 				$type_name = $this->get_type_name($right_type);
 				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$type_name}' supplied", $node->right);
@@ -1813,7 +1812,7 @@ class ASTChecker
 		return TypeFactory::create_array_type($item_type);
 	}
 
-	private function infer_dict_expression(IDict $node): IType
+	private function infer_dict_expression(DictExpression $node): IType
 	{
 		if (!$node->items) {
 			return TypeFactory::$_dict;
@@ -1825,13 +1824,9 @@ class ASTChecker
 			if (TypeFactory::is_dict_key_directly_supported_type($key_type)) {
 				// okay
 			}
-			// elseif (TypeFactory::is_dict_key_castable_type($key_type)) {
-			// 	// need cast
-			// 	$item->key->infered_type = $key_type;
-			// }
 			else {
 				$type_name = $this->get_type_name($key_type);
-				throw $this->new_syntax_error("Key type for Dict/Object should be String/Int, '{$type_name}' supplied", $item->key);
+				throw $this->new_syntax_error("Key type for Dict should be String/Int, '{$type_name}' supplied", $item->key);
 			}
 
 			$infered_value_types[] = $this->infer_expression($item->value);
@@ -1840,6 +1835,18 @@ class ASTChecker
 		$generic_type = $this->reduce_types($infered_value_types);
 
 		return TypeFactory::create_dict_type($generic_type);
+	}
+
+	private function infer_object_expression(ObjectExpression $node): IType
+	{
+		$this->check_classkindred_declaration($node->class_declaration);
+
+		$object_type = clone TypeFactory::$_object;
+		$object_type->symbol = $node->class_declaration->symbol;
+
+		$node->infered_type = $object_type;
+
+		return $object_type;
 	}
 
 	private function infer_callback_argument(CallbackArgument $node): ?IType
@@ -1982,16 +1989,18 @@ class ASTChecker
 		// if $callee_declar is AnyType, do not has the type property
 		$callee_type = $callee_declar->type ?? TypeFactory::$_any;
 
-		// // if is a variable, use it's type declaration
-		// if ($callee_declar instanceof IVariableDeclaration) {
-		// 	if ($callee_type instanceof MetaType) {
-		// 		// if is MetaType, use the Declaration of it's value type
-		// 		$callee_declar = $callee_declar->generic_type->symbol->declaration;
-		// 	}
-		// }
-
 		// cache for render
 		$node->infered_callee_declaration = $callee_declar;
+
+		// if is a variable, use it's type declaration
+		if ($callee_declar instanceof IVariableDeclaration) {
+			// if ($callee_type instanceof MetaType) {
+			// 	// if is MetaType, use the Declaration of it's value type
+			// 	$callee_declar = $callee_type->generic_type->symbol->declaration;
+			// }
+
+			$callee_declar = $callee_declar->value;
+		}
 
 		if ($callee_type === TypeFactory::$_any || $callee_declar === TypeFactory::$_callable) {
 			// the Any-Callable type do not need to match parameters
@@ -2001,9 +2010,12 @@ class ASTChecker
 
 			// return; // ignore check parameters for type Any
 		}
-		else {
+		elseif ($callee_declar instanceof ICallableDeclaration) {
 			// check arguments
 			$this->check_call_arguments($node, $callee_declar);
+		}
+		else {
+			throw $this->new_syntax_error("Callee not a valid callable declaration", $node->callee);
 		}
 
 		if ($callee_declar instanceof ClassKindredDeclaration) {
@@ -2035,7 +2047,7 @@ class ASTChecker
 		return $infered;
 	}
 
-	private function check_call_arguments(BaseCallExpression $node, IDeclaration $callee_declar)
+	private function check_call_arguments(BaseCallExpression $node, ICallableDeclaration $callee_declar)
 	{
 		$arguments = $node->arguments;
 
@@ -2268,6 +2280,8 @@ class ASTChecker
 				// unbreak
 			case PropertyDeclaration::KIND:
 			case ClassConstantDeclaration::KIND:
+			case ObjectMember::KIND:
+
 			case ClassDeclaration::KIND:
 				$infered = $member->type;
 				break;
@@ -2510,7 +2524,7 @@ class ASTChecker
 
 			$node->symbol = $this->require_class_member_symbol($master_declar, $node);
 
-			if (!$node->symbol->declaration->is_accessable_for_object($master)) {
+			if (!$this->is_instance_accessable($master, $node->symbol->declaration)) {
 				throw $this->new_syntax_error("Cannot access the private/protected members", $node);
 			}
 		}
@@ -2538,7 +2552,6 @@ class ASTChecker
 			throw $this->new_syntax_error("Cannot accessing the 'UnionType' targets", $node);
 		}
 		else {
-			// dump($master_type);
 			$classkindred = $master_type->symbol->declaration;
 			$symbol = $this->find_member_symbol_in_class($classkindred, $node->name);
 			if ($symbol === null) {
@@ -2584,9 +2597,37 @@ class ASTChecker
 			throw $this->new_syntax_error("Invalid to accessing a non-static member", $node);
 		}
 
-		if (!$node_declaration->is_accessable_for_class($node->master)) {
+		if (!$this->is_static_accessable($node->master, $node_declaration)) {
 			throw $this->new_syntax_error("Cannot accessing the private/protected members", $node);
 		}
+	}
+
+	private function is_instance_accessable(BaseExpression $expr, IClassMemberDeclaration $member) {
+		if ($member->modifier === _PRIVATE) {
+			$accessable = $expr instanceof PlainIdentifier && $expr->symbol === $member->belong_block->this_object_symbol;
+		}
+		elseif ($member->modifier === _PROTECTED) {
+			$accessable = $expr instanceof PlainIdentifier && ($expr->name === _THIS || $expr->name === _SUPER);
+		}
+		else {
+			$accessable = true;
+		}
+
+		return $accessable;
+	}
+
+	private function is_static_accessable(BaseExpression $expr, IClassMemberDeclaration $member) {
+		if ($member->modifier === _PRIVATE) {
+			$accessable = $expr instanceof PlainIdentifier && $expr->symbol === $member->belong_block->this_class_symbol;
+		}
+		elseif ($member->modifier === _PROTECTED) {
+			$accessable = $expr instanceof PlainIdentifier && ($expr->name === _THIS || $expr->name === _SUPER);
+		}
+		else {
+			$accessable = true;
+		}
+
+		return $accessable;
 	}
 
 	private function create_any_symbol_for_accessing_identifier(AccessingIdentifier $node)

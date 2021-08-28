@@ -1098,6 +1098,14 @@ class PHPCoder extends TeaCoder
 
 		$callee = $this->render_master_expression($node->callee);
 
+		// object member as callee, must be got it result, then handle call
+		if ($node->infered_callee_declaration instanceof IVariableDeclaration
+			and $node->callee instanceof AccessingIdentifier
+			and $node->callee->symbol->declaration !== ASTFactory::$virtual_property_for_any
+		) {
+			$callee = "($callee)";
+		}
+
 		$arguments = $node->normalized_arguments ?? $node->arguments;
 		$arguments = $this->render_arguments($arguments);
 
@@ -1479,23 +1487,26 @@ class PHPCoder extends TeaCoder
 		return $code;
 	}
 
-	protected function render_dict_key(BaseExpression $expr)
-	{
-		$key = $expr->render($this);
-		if (isset($expr->infered_type)) {
-			// the auto-cast type to String
-			if ($expr->infered_type !== TypeFactory::$_uint && $expr->infered_type !== TypeFactory::$_int) {
-				// 如果不强制转为string, float/bool将会被转成int
-				$key = '(string)' . $key;
-			}
-		}
+	// public function render_object_expression(BaseExpression $node)
+	// {
+	// 	$members = $node->class_declaration->members;
 
-		return $key;
-	}
+	// 	$items = [];
+	// 	foreach ($members as $subnode) {
+	// 		$items[] = $subnode->render($this);
+	// 		if ($subnode->value instanceof LambdaExpression) {
+	// 			//
+	// 		}
+	// 	}
 
-	public function render_dict_key_identifier(DictKeyIdentifier $expr)
+	// 	$body = $this->join_member_items($items, $node->is_vertical_layout);
+
+	// 	return $this->wrap_object($body);
+	// }
+
+	protected function render_key_for_object_member(ObjectMember $node)
 	{
-		return "'{$expr->token}'";
+		return "'{$node->name}'";
 	}
 
 	protected function wrap_object(string $body)

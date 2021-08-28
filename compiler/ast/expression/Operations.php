@@ -11,7 +11,6 @@ namespace Tea;
 
 abstract class BaseOperation extends BaseExpression
 {
-	public $infered_type;
 	public $operator;
 }
 

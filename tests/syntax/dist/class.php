@@ -42,6 +42,12 @@ class Test1 extends BaseClass implements IDemo {
 	public static function static_method() {
 		echo Test1::CONST1, LF;
 	}
+
+	public static function get_closure() {
+		return function () {
+			return Test1::CONST1;
+		};
+	}
 }
 
 #internal
@@ -214,6 +220,10 @@ class Test5 {
 }
 
 // ---------
+echo "# start to run closure", LF;
+var_dump(Test1::get_closure()());
+echo "# finished run closure", LF;
+
 $t1 = new Test1('some');
 echo $t1->get_class_name('Unknow'), LF;
 

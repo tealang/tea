@@ -9,9 +9,9 @@
 
 namespace Tea;
 
-interface IVariableDeclaration extends IDeclaration {}
+interface IVariableDeclaration extends IValuedDeclaration {}
 
-abstract class BaseVariableDeclaration extends Node
+abstract class BaseVariableDeclaration extends Node implements IVariableDeclaration
 {
 	use DeclarationTrait;
 
@@ -30,7 +30,7 @@ abstract class BaseVariableDeclaration extends Node
 	}
 }
 
-class VariableDeclaration extends BaseVariableDeclaration implements IVariableDeclaration, IStatement
+class VariableDeclaration extends BaseVariableDeclaration implements IStatement
 {
 	const KIND = 'variable_declaration';
 	public $block; // defined in which block?
@@ -87,7 +87,7 @@ class RuleOptions
 	}
 }
 
-class ParameterDeclaration extends BaseVariableDeclaration implements IVariableDeclaration
+class ParameterDeclaration extends BaseVariableDeclaration
 {
 	const KIND = 'parameter_declaration';
 

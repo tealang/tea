@@ -14,35 +14,11 @@ interface IClassMemberDeclaration extends IMemberDeclaration {}
 trait IClassMemberDeclarationTrait
 {
 	public $modifier;
-
 	public $is_static = false;
-
 	public $belong_block;
-
-	public function is_accessable_for_object(BaseExpression $expr) {
-		if ($this->modifier === _PRIVATE) {
-			return $expr instanceof PlainIdentifier && $expr->symbol === $this->belong_block->this_object_symbol;
-		}
-		elseif ($this->modifier === _PROTECTED) {
-			return $expr instanceof PlainIdentifier && ($expr->name === _THIS || $expr->name === _SUPER);
-		}
-
-		return true;
-	}
-
-	public function is_accessable_for_class(BaseExpression $expr) {
-		if ($this->modifier === _PRIVATE) {
-			return $expr instanceof PlainIdentifier && $expr->symbol === $this->belong_block->this_class_symbol;
-		}
-		elseif ($this->modifier === _PROTECTED) {
-			return $expr instanceof PlainIdentifier && ($expr->name === _THIS || $expr->name === _SUPER);
-		}
-
-		return true;
-	}
 }
 
-class PropertyDeclaration extends BaseVariableDeclaration implements IClassMemberDeclaration, IVariableDeclaration
+class PropertyDeclaration extends BaseVariableDeclaration implements IClassMemberDeclaration, IBlock
 {
 	use IClassMemberDeclarationTrait;
 

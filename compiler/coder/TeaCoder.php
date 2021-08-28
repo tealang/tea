@@ -778,10 +778,10 @@ class TeaCoder
 		return $this->new_string_placeholder($code);
 	}
 
-	public function render_object_literal(ObjectLiteral $node)
-	{
-		return $this->render_object_expression($node);
-	}
+	// public function render_object_literal(ObjectLiteral $node)
+	// {
+	// 	return $this->render_object_expression($node);
+	// }
 
 	public function render_array_literal(ArrayLiteral $node)
 	{
@@ -811,30 +811,37 @@ class TeaCoder
 
 	public function render_dict_expression(DictExpression $node)
 	{
-		$body = $this->render_dict_body($node->items, $node->is_vertical_layout);
+		$body = $this->render_member_items($node->items, $node->is_vertical_layout);
 		return $this->wrap_dict($body);
 	}
 
-	protected function render_dict_body(array $subnodes, bool $is_vertical_layout)
+	protected function render_member_items(array $subnodes, bool $is_vertical_layout)
 	{
 		$items = [];
 		foreach ($subnodes as $subnode) {
-			$key = $this->render_dict_key($subnode->key);
-			$value = $subnode->value->render($this);
-			$items[] = $key . static::DICT_KV_OPERATOR . $value;
+			$items[] = $subnode->render($this);
 		}
 
 		return $this->join_member_items($items, $is_vertical_layout);
 	}
 
-	protected function render_dict_key(BaseExpression $expr)
+	public function render_dict_member(DictMember $node)
 	{
-		return $expr->render($this);
+		$key = $node->key->render($this);
+		$value = $node->value->render($this);
+		return $key . static::DICT_KV_OPERATOR . $value;
 	}
 
-	public function render_dict_key_identifier(DictKeyIdentifier $expr)
+	public function render_object_member(ObjectMember $node)
 	{
-		return $expr->token;
+		$key = $this->render_key_for_object_member($node);
+		$value = $node->value->render($this);
+		return $key . static::DICT_KV_OPERATOR . $value;
+	}
+
+	protected function render_key_for_object_member(ObjectMember $node)
+	{
+		return $node->key_quote_mark ? "'{$node->name}'" : $node->name;
 	}
 
 	protected function join_member_items(array $items, bool $is_vertical_layout)
@@ -862,7 +869,7 @@ class TeaCoder
 
 	public function render_object_expression(BaseExpression $node)
 	{
-		$body = $this->render_dict_body($node->items, $node->is_vertical_layout);
+		$body = $this->render_member_items($node->class_declaration->members, $node->is_vertical_layout);
 		return $this->wrap_object($body);
 	}
 
@@ -886,7 +893,7 @@ class TeaCoder
 		$left = $node->left->render($this);
 		$right = $node->right->render($this);
 
-		return "$left as $right";
+		return "$left#$right";
 	}
 
 	public function render_is_operation(IsOperation $node)

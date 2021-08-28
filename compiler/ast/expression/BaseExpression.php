@@ -11,5 +11,6 @@ namespace Tea;
 
 abstract class BaseExpression extends Node
 {
+	public $infered_type;
 	public $is_pure;
 }

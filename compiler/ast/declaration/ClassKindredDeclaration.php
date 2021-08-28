@@ -81,7 +81,9 @@ abstract class ClassKindredDeclaration extends Node implements IRootDeclaration,
 			return false;
 		}
 
+		$member->belong_block = $this;
 		$this->members[$member->name] = $member;
+
 		return true;
 	}
 

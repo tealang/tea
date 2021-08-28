@@ -29,7 +29,15 @@ internal Test1: BaseClass, IDemo {
 	static static_method() {
 		echo this.CONST1
 	}
+
+	static get_closure() {
+		return () => this.CONST1
+	}
 }
+
+echo "# start to run closure"
+Test1.get_closure()()::var_dump
+echo "# finished run closure"
 
 var t1 = Test1('some')
 echo t1.get_class_name('Unknow')

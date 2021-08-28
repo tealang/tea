@@ -119,6 +119,10 @@ class TypeFactory
 
 	static function is_dict_key_directly_supported_type(?IType $type)
 	{
+		// 一些类型值作为下标调用时，PHP中有一些隐式的转换规则，这些规则往往不那么清晰，故不能把这些用于key
+		// 如false用作下标时将转换为0，但直接转成string时是''
+		// 而0.1用作下标时将转换为0，但实际情况可能需要的是'0.1'
+
 		if ($type === self::$_string || $type === self::$_uint || $type === self::$_int) {
 			return true;
 		}
@@ -138,19 +142,7 @@ class TypeFactory
 		return false;
 	}
 
-	// static function is_dict_key_castable_type(?IType $type)
-	// {
-	// 	// Data type convert is a problem
-	// 	// false to string in javascript is 'false', and in python is 'False', in PHP is '' ...
-
-	// 	return $type === self::$_int
-	// 		|| $type === self::$_uint
-	// 		|| $type === self::$_float
-	// 		|| $type === self::$_bool
-	// 		|| $type === self::$_any;
-	// }
-
-	static function is_when_testable_type(?IType $type)
+	static function is_case_testable_type(?IType $type)
 	{
 		return $type === self::$_int
 			|| $type === self::$_uint

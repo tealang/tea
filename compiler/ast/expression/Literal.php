@@ -86,8 +86,8 @@ class DictLiteral extends DictExpression implements ILiteral
 	const KIND = 'dict_literal';
 }
 
-class ObjectLiteral extends ObjectExpression implements ILiteral
-{
-	const KIND = 'object_literal';
-}
+// class ObjectLiteral extends ObjectExpression implements ILiteral
+// {
+// 	const KIND = 'object_literal';
+// }
 

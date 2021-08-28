@@ -175,17 +175,17 @@ class ASTFactory
 		if ($token === _THIS) {
 			$identifier = new PlainIdentifier($token);
 			if ($this->class) {
-				if ($this->function !== $this->scope) { // it is would be in a lambda block
-					throw $this->parser->new_parse_error("Cannot use '$token' identifier in lambda functions");
-				}
-				elseif ($this->function) {
+				// if ($this->function !== $this->scope) { // it is would be in a lambda block
+				// 	throw $this->parser->new_parse_error("Cannot use '$token' identifier in lambda functions");
+				// }
+				// else
+				if ($this->function) {
 					$identifier->symbol = $this->function->is_static ? $this->class->this_class_symbol : $this->class->this_object_symbol;
 				}
 				else {
-					// 不支持在类成员声明中使用this关键字, 因为编译器将静态的指向到当前类, 而按一般理解可能是需要指向到运行时的实际对象
 					// the const/property declaration
-					// $identifier->symbol = $this->declaration->is_static ? $this->class->this_class_symbol : $this->class->this_object_symbol;
-					throw $this->parser->new_parse_error("Can not use 'this' on class member declaration");
+					$identifier->symbol = $this->declaration->is_static ? $this->class->this_class_symbol : $this->class->this_object_symbol;
+					// throw $this->parser->new_parse_error("Can not use 'this' on class member declaration");
 				}
 			}
 			elseif (!$this->seek_symbol_in_function($identifier)) { // it would be has an #expect
@@ -248,9 +248,6 @@ class ASTFactory
 		}
 		elseif (!$this->seek_symbol_in_function($identifier)) {
 			$this->declaration->set_defer_check_identifier($identifier);
-			// if ($this->declaration->belong_block instanceof ClassKindredDeclaration) {
-			// 	$this->class->set_defer_check_identifier($identifier);
-			// }
 		}
 	}
 
@@ -365,7 +362,9 @@ class ASTFactory
 
 		$declaration = new BuiltinTypeClassDeclaration(_PUBLIC, $name);
 		$this->begin_class($declaration);
-		$symbol = $this->create_class_symbol($declaration);
+
+		$symbol = $this->create_global_symbol($declaration);
+		$this->bind_class_symbol($declaration, $symbol);
 
 		// bind to type
 		$type_identifier->symbol = $symbol;
@@ -373,16 +372,40 @@ class ASTFactory
 		return $declaration;
 	}
 
-	/**
-	 * @param $name string
-	 */
+	public function create_virtual_class_declaration()
+	{
+		$declaration = new ClassDeclaration(null, '__object_class');
+
+		$symbol = new Symbol($declaration);
+		$this->bind_class_symbol($declaration, $symbol);
+
+		// do not create class context, because it not a normal class, it just for ast-check
+
+		// $this->pushed_env = [$this->class, $this->declaration, $this->function, $this->scope, $this->block];
+		// $this->begin_class($declaration);
+
+		return $declaration;
+	}
+
+	public function create_property_declaration_for_virtual_class(?string $quote_mark, string $name)
+	{
+		$declaration = new ObjectMember($name, $quote_mark);
+		new Symbol($declaration);
+
+		// $this->begin_class_member($declaration);
+
+		return $declaration;
+	}
+
 	public function create_class_declaration(string $name, string $modifier)
 	{
 		$this->check_global_modifier($modifier, 'class');
 
 		$declaration = new ClassDeclaration($modifier, $name);
 		$this->begin_class($declaration);
-		$this->create_class_symbol($declaration);
+
+		$symbol = $this->create_global_symbol($declaration);
+		$this->bind_class_symbol($declaration, $symbol);
 
 		return $declaration;
 	}
@@ -393,18 +416,17 @@ class ASTFactory
 
 		$declaration = new InterfaceDeclaration($modifier, $name);
 		$this->begin_class($declaration);
-		$this->create_class_symbol($declaration);
+
+		$symbol = $this->create_global_symbol($declaration);
+		$this->bind_class_symbol($declaration, $symbol);
 
 		return $declaration;
 	}
 
-	public function create_class_symbol(ClassKindredDeclaration $declaration)
+	private function bind_class_symbol(ClassKindredDeclaration $declaration, Symbol $symbol)
 	{
-		// create symbol
-		$symbol = $this->create_global_symbol($declaration);
-
 		// create 'this' symbol
-		$class_identifier = new ClassKindredIdentifier($declaration->name); // as a Type for this
+		$class_identifier = new ClassKindredIdentifier($declaration->name); // as a Type for 'this'
 		$class_identifier->symbol = $symbol;
 		// $declaration->symbols[_THIS] = ASTHelper::create_symbol_this($class_identifier);
 
@@ -413,8 +435,6 @@ class ASTFactory
 
 		// create the MetaType
 		$declaration->type = TypeFactory::create_meta_type($class_identifier);
-
-		return $symbol;
 	}
 
 	public function set_scope_parameters(array $parameters)
@@ -430,6 +450,8 @@ class ASTFactory
 	public function create_masked_declaration(string $name)
 	{
 		$declaration = new MaskedDeclaration(_PUBLIC, $name);
+		new Symbol($declaration);
+
 		$this->begin_class_member($declaration);
 
 		$this->declaration = $declaration;
@@ -443,6 +465,8 @@ class ASTFactory
 	public function create_method_declaration(?string $modifier, string $name)
 	{
 		$declaration = new FunctionDeclaration($modifier, $name);
+		new Symbol($declaration);
+
 		$this->begin_class_member($declaration);
 
 		return $declaration;
@@ -463,6 +487,8 @@ class ASTFactory
 	public function create_property_declaration(?string $modifier, string $name)
 	{
 		$declaration = new PropertyDeclaration($modifier, $name);
+		new Symbol($declaration);
+
 		$this->begin_class_member($declaration);
 
 		return $declaration;
@@ -471,6 +497,8 @@ class ASTFactory
 	public function create_class_constant_declaration(?string $modifier, string $name)
 	{
 		$declaration = new ClassConstantDeclaration($modifier, $name);
+		new Symbol($declaration);
+
 		$this->begin_class_member($declaration);
 
 		return $declaration;
@@ -715,32 +743,27 @@ class ASTFactory
 
 	public function end_class()
 	{
-		// $this->program->append_defer_check_identifiers($this->declaration);
 		$this->class = null;
 		$this->set_main_function();
 	}
 
 	public function begin_class_member(IClassMemberDeclaration $declaration)
 	{
-		new Symbol($declaration);
-
 		if (!$this->class->append_member($declaration)) {
 			throw $this->parser->new_parse_error("Class member '{$declaration->name}' of '{$this->class->name}' has duplicated");
 		}
 
 		if ($declaration instanceof FunctionDeclaration) {
-			$this->block = $declaration;
 			$this->scope = $declaration;
 			$this->function = $declaration;
 		}
 
-		$declaration->belong_block = $this->class;
+		$this->block = $declaration;
 		$this->declaration = $declaration;
 	}
 
 	public function end_class_member()
 	{
-		// $this->program->append_defer_check_identifiers($this->declaration);
 		$this->class->append_defer_check_identifiers($this->declaration);
 
 		$this->declaration = $this->class;
@@ -761,7 +784,6 @@ class ASTFactory
 
 	public function end_root_declaration()
 	{
-		// $this->program->append_defer_check_identifiers($this->declaration);
 		$this->set_main_function();
 	}
 
@@ -853,7 +875,7 @@ class ASTFactory
 			}
 
 			if ($seek_block->belong_block && !$seek_block->belong_block instanceof ClassKindredDeclaration) {
-				$symbol = $this->seek_symbol_in_function($identifier, $seek_block->belong_block);
+				return $this->seek_symbol_in_function($identifier, $seek_block->belong_block);
 			}
 		}
 
