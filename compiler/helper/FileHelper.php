@@ -25,7 +25,7 @@ class FileHelper
 	{
 		$result = mkdir($dir, 0755, true);
 		if (!$result) {
-			throw new \Exception("Create dir '$dir' failed.");
+			throw new Exception("Create dir '$dir' failed.");
 		}
 	}
 

@@ -2346,9 +2346,9 @@ class TeaParser extends BaseParser
 			$next = $this->get_token_ignore_space();
 		}
 
-		if ($is_value_mutable && !($type instanceof ArrayType || $type instanceof DictType)) {
-			throw $this->new_parse_error("Cannot use the value-mutable for '$type->name' type parameter.");
-		}
+		// if ($is_value_mutable && !($type instanceof ArrayType || $type instanceof DictType)) {
+		// 	throw $this->new_parse_error("Cannot use the value-mutable for '$type->name' type parameter.");
+		// }
 
 		if ($next === _ASSIGN) {
 			$this->scan_token_ignore_space();

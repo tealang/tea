@@ -63,7 +63,7 @@ abstract class BaseParser
 	{
 		$source = file_get_contents($file);
 		if ($source === false) {
-			throw new \ErrorException("File '$file' to parse load failed.");
+			throw new ErrorException("File '$file' to parse load failed.");
 		}
 
 		return $source;
@@ -78,7 +78,7 @@ abstract class BaseParser
 		$message = "Syntax parse error:\n{$place}\n{$message}";
 		DEBUG && $message .= "\n\nTraces:\n" . get_traces($trace_start);
 
-		return new \Exception($message);
+		return new Exception($message);
 	}
 
 	public function new_unexpected_error()

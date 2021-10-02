@@ -51,6 +51,8 @@ class ASTChecker
 
 	public static function init_checkers(Unit $main_unit)
 	{
+		self::$normal_checker_instances = [];
+
 		$main_checker = new ASTChecker($main_unit);
 
 		self::$builtin_checker_instance = $main_checker;
@@ -124,7 +126,7 @@ class ASTChecker
 		}
 	}
 
-	private function check_use_target(UseDeclaration $node)
+	protected function check_use_target(UseDeclaration $node)
 	{
 		$this->get_source_declaration_for_use($node);
 	}
@@ -776,7 +778,8 @@ class ASTChecker
 		foreach ($protocol->parameters as $idx => $protocol_param) {
 			$node_param = $node->parameters[$idx];
 			if (!$this->is_strict_compatible_types($protocol_param->type, $node_param->type)) {
-				throw $this->new_syntax_error("Type of parameter {$idx} in '{$node->belong_block->name}.{$node->name}' must be compatibled with '{$protocol->belong_block->name}.{$protocol->name}'", $node->belong_block);
+				$type_name = $this->get_type_name($node_param->type);
+				throw $this->new_syntax_error("Parameter '{$node_param->name} {$type_name}' in '{$node->belong_block->name}.{$node->name}', must be compatibled with '{$protocol->belong_block->name}.{$protocol->name}'", $node->belong_block);
 			}
 		}
 	}
@@ -2122,7 +2125,8 @@ class ASTChecker
 		foreach ($parameters as $idx => $parameter) {
 			if ($parameter->value === null && !isset($normalizeds[$idx])) {
 				$callee_name = self::get_declaration_name($callee_declar);
-				throw $this->new_syntax_error("Missed argument $idx to call '{$callee_name}'", $node);
+				$param_name = $callee_declar->parameters[$idx]->name;
+				throw $this->new_syntax_error("Required argument '$param_name' to call '{$callee_name}'", $node);
 			}
 		}
 
@@ -2783,7 +2787,7 @@ class ASTChecker
 		return $unit;
 	}
 
-	protected function get_source_declaration_for_use(UseDeclaration $use): ?IRootDeclaration
+	private function get_source_declaration_for_use(UseDeclaration $use): ?IRootDeclaration
 	{
 		if ($use->source_declaration === null) {
 			$unit = $this->get_uses_unit_declaration($use->ns);
@@ -2893,7 +2897,7 @@ class ASTChecker
 		$message = "Syntax check error:\n{$place}\n{$message}";
 		DEBUG && $message .= "\n\nTraces:\n" . get_traces();
 
-		return new \Exception($message);
+		return new Exception($message);
 	}
 
 	static function get_declaration_name(IDeclaration $declaration)

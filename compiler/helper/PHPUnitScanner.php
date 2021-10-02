@@ -58,7 +58,7 @@ class PHPUnitScanner
 					}
 
 					if (isset($this->class_map[$class])) {
-						throw new \Exception("Class '$class' in file '$file' duplicated.");
+						throw new Exception("Class '$class' in file '$file' duplicated.");
 					}
 
 	 				$this->class_map[$class] = $file;

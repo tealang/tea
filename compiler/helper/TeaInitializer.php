@@ -19,10 +19,6 @@ class TeaInitializer
 		// create the unit dir
 		is_dir($unit_dir) or FileHelper::mkdir($unit_dir);
 
-		// create the dist dir
-		// $dist_dir = $this->domain . '/dist';
-		// is_dir($dist_dir) or FileHelper::mkdir($dist_dir);
-
 		// the __unit.th
 		$header_file = $unit_dir . '/__unit.th';
 		file_exists($header_file) or file_put_contents($header_file, "\n#unit {$this->uri}\n\n");
@@ -33,11 +29,11 @@ class TeaInitializer
 
 		// the editorconfig settings
 		$editorconfig_file = $this->domain . '/.editorconfig';
-		file_exists($editorconfig_file) or copy(BASE_PATH . '.editorconfig', $editorconfig_file);
+		file_exists($editorconfig_file) or copy(TEA_BASE_PATH . '.editorconfig', $editorconfig_file);
 
 		// the gitattributes settings
 		$gitattributes_file = $this->domain . '/.gitattributes';
-		file_exists($gitattributes_file) or copy(BASE_PATH . '.gitattributes', $gitattributes_file);
+		file_exists($gitattributes_file) or copy(TEA_BASE_PATH . '.gitattributes', $gitattributes_file);
 	}
 
 	public function set_unit_uri(string $uri)

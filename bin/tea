@@ -12,10 +12,9 @@
 
 namespace Tea;
 
-define('BASE_PATH', dirname(__DIR__) . '/');
-define('LOG_PATH', BASE_PATH . 'log/');
+define('TEA_BASE_PATH', dirname(__DIR__) . '/');
 
-require BASE_PATH . 'compiler/__public.php';
+require TEA_BASE_PATH . 'compiler/__public.php';
 
 // stats start
 UsageTracer::start();
@@ -56,9 +55,9 @@ try {
 	}
 
 	echo LF;
-	$realpath = FileHelper::normalize_path($realpath . DS);
-	$compiler = new Compiler($realpath);
-	$count = $compiler->make();
+
+	$compiler = new Compiler();
+	$count = $compiler->make($realpath);
 
 	echo "\n$count programs compiled.\n\n";
 }

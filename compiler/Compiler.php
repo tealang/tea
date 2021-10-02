@@ -9,6 +9,10 @@
 
 namespace Tea;
 
+const
+	BUILTIN_PATH = TEA_BASE_PATH . 'builtin/',
+	BUILTIN_PROGRAM = BUILTIN_PATH . 'core.tea';
+
 class Compiler
 {
 	// the path of current compiling unit
@@ -86,20 +90,17 @@ class Compiler
 	// autoload classes/interfaces/traits for render Autoload
 	private $autoloads_map = [];
 
-	public function __construct(string $unit_path)
+	public function __construct()
 	{
-		ASTFactory::init_ast_system();
-
-		$this->init_unit($unit_path);
-
-		// when not on build the builtins unit
-		if (!self::check_is_builtin_unit($unit_path)) {
-			$this->load_builtins();
-		}
+		//
 	}
 
 	private function init_unit(string $unit_path)
 	{
+		$unit_path = FileHelper::normalize_path($unit_path . DS);
+
+		ASTFactory::init_ast_system();
+
 		$this->header_file_path = $unit_path . UNIT_HEADER_FILE_NAME;
 		if (!file_exists($this->header_file_path)) {
 			throw new Exception("The Unit header file '{$this->header_file_path}' not found.");
@@ -110,6 +111,11 @@ class Compiler
 		$this->ast_factory = new ASTFactory($this->unit);
 
 		$this->unit_path = $unit_path;
+
+		// when not on build the builtins unit
+		if (!self::check_is_builtin_unit($unit_path)) {
+			$this->load_builtins();
+		}
 	}
 
 	private function load_builtins()
@@ -137,8 +143,10 @@ class Compiler
 		return $result;
 	}
 
-	public function make()
+	public function make(string $unit_path)
 	{
+		$this->init_unit($unit_path);
+
 		// for generate the autoload maps
 		$this->unit_path_prefix_len = strlen($this->unit_path);
 
@@ -238,22 +246,12 @@ class Compiler
 		$super_dir_name = basename($checking_path);
 		if (in_array($super_dir_name, ['units', 'vendor'])) {
 			$checking_path = dirname($checking_path);
-			if ($super_dir_name === 'units') {
-				$search_dirs[] = '';
-				$search_dirs[] = 'vendor';
-			}
-			elseif ($super_dir_name === 'vendor') {
-				$search_dirs[] = '';
-				$search_dirs[] = 'units';
-			}
-
 			$unit->super_dir_levels += 1;
 		}
-		else {
-			$search_dirs[] = '';
-			$search_dirs[] = 'units';
-			$search_dirs[] = 'vendor';
-		}
+
+		$search_dirs[] = '';
+		$search_dirs[] = 'units';
+		$search_dirs[] = 'vendor';
 
 		$this->search_dirs = $search_dirs;
 		$this->workspace_path = $checking_path . DS;

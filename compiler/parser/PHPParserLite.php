@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-// define the PHP8 constants to compatible
+// define PHP8 constants to compatible
 if (!defined('T_NAME_QUALIFIED')) {
 	define('T_NAME_QUALIFIED', 1001);
 	define('T_NAME_FULLY_QUALIFIED', 1002);
@@ -65,6 +65,8 @@ class PHPParserLite extends BaseParser
 	 */
 	private $namespace;
 
+	private $current_following_comment;
+
 	public function read_program(): Program
 	{
 		$max_pos = $this->tokens_count - 1;
@@ -107,7 +109,7 @@ class PHPParserLite extends BaseParser
 		$doc = null;
 		if ($token[0] === T_DOC_COMMENT) {
 			$doc = $token[1];
-			$token = $this->scan_typed_token_ignore_empty();
+			$token = $this->expect_typed_token_ignore_empty();
 		}
 
 		switch ($token[0]) {
@@ -491,18 +493,18 @@ class PHPParserLite extends BaseParser
 		$doc = null;
 		if ($token[0] === T_DOC_COMMENT) {
 			$doc = $token[1];
-			$token = $this->scan_typed_token_ignore_empty();
+			$token = $this->expect_typed_token_ignore_empty();
 		}
 
 		$modifier = null;
 		if (in_array($token[0], [T_PUBLIC, T_PROTECTED, T_PRIVATE], true)) {
 			$modifier = $token[1];
-			$token = $this->scan_typed_token_ignore_empty();
+			$token = $this->expect_typed_token_ignore_empty();
 		}
 
 		$is_static = $token[0] === T_STATIC;
 		if ($is_static) {
-			$token = $this->scan_typed_token_ignore_empty();
+			$token = $this->expect_typed_token_ignore_empty();
 		}
 
 		switch ($token[0]) {
@@ -539,25 +541,25 @@ class PHPParserLite extends BaseParser
 		$doc = null;
 		if ($token[0] === T_DOC_COMMENT) {
 			$doc = $token[1];
-			$token = $this->scan_typed_token_ignore_empty();
+			$token = $this->expect_typed_token_ignore_empty();
 		}
 
 		$modifier = null;
 		if (in_array($token[0], [T_PUBLIC, T_PROTECTED, T_PRIVATE], true)) {
 			$modifier = $token[1];
-			$token = $this->scan_typed_token_ignore_empty();
+			$token = $this->expect_typed_token_ignore_empty();
 		}
 
 		$is_static = false;
 		if ($token[0] === T_STATIC) {
 			$is_static = true;
-			$token = $this->scan_typed_token_ignore_empty();
+			$token = $this->expect_typed_token_ignore_empty();
 		}
 
 		// $this->print_token($token);
 		switch ($token[0]) {
 			case T_VAR:
-				$token = $this->scan_typed_token_ignore_empty();
+				$token = $this->expect_typed_token_ignore_empty();
 				// unbreak
 			case T_VARIABLE:
 			case T_STRING: // maybe the type hint
@@ -730,7 +732,7 @@ class PHPParserLite extends BaseParser
 			$type_name = $token[1];
 
 			// scan the next token
-			$token = $this->scan_typed_token_ignore_empty();
+			$token = $this->expect_typed_token_ignore_empty();
 		}
 
 		$name = ltrim($token[1], '$');
@@ -847,12 +849,12 @@ class PHPParserLite extends BaseParser
 
 		$nullable = $token === _INVALIDABLE_SIGN;
 		if ($nullable) {
-			$token = $this->scan_typed_token_ignore_empty();
+			$token = $this->expect_typed_token_ignore_empty();
 		}
 
 		$reference = $token === _REFERENCE;
 		if ($reference) {
-			$token = $this->scan_typed_token_ignore_empty();
+			$token = $this->expect_typed_token_ignore_empty();
 		}
 
 		// $this->print_token($token);
@@ -862,19 +864,17 @@ class PHPParserLite extends BaseParser
 			$token = $this->scan_token_ignore_empty();
 		}
 		elseif ($token_type === T_ARRAY) {
-			$type = TypeFactory::$_any; // maybe Array / Dict type
-			$token = $this->scan_token_ignore_empty();
-
-			if ($token[0] === T_COMMENT) {
-				if ($token[1] === '/*list*/') {
-					$type = TypeFactory::$_array;
-				}
-				elseif ($token[1] === '/*dict*/') {
-					$type = TypeFactory::$_dict;
-				}
-
-				$token = $this->scan_token_ignore_empty();
+			if ($this->current_following_comment === '/*list*/') {
+				$type = TypeFactory::$_array;
 			}
+			elseif ($this->current_following_comment === '/*dict*/') {
+				$type = TypeFactory::$_dict;
+			}
+			else {
+				$type = TypeFactory::$_any; // maybe Array / Dict type
+			}
+
+			$token = $this->scan_token_ignore_empty();
 		}
 		elseif ($token_type === T_NAME_FULLY_QUALIFIED) {
 			$type = $this->read_classkindred_identifier($token);
@@ -889,7 +889,7 @@ class PHPParserLite extends BaseParser
 			throw $this->new_unexpected_error();
 		}
 
-		$name = substr($token[1], 1); // remove the first '$'
+		$name = substr($token[1], 1); // remove the prefix '$'
 
 		$value = null;
 		if ($this->skip_char_token(_ASSIGN)) {
@@ -1039,17 +1039,29 @@ class PHPParserLite extends BaseParser
 		$lower_case_name = strtolower($name);
 		if (isset(static::TYPE_MAP[$lower_case_name])) {
 			$name = static::TYPE_MAP[$lower_case_name];
+			if ($this->current_following_comment === '/*list*/') {
+				$name = _ARRAY;
+			}
+			elseif ($this->current_following_comment === '/*dict*/') {
+				$name = _DICT;
+			}
+
 			$identifier = TypeFactory::get_type($name);
+			if ($nullable) {
+				$identifier = clone $identifier;
+				$identifier->nullable = true;
+			}
 		}
 		elseif (strpos($name, _BACK_SLASH) !== false) {
 			$names = explode(_BACK_SLASH, $name);
 			$identifier = $this->create_classkindred_identifier(array_pop($names), $names);
+			$identifier->nullable = $nullable;
 		}
 		else {
 			$identifier = $this->create_classkindred_identifier($name);
+			$identifier->nullable = $nullable;
 		}
 
-		$identifier->nullable = $nullable;
 		$identifier->pos = $this->pos;
 
 		return $identifier;
@@ -1220,11 +1232,13 @@ class PHPParserLite extends BaseParser
 
 	private function get_identifier_name($token)
 	{
-		if (is_string($token) || $token[0] !== T_STRING) {
+		if (is_string($token) || ($token[0] !== T_STRING && $token[0] !== T_ARRAY)) {
+			// $this->print_token($token);
 			throw $this->new_unexpected_error();
 		}
 
-		return $token[1];
+		$type = $token[1];
+		return $type;
 	}
 
 	private function assert_member_identifier_token($token)
@@ -1241,7 +1255,7 @@ class PHPParserLite extends BaseParser
 		return is_array($token) ? $token[1] : $token;
 	}
 
-	private function scan_typed_token_ignore_empty()
+	private function expect_typed_token_ignore_empty()
 	{
 		$token = $this->scan_token_ignore_empty();
 		if (!is_array($token)) {
@@ -1260,6 +1274,22 @@ class PHPParserLite extends BaseParser
 				break;
 			}
 		} while ($token !== null);
+
+		$this->current_following_comment = null;
+
+		// read the following comment
+		$next = $this->get_token_ignore_empty();
+		if ($next !== null and ($next[0] === T_DOC_COMMENT || $next[0] === T_COMMENT) and !strpos("\n", $this->get_token()[1])) {
+			$this->current_following_comment = $next[1];
+
+			do {
+				$this->pos++;
+				$temp = $this->tokens[$this->pos] ?? null;
+				if ($temp !== _SPACE && (!is_array($temp) || $temp[0] !== T_WHITESPACE)) {
+					break;
+				}
+			} while ($temp !== null);
+		}
 
 		return $token;
 	}

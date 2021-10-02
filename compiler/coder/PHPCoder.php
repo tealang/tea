@@ -1025,7 +1025,7 @@ class PHPCoder extends TeaCoder
 			return $masked->render($this);
 		}
 		else {
-			throw new \Exception("Unknow masked contents.", $declaration);
+			throw new Exception("Unknow masked contents.", $declaration);
 		}
 	}
 

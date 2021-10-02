@@ -12,14 +12,13 @@
 
 namespace Tea;
 
-define('BASE_PATH', dirname(__DIR__) . '/');
-define('LOG_PATH', BASE_PATH . 'log/');
+define('TEA_BASE_PATH', dirname(__DIR__) . '/');
 
 const DEBUG = false;
 const OPTION_KEYS = ['init'];
 const USAGE = 'Usage: genphploader tea/tests/PHPDemoUnit';
 
-require BASE_PATH . 'compiler/__public.php';
+require TEA_BASE_PATH . 'compiler/__public.php';
 
 try {
 	$opts = process_cli_options($argv, OPTION_KEYS);

@@ -75,11 +75,11 @@ function process_cli_options(array $argv, array $allow_list = []) {
 				$key = substr($item, 1);
 			}
 			else {
-				throw new \Exception("Invalid command-line option '{$item}'");
+				throw new Exception("Invalid command-line option '{$item}'");
 			}
 
 			if (!in_array($key, $allow_list, true)) {
-				throw new \Exception("Invalid command-line option key '{$key}'");
+				throw new Exception("Invalid command-line option key '{$key}'");
 			}
 
 			$opts[$key] = true;
@@ -120,6 +120,8 @@ function get_traces(int $trace_start = 0) {
 const __AUTOLOADS = [
 	'Tea\Compiler' => 'Compiler.php',
 	'Tea\Exception' => 'Exception.php',
+	'Tea\ErrorException' => 'Exception.php',
+	'Tea\LogicException' => 'Exception.php',
 	'Tea\InlineComments' => 'ast/base/Comment.php',
 	'Tea\BlockComment' => 'ast/base/Comment.php',
 	'Tea\Docs' => 'ast/base/Docs.php',
@@ -186,6 +188,7 @@ const __AUTOLOADS = [
 	'Tea\IRootDeclaration' => 'ast/declaration/BaseDeclaration.php',
 	'Tea\ICallableDeclaration' => 'ast/declaration/BaseDeclaration.php',
 	'Tea\IMemberDeclaration' => 'ast/declaration/BaseDeclaration.php',
+	'Tea\IValuedDeclaration' => 'ast/declaration/BaseDeclaration.php',
 	'Tea\DeclarationTrait' => 'ast/declaration/BaseDeclaration.php',
 	'Tea\CallbackProtocol' => 'ast/declaration/CallbackProtocol.php',
 	'Tea\ClassKindredDeclaration' => 'ast/declaration/ClassKindredDeclaration.php',
