@@ -303,7 +303,7 @@ class PHPCoder extends TeaCoder
 
 		// just render return type on hinted
 		// because on unhinted, it's not necessary, and sometimes it makes mistakes
-		if ($node->is_hinted_return_type && $node->type !== TypeFactory::$_any && $node->type !== TypeFactory::$_void) {
+		if ($node->is_hinted_return_type && $node->type !== TypeFactory::$_any) {
 			$return_type = $this->render_type($node->type);
 			$return_type and $code .= ": $return_type";
 		}

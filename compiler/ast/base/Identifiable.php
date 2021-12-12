@@ -68,6 +68,8 @@ class PlainIdentifier extends Identifiable implements IType
 
 	const KIND = 'plain_identifier';
 
+	public $generic_types;
+
 	public static function create_with_symbol(Symbol $symbol)
 	{
 		$identifier = new static($symbol->name);
@@ -81,7 +83,7 @@ class PlainIdentifier extends Identifiable implements IType
 			return false;
 		}
 
-		if ($this->symbol->declaration->is_based_with_symbol($target->symbol)) {
+		if ($this->symbol->declaration->find_based_with_symbol($target->symbol) !== null) {
 			return true;
 		}
 

@@ -14,14 +14,37 @@ internal IDemo: BaseInterface {
 	}
 }
 
-internal BaseClass {
-	set_value(num Int) {
-		//
+internal IterableObject: IIterator<K UInt, V String> {
+	public pos UInt
+	public items = ['item1', 'item2', 'item3']
+
+	current() String {
+		return this.items[this.pos]
+	}
+
+	key() UInt {
+		return this.pos
+	}
+
+	next() Void {
+		this.pos += 1
+	}
+
+	valid() Bool {
+		return isset(this.items[this.pos])
+	}
+
+	rewind() Void {
+		this.pos = 0
 	}
 }
 
+for k, v in IterableObject() {
+	echo 'iterable item: ${k} => ${v}'
+}
+
 // inherts a class, and implements an interface
-internal Test1: BaseClass, IDemo {
+internal Test1: IterableObject, IDemo {
 	construct(some String) {
 		//
 	}

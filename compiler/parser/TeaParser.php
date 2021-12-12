@@ -1918,7 +1918,33 @@ class TeaParser extends BaseParser
 		$identifer = $this->factory->create_classkindred_identifier($token);
 		$identifer->pos = $this->pos;
 
+		if ($this->skip_token(_GENERIC_OPEN)) {
+			$identifer->generic_types = $this->read_generic_types();
+			$this->expect_token(_GENERIC_CLOSE);
+		}
+
 		return $identifer;
+	}
+
+	private function read_generic_types()
+	{
+		$map = [];
+		do {
+			$key = $this->scan_token_ignore_space();
+			if (!TeaHelper::is_identifier_name($key)) {
+				throw $this->new_parse_error("Expected a identifer for generic key");
+			}
+
+			$type = $this->try_read_type_identifier();
+			if ($type === null) {
+				throw $this->new_parse_error("Expected a identifer for generic type");
+			}
+
+			$map[$key] = $type;
+		}
+		while ($this->skip_token_ignore_empty(_COMMA) and $this->get_token_ignore_space() !== _GENERIC_CLOSE);
+
+		return $map;
 	}
 
 	// protected function read_classkindred_identifier(string $name = null)
@@ -1997,6 +2023,7 @@ class TeaParser extends BaseParser
 			$this->scan_token_ignore_space(); // skip
 			// $type = $this->read_classkindred_identifier($token);
 			$type = $this->factory->create_classkindred_identifier($token);
+			$type->pos = $this->pos;
 		}
 		else {
 			return null;
@@ -2020,9 +2047,10 @@ class TeaParser extends BaseParser
 			else {
 				$type->let_nullable();
 			}
+
+			$type->pos = $this->pos;
 		}
 
-		$type->pos = $this->pos;
 		return $type;
 	}
 
@@ -2059,6 +2087,7 @@ class TeaParser extends BaseParser
 			$i++;
 		}
 
+		$type->pos = $this->pos;
 		return $type;
 	}
 
@@ -2085,6 +2114,7 @@ class TeaParser extends BaseParser
 			$i++;
 		}
 
+		$type->pos = $this->pos;
 		return $type;
 	}
 

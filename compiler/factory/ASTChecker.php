@@ -641,6 +641,10 @@ class ASTChecker
 		foreach ($node->baseds as $identifier) {
 			$declaration = $this->require_classkindred_declaration($identifier);
 
+			if ($identifier->generic_types) {
+				$this->check_generic_types($identifier);
+			}
+
 			// check is a class
 			if ($declaration instanceof ClassDeclaration) {
 				if ($node instanceof InterfaceDeclaration) {
@@ -660,6 +664,12 @@ class ASTChecker
 
 		if ($node->inherits) {
 			$node->baseds = $interfaces;
+		}
+	}
+
+	private function check_generic_types(PlainIdentifier $identifier) {
+		foreach ($identifier->generic_types as $key => $type) {
+			$this->check_type($type);
 		}
 	}
 
@@ -725,12 +735,12 @@ class ASTChecker
 			return;
 		}
 
-		// check return types
-		if (!$this->is_strict_compatible_types($super->type, $node->type)) {
+		// check types
+		if (!$super->type->is_accept_type($node->type)) {
 			$node_return_type = $this->get_type_name($node->type);
 			$super_return_type = $this->get_type_name($super->type);
 
-			throw $this->new_syntax_error("The return type '{$node_return_type}' in '{$node->belong_block->name}.{$node->name}' must be compatibled with '$super_return_type' in '{$super->belong_block->name}.{$super->name}'", $node);
+			throw $this->new_syntax_error("The type '{$node_return_type}' in '{$node->belong_block->name}.{$node->name}' must be compatibled with '$super_return_type' in '{$super->belong_block->name}.{$super->name}'", $node);
 		}
 
 		// the accessing modifer
@@ -782,14 +792,6 @@ class ASTChecker
 				throw $this->new_syntax_error("Parameter '{$node_param->name} {$type_name}' in '{$node->belong_block->name}.{$node->name}', must be compatibled with '{$protocol->belong_block->name}.{$protocol->name}'", $node->belong_block);
 			}
 		}
-	}
-
-	private function is_strict_compatible_types(IType $left, IType $right)
-	{
-		return $left === $right
-			|| $left->symbol === $right->symbol
-			|| ($left === TypeFactory::$_int && $right === TypeFactory::$_uint)
-		;
 	}
 
 	private function infer_if_block(IfBlock $node): ?IType
@@ -964,21 +966,32 @@ class ASTChecker
 
 	private function infer_forin_block(ForInBlock $node): ?IType
 	{
-		$iterable_type = $this->infer_expression($node->iterable);
-		if (!TypeFactory::is_iterable_type($iterable_type)) {
-			$type_name = self::get_type_name($iterable_type);
+		$infered_iter_type = $this->infer_expression($node->iterable);
+
+		if ($infered_iter_type instanceof IterableType) {
+			// for Array or Dict
+			$key_type = $infered_iter_type instanceof ArrayType
+				? TypeFactory::$_uint
+				: TypeFactory::create_union_type([TypeFactory::$_uint, TypeFactory::$_string]);
+			$val_type = $infered_iter_type->generic_type ?? TypeFactory::$_any;
+		}
+		elseif ($infered_iter_type instanceof PlainIdentifier and $based_iter_ident = TypeFactory::find_iterator_identifier($infered_iter_type)) {
+			// for Iterator
+			$key_type = $based_iter_ident->generic_types['K'] ?? TypeFactory::$_any;
+			$val_type = $based_iter_ident->generic_types['V'] ?? TypeFactory::$_any;
+		}
+		else {
+			$type_name = self::get_type_name($infered_iter_type);
 			throw $this->new_syntax_error("Expect a Iterable type, '{$type_name}' supplied", $node->iterable);
 		}
 
-		// the key type, default is String
-		if ($node->key_var && $iterable_type instanceof ArrayType) {
-			$node->key_var->symbol->declaration->type = TypeFactory::$_uint;
+		if ($node->key_var) {
+			$node->key_var->symbol->declaration->type = $key_type;
 		}
 
-		// the value type, default is Any
-		if ($iterable_type instanceof IterableType and $iterable_type->generic_type) {
-			$node->value_var->symbol->declaration->type = $iterable_type->generic_type;
-		}
+		$node->value_var->symbol->declaration->type = $val_type;
+
+		/// ---
 
 		$result_type = $this->infer_block($node);
 
@@ -1913,6 +1926,7 @@ class ASTChecker
 		$node->parameters and $this->check_parameters_for_callable_declaration($node);
 	}
 
+	// just for php parser
 	private function infer_classkindred_identifier(ClassKindredIdentifier $node): IType
 	{
 		$declaration = $this->require_classkindred_declaration($node);
@@ -2187,6 +2201,14 @@ class ASTChecker
 		}
 
 		return $symbol->declaration;
+	}
+
+	private function is_strict_compatible_types(IType $left, IType $right)
+	{
+		return $left === $right
+			|| $left->symbol === $right->symbol
+			|| ($left === TypeFactory::$_int && $right === TypeFactory::$_uint)
+		;
 	}
 
 	private function check_type_compatible(IType $left, IType $right, Node $value_node)

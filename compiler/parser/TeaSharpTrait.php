@@ -110,7 +110,14 @@ trait TeaSharpTrait
 			}
 
 			$this->is_declare_mode = true;
-			$declaration = $this->read_class_declaration($name, _PUBLIC);
+
+			if (TeaHelper::is_interface_marked_name($name)) {
+				$declaration = $this->read_interface_declaration($name, _PUBLIC);
+			}
+			else {
+				$declaration = $this->read_class_declaration($name, _PUBLIC);
+			}
+
 			$this->is_declare_mode = false;
 
 			if (isset($origin_name)) {

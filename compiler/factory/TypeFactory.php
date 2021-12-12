@@ -93,29 +93,41 @@ class TypeFactory
 		// self::$_yield_generator = new ClassKindredIdentifier('YieldGenerator');
 	}
 
-	static function is_iterable_type(IType $type)
+	static function find_iterator_identifier(IType $type)
 	{
-		if ($type === TypeFactory::$_any || $type instanceof IterableType) {
-			$result = true;
-		}
-		elseif ($type instanceof PlainIdentifier) {
-			$result = $type->symbol->declaration->is_same_or_based_with_symbol(self::$_iiterator_symbol);
-		}
-		elseif ($type instanceof UnionType) {
-			$result = true;
-			foreach ($type->types as $member_type) {
-				if (!TypeFactory::is_iterable_type($member_type)) {
-					$result = false;
-					break;
-				}
-			}
+		if ($type->symbol === self::$_iiterator_symbol) {
+			$result = $type;
 		}
 		else {
-			$result = false;
+			$result = $type->symbol->declaration->find_based_with_symbol(self::$_iiterator_symbol);
 		}
 
 		return $result;
 	}
+
+	// static function is_iterable_type(IType $type)
+	// {
+	// 	if ($type === TypeFactory::$_any || $type instanceof IterableType) {
+	// 		$result = true;
+	// 	}
+	// 	elseif ($type instanceof PlainIdentifier) {
+	// 		$result = $type->symbol->declaration->is_same_or_based_with_symbol(self::$_iiterator_symbol);
+	// 	}
+	// 	elseif ($type instanceof UnionType) {
+	// 		$result = true;
+	// 		foreach ($type->types as $member_type) {
+	// 			if (!TypeFactory::is_iterable_type($member_type)) {
+	// 				$result = false;
+	// 				break;
+	// 			}
+	// 		}
+	// 	}
+	// 	else {
+	// 		$result = false;
+	// 	}
+
+	// 	return $result;
+	// }
 
 	static function is_dict_key_directly_supported_type(?IType $type)
 	{

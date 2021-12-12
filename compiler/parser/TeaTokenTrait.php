@@ -15,7 +15,7 @@ trait TeaTokenTrait
 {
 	protected function tokenize(string $source)
 	{
-		$items = preg_split(TEA_TOKENS_SPLIT_PATTERN, $source, null, PREG_SPLIT_DELIM_CAPTURE);
+		$items = preg_split(TEA_TOKENS_SPLIT_PATTERN, $source, -1, PREG_SPLIT_DELIM_CAPTURE);
 
 		$this->line2pos[] = $real_pos = 0;
 

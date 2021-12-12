@@ -120,14 +120,12 @@ class Compiler
 
 	private function load_builtins()
 	{
-		self::echo_start('Loading builtins...');
+		self::echo_start('Loading builtins...', LF);
 
 		$program = $this->parse_tea_program(BUILTIN_PROGRAM);
 		$program->unit = null;
 
 		$this->builtin_symbols = $program->symbols;
-
-		self::echo_success();
 	}
 
 	private static function check_is_builtin_unit(string $unit_path)
@@ -194,7 +192,7 @@ class Compiler
 				$this->native_programs[] = $program;
 			}
 
-			self::echo_success(count($this->native_programs) . ' PHP programs parsed success.');
+			self::echo_success(count($this->native_programs) . ' PHP programs parsed.');
 		}
 
 		// parse tea programs
@@ -202,7 +200,7 @@ class Compiler
 			$this->normal_programs[] = $this->parse_tea_program($file);
 		}
 
-		self::echo_success(count($this->normal_programs) . ' Tea programs parsed success.' . LF);
+		self::echo_success(count($this->normal_programs) . ' Tea programs parsed.' . LF);
 	}
 
 	private function parse_unit_header()
@@ -278,7 +276,7 @@ class Compiler
 		$normal_checker = ASTChecker::get_checker($this->header_program);
 		$this->check_ast_for_unit($this->unit, $normal_checker);
 
-		self::echo_success('Programs checked success.' . LF);
+		self::echo_success('Programs checked.' . LF);
 	}
 
 	private function check_ast_for_unit(Unit $unit, ASTChecker $normal_checker)
@@ -430,7 +428,7 @@ class Compiler
 
 	private function render_all()
 	{
-		self::echo_start('Rendering programs...');
+		self::echo_start('Rendering programs...', LF);
 
 		// prepare for include expression
 		$this->unit->include_prefix = DIST_DIR_NAME . DS;
@@ -476,8 +474,7 @@ class Compiler
 		// the public header for supply to other units
 		$this->render_public_header();
 
-		// rendered success
-		self::echo_success(count($this->normal_programs) . ' programs rendered success.');
+		self::echo_success(count($this->normal_programs) . ' programs rendered.');
 	}
 
 	private function render_loader_file(PHPCoder $coder)
@@ -519,8 +516,6 @@ class Compiler
 
 	private function render_public_header()
 	{
-		self::echo_start('Rendering public header file...');
-
 		$program = new Program(PUBLIC_HEADER_NAME, $this->unit);
 		$program->uses = $this->header_program->uses;
 
@@ -538,9 +533,6 @@ class Compiler
 		$code = $program->render(new TeaHeaderCoder());
 
 		file_put_contents($this->unit_public_file, $code);
-
-		$count = count($program->declarations);
-		self::echo_success("$count public declarations rendered success.");
 	}
 
 	private function collect_autoloads(Program $program, string $dist_file_path, string $name_prefix = null)

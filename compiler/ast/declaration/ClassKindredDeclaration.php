@@ -89,25 +89,22 @@ abstract class ClassKindredDeclaration extends Node implements IRootDeclaration,
 
 	public function is_same_or_based_with_symbol(Symbol $symbol)
 	{
-		return $this->symbol === $symbol || $this->is_based_with_symbol($symbol);
+		return $this->symbol === $symbol || $this->find_based_with_symbol($symbol) !== null;
 	}
 
-	public function is_based_with_symbol(Symbol $symbol)
+	public function find_based_with_symbol(Symbol $symbol)
 	{
+		$result = null;
+
 		// check the implements interfaces
 		foreach ($this->baseds as $interface) {
-			if ($interface->symbol === $symbol) {
-				return true;
-			}
-
-			// if $interface->symbol is null, it should be not checked ast...
-
-			if ($interface->symbol->declaration->is_based_with_symbol($symbol)) {
-				return true;
+			if ($interface->symbol === $symbol || $interface->symbol->declaration->find_based_with_symbol($symbol) ) {
+				$result = $interface;
+				break;
 			}
 		}
 
-		return false;
+		return $result;
 	}
 }
 
@@ -118,23 +115,33 @@ class ClassDeclaration extends ClassKindredDeclaration implements ICallableDecla
 	// if not a declare mode, set true
 	public $define_mode = false;
 
-	public function is_based_with_symbol(Symbol $symbol)
+	public function find_based_with_symbol(Symbol $symbol)
 	{
 		// check the extends class first
-		if ($this->inherits !== null) {
-			$inherits_symbol = $this->inherits->symbol;
-
-			// 当 引用的unit中类所继承类 和 当前引用的类 为同一个第三方unit的类时，symbol会有所不同，这时需比较declaration
-			if ($inherits_symbol === $symbol || $inherits_symbol->declaration === $symbol->declaration) {
-				return true;
-			}
-
-			if ($inherits_symbol->declaration->is_based_with_symbol($symbol)) {
-				return true;
-			}
+		if ($this->inherits !== null and $result = $this->find_based_with_symbol_in_inherits($this->inherits, $symbol)) {
+			// no any
+		}
+		else {
+			$result = parent::find_based_with_symbol($symbol);
 		}
 
-		return parent::is_based_with_symbol($symbol);
+		return $result;
+	}
+
+	private function find_based_with_symbol_in_inherits($inherits, $symbol)
+	{
+		$inherits_symbol = $inherits->symbol;
+		$result = null;
+
+		// 当 引用的unit中类所继承类 和 当前引用的类 为同一个第三方unit的类时，symbol会有所不同，这时需比较declaration
+		if ($inherits_symbol === $symbol || $inherits_symbol->declaration === $symbol->declaration) {
+			$result = $inherits;
+		}
+		elseif ($identifier = $inherits_symbol->declaration->find_based_with_symbol($symbol)) {
+			$result = $identifier;
+		}
+
+		return $result;
 	}
 }
 

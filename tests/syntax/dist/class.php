@@ -25,14 +25,33 @@ trait IDemoTrait {
 }
 
 #internal
-class BaseClass {
-	public function set_value(int $num) {
-		// no any
+class IterableObject implements \Iterator {
+	public $pos;
+	public $items = ['item1', 'item2', 'item3'];
+
+	public function current(): string {
+		return $this->items[$this->pos];
+	}
+
+	public function key(): int {
+		return $this->pos;
+	}
+
+	public function next(): void {
+		$this->pos += 1;
+	}
+
+	public function valid(): bool {
+		return isset($this->items[$this->pos]);
+	}
+
+	public function rewind(): void {
+		$this->pos = 0;
 	}
 }
 
 #internal
-class Test1 extends BaseClass implements IDemo {
+class Test1 extends IterableObject implements IDemo {
 	use IDemoTrait;
 
 	public function __construct(string $some) {
@@ -220,6 +239,10 @@ class Test5 {
 }
 
 // ---------
+foreach (new IterableObject() as $k => $v) {
+	echo 'iterable item: ' . $k . ' => ' . $v, LF;
+}
+
 echo "# start to run closure", LF;
 var_dump(Test1::get_closure()());
 echo "# finished run closure", LF;

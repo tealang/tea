@@ -404,6 +404,10 @@ class PHPParserLite extends BaseParser
 				$value_expr = $this->read_expression();
 			}
 
+			while ($this->get_token_ignore_empty()[0] === T_COMMENT) {
+				$this->scan_token_ignore_empty();
+			}
+
 			if (!$this->skip_char_token(_COMMA)) {
 				break;
 			}
@@ -599,6 +603,8 @@ class PHPParserLite extends BaseParser
 		$declaration->type = $this->read_value_type_skip($doc);
 		$this->expect_statement_end();
 
+		$declaration->pos = $this->pos;
+
 		return $declaration;
 	}
 
@@ -610,6 +616,8 @@ class PHPParserLite extends BaseParser
 		$this->expect_char_token(_ASSIGN);
 		$declaration->type = $this->read_value_type_skip($doc, 'const', $name);
 		$this->expect_statement_end();
+
+		$declaration->pos = $this->pos;
 
 		return $declaration;
 	}
@@ -636,7 +644,7 @@ class PHPParserLite extends BaseParser
 		//  * @var int
 		//  */
 
-		if (preg_match('/\s+\*\s+@' . $kind . '\s+([^\s]+)/', $doc, $match)) {
+		if ($doc !== null and preg_match('/\s+\*\s+@' . $kind . '\s+([^\s]+)/', $doc, $match)) {
 			return $this->create_doc_type_identifier($match[1]);
 		}
 
@@ -762,6 +770,7 @@ class PHPParserLite extends BaseParser
 
 		$this->expect_statement_end();
 		$declaration->type = $type;
+		$declaration->pos = $this->pos;
 
 		return $declaration;
 	}
@@ -780,15 +789,14 @@ class PHPParserLite extends BaseParser
 
 		$declaration->type = $this->try_read_function_return_type();
 
+		$declaration->pos = $this->pos;
+
 		if ($is_interface) {
 			$this->expect_statement_end();
 		}
 		else {
 			$this->read_function_block();
 		}
-
-		// $this->print_token();
-		// var_dump($this->get_line_number($this->pos));
 
 		return $declaration;
 	}
@@ -805,6 +813,8 @@ class PHPParserLite extends BaseParser
 
 		$this->factory->set_scope_parameters($parameters);
 		$declaration->type = $return_type;
+
+		$declaration->pos = $this->pos;
 
 		$this->read_function_block();
 

@@ -27,7 +27,7 @@ trait IBaseViewTrait {
 
 	public function set_attribute(string $key, string $value) {
 		if (!regex_test('/^[a-z][a-z0-9]*$/i', $key)) {
-			throw new Exception("Invalid key '{$key}'");
+			throw new \Exception("Invalid key '{$key}'");
 		}
 
 		$this->attributes[$key] = $value;
