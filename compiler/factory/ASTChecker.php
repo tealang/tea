@@ -1448,6 +1448,9 @@ class ASTChecker
 				throw $this->new_syntax_error("Unknow expression kind: '{$kind}'", $node);
 		}
 
+		// for render
+		$node->infered_type = $infered_type;
+
 		return $infered_type;
 	}
 
@@ -2945,7 +2948,7 @@ class ASTChecker
 		}
 		elseif ($type instanceof MetaType) {
 			$generic_type_name = self::get_type_name($type->generic_type);
-			$name = "{$generic_type_name}" . _DOT_SIGN_METATYPE;
+			$name = "{$generic_type_name}." . _DOT_SIGN_METATYPE;
 		}
 		elseif ($type instanceof ICallableDeclaration) {
 			$args = [];

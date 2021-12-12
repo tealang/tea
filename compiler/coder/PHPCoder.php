@@ -848,7 +848,14 @@ class PHPCoder extends TeaCoder
 	public function render_html_escape_expression(HTMLEscapeExpression $node)
 	{
 		$expr = $node->expression->render($this);
-		return "htmlspecialchars($expr, ENT_QUOTES)";
+		$code = "htmlspecialchars($expr, ENT_QUOTES)";
+
+		// PHP 8.1 not allowed null
+		if ($node->expression->infered_type->is_same_with(TypeFactory::$_any)) {
+			$code = "($expr === null ? '' : htmlspecialchars($expr, ENT_QUOTES))";
+		}
+
+		return $code;
 	}
 
 	protected function render_xblock_elements(array $items)
@@ -1331,12 +1338,12 @@ class PHPCoder extends TeaCoder
 
 		$key = $node->right->render($this);
 
-		if (isset($node->right->infered_type)) {
-			// the auto-cast type to String
-			if ($node->right->infered_type !== TypeFactory::$_uint && $node->right->infered_type !== TypeFactory::$_int) {
-				// 如果不强制转为string, float/bool将会被转成int
-				$key = '(string)' . $key;
-			}
+		// the auto-cast type to String
+		$infered_type = $node->right->infered_type;
+		if (!TypeFactory::is_dict_key_directly_supported_type($infered_type)) {
+			// Cast others to string, and bool to ''
+			// Avoid of float/bool being cast to integers
+			$key = '(string)' . $key;
 		}
 
 		return "{$master}[{$key}]";
@@ -1653,12 +1660,9 @@ class PHPCoder extends TeaCoder
 
 	public function render_none_coalescing_operation(NoneCoalescingOperation $node)
 	{
-		$items = $node->items;
-		$end = count($items) - 1;
-
-		$expr = null;
-		for ($i = $end; $i >= 0; $i--) {
-			$item = $items[$i];
+		$expr = end($node->items)->render($this);
+		for ($i = count($node->items) - 2; $i >= 0; $i--) {
+			$item = $node->items[$i];
 			$left = $item->render($this);
 
 			if ($item instanceof CastOperation) {
