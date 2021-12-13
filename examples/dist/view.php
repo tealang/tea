@@ -59,7 +59,7 @@ class ListView implements IBaseView {
 
 	public function get_subviews() {
 		return array_map(function ($item) {
-			return '<li>' . htmlspecialchars($item, ENT_QUOTES) . '</li>';
+			return '<li>' . ($item === null ? '' : htmlspecialchars($item, ENT_QUOTES)) . '</li>';
 		}, $this->subitems);
 	}
 
