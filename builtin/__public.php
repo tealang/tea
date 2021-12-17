@@ -83,11 +83,11 @@ function _dict_search(array $master, $search) {
 	return $key === false ? false : (string)$key;
 }
 
-function html_encode($string, int $flags = ENT_QUOTES) {
+function html_encode(string $string, int $flags = ENT_QUOTES) {
 	return htmlspecialchars($string, $flags);
 }
 
-function html_decode($string, int $flags = ENT_QUOTES) {
+function html_decode(string $string, int $flags = ENT_QUOTES) {
 	return htmlspecialchars_decode($string, $flags);
 }
 
