@@ -928,7 +928,8 @@ class ASTChecker
 	{
 		$testing_type = $this->infer_expression($node->test);
 		if (!TypeFactory::is_case_testable_type($testing_type)) {
-			throw $this->new_syntax_error("The case compare expression should be String/Int/UInt", $node->test);
+			$type_name = self::get_type_name($testing_type);
+			throw $this->new_syntax_error("The case compare expression should be String/Int/UInt, $type_name supplied", $node->test);
 		}
 
 		$infered_types = [];
@@ -936,14 +937,14 @@ class ASTChecker
 			if ($branch->rule instanceof ExpressionList) {
 				foreach ($branch->rule->items as $rule_sub_expr) {
 					$matching_type = $this->infer_expression($rule_sub_expr);
-					if ($testing_type !== $matching_type) {
+					if (!$testing_type->is_accept_type($matching_type)) {
 						throw $this->new_syntax_error("The type of matching expression should be same as testing", $rule_sub_expr);
 					}
 				}
 			}
 			else {
 				$matching_type = $this->infer_expression($branch->rule);
-				if ($testing_type !== $matching_type) {
+				if (!$testing_type->is_accept_type($matching_type)) {
 					throw $this->new_syntax_error("The type of matching expression should be same as testing", $branch->rule);
 				}
 			}
@@ -1738,6 +1739,11 @@ class ASTChecker
 
 		// none has been coalesced
 		if (!$infered instanceof NoneType) {
+			// Avoid affecting previously defined
+			if (!$reduced instanceof UnionType) {
+				$reduced = clone $reduced;
+			}
+
 			$reduced->remove_nullable();
 		}
 

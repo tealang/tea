@@ -156,9 +156,7 @@ class TypeFactory
 
 	static function is_case_testable_type(?IType $type)
 	{
-		return $type === self::$_int
-			|| $type === self::$_uint
-			|| $type === self::$_string;
+		return $type instanceof StringType || $type instanceof IntType || $type instanceof UIntType;
 	}
 
 	static function is_number_type(?IType $type)
