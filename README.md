@@ -8,7 +8,7 @@ Tea attaches great importance to the friendliness of syntax. By optimizing the s
 
 # Install and use
 
-1. Install PHP 7.2 +
+1. Install PHP 8.0 +
 2. Add the directory where the PHP execution file is located to the environment variable.
 3. Clone **Tea**.
 ```bash
