@@ -862,11 +862,6 @@ class PHPParserLite extends BaseParser
 			$token = $this->expect_typed_token_ignore_empty();
 		}
 
-		$reference = $token === _REFERENCE;
-		if ($reference) {
-			$token = $this->expect_typed_token_ignore_empty();
-		}
-
 		// $this->print_token($token);
 		$token_type = $token[0];
 		if ($token_type === T_STRING) {
@@ -895,7 +890,14 @@ class PHPParserLite extends BaseParser
 			$type = TypeFactory::$_any;
 		}
 
+		$reference = $token === _REFERENCE
+			|| $token[0] === T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG;
+		if ($reference) {
+			$token = $this->expect_typed_token_ignore_empty();
+		}
+
 		if ($token[0] !== T_VARIABLE) {
+			// $this->print_token($token);exit;
 			throw $this->new_unexpected_error();
 		}
 
@@ -912,9 +914,11 @@ class PHPParserLite extends BaseParser
 		}
 
 		$type->nullable = $nullable;
-		$type->is_value_mutable = $reference;
 
-		return new ParameterDeclaration($name, $type, $value);
+		$declar = new ParameterDeclaration($name, $type, $value);
+		$declar->is_value_mutable = $reference;
+
+		return $declar;
 	}
 
 	private function read_function_block()

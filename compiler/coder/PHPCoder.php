@@ -1010,7 +1010,7 @@ class PHPCoder extends TeaCoder
 		if ($masked instanceof CallExpression) {
 			$actual_arguments = [];
 			foreach ($declaration->arguments_map as $idx) {
-				assert($idx === 0);
+				// assert($idx === 0);
 				$actual_arguments[] = $node->master;
 			}
 

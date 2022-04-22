@@ -1770,7 +1770,7 @@ class TeaParser extends BaseParser
 			if (isset($item->label)) {
 				// the labeled argument
 				if (isset($items[$item->label])) {
-					throw $this->new_parse_error("Parameter '{$item->label}' already has be assigned.");
+					throw $this->new_parse_error("Parameter '{$item->label}' already has been assigned.");
 				}
 				else {
 					$items[$item->label] = $item;

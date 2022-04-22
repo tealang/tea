@@ -96,15 +96,15 @@ function regex_test(string $regex, string $subject): bool {
 }
 
 function regex_capture_one(string $regex, string $subject): ?array {
-	$matches = null;
-	$count = preg_match($regex, $subject, $matches);
-	return $count === 0 ? null : $matches;
+	$result = null;
+	$count = preg_match($regex, $subject, $result);
+	return $count === 0 ? null : $result;
 }
 
 function regex_capture_all(string $regex, string $subject): ?array {
-	$matches = null;
-	$count = preg_match_all($regex, $subject, $matches);
-	return $count === 0 ? null : $matches;
+	$results = null;
+	$count = preg_match_all($regex, $subject, $results);
+	return $results;
 }
 
 

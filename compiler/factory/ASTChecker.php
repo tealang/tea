@@ -828,6 +828,17 @@ class ASTChecker
 	{
 		$type_assertion = $node->condition->type_assertion;
 
+		// cannot use type assertion when not an Identifiable
+		if (!$type_assertion->left instanceof Identifiable) {
+			// check block body
+			$result_type = $this->infer_block($node);
+			if ($node->else) {
+				$result_type = $this->reduce_types_with_else_block($node, $result_type);
+			}
+
+			return $result_type;
+		}
+
 		$left_declaration = $type_assertion->left->symbol->declaration;
 		$asserted_then_type = null;
 		$asserted_else_type = null;
@@ -1641,6 +1652,10 @@ class ASTChecker
 		if (!$cast_type instanceof IType) {
 			throw $this->new_syntax_error("Invalid 'as' expression '{$node->right->name}'", $node);
 		}
+
+		// if ($cast_type instanceof CallableType) {
+		// 	throw $this->new_syntax_error("Cannot mark as Callable", $node);
+		// }
 
 		return $cast_type;
 	}

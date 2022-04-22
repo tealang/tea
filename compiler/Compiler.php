@@ -388,8 +388,8 @@ class Compiler
 		}
 
 		if ($relative_path === false) {
-			$dirs = join(', and ', $this->search_dirs);
-			throw new Exception("The directory of depends unit '{$ns->uri}' not found in $dirs");
+			$dirs = join('", and "', $this->search_dirs);
+			throw new Exception("The directory of depends unit '{$ns->uri}' not found in (\"$dirs\")");
 		}
 
 		return $relative_path;
@@ -559,7 +559,7 @@ class Compiler
 
 		// check is a sub-unit
 		if ($levels > 0 && (in_array(UNIT_HEADER_FILE_NAME, $items) || in_array(PUBLIC_HEADER_FILE_NAME, $items)) ) {
-			echo "\nWarring: The sub-diretory '$path' has be ignored, because of it has '__unit.th' or '__public.th'.\n\n";
+			echo "\nWarring: The sub-diretory '$path' is ignored, because of it has '__unit.th' or '__public.th'.\n\n";
 			return; // ignore these sub-unit
 		}
 

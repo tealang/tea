@@ -163,6 +163,8 @@ public xrange(start Int, end Int, step = 1) {
 // bytes mode functions
 #php strlen(str) UInt
 #php substr(str, start Int, length Int = #default) String
+
+#php str_contains(master, search) Bool
 #php strpos(master, search, offset Int = 0) Int  // would return false on not found
 #php strrpos(master, search, offset Int = 0) Int  // would return false on not found
 #php strtoupper(str) String
@@ -203,7 +205,7 @@ public array_last_index(array Array) UInt {
 	return count(array) - 1
 }
 
-#php array_key_exists(key, arr Dict) Bool
+#php array_key_exists(key, arr) Bool
 
 // assoc array
 #php array_keys(dict) String.Array
@@ -245,14 +247,14 @@ public regex_test(regex Regex, subject String) Bool {
 	return preg_match(regex, subject) ? true : false
 }
 public regex_capture_one(regex Regex, subject String) String.Array? {
-	var matches String.Array
-	count = preg_match(regex, subject, matches)
-	return count === 0 ? none : matches
+	var result String.Array
+	count = preg_match(regex, subject, result)
+	return count === 0 ? none : result
 }
 public regex_capture_all(regex Regex, subject String) String.Array.Array? {
-	var matches String.Array.Array
-	count = preg_match_all(regex, subject, matches)
-	return count === 0 ? none : matches
+	var results String.Array.Array
+	count = preg_match_all(regex, subject, results)
+	return results
 }
 
 // 所有 masked function 在定义时都需要考虑参数的顺序，参数的运行时序不一致可能会导致问题
@@ -282,6 +284,8 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array? {
 #tea String {
 	// process in dist native mode
 	masked length UInt => strlen(this)
+
+	masked contains(val) => str_contains(this, val)
 	masked find(str String, offset Int = #default) => strpos(this, str, offset)
 	masked find_last(str String, offset Int = #default) => strrpos(this, str, offset)
 	masked copy(start Int, length Int = #default) => substr(this, start, length)
@@ -329,7 +333,8 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array? {
 	masked length UInt => count(this)
 	masked end UInt => array_last_index(this)
 
-	masked has_value(val) => in_array(val, this)
+	masked has(key Int) => array_key_exists(key, this)
+	masked contains(val) => in_array(val, this)
 
 	masked find(val) => _array_search(this, val) // find the index for supported value
 
@@ -359,8 +364,8 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array? {
 	masked keys() => array_keys(this)
 	masked values() => array_values(this)
 
-	masked has_key(key String) => array_key_exists(key, this)
-	masked has_value(val) => in_array(val, this)
+	masked has(key String) => array_key_exists(key, this)
+	masked contains(val) => in_array(val, this)
 
 	masked get(key String) => dict_get(this, key)
 	masked find(val) => _dict_search(this, val) // find the key with supported value
