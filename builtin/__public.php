@@ -95,7 +95,7 @@ function regex_test(string $regex, string $subject): bool {
 	return preg_match($regex, $subject) ? true : false;
 }
 
-function regex_capture_one(string $regex, string $subject): ?array {
+function regex_capture(string $regex, string $subject): ?array {
 	$result = null;
 	$count = preg_match($regex, $subject, $result);
 	return $count === 0 ? null : $result;

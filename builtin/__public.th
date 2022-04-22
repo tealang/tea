@@ -204,7 +204,7 @@ public html_decode(string String, flags Int = ENT_QUOTES) String
 
 public regex_test(regex Regex, subject String) Bool
 
-public regex_capture_one(regex Regex, subject String) String.Array
+public regex_capture(regex Regex, subject String) String.Array
 
 public regex_capture_all(regex Regex, subject String) String.Array.Array
 
@@ -312,7 +312,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 #tea Regex {
 	masked test(string String) Bool
 	masked separate(string String) String.Array
-	masked capture_one(string String) String.Array
+	masked capture(string String) String.Array
 	masked capture_all(string String) String.Array.Array
 }
 

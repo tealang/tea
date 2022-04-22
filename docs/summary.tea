@@ -111,7 +111,7 @@ var xview XView = <div>
 
 // 正则表达式
 var regex Regex = /^[a-z0-9'_"]+$/i
-if regex.capture_one('Abc\'123"') !== none {
+if regex.capture('Abc\'123"') !== none {
 	echo 'captured!'
 }
 

@@ -122,7 +122,7 @@ $xview = '<div>
 </div>';
 
 $regex = '/^[a-z0-9\'_"]+$/i';
-if (regex_capture_one($regex, 'Abc\'123"') !== null) {
+if (regex_capture($regex, 'Abc\'123"') !== null) {
 	echo 'captured!', LF;
 }
 

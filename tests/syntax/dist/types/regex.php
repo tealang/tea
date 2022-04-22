@@ -9,7 +9,7 @@ $match_count = preg_match('/^\\\'[a-z0-9]+\'$/i', $str);
 echo $match_count, LF;
 
 $regex = '/[\s\|,]/';
-$result0 = regex_capture_one($regex, 'ab cd|e,f');
+$result0 = regex_capture($regex, 'ab cd|e,f');
 var_dump($result0);
 
 $result1 = regex_capture_all($regex, 'ab cd|e,f');

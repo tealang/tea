@@ -246,7 +246,7 @@ public html_decode(string String, flags = ENT_QUOTES) {
 public regex_test(regex Regex, subject String) Bool {
 	return preg_match(regex, subject) ? true : false
 }
-public regex_capture_one(regex Regex, subject String) String.Array? {
+public regex_capture(regex Regex, subject String) String.Array? {
 	var result String.Array
 	count = preg_match(regex, subject, result)
 	return count === 0 ? none : result
@@ -391,7 +391,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array? {
 	masked separate(string String) String.Array => preg_split(this, string)
 
 	// match in target string, returns the first captured item
-	masked capture_one(string String) String.Array => regex_capture_one(this, string)
+	masked capture(string String) String.Array => regex_capture(this, string)
 
 	// match in target string, returns the all captured items
 	masked capture_all(string String) String.Array.Array => regex_capture_all(this, string)
