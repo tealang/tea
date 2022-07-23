@@ -665,7 +665,7 @@ class PHPCoder extends TeaCoder
 			$items[] = $item === LF ? $item : $item . LF;
 		}
 
-		if (isset($node) && !$node instanceof BreakStatement) {
+		if (empty($nodes) || !$node instanceof BreakStatement) {
 			$items[] = 'break' . static::STATEMENT_TERMINATOR;
 		}
 
