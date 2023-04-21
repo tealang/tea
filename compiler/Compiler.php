@@ -15,6 +15,9 @@ const
 
 class Compiler
 {
+	const BASE_WORKSPACE = 0;
+	const BASE_SUPER = 1;
+
 	// the path of current compiling unit
 	private $unit_path;
 
@@ -36,12 +39,17 @@ class Compiler
 	private $container_name;
 
 	// the workspace path to load units
-	private $workspace_path;
+	private $work_path;
+
+	private $super_path;
+
+	// for render code
+	private $loaders = [];
 
 	// header file path of current unit
 	private $header_file_path;
 
-	private $search_dirs;
+	private $search_dirs = ['', 'units', 'vendor'];
 
 	/**
 	 * @var Program
@@ -218,41 +226,9 @@ class Compiler
 
 	private function prepare_unit_paths()
 	{
-		$unit = $this->unit;
-
-		$checking_path = $this->unit_path;
-		foreach ($unit->ns->names as $ns_name) {
-			$dir_name = basename($checking_path);
-			$checking_path = dirname($checking_path);
-		}
-
-		// the super dir levels for the Unit
-		// for generate the $super_path
-		$unit->super_dir_levels = count($unit->ns->names);
-
-		if (self::is_framework_internal_namespaces($unit->ns)) {
-			$this->container_name = basename($checking_path);
-			$checking_path = dirname($checking_path);
-			$unit->super_dir_levels += 1;
-		}
-		else {
-			$this->container_name = $dir_name;
-		}
-
-		// dirs for search dependences
-		$search_dirs = [];
-		$super_dir_name = basename($checking_path);
-		if (in_array($super_dir_name, ['units', 'vendor'])) {
-			$checking_path = dirname($checking_path);
-			$unit->super_dir_levels += 1;
-		}
-
-		$search_dirs[] = '';
-		$search_dirs[] = 'units';
-		$search_dirs[] = 'vendor';
-
-		$this->search_dirs = $search_dirs;
-		$this->workspace_path = $checking_path . DS;
+		$base_level = count($this->unit->ns->names);
+		$this->work_path = dirname($this->unit_path, $base_level) . DS;
+		$this->super_path = dirname($this->work_path) . DS;
 
 		// set the dist paths
 		$this->unit_dist_path = $this->unit_path . DIST_DIR_NAME . DS;
@@ -322,10 +298,6 @@ class Compiler
 			}
 			elseif ($target->uri !== '' and $target->uri !== $current_unit_uri) {
 				$use_unit = $this->load_unit_for_namespace($target);
-
-				// 框架内部名称空间的，无需添加载入语句，由框架加载即可
-				$use_unit->is_need_load = !self::is_framework_internal_namespaces($use_unit->ns);
-
 				$unit->use_units[$uri] = $use_unit;
 			}
 			else {
@@ -344,19 +316,27 @@ class Compiler
 		}
 
 		// find the target relative path
-		$unit_dir = $this->find_unit_dir_for_namespace($ns);
-		$unit_path = $this->workspace_path . $unit_dir . DS;
+		[$base_path_type, $unit_dir] = $this->find_unit_dir_for_namespace($ns);
+
+		$unit_path = $base_path_type === self::BASE_SUPER
+			? $this->super_path
+			: $this->work_path;
+
+		if ($unit_dir !== null) {
+			$unit_path .= $unit_dir . DS;
+		}
 
 		// check public file
 		$unit_public_file = $unit_path . PUBLIC_HEADER_FILE_NAME;
-		if (!file_exists($unit_public_file)) {
-			throw new Exception("The public file of unit '{$ns->uri}' not found at: $unit_public_file");
-		}
+		// if (!file_exists($unit_public_file)) {
+		// 	throw new Exception("The public file of unit '{$ns->uri}' not found at: $unit_public_file");
+		// }
 
-		// init it
 		$unit = new Unit($unit_path);
 		$unit->symbols = $this->builtin_symbols;
-		$unit->loader_file = $unit_dir . '/' . PUBLIC_LOADER_FILE_NAME; // for render the require statements
+
+		$loader_file = $unit_dir . DS . PUBLIC_LOADER_FILE_NAME; // for render the require statements
+		$this->loaders[$uri] = [$base_path_type, $loader_file];
 
 		// add to pool, so do not need to reload
 		$this->units_pool[$uri] = $unit;
@@ -373,40 +353,60 @@ class Compiler
 
 	private function find_unit_dir_for_namespace(NamespaceIdentifier $ns)
 	{
-		$names = $ns->names;
+		$relative_path = $this->try_search_all_dirs($ns->names, $this->work_path);
 
-		// add the project name when the Unit in a framework
-		if (self::is_framework_internal_namespaces($ns)) {
-			array_unshift($names, $this->container_name);
+		// second search
+		if ($relative_path === false) {
+			$relative_path = $this->try_search_all_dirs($ns->names, $this->super_path);
+			$base_path_type = self::BASE_SUPER;
+		}
+		else {
+			$base_path_type = self::BASE_WORKSPACE;
 		}
 
+		if ($relative_path === false) {
+			$dirs = join('", and "', $this->search_dirs);
+			throw new Exception("The depends unit '{$ns->uri}' not found in (\"$dirs\")");
+		}
+
+		return [$base_path_type, $relative_path];
+	}
+
+	private function try_search_all_dirs(array $names, string $searching_path)
+	{
 		foreach ($this->search_dirs as $dir) {
-			$relative_path = $this->try_look_in_dir($dir, $names);
+			$relative_path = $this->try_look_in_dir($dir, $names, $searching_path);
 			if ($relative_path) {
 				break;
 			}
 		}
 
-		if ($relative_path === false) {
-			$dirs = join('", and "', $this->search_dirs);
-			throw new Exception("The directory of depends unit '{$ns->uri}' not found in (\"$dirs\")");
+		$unit_path = $searching_path;
+		if ($relative_path !== null) {
+			$unit_path .= $relative_path . DS;
+		}
+
+		// check public file
+		$unit_public_file = $unit_path . PUBLIC_HEADER_FILE_NAME;
+		if (!file_exists($unit_public_file)) {
+			return false;
 		}
 
 		return $relative_path;
 	}
 
-	private function try_look_in_dir(string $dir, array $namespace_components)
+	private function try_look_in_dir(string $dir, array $namespace_components, string $searching_path)
 	{
 		$dir_components = [];
 
-		$path = $this->workspace_path;
+		$path = $searching_path;
 		if ($dir !== '') {
 			$path .= $dir . DS;
 			$dir_components[] = $dir;
 		}
 
 		if (!is_dir($path)) {
-			return;
+			return false;
 		}
 
 		foreach ($namespace_components as $name) {
@@ -479,7 +479,7 @@ class Compiler
 
 	private function render_loader_file(PHPCoder $coder)
 	{
-		$dist_code = $coder->render_loader_program($this->header_program, $this->normal_programs);
+		$dist_code = $coder->render_loader_program($this->header_program, $this->normal_programs, $this->loaders);
 
 		// the autoloads for classes/interfaces/traits
 		$dist_code .= PHPLoaderCoder::render_autoloads_code($this->autoloads_map);
@@ -613,11 +613,6 @@ class Compiler
 	{
 		$parser = new PHPParserLite($this->ast_factory, $file);
 		return $parser->read_program();
-	}
-
-	private static function is_framework_internal_namespaces(NamespaceIdentifier $ns)
-	{
-		return in_array($ns->names[0], FRAMEWORK_INTERNAL_NAMESPACES, true);
 	}
 
 	private static function echo_start(string $message, string $ending = "\t")

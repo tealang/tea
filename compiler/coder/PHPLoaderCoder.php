@@ -14,45 +14,16 @@ class PHPLoaderCoder extends PHPCoder
 	private $constants = [];
 	private $functions = [];
 
-	public function render_loader_program(Program $header_program, array $normal_programs)
+	public function render_loader_program(Program $header_program, array $normal_programs, array $loaders)
 	{
 		$this->program = $header_program;
-
-		$unit = $header_program->unit;
 
 		$this->collect_declarations($normal_programs);
 
 		$this->process_use_statments($this->constants);
 		$this->process_use_statments($this->functions);
 
-		$items = $this->render_heading_statements($header_program);
-
-		// the builtin constants
-		$items[] = 'const ' . _UNIT_PATH . ' = __DIR__ . DIRECTORY_SEPARATOR;';
-
-		// put an empty line
-		$items[] = '';
-
-		// load the dependence units
-		if ($unit->use_units || $unit->as_main_unit) {
-			// 由于PHP不支持在const中使用函数表达式，故使用变量替代
-			// 另外，主Unit的super_path和被引用库的可能是不一致的
-			$items[] = "\$super_path = dirname(__DIR__, {$unit->super_dir_levels}) . DIRECTORY_SEPARATOR; // the workspace/vendor path";
-
-			// load the builtins
-			if ($unit->as_main_unit) {
-				$items[] = sprintf("require_once \$super_path . '%s'; // the builtins", BUILTIN_LOADER_FILE);
-			}
-
-			// load the foriegn units
-			foreach ($unit->use_units as $foreign_unit) {
-				if ($foreign_unit->is_need_load) {
-					$items[] = "require_once \$super_path . '{$foreign_unit->loader_file}';";
-				}
-			}
-
-			$items[] = '';
-		}
+		$items = $this->render_base_statements($header_program, $loaders);
 
 		// render constants and function defined in current Unit
 		// because of them can not be autoloaded like Classes
@@ -84,6 +55,62 @@ class PHPLoaderCoder extends PHPCoder
 		}
 
 		return $this->join_code($items);
+	}
+
+	protected function render_base_statements(Program $program, array $loaders)
+	{
+		$items = parent::render_heading_statements($program);
+
+		// the builtin constants
+		$items[] = 'const ' . _UNIT_PATH . ' = __DIR__ . DIRECTORY_SEPARATOR;';
+
+		// put an empty line
+		$items[] = '';
+
+		// load the dependence units
+		$unit = $program->unit;
+		if ($loaders || $unit->as_main_unit) {
+			// workspace path
+			$dir_levels = count($unit->ns->names);
+			if (self::check_used_path_type(Compiler::BASE_WORKSPACE, $loaders)) {
+				$items[] = "\$work_path = dirname(__DIR__, {$dir_levels}) . DIRECTORY_SEPARATOR;";
+			}
+
+			// super path
+			if ($unit->as_main_unit or self::check_used_path_type(Compiler::BASE_SUPER, $loaders)) {
+				$dir_levels += 1;
+				$items[] = "\$super_path = dirname(__DIR__, {$dir_levels}) . DIRECTORY_SEPARATOR;";
+			}
+
+			// load the builtins
+			if ($unit->as_main_unit) {
+				$items[] = sprintf("require_once \$super_path . '%s';", BUILTIN_LOADER_FILE);
+			}
+
+			// load the foriegn units
+			foreach ($loaders as $loader) {
+				$based_var_name = $loader[0] === Compiler::BASE_WORKSPACE
+					? '$work_path'
+					: '$super_path';
+
+				$items[] = "require_once {$based_var_name} . '{$loader[1]}';";
+			}
+
+			$items[] = '';
+		}
+
+		return $items;
+	}
+
+	private static function check_used_path_type(int $type, array $loaders)
+	{
+		foreach ($loaders as $loader) {
+			if ($loader[0] === $type) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private function collect_declarations(array $programs)

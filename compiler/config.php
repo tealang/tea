@@ -23,10 +23,7 @@ const
 
 	BUILTIN_LOADER_FILE = 'tea/builtin/' . PUBLIC_LOADER_FILE_NAME,
 
-	DIR_SCAN_SKIP_ITEMS = ['.', '..', DIST_DIR_NAME, PUBLIC_LOADER_FILE_NAME],
-
-	// the special namespaces for some framework
-	FRAMEWORK_INTERNAL_NAMESPACES = ['App', 'Model', 'Lib']
+	DIR_SCAN_SKIP_ITEMS = ['.', '..', DIST_DIR_NAME, PUBLIC_LOADER_FILE_NAME]
 ;
 
 // program end

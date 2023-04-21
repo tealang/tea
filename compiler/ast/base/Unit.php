@@ -50,18 +50,6 @@ class Unit implements IRootDeclaration
 	 */
 	public $include_prefix;
 
-	/**
-	 * The super directories levels for render dist dependencies
-	 * @var int
-	 */
-	public $super_dir_levels;
-
-	/**
-	 * is need to be load when current as a foriegn Unit
-	 * @var bool
-	 */
-	public $is_need_load;
-
 	// /**
 	//  * @var bool
 	//  */
