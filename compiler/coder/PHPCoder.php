@@ -848,12 +848,16 @@ class PHPCoder extends TeaCoder
 	public function render_html_escape_expression(HTMLEscapeExpression $node)
 	{
 		$expr = $node->expression->render($this);
-		$code = "htmlspecialchars($expr, ENT_QUOTES)";
+		// $code = "htmlspecialchars($expr, ENT_QUOTES)";
 
-		// PHP 8.1 not allowed null
-		if ($node->expression->infered_type->is_same_with(TypeFactory::$_any)) {
-			$code = "($expr === null ? '' : htmlspecialchars($expr, ENT_QUOTES))";
-		}
+		// // PHP 8.1 not allowed null
+		// if ($node->expression->infered_type->nullable 
+		// 	or $node->expression->infered_type->is_same_with(TypeFactory::$_any)) {
+		// 	$code = "($expr === null ? '' : htmlspecialchars($expr, ENT_QUOTES))";
+		// }
+
+		// use the tea lib function instead, avoiding target is a function call
+		$code = "\html_encode($expr)";
 
 		return $code;
 	}

@@ -83,12 +83,12 @@ function _dict_search(array $master, $search) {
 	return $key === false ? false : (string)$key;
 }
 
-function html_encode(string $string, int $flags = ENT_QUOTES) {
-	return htmlspecialchars($string, $flags);
+function html_encode(?string $string, int $flags = ENT_QUOTES) {
+	return empty($string) ? $string : htmlspecialchars($string, $flags);
 }
 
-function html_decode(string $string, int $flags = ENT_QUOTES) {
-	return htmlspecialchars_decode($string, $flags);
+function html_decode(?string $string, int $flags = ENT_QUOTES) {
+	return empty($string) ? $string : htmlspecialchars_decode($string, $flags);
 }
 
 function regex_test(string $regex, string $subject): bool {

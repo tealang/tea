@@ -341,6 +341,7 @@ class NoneType extends BaseType {
 
 class AnyType extends BaseType {
 	public $name = _ANY;
+	public $nullable = true;
 	public function is_accept_single_type(IType $target) {
 		return true;
 	}
