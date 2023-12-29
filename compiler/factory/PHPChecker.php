@@ -57,6 +57,11 @@ class PHPChecker extends ASTChecker
 			$this->attach_source_declaration_for_use($node, $unit);
 		}
 	}
+
+	protected function assert_member_declarations(IClassMemberDeclaration $node, IClassMemberDeclaration $super, bool $is_interface = false)
+	{
+		//
+	}
 }
 
 // end

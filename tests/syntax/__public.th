@@ -1,17 +1,9 @@
 // the public declarations
 
-#unit tea/tests/syntax
+#unit tests/syntax
 
-#use tea/tests/PHPDemoUnit { PHP_CONST_DEMO }
-#use tea/tests/xview { BaseView }
-
-public PHPClassInMixed1 {
-	protected PREFIX String
-	public construct(caller String = #default, items Any, some Bool = #default)
-	public get_message() String
-}
-
-public php_get_num() Int
+#use tests/PHPDemoUnit { PHP_CONST_DEMO }
+#use tests/xview { BaseView }
 
 #php range(start Int, end Int, step Int = 1) Array
 

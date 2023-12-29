@@ -998,7 +998,7 @@ class ASTFactory
 	private function add_unit_symbol(Symbol $symbol)
 	{
 		if (isset($this->unit->symbols[$symbol->name])) {
-			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use, cannot redeclare");
+			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in unit '{$this->unit->name}', cannot redeclare");
 		}
 
 		$this->unit->symbols[$symbol->name] = $symbol;
@@ -1016,7 +1016,7 @@ class ASTFactory
 	private function add_scope_symbol(Symbol $symbol)
 	{
 		if (isset($this->scope->symbols[$symbol->name])) {
-			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in current function, cannot redeclare");
+			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in current scope, cannot redeclare");
 		}
 
 		$this->scope->symbols[$symbol->name] = $symbol;

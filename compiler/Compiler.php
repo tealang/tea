@@ -10,7 +10,8 @@
 namespace Tea;
 
 const
-	BUILTIN_PATH = TEA_BASE_PATH . 'builtin/',
+	BUILTIN_NS_URI = 'tea/builtin',
+	BUILTIN_PATH = TEA_BASE_PATH . 'tea-modules/tea/builtin/',
 	BUILTIN_PROGRAM = BUILTIN_PATH . 'core.tea';
 
 class Compiler
@@ -92,6 +93,9 @@ class Compiler
 	 */
 	private $ast_factory;
 
+
+	private $builtin_unit;
+
 	// the builtin symbols cache
 	private $builtin_symbols;
 
@@ -122,19 +126,37 @@ class Compiler
 
 		// when not on build the builtins unit
 		if (!self::check_is_builtin_unit($unit_path)) {
-			$this->load_builtins();
+			// $this->load_builtins();
+			$this->load_builtin_unit();
 		}
 	}
 
-	private function load_builtins()
+	private function load_builtin_unit(string $unit_path = BUILTIN_PATH)
 	{
-		self::echo_start('Loading builtins...', LF);
+		$unit_public_file = $unit_path . PUBLIC_HEADER_FILE_NAME;
 
-		$program = $this->parse_tea_program(BUILTIN_PROGRAM);
+		$this->builtin_unit = new Unit($unit_path);
+
+		$ast_factory = new ASTFactory($this->builtin_unit);
+
+		$parser = new TeaParser($ast_factory, BUILTIN_PROGRAM);
+		$program = $parser->read_program();
+
+		// lets render namespace as root
 		$program->unit = null;
 
-		$this->builtin_symbols = $program->symbols;
+		// $this->parse_tea_header($unit_public_file, $ast_factory);
 	}
+
+	// private function load_builtins()
+	// {
+	// 	self::echo_start('Loading builtins...', LF);
+
+	// 	$program = $this->parse_tea_program(BUILTIN_PROGRAM);
+	// 	$program->unit = null;
+
+	// 	$this->builtin_symbols = $program->symbols;
+	// }
 
 	private static function check_is_builtin_unit(string $unit_path)
 	{
@@ -170,7 +192,7 @@ class Compiler
 		$this->parse_programs();
 
 		// bind the builtin type symbols
-		TypeFactory::set_symbols($this->unit);
+		TypeFactory::set_symbols($this->builtin_unit ?? $this->unit);
 
 		// load deps for compiling unit
 		$this->load_dependences_for_unit($this->unit);
@@ -227,6 +249,10 @@ class Compiler
 	private function prepare_unit_paths()
 	{
 		$base_level = count($this->unit->ns->names);
+		if ($base_level > 1) {
+			$base_level -= 1;
+		}
+
 		$this->work_path = dirname($this->unit_path, $base_level) . DS;
 		$this->super_path = dirname($this->work_path) . DS;
 
@@ -240,7 +266,7 @@ class Compiler
 	{
 		self::echo_start('Checking...', LF);
 
-		ASTChecker::init_checkers($this->unit);
+		ASTChecker::init_checkers($this->unit, $this->builtin_unit);
 
 		// check depends units first
 		foreach ($this->unit->use_units as $dep_unit) {
@@ -333,6 +359,8 @@ class Compiler
 		// }
 
 		$unit = new Unit($unit_path);
+
+		// This mechanism is not flexible, change to the basic namespace mechanism
 		$unit->symbols = $this->builtin_symbols;
 
 		$loader_file = $unit_dir . DS . PUBLIC_LOADER_FILE_NAME; // for render the require statements
@@ -366,7 +394,7 @@ class Compiler
 
 		if ($relative_path === false) {
 			$dirs = join('", and "', $this->search_dirs);
-			throw new Exception("The depends unit '{$ns->uri}' not found in (\"$dirs\")");
+			throw new Exception("The depends unit '{$ns->uri}' not found in (\"$dirs\"), based on path: '{$this->work_path}'");
 		}
 
 		return [$base_path_type, $relative_path];

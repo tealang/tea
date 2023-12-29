@@ -1016,9 +1016,9 @@ class PHPParserLite extends BaseParser
 			}
 
 			$ns = $this->create_namespace_identifier($ns_components);
+			$identifier->set_namespace($ns);
 
 			$target = $this->factory->append_use_target($ns, $name);
-
 			$statement = $this->create_use_statement_when_not_exists($ns, [$target]);
 		}
 

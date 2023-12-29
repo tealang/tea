@@ -1,6 +1,6 @@
 // the public declarations
 
-#unit tea/tests/xview
+#unit tests/xview
 
 public BaseView: IView {
 	name String

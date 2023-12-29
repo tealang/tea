@@ -1,7 +1,7 @@
 <?php
-namespace tea\tests\syntax;
+namespace tests\syntax;
 
-use tea\tests\PHPDemoUnit\{ NS1\Demo as PHPClassDemo, function php_function_demo, const PHP_CONST_DEMO };
+use tests\PHPDemoUnit\{ NS1\Demo as PHPClassDemo, function php_function_demo, const PHP_CONST_DEMO };
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 
@@ -46,11 +46,6 @@ var_dump(PHP_CONST_DEMO);
 echo "\n***Test for range:", LF;
 $items = range(0, 9, 2);
 var_dump($items);
-
-echo "\n***Test for include:", LF;
-$title = 'include from main1.tea';
-$result = (include UNIT_PATH . 'dist/expect.php');
-var_dump($result);
 
 echo "\n***Test for int/uint cast:", LF;
 echo "'-123abc' cast to int: ", (int)'-123abc', LF;

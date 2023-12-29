@@ -72,6 +72,10 @@ class PHPLoaderCoder extends PHPCoder
 		if ($loaders || $unit->as_main_unit) {
 			// workspace path
 			$dir_levels = count($unit->ns->names);
+			if ($dir_levels > 1) {
+				$dir_levels -= 1;
+			}
+
 			if (self::check_used_path_type(Compiler::BASE_WORKSPACE, $loaders)) {
 				$items[] = "\$work_path = dirname(__DIR__, {$dir_levels}) . DIRECTORY_SEPARATOR;";
 			}
@@ -84,7 +88,7 @@ class PHPLoaderCoder extends PHPCoder
 
 			// load the builtins
 			if ($unit->as_main_unit) {
-				$items[] = sprintf("require_once \$super_path . '%s';", BUILTIN_LOADER_FILE);
+				$items[] = sprintf("require_once \$super_path . 'tea-modules/%s';", BUILTIN_LOADER_FILE);
 			}
 
 			// load the foriegn units

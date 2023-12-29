@@ -1,7 +1,7 @@
 <?php
-namespace tea\tests\syntax;
+namespace tests\syntax;
 
-use tea\tests\PHPDemoUnit\{ BaseInterface };
+use tests\PHPDemoUnit\{ BaseInterface };
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 

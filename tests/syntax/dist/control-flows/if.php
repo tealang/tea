@@ -1,5 +1,5 @@
 <?php
-namespace tea\tests\syntax;
+namespace tests\syntax;
 
 // ---------
 $a = 0;

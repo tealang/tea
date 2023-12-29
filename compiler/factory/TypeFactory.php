@@ -186,9 +186,9 @@ class TypeFactory
 			}
 		}
 
-		self::$_iview_symbol = $unit->symbols['IView'];
-		self::$_iiterator_symbol = $unit->symbols['IIterator'];
-		// self::$_yield_generator_symbol = $unit->symbols['YieldGenerator'];
+		self::$_iview_symbol = $unit->symbols['IView'] ?? null;
+		self::$_iiterator_symbol = $unit->symbols['IIterator'] ?? null;
+		// self::$_yield_generator_symbol = $unit->symbols['YieldGenerator'] ?? null;
 		self::$_yield_generator_symbol = self::$_iiterator_symbol;
 	}
 

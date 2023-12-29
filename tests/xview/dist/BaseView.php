@@ -1,8 +1,8 @@
 <?php
-namespace tea\tests\xview;
+namespace tests\xview;
 
 #public
-class BaseView implements \IView {
+class BaseView implements IView {
 	public $name;
 
 	protected $props = [];
@@ -27,7 +27,7 @@ class BaseView implements \IView {
 	protected function build_props() {
 		$props = '';
 		foreach ($this->props as $key => $value) {
-			$props .= ' ' . htmlspecialchars($key, ENT_QUOTES) . '="' . ($value === null ? '' : htmlspecialchars($value, ENT_QUOTES)) . '"';
+			$props .= ' ' . \html_encode($key) . '="' . \html_encode($value) . '"';
 		}
 
 		return $props;

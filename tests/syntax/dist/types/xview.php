@@ -1,7 +1,7 @@
 <?php
-namespace tea\tests\syntax;
+namespace tests\syntax;
 
-use tea\tests\xview\{ BaseView };
+use tests\xview\{ BaseView };
 
 require_once dirname(__DIR__, 2) . '/__public.php';
 
@@ -53,7 +53,7 @@ class DemoList extends BaseView {
 		}
 
 		return '<view id="' . $this->name . '">
-	' . ($this->title == "abc" ? '<h1>' . htmlspecialchars($this->title . 123, ENT_QUOTES) . '</h1>' : null) . '
+	' . ($this->title == "abc" ? '<h1>' . \html_encode($this->title . 123) . '</h1>' : null) . '
 	<i></i>
 	<cells>
 		' . implode(LF, $cells) . '

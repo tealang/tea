@@ -4,7 +4,7 @@
  *
  */
 
-namespace PHPDemoUnit;
+namespace tests\PHPDemoUnit;
 
 require_once __DIR__ . '/constants.php';
 require_once __DIR__ . '/functions.php';
@@ -18,9 +18,9 @@ require_once __DIR__ . '/functions.php';
 
 # --- generates ---
 const __AUTOLOADS = [
-	'tea\tests\PHPDemoUnit\BaseInterface' => 'InterfaceDemo.php',
-	'tea\tests\PHPDemoUnit\Interface1' => 'InterfaceDemo.php',
-	'tea\tests\PHPDemoUnit\NS1\Demo' => 'NS1/Demo.php'
+	'tests\PHPDemoUnit\BaseInterface' => 'InterfaceDemo.php',
+	'tests\PHPDemoUnit\Interface1' => 'InterfaceDemo.php',
+	'tests\PHPDemoUnit\NS1\Demo' => 'NS1/Demo.php'
 ];
 
 spl_autoload_register(function ($class) {

@@ -1,5 +1,5 @@
 <?php
-namespace tea\tests\syntax;
+namespace tests\syntax;
 
 require_once dirname(__DIR__, 2) . '/__public.php';
 
@@ -42,7 +42,7 @@ $var1 = '<div>' . '<script>' . '</div>';
 
 'string' . $abc;
 "string{$abc}";
-'string' . htmlspecialchars($abc, ENT_QUOTES);
+'string' . \html_encode($abc);
 
 'string${abc}';
 "string\${abc}";

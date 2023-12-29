@@ -1,5 +1,5 @@
 <?php
-namespace tea\tests\xview;
+namespace tests\xview;
 
 const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
@@ -7,9 +7,9 @@ const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
 // autoloads
 const __AUTOLOADS = [
-	'tea\tests\xview\BaseView' => 'dist/BaseView.php',
-	'tea\tests\xview\IViewDemo' => 'dist/IViewDemo.php',
-	'tea\tests\xview\IViewDemoTrait' => 'dist/IViewDemo.php'
+	'tests\xview\BaseView' => 'dist/BaseView.php',
+	'tests\xview\IViewDemo' => 'dist/IViewDemo.php',
+	'tests\xview\IViewDemoTrait' => 'dist/IViewDemo.php'
 ];
 
 spl_autoload_register(function ($class) {

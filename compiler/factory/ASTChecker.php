@@ -12,6 +12,12 @@ namespace Tea;
 class ASTChecker
 {
 	/**
+	 * the builtin unit
+	 * @var Unit
+	 */
+	private $builtin_unit;
+
+	/**
 	 * current unit
 	 * @var Unit
 	 */
@@ -49,35 +55,41 @@ class ASTChecker
 		return self::$native_checker_instance;
 	}
 
-	public static function init_checkers(Unit $main_unit)
+	public static function init_checkers(Unit $main_unit, Unit $builtin_unit = null)
 	{
 		self::$normal_checker_instances = [];
 
-		$main_checker = new ASTChecker($main_unit);
+		// for builtin unit
+		if ($builtin_unit) {
+			self::$normal_checker_instances[$builtin_unit->name] = new ASTChecker($builtin_unit);
+		}
+
+		$main_checker = new ASTChecker($main_unit, $builtin_unit);
 
 		self::$builtin_checker_instance = $main_checker;
-		self::$native_checker_instance = new PHPChecker($main_unit);
+		self::$native_checker_instance = new PHPChecker($main_unit, $builtin_unit);
 
 		self::$normal_checker_instances[$main_unit->name] = $main_checker;
 
 		foreach ($main_unit->use_units as $unit) {
-			self::init_checker_for_unit($unit); // direct
+			self::init_checker_for_unit($unit, $builtin_unit); // direct
 			foreach ($unit->use_units as $indirect_unit) {
-				self::init_checker_for_unit($indirect_unit);
+				self::init_checker_for_unit($indirect_unit, $builtin_unit);
 			}
 		}
 	}
 
-	private static function init_checker_for_unit(Unit $unit)
+	private static function init_checker_for_unit(Unit $unit, Unit $builtin_unit)
 	{
 		if (!isset(self::$normal_checker_instances[$unit->name])) {
-			self::$normal_checker_instances[$unit->name] = new ASTChecker($unit);
+			self::$normal_checker_instances[$unit->name] = new ASTChecker($unit, $builtin_unit);
 		}
 	}
 
-	public function __construct(Unit $unit)
+	public function __construct(Unit $unit, Unit $builtin_unit = null)
 	{
 		$this->unit = $unit;
+		$this->builtin_unit = $builtin_unit;
 	}
 
 	public function collect_program_uses(Program $program)
@@ -96,7 +108,7 @@ class ASTChecker
 		foreach ($declaration->defer_check_identifiers as $identifier) {
 			$symbol = $identifier->symbol ?: $this->find_symbol_with_program($this->program, $identifier->name);
 			if ($symbol === null) {
-				throw $this->new_syntax_error("Symbol of '{$identifier->name}' not found", $identifier);
+				throw $this->new_syntax_error("Symbol of '{$identifier->name}' not found when check uses", $identifier);
 			}
 
 			$dependence = $symbol->declaration;
@@ -536,7 +548,7 @@ class ASTChecker
 		}
 	}
 
-	private function check_function_declaration(FunctionDeclaration $node)
+	protected function check_function_declaration(FunctionDeclaration $node)
 	{
 		if ($node->is_checked) return;
 		$node->is_checked = true;
@@ -728,7 +740,7 @@ class ASTChecker
 		}
 	}
 
-	private function assert_member_declarations(IClassMemberDeclaration $node, IClassMemberDeclaration $super, bool $is_interface = false)
+	protected function assert_member_declarations(IClassMemberDeclaration $node, IClassMemberDeclaration $super, bool $is_interface = false)
 	{
 		// do not need check for construct
 		if ($node->name === _CONSTRUCT) {
@@ -2456,12 +2468,11 @@ class ASTChecker
 		if (isset($program->symbols[$name])) {
 			$symbol = $program->symbols[$name];
 		}
-		elseif (isset($program->unit->symbols[$name])) {
-			$symbol = $program->unit->symbols[$name];
-			$symbol->declaration->is_unit_level = true;
-		}
 		else {
-			$symbol = null;
+			$symbol = $program->unit->symbols[$name] ?? $this->builtin_unit->symbols[$name] ?? null;
+			if ($symbol !== null) {
+				$symbol->declaration->is_unit_level = true;
+			}
 		}
 
 		return $symbol;
@@ -2779,7 +2790,7 @@ class ASTChecker
 		if (!$symbol) {
 			$symbol = $this->get_symbol_for_classkindred_identifier($identifier);
 			if ($symbol === null) {
-				throw $this->new_syntax_error("Symbol '{$identifier->name}' not found", $identifier);
+				throw $this->new_syntax_error("Symbol of '{$identifier->name}' not found when find classkindred identifier", $identifier);
 			}
 
 			if ($symbol->declaration instanceof UseDeclaration) {
@@ -2814,6 +2825,7 @@ class ASTChecker
 		else {
 			$symbol = $this->program->symbols[$identifier->name]
 				?? $this->program->unit->symbols[$identifier->name]
+				?? $this->builtin_unit->symbols[$identifier->name]
 				?? null;
 		}
 

@@ -1,5 +1,5 @@
 <?php
-namespace tea\tests\syntax;
+namespace tests\syntax;
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 
@@ -12,7 +12,7 @@ $test_items['header_key'] = filter_input(INPUT_SERVER, 'HTTP_HOST');
 
 $items = [];
 foreach ($test_items as $k => $v) {
-	$items[] = '<li>' . $k . ': ' . ($v === null ? '' : htmlspecialchars($v, ENT_QUOTES)) . '</li>';
+	$items[] = '<li>' . $k . ': ' . \html_encode($v) . '</li>';
 }
 
 echo '<ul>

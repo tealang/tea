@@ -1,5 +1,5 @@
 <?php
-namespace tea\tests\syntax;
+namespace tests\syntax;
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 
@@ -22,11 +22,11 @@ function fn3($some, callable $done, callable $error = null): string {
 }
 
 // ---------
-$a_function = 'tea\tests\syntax\fn0';
+$a_function = 'tests\syntax\fn0';
 $a_string = "string";
 $a_function('call with callable type');
 
-fn1('tea\tests\syntax\fn0');
+fn1('tests\syntax\fn0');
 fn1(function ($str) {
 	return fn0($str);
 });

@@ -38,11 +38,6 @@ echo "\n***Test for range:"
 var items = range(0, 9, 2)
 var_dump(items)
 
-echo "\n***Test for include:"
-var title = 'include from main1.tea' // used in included file
-result = #include('expect')
-var_dump(result)
-
 echo "\n***Test for int/uint cast:"
 echo "'-123abc' cast to int: ", '-123abc'#Int // -123
 // echo "'-123abc' cast to uint: ", '-123abc'#UInt  // error

@@ -1,5 +1,5 @@
 <?php
-namespace tea\tests\syntax;
+namespace tests\syntax;
 
 function declarative_demo(string $name, int $age) {
 	// no any
