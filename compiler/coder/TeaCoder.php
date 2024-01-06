@@ -23,7 +23,7 @@ class TeaCoder
 
 	const USE_DECLARE_PREFIX = '#use ';
 
-	const NS_SEPARATOR = '.';
+	const NS_SEPARATOR = _SLASH;
 
 	const STATEMENT_TERMINATOR = '';
 
@@ -80,7 +80,7 @@ class TeaCoder
 		}
 
 		foreach ($program->declarations as $node) {
-			if (!$node instanceof ClassKindredDeclaration && !$node instanceof FunctionDeclaration) {
+			if (!($node instanceof ClassKindredDeclaration) && !($node instanceof FunctionDeclaration)) {
 				$simple_item = $node->render($this);
 				$simple_item === null || $items[] = $simple_item;
 			}
@@ -153,7 +153,7 @@ class TeaCoder
 		return $items ? ': ' . join(', ', $items) : '';
 	}
 
-	protected function generate_function_header(FunctionDeclaration $node)
+	protected function generate_function_header(IFunctionDeclaration $node)
 	{
 		if ($node->label) {
 			$items[] = _SHARP . $node->label;
@@ -269,9 +269,21 @@ class TeaCoder
 		}
 	}
 
-	protected function render_function_protocol(FunctionDeclaration $node)
+	protected function render_function_protocol(IFunctionDeclaration $node)
 	{
 		return $this->generate_function_header($node);
+	}
+
+	public function render_method_declaration(MethodDeclaration $node)
+	{
+		$code = $this->render_function_protocol($node);
+
+		if ($node->body !== null) {
+			$body = $this->render_function_body($node);
+			$code = $code . ' ' . $body;
+		}
+
+		return $code;
 	}
 
 	public function render_function_declaration(FunctionDeclaration $node)
@@ -984,9 +996,10 @@ class TeaCoder
 
 	public function render_use_statement(UseStatement $node)
 	{
-		$ns = $this->render_namespace_identifier($node->ns);
+		$uri = $this->render_namespace_identifier($node->ns);
+		$uri = ltrim($uri, static::NS_SEPARATOR);
 
-		$code = static::USE_DECLARE_PREFIX . $ns;
+		$code = static::USE_DECLARE_PREFIX . $uri;
 
 		if ($node->targets) {
 			$code .= $this->generate_use_targets($node->targets);

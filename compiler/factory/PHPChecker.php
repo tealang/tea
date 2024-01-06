@@ -11,6 +11,12 @@ namespace Tea;
 
 class PHPChecker extends ASTChecker
 {
+	const NS_SEPARATOR = _BACK_SLASH;
+
+	const NS_ROOT_MARK = _BACK_SLASH;
+
+	protected $is_weakly_typed_system = true;
+
 	protected function infer_plain_identifier(PlainIdentifier $node): IType
 	{
 		if (!$node->symbol) {
@@ -39,14 +45,14 @@ class PHPChecker extends ASTChecker
 		return $type;
 	}
 
-	protected function attach_symbol(PlainIdentifier $node)
+	protected function attach_symbol(PlainIdentifier $identifier)
 	{
-		$symbol = $this->find_symbol_by_name($node->name, $node);
+		$symbol = $this->find_plain_symbol_and_check_declaration($identifier);
 		if ($symbol === null) {
 			return null;
 		}
 
-		$node->symbol = $symbol;
+		$identifier->symbol = $symbol;
 		return $symbol;
 	}
 

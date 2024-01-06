@@ -20,6 +20,7 @@ function fn0($str) {
 
 // autoloads
 const __AUTOLOADS = [
+	'tests\syntax\PHPClassInMixed1' => '_mixed1.php',
 	'tests\syntax\IDemo' => 'dist/class.php',
 	'tests\syntax\IDemoTrait' => 'dist/class.php',
 	'tests\syntax\IterableObject' => 'dist/class.php',

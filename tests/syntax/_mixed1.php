@@ -1,5 +1,5 @@
 <?php
-namespace tea\tests\syntax;
+namespace tests\syntax;
 
 class PHPClassInMixed1 {
 	protected const PREFIX = 'user';
@@ -15,8 +15,4 @@ class PHPClassInMixed1 {
 	}
 }
 
-
-// class Exception extends \Exception {
-// 	//
-// }
 

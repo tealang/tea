@@ -11,7 +11,7 @@ namespace Tea;
 
 class HeaderParser extends TeaParser
 {
-	const IS_IN_HEADER = true;
+	public $is_parsing_header = true;
 
 	protected function read_root_statement($leading = null, Docs $docs = null)
 	{
@@ -76,7 +76,7 @@ class HeaderParser extends TeaParser
 
 			// function
 			$this->assert_not_reserveds_word($name);
-			return $this->read_function_declaration($name, $modifier, true);
+			return $this->read_function_declaration($name, $modifier, null, true);
 		}
 		elseif (TeaHelper::is_constant_name($name)) {
 			if ($next !== _BLOCK_BEGIN && $next !== _AS) {
@@ -133,7 +133,7 @@ class HeaderParser extends TeaParser
 		return $components;
 	}
 
-	protected function read_class_constant_declaration(string $name, ?string $modifier)
+	protected function read_class_constant_declaration(string $name, ?string $modifier, bool $is_declare_mode = false)
 	{
 		$declaration = $this->factory->create_class_constant_declaration($modifier, $name);
 
@@ -149,7 +149,7 @@ class HeaderParser extends TeaParser
 		return $declaration;
 	}
 
-	protected function read_method_declaration(string $name, ?string $modifier, bool $static)
+	protected function read_method_declaration(string $name, ?string $modifier, bool $static, bool $is_declare_mode = false)
 	{
 		$declaration = $this->factory->create_method_declaration($modifier, $name);
 		$declaration->pos = $this->pos;
@@ -163,3 +163,5 @@ class HeaderParser extends TeaParser
 		return $declaration;
 	}
 }
+
+// end

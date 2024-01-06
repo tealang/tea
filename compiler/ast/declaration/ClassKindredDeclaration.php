@@ -9,17 +9,9 @@
 
 namespace Tea;
 
-abstract class ClassKindredDeclaration extends Node implements IRootDeclaration, IStatement
+abstract class ClassKindredDeclaration extends RootDeclaration
 {
-	use DeclarationTrait;
-
-	public $ns;
-
-	public $modifier;
-
 	public $is_abstract;
-
-	public $origin_name;
 
 	/**
 	 * the implements interfaces or inherits class
@@ -54,20 +46,10 @@ abstract class ClassKindredDeclaration extends Node implements IRootDeclaration,
 
 	public $this_object_symbol;
 
-	/**
-	 * @var Program
-	 */
-	public $program;
-
 	public function __construct(?string $modifier, $name)
 	{
 		$this->modifier = $modifier;
 		$this->name = $name;
-	}
-
-	public function is_root_namespace()
-	{
-		return $this->program->unit === null || $this->label === _PHP;
 	}
 
 	public function set_baseds(ClassKindredIdentifier ...$baseds)
@@ -112,7 +94,7 @@ class ClassDeclaration extends ClassKindredDeclaration implements ICallableDecla
 {
 	const KIND = 'class_declaration';
 
-	// if not a declare mode, set true
+	// if not declare mode, set true
 	public $define_mode = false;
 
 	public function find_based_with_symbol(Symbol $symbol)
@@ -133,7 +115,7 @@ class ClassDeclaration extends ClassKindredDeclaration implements ICallableDecla
 		$inherits_symbol = $inherits->symbol;
 		$result = null;
 
-		// 当 引用的unit中类所继承类 和 当前引用的类 为同一个第三方unit的类时，symbol会有所不同，这时需比较declaration
+		// 当引用的unit中类所继承类 和 当前引用的类 为同一个第三方unit的类时，symbol会有所不同，这时需比较declaration
 		if ($inherits_symbol === $symbol || $inherits_symbol->declaration === $symbol->declaration) {
 			$result = $inherits;
 		}
@@ -160,3 +142,5 @@ class InterfaceDeclaration extends ClassKindredDeclaration
 	 */
 	public $has_default_implementations = false;
 }
+
+// end

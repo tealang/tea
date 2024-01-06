@@ -15,14 +15,18 @@ class NamespaceDeclaration extends Node implements IRootDeclaration, IMemberDecl
 
 	public $name;
 
-	public $members = [];
+	/**
+	 * The sub namespaces
+	 * @var array <string: NamespaceDeclaration>
+	 */
+	public $namespaces = [];
 
 	public $symbols = [];
-
-	public $belong_block;
 
 	public function __construct(string $name)
 	{
 		$this->name = $name;
 	}
 }
+
+// end

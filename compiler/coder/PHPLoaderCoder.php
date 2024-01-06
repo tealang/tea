@@ -71,19 +71,19 @@ class PHPLoaderCoder extends PHPCoder
 		$unit = $program->unit;
 		if ($loaders || $unit->as_main_unit) {
 			// workspace path
-			$dir_levels = count($unit->ns->names);
-			if ($dir_levels > 1) {
-				$dir_levels -= 1;
+			$based_level = count($unit->ns->names) - 1;
+			if ($based_level > 1) {
+				$based_level--;
 			}
 
-			if (self::check_used_path_type(Compiler::BASE_WORKSPACE, $loaders)) {
-				$items[] = "\$work_path = dirname(__DIR__, {$dir_levels}) . DIRECTORY_SEPARATOR;";
+			if (self::check_used_path_type(Compiler::BASED_FAMILLY, $loaders)) {
+				$items[] = "\$work_path = dirname(__DIR__, {$based_level}) . DIRECTORY_SEPARATOR;";
 			}
 
 			// super path
-			if ($unit->as_main_unit or self::check_used_path_type(Compiler::BASE_SUPER, $loaders)) {
-				$dir_levels += 1;
-				$items[] = "\$super_path = dirname(__DIR__, {$dir_levels}) . DIRECTORY_SEPARATOR;";
+			if ($unit->as_main_unit or self::check_used_path_type(Compiler::BASED_WORKSPACE, $loaders)) {
+				$based_level += 1;
+				$items[] = "\$super_path = dirname(__DIR__, {$based_level}) . DIRECTORY_SEPARATOR;";
 			}
 
 			// load the builtins
@@ -93,7 +93,7 @@ class PHPLoaderCoder extends PHPCoder
 
 			// load the foriegn units
 			foreach ($loaders as $loader) {
-				$based_var_name = $loader[0] === Compiler::BASE_WORKSPACE
+				$based_var_name = $loader[0] === Compiler::BASED_FAMILLY
 					? '$work_path'
 					: '$super_path';
 

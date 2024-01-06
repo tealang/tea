@@ -41,7 +41,8 @@ class TeaHeaderCoder extends TeaCoder
 
 		$items = parent::render_program_statements($program);
 
-		$unit_declaration = "#unit {$program->unit->ns->uri}\n";
+		$uri = ltrim($program->unit->ns->uri, _SLASH);
+		$unit_declaration = "#unit {$uri}\n";
 		array_unshift($items, $unit_declaration);
 
 		return $items;
@@ -64,6 +65,15 @@ class TeaHeaderCoder extends TeaCoder
 
 		$code = $this->generate_property_header($node);
 		return $code . static::CLASS_MEMBER_TERMINATOR;
+	}
+
+	public function render_method_declaration(MethodDeclaration $node)
+	{
+		if ($node->modifier === _PRIVATE || $node->modifier === _INTERNAL) {
+			return null;
+		}
+
+		return $this->render_function_protocol($node);
 	}
 
 	public function render_function_declaration(FunctionDeclaration $node)
@@ -91,3 +101,5 @@ class TeaHeaderCoder extends TeaCoder
 		}
 	}
 }
+
+// end

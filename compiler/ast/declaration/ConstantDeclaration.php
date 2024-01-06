@@ -11,11 +11,9 @@ namespace Tea;
 
 interface IConstantDeclaration extends IValuedDeclaration {}
 
-trait IConstantDeclarationTrait
+trait ConstantDeclarationTrait
 {
 	use DeclarationTrait;
-
-	public $ns;
 
 	public $modifier;
 
@@ -35,21 +33,18 @@ trait IConstantDeclarationTrait
 	}
 }
 
-class ConstantDeclaration extends Node implements IConstantDeclaration, IRootDeclaration, IStatement
+class ConstantDeclaration extends RootDeclaration implements IConstantDeclaration, IRootDeclaration, IStatement
 {
-	use IConstantDeclarationTrait;
+	use ConstantDeclarationTrait;
 
 	const KIND = 'constant_declaration';
-
-	/**
-	 * @var Program
-	 */
-	public $program;
 }
 
 class ClassConstantDeclaration extends Node implements IConstantDeclaration, IClassMemberDeclaration
 {
-	use IClassMemberDeclarationTrait, IConstantDeclarationTrait;
+	use ClassMemberDeclarationTrait, ConstantDeclarationTrait;
 
 	const KIND = 'class_constant_declaration';
 }
+
+// end

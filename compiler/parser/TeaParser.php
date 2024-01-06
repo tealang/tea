@@ -13,8 +13,6 @@ class TeaParser extends BaseParser
 {
 	use TeaTokenTrait, TeaStringTrait, TeaXBlockTrait, TeaSharpTrait, TeaDocsTrait;
 
-	protected $is_declare_mode = false;
-
 	protected $root_statements = [];
 
 	public function read_program(): Program
@@ -193,12 +191,12 @@ class TeaParser extends BaseParser
 		throw $this->new_unexpected_error();
 	}
 
-	protected function read_function_declaration(string $name, ?string $modifier, bool $declare_mode = false)
+	protected function read_function_declaration(string $name, ?string $modifier, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
 	{
 		// func1(arg0 String, arg1 Int = 0) // declare mode has no body
 		// func1(arg0 String, arg1 Int = 0) { ... } // normal mode required body
 
-		$declaration = $this->factory->create_function_declaration($modifier, $name);
+		$declaration = $this->factory->create_function_declaration($modifier, $name, $ns, $is_declare_mode);
 		$declaration->pos = $this->pos;
 
 		$parameters = $this->read_parameters_with_parentheses();
@@ -206,7 +204,7 @@ class TeaParser extends BaseParser
 
 		$declaration->type = $this->try_read_return_type_identifier();
 
-		if (!$declare_mode) {
+		if (!$is_declare_mode) {
 			$this->read_body_statements($declaration);
 		}
 
@@ -238,7 +236,7 @@ class TeaParser extends BaseParser
 	protected function read_constant_declaration(string $name, string $modifier = null)
 	{
 		if ($this->root_statements) {
-			throw $this->new_parse_error("Please define the constants at header of the program.");
+			throw $this->new_parse_error("Please define constants at header of program.");
 		}
 
 		$declaration = $this->read_constant_declaration_header($name, $modifier);
@@ -251,11 +249,11 @@ class TeaParser extends BaseParser
 		return $declaration;
 	}
 
-	protected function read_constant_declaration_without_value(string $name, string $modifier = null)
+	protected function read_constant_declaration_without_value(string $name, string $modifier = null, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
 	{
 		$this->assert_not_reserveds_word($name);
 
-		$declaration = $this->read_constant_declaration_header($name, $modifier);
+		$declaration = $this->read_constant_declaration_header($name, $modifier, $ns, $is_declare_mode);
 		if (!$declaration->type) {
 			$this->new_unexpected_error();
 		}
@@ -265,9 +263,9 @@ class TeaParser extends BaseParser
 		return $declaration;
 	}
 
-	protected function read_constant_declaration_header(string $name, string $modifier = null)
+	private function read_constant_declaration_header(string $name, string $modifier = null, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
 	{
-		$declaration = $this->factory->create_constant_declaration($modifier, $name);
+		$declaration = $this->factory->create_constant_declaration($modifier, $name, $ns, $is_declare_mode);
 		$declaration->pos = $this->pos;
 		$declaration->type = $this->try_read_type_identifier();
 		return $declaration;
@@ -1844,29 +1842,27 @@ class TeaParser extends BaseParser
 		return $declaration;
 	}
 
-	protected function read_class_declaration(string $name, ?string $modifier)
+	protected function read_class_declaration(string $name, ?string $modifier, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
 	{
-		$declaration = $this->factory->create_class_declaration($name, $modifier);
+		$declaration = $this->factory->create_class_declaration($name, $modifier, $ns, $is_declare_mode);
 		$declaration->pos = $this->pos;
 
-		$this->read_rest_for_classkindred_declaration($declaration);
+		$this->read_rest_for_classkindred_declaration($declaration, $is_declare_mode);
 
 		return $declaration;
 	}
 
-	protected function read_interface_declaration(string $name, ?string $modifier)
+	protected function read_interface_declaration(string $name, ?string $modifier, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
 	{
-		$declaration = $this->factory->create_interface_declaration($name, $modifier);
+		$declaration = $this->factory->create_interface_declaration($name, $modifier, $ns, $is_declare_mode);
 		$declaration->pos = $this->pos;
 
-		$this->is_declare_mode = true;
-		$this->read_rest_for_classkindred_declaration($declaration);
-		$this->is_declare_mode = false;
+		$this->read_rest_for_classkindred_declaration($declaration, true);
 
 		return $declaration;
 	}
 
-	protected function read_rest_for_classkindred_declaration(ClassKindredDeclaration $declaration)
+	protected function read_rest_for_classkindred_declaration(ClassKindredDeclaration $declaration, bool $is_declare_mode = false)
 	{
 		if ($baseds = $this->read_class_baseds()) {
 			$declaration->set_baseds(...$baseds);
@@ -1874,7 +1870,7 @@ class TeaParser extends BaseParser
 
 		$this->expect_block_begin_inline();
 
-		while ($item = $this->read_class_member_declaration());
+		while ($item = $this->read_class_member_declaration($is_declare_mode));
 
 		$this->expect_block_end();
 		$this->factory->end_class();
@@ -2118,7 +2114,7 @@ class TeaParser extends BaseParser
 		return $type;
 	}
 
-	protected function read_class_member_declaration($leading = null, Docs $docs = null, string $modifier = null, bool $static = false)
+	private function read_class_member_declaration(bool $is_declare_mode)
 	{
 		$token = $this->get_token_ignore_space();
 		if ($token === null || $token === _BLOCK_END) {
@@ -2130,11 +2126,14 @@ class TeaParser extends BaseParser
 		if ($token === LF) {
 			// has leading empty line
 			// will ignore docs when has empty lines
-			return $this->read_class_member_declaration(LF);
+			$declaration = $this->read_class_member_declaration($is_declare_mode);
+			$declaration and $declaration->leading = $token;
+			return $declaration;
 		}
 
 		$this->trace_statement($token);
 
+		$modifier = null;
 		if (TeaHelper::is_modifier($token)) {
 			if ($token === _MASKED) {
 				return $this->read_masked_declaration();
@@ -2144,47 +2143,39 @@ class TeaParser extends BaseParser
 			$token = $this->scan_token_ignore_space();
 		}
 
+		$static = false;
 		if ($token === _STATIC) {
 			$static = true;
 			$token = $this->scan_token_ignore_space();
 		}
 
-		// 此处无需检查类成员保留字，因相关修饰符可以被上述代码正确处理
-
-		$header_pos = $this->pos;
-
 		if ($token === _VAR) {
 			$token = $this->scan_token_ignore_space();
-			$declaration = $this->read_property_declaration($token, $modifier, $static);
+			$declaration = $this->read_property_declaration($token, $modifier, $static, $is_declare_mode);
 		}
 		elseif (TeaHelper::is_constant_name($token)) {
-			$declaration = $this->read_class_constant_declaration($token, $modifier);
+			$declaration = $this->read_class_constant_declaration($token, $modifier, $is_declare_mode);
 		}
 		elseif (TeaHelper::is_strict_less_function_name($token)) {
 			if ($this->get_token() === _PAREN_OPEN) {
-				$declaration = $this->read_method_declaration($token, $modifier, $static);
+				$declaration = $this->read_method_declaration($token, $modifier, $static, $is_declare_mode);
 			}
 			else {
-				$declaration = $this->read_property_declaration($token, $modifier, $static);
+				$declaration = $this->read_property_declaration($token, $modifier, $static, $is_declare_mode);
 			}
 		}
 		elseif ($token === _DOCS_MARK) {
 			$docs = $this->read_docs();
-			return $this->read_class_member_declaration($leading, $docs, $modifier, $static);
+			$declaration = $this->read_class_member_declaration($is_declare_mode);
+			$declaration and $declaration->docs = $docs;
 		}
 		elseif ($token === _INLINE_COMMENT_MARK) {
 			$this->skip_current_line();
-			return $this->read_class_member_declaration($leading, $docs, $modifier, $static);
+			$declaration = $this->read_class_member_declaration($is_declare_mode);
 		}
 		else {
 			throw $this->new_unexpected_error();
 		}
-
-		$this->expect_statement_end();
-
-		$declaration->pos = $header_pos;
-		$declaration->leading = $leading;
-		$docs && $declaration->docs = $docs;
 
 		return $declaration;
 	}
@@ -2195,7 +2186,7 @@ class TeaParser extends BaseParser
 		return $this->read_expression();
 	}
 
-	protected function read_class_constant_declaration(string $name, ?string $modifier)
+	protected function read_class_constant_declaration(string $name, ?string $modifier, bool $is_declare_mode)
 	{
 		$declaration = $this->factory->create_class_constant_declaration($modifier, $name);
 		$declaration->pos = $this->pos;
@@ -2205,7 +2196,7 @@ class TeaParser extends BaseParser
 		if ($this->skip_token_ignore_space(_ASSIGN)) {
 			$declaration->value = $this->read_compile_time_value();
 		}
-		elseif (!$this->is_declare_mode) {
+		elseif (!$is_declare_mode) {
 			throw $this->new_parse_error('Expected value assign expression.');
 		}
 		elseif (!$declaration->type) {
@@ -2214,10 +2205,12 @@ class TeaParser extends BaseParser
 
 		$this->factory->end_class_member();
 
+		$this->expect_statement_end();
+
 		return $declaration;
 	}
 
-	protected function read_property_declaration(string $name, ?string $modifier, bool $static)
+	protected function read_property_declaration(string $name, ?string $modifier, bool $static, bool $is_declare_mode)
 	{
 		// prop1 String
 		// prop1 = 'abcdef'
@@ -2246,10 +2239,12 @@ class TeaParser extends BaseParser
 
 		$this->factory->end_class_member();
 
+		$this->expect_statement_end();
+
 		return $declaration;
 	}
 
-	protected function read_method_declaration(string $name, ?string $modifier, bool $static)
+	protected function read_method_declaration(string $name, ?string $modifier, bool $static, bool $is_declare_mode)
 	{
 		$declaration = $this->factory->create_method_declaration($modifier, $name);
 		$declaration->pos = $declaration;
@@ -2265,14 +2260,16 @@ class TeaParser extends BaseParser
 		if ($next === _BLOCK_BEGIN) {
 			$this->read_body_statements($declaration);
 		}
-		elseif ($this->is_declare_mode) {
-			// no any others
+		elseif ($is_declare_mode) {
+			// no any
 		}
 		else {
 			throw $this->new_parse_error('Method body required.');
 		}
 
 		$this->factory->end_class_member();
+
+		$this->expect_statement_end();
 
 		return $declaration;
 	}

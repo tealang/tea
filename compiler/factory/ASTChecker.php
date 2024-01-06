@@ -11,6 +11,12 @@ namespace Tea;
 
 class ASTChecker
 {
+	const NS_SEPARATOR = _SLASH;
+
+	const NS_ROOT_MARK = _SLASH;
+
+	protected $is_weakly_typed_system = false;
+
 	/**
 	 * the builtin unit
 	 * @var Unit
@@ -106,9 +112,9 @@ class ASTChecker
 	private function collect_declaration_uses(IDeclaration $declaration)
 	{
 		foreach ($declaration->defer_check_identifiers as $identifier) {
-			$symbol = $identifier->symbol ?: $this->find_symbol_with_program($this->program, $identifier->name);
+			$symbol = $identifier->symbol ?? $this->find_symbol_for_plain_identifier($identifier);
 			if ($symbol === null) {
-				throw $this->new_syntax_error("Symbol of '{$identifier->name}' not found when check uses", $identifier);
+				throw $this->new_syntax_error("Symbol of '{$identifier->name}' not found when check declaration uses", $identifier);
 			}
 
 			$dependence = $symbol->declaration;
@@ -158,11 +164,11 @@ class ASTChecker
 				break;
 
 			case ClassDeclaration::KIND:
-				$this->check_classkindred_declaration($node);
+				$this->check_local_classkindred_declaration($node);
 				break;
 
 			case InterfaceDeclaration::KIND:
-				$this->check_classkindred_declaration($node);
+				$this->check_local_classkindred_declaration($node);
 				break;
 
 			case ConstantDeclaration::KIND:
@@ -192,8 +198,8 @@ class ASTChecker
 				$this->check_masked_declaration($node);
 				break;
 
-			case FunctionDeclaration::KIND:
-				$this->check_function_declaration($node);
+			case MethodDeclaration::KIND:
+				$this->check_method_declaration($node);
 				break;
 
 			case PropertyDeclaration::KIND:
@@ -483,7 +489,7 @@ class ASTChecker
 			$this->check_type($node->type, $node);
 		}
 
-		$this->check_function_body($node);
+		$this->check_scope_block_body($node);
 	}
 
 	private function infer_lambda_expression(LambdaExpression $node)
@@ -511,12 +517,12 @@ class ASTChecker
 			$this->check_type($node->type, $node);
 		}
 
-		$this->check_function_body($node);
+		$this->check_scope_block_body($node);
 
 		return TypeFactory::create_callable_type($node->type, $node->parameters);
 	}
 
-	private function check_function_body(IScopeBlock $node)
+	private function check_scope_block_body(IScopeBlock $node)
 	{
 		if (is_array($node->body)) {
 			$infered_type = $this->infer_block($node);
@@ -561,8 +567,29 @@ class ASTChecker
 		}
 
 		if ($node->body !== null) {
+			$this->check_scope_block_body($node);
+		}
+		elseif ($node->type === null) {
+			$node->type = TypeFactory::$_void;
+		}
+	}
+
+
+	protected function check_method_declaration(MethodDeclaration $node)
+	{
+		if ($node->is_checked) return;
+		$node->is_checked = true;
+
+		$this->check_parameters_for_callable_declaration($node);
+
+		if ($node->type) {
+			$node->is_hinted_return_type = true;
+			$this->check_type($node->type, $node);
+		}
+
+		if ($node->body !== null) {
 			$this->current_function = $node; // for find _SUPER
-			$this->check_function_body($node);
+			$this->check_scope_block_body($node);
 		}
 		elseif ($node->type === null) {
 			$node->type = TypeFactory::$_void;
@@ -605,9 +632,8 @@ class ASTChecker
 		}
 	}
 
-	private function check_classkindred_declaration(ClassKindredDeclaration $node)
+	private function check_local_classkindred_declaration(ClassKindredDeclaration $node)
 	{
-		if ($node->is_checked) return;
 		$node->is_checked = true;
 
 		// 当前是类时，包括继承的类，或实现的接口
@@ -624,7 +650,7 @@ class ASTChecker
 		// check is has default implementations for Interface
 		if ($node instanceof InterfaceDeclaration) {
 			foreach ($node->members as $member) {
-				if ($member instanceof PropertyDeclaration || ($member instanceof FunctionDeclaration && $member->body !== null)) {
+				if ($member instanceof PropertyDeclaration || ($member instanceof MethodDeclaration && $member->body !== null)) {
 					$node->has_default_implementations = true;
 				}
 			}
@@ -632,7 +658,7 @@ class ASTChecker
 
 		// 检查本类与继承类的成员是否匹配
 		if ($node->inherits) {
-			$this->check_inherts_for_class_declaration($node);
+			$this->check_inherits_for_class_declaration($node);
 		}
 
 		// 检查本类与实现或继承的接口中的成员是否匹配
@@ -641,7 +667,9 @@ class ASTChecker
 		}
 
 		// 本类中的成员优先级最高
-		$node->aggregated_members = array_merge($node->aggregated_members, $node->members);
+		if ($node->members) {
+			$node->aggregated_members = array_merge($node->aggregated_members, $node->members);
+		}
 	}
 
 	private function attach_baseds_for_classkindred_declaration(ClassKindredDeclaration $node)
@@ -651,13 +679,12 @@ class ASTChecker
 
 		$interfaces = [];
 		foreach ($node->baseds as $identifier) {
-			$declaration = $this->require_classkindred_declaration($identifier);
+			$declaration = $this->get_classkindred_declaration($identifier);
 
 			if ($identifier->generic_types) {
 				$this->check_generic_types($identifier);
 			}
 
-			// check is a class
 			if ($declaration instanceof ClassDeclaration) {
 				if ($node instanceof InterfaceDeclaration) {
 					throw $this->new_syntax_error("Cannot to inherits super class for interface '{$node->name}'", $node);
@@ -685,7 +712,7 @@ class ASTChecker
 		}
 	}
 
-	private function check_inherts_for_class_declaration(ClassDeclaration $node)
+	private function check_inherits_for_class_declaration(ClassDeclaration $node)
 	{
 		// 解析PHP语法的时候，需要本分支
 		if ($node->inherits->symbol === null) {
@@ -693,7 +720,7 @@ class ASTChecker
 		}
 
 		// 添加到本类实际成员中，继承的成员属于super，优先级最低
-		$node->aggregated_members = $node->inherits->symbol->declaration->aggregated_members;
+		$node->aggregated_members = $node->inherits->symbol->declaration->aggregated_members ?? [];
 
 		// 检查本类中有重写的成员是否与父类成员匹配
 		foreach ($node->aggregated_members as $name => $super_class_member) {
@@ -719,7 +746,7 @@ class ASTChecker
 					$this->assert_member_declarations($node->aggregated_members[$name], $member, true);
 
 					// replace to the default method implementation in interface
-					if ($member instanceof FunctionDeclaration && $member->body !== null) {
+					if ($member instanceof MethodDeclaration && $member->body !== null) {
 						$node->aggregated_members[$name] = $member;
 					}
 				}
@@ -732,7 +759,7 @@ class ASTChecker
 		// 如果是类定义，最后检查是否还有未实现的接口成员
 		if ($node instanceof ClassDeclaration && $node->define_mode) {
 			foreach ($node->aggregated_members as $name => $member) {
-				if ($member instanceof FunctionDeclaration && $member->body === null) {
+				if ($member instanceof MethodDeclaration && $member->body === null) {
 					$interface = $member->belong_block;
 					throw $this->new_syntax_error("Method protocol '{$interface->name}.{$name}' required an implementation in class '{$node->name}'", $node);
 				}
@@ -762,8 +789,8 @@ class ASTChecker
 			throw $this->new_syntax_error("Modifier in '{$node->belong_block->name}.{$node->name}' must be same as '{$super->belong_block->name}.{$super->name}'", $node->belong_block);
 		}
 
-		if ($super instanceof FunctionDeclaration) {
-			if (!$node instanceof FunctionDeclaration) {
+		if ($super instanceof MethodDeclaration) {
+			if (!$node instanceof MethodDeclaration) {
 				throw $this->new_syntax_error("Kind of '{$node->belong_block->name}.{$node->name}' must be compatibled with '{$super->belong_block->name}.{$super->name}'", $node);
 			}
 
@@ -785,7 +812,7 @@ class ASTChecker
 		}
 	}
 
-	private function assert_classkindred_method_parameters(FunctionDeclaration $node, FunctionDeclaration $protocol)
+	private function assert_classkindred_method_parameters(MethodDeclaration $node, MethodDeclaration $protocol)
 	{
 		if ($protocol->parameters === null && $protocol->parameters === null) {
 			return;
@@ -1891,7 +1918,7 @@ class ASTChecker
 
 	private function infer_object_expression(ObjectExpression $node): IType
 	{
-		$this->check_classkindred_declaration($node->class_declaration);
+		$this->check_local_classkindred_declaration($node->class_declaration);
 
 		$object_type = clone TypeFactory::$_object;
 		$object_type->symbol = $node->class_declaration->symbol;
@@ -1930,7 +1957,7 @@ class ASTChecker
 			}
 
 			if (!$type->symbol) {
-				$type->symbol = $this->find_symbol_by_name($type->name, $type);
+				$type->symbol = $this->find_type_symbol_and_check_declaration($type);
 			}
 
 			// no any other need to check
@@ -1963,10 +1990,10 @@ class ASTChecker
 	}
 
 	// just for php parser
-	private function infer_classkindred_identifier(ClassKindredIdentifier $node): IType
+	private function infer_classkindred_identifier(ClassKindredIdentifier $node): ?IType
 	{
-		$declaration = $this->require_classkindred_declaration($node);
-		return $declaration->type;
+		$declaration = $this->get_classkindred_declaration($node);
+		return $declaration ? $declaration->type : null;
 	}
 
 	private function infer_constant_identifier(ConstantIdentifier $node): IType
@@ -1994,7 +2021,7 @@ class ASTChecker
 			// check all expect variables is decalared in current including place
 			foreach ($target_main->parameters as $parameter) {
 				$param_name = $parameter->name;
-				$symbol = $node->symbols[$param_name] ?? $this->find_symbol_by_name($param_name);
+				$symbol = $node->symbols[$param_name] ?? $this->find_plain_symbol_and_check_declaration($parameter);
 				if ($symbol === null) {
 					$checker = self::get_checker($including);
 					throw $checker->new_syntax_error("Expected var '{$param_name}' to #include('{$node->target}')", $node);
@@ -2226,7 +2253,7 @@ class ASTChecker
 
 	private function require_construct_declaration_for_class(ClassDeclaration $class, BaseCallExpression $call)
 	{
-		$symbol = $this->find_member_symbol_in_class($class, _CONSTRUCT);
+		$symbol = $this->find_member_symbol_in_class_declaration($class, _CONSTRUCT);
 
 		if (!$symbol) {
 			if ($call->arguments || $call->callbacks) {
@@ -2331,6 +2358,7 @@ class ASTChecker
 	{
 		$member = $this->require_accessing_identifier_declaration($node);
 		switch ($member::KIND) {
+			case MethodDeclaration::KIND:
 			case FunctionDeclaration::KIND:
 				$infered = TypeFactory::$_callable;
 				break;
@@ -2420,62 +2448,151 @@ class ASTChecker
 		}
 	}
 
-	protected function attach_symbol(PlainIdentifier $node)
+	protected function attach_symbol(PlainIdentifier $identifier)
 	{
-		$symbol = $this->find_symbol_by_name($node->name, $node);
+		$symbol = $this->find_plain_symbol_and_check_declaration($identifier);
 		if ($symbol === null) {
-			throw $this->new_syntax_error("Symbol of '{$node->name}' not found", $node);
+			throw $this->new_syntax_error("Symbol of '{$identifier->name}' not found", $identifier);
 		}
 
-		$node->symbol = $symbol;
+		$identifier->symbol = $symbol;
 		return $symbol;
 	}
 
-	protected function find_symbol_by_name(string $name, Node $node = null)
+	protected function find_type_symbol_and_check_declaration(IType $identifier)
 	{
-		$symbol = $this->find_symbol_with_program($this->program, $name);
+		$symbol = $identifier instanceof PlainIdentifier
+			? $this->find_symbol_for_plain_identifier($identifier)
+			: $this->find_symbol_for_type($identifier);
 
-		// find for 'super'
-		if ($symbol === null && $name === _SUPER) {
-			if ($this->current_function->belong_block->inherits === null) {
-				throw $this->new_syntax_error("There are not inherits a class/interface for 'super' reference", $node);
-			}
-
-			$inherits_class = $this->current_function->belong_block->inherits->symbol->declaration;
-			if ($this->current_function->is_static) {
-				$symbol = $inherits_class->this_class_symbol;
-			}
-			else {
-				$symbol = $inherits_class->this_object_symbol;
-			}
+		if ($symbol === null && $identifier->name === _SUPER) {
+			$symbol = $this->get_symbol_for_super_identifier($identifier);
 		}
 
-		if ($symbol) {
-			if ($symbol->declaration instanceof UseDeclaration) {
-				$symbol->declaration = $this->get_source_declaration_for_use($symbol->declaration);
-			}
-			elseif (!$symbol->declaration->is_checked) {
-				$this->check_declaration($symbol->declaration);
-			}
-		}
+		$symbol and $this->check_declaration_for_symbol($symbol);
 
 		// find in unit level symbols
 		return $symbol;
 	}
 
-	private function find_symbol_with_program(Program $program, string $name)
+	protected function find_plain_symbol_and_check_declaration(PlainIdentifier $identifier)
 	{
-		if (isset($program->symbols[$name])) {
-			$symbol = $program->symbols[$name];
+		$symbol = $this->find_symbol_for_plain_identifier($identifier);
+
+		if ($symbol === null && $identifier->name === _SUPER) {
+			$symbol = $this->get_symbol_for_super_identifier($identifier);
+		}
+
+		$symbol and $this->check_declaration_for_symbol($symbol);
+
+		// find in unit level symbols
+		return $symbol;
+	}
+
+	private function get_symbol_for_super_identifier(PlainIdentifier $identifier)
+	{
+		if ($this->current_function->belong_block->inherits === null) {
+			// dump($this->current_function);
+			throw $this->new_syntax_error("There are not inherits a class/interface for 'super' reference", $identifier);
+		}
+
+		$inherits_class = $this->current_function->belong_block->inherits->symbol->declaration;
+		if ($this->current_function->is_static) {
+			$symbol = $inherits_class->this_class_symbol;
 		}
 		else {
-			$symbol = $program->unit->symbols[$name] ?? $this->builtin_unit->symbols[$name] ?? null;
+			$symbol = $inherits_class->this_object_symbol;
+		}
+
+		return $symbol;
+	}
+
+	private function check_declaration_for_symbol(Symbol $symbol)
+	{
+		if ($symbol->declaration instanceof UseDeclaration) {
+			$symbol->declaration = $this->get_source_declaration_for_use($symbol->declaration);
+		}
+		elseif (!$symbol->declaration->is_checked) {
+			$this->check_declaration($symbol->declaration);
+		}
+	}
+
+	private function find_symbol_for_plain_identifier(PlainIdentifier $identifier)
+	{
+		$name = $identifier->name;
+
+		if ($identifier->ns) {
+			$symbol = $this->find_symbol_in_namespace($identifier->ns, $name, $this->unit)
+				?? $this->find_symbol_in_namespace($identifier->ns, $name, $this->builtin_unit);
+
+			if ($symbol === null) {
+				$ns_unit = $this->get_unit_by_uri($identifier->ns->uri);
+				if ($ns_unit !== null) {
+					$symbol = $this->get_symbol_in_unit($ns_unit, $name);
+				}
+			}
+		}
+		else {
+			$symbol = $this->program->symbols[$name] ?? null;
+			if ($symbol === null) {
+				$symbol = $this->get_symbol_in_unit($this->unit, $name)
+					?? $this->get_symbol_in_unit($this->builtin_unit, $name);
+				if ($symbol !== null) {
+					$symbol->declaration->is_unit_level = true;
+				}
+			}
+		}
+
+		return $symbol;
+	}
+
+	private function get_symbol_in_unit(Unit $unit, string $name)
+	{
+		return $unit->symbols[$name] ?? null;
+	}
+
+	private function find_symbol_for_type(BaseType $type)
+	{
+		$name = $type->name;
+
+		$symbol = $this->program->symbols[$name] ?? null;
+		if ($symbol === null) {
+			$symbol = $this->unit->symbols[$name] ?? $this->builtin_unit->symbols[$name] ?? null;
 			if ($symbol !== null) {
 				$symbol->declaration->is_unit_level = true;
 			}
 		}
 
 		return $symbol;
+	}
+
+	private function get_unit_by_uri(string $uri)
+	{
+		return $this->unit->use_units[$uri] ?? null;
+	}
+
+	private function find_symbol_in_namespace(NamespaceIdentifier $ns, string $name, Unit $unit)
+	{
+		$ns_decl = $this->find_namespace_declaration_in_unit($unit, $ns);
+		return $ns_decl->symbols[$name] ?? null;
+	}
+
+	private function find_namespace_declaration_in_unit(Unit $unit, NamespaceIdentifier $ns)
+	{
+		$namepath = $ns->get_namepath();
+		$ns_name = array_shift($namepath);
+
+		$ns_decl = $unit->namespaces[$ns_name] ?? null;
+		if ($ns_decl !== null) {
+			foreach ($namepath as $ns_name) {
+				$ns_decl = $ns_decl->namespaces[$ns_name] ?? null;
+				if ($ns_decl === null) {
+					break;
+				}
+			}
+		}
+
+		return $ns_decl;
 	}
 
 	private function require_callee_declaration(BaseExpression $node): IDeclaration
@@ -2487,7 +2604,7 @@ class ASTChecker
 			$declar = $this->require_callable_declaration($node);
 		}
 		elseif ($node instanceof ClassKindredIdentifier) {
-			$declar = $this->require_classkindred_declaration($node);
+			$declar = $this->get_classkindred_declaration($node, true);
 		}
 		else {
 			$infered_type = $this->infer_expression($node);
@@ -2517,7 +2634,7 @@ class ASTChecker
 			// for Callable type parameters
 		}
 		elseif ($declar->type instanceof MetaType and $declar->type->generic_type instanceof ClassKindredIdentifier) {
-			$declar = $this->require_classkindred_declaration($declar->type->generic_type);
+			$declar = $this->get_classkindred_declaration($declar->type->generic_type, true);
 		}
 		else {
 			throw $this->new_syntax_error("Invalid callable expression", $node);
@@ -2535,6 +2652,10 @@ class ASTChecker
 		$node->is_checking = true;
 
 		switch ($node::KIND) {
+			case MethodDeclaration::KIND:
+				$this->check_method_declaration($node);
+				break;
+
 			case FunctionDeclaration::KIND:
 				$this->check_function_declaration($node);
 				break;
@@ -2550,21 +2671,6 @@ class ASTChecker
 				$kind = $node::KIND;
 				throw $this->new_syntax_error("Unexpect callable declaration kind: '{$kind}'", $node);
 		}
-	}
-
-	private function require_function_declaration(PlainIdentifier $node): FunctionDeclaration
-	{
-		if (!$node->symbol) {
-			if (!isset($this->unit->symbols[$node->name])) {
-				throw $this->new_syntax_error("Symbol '{$node->name}' not found", $node);
-			}
-
-			$node->symbol = $this->unit->symbols[$node->name];
-
-			$this->check_function_declaration($node->symbol->declaration);
-		}
-
-		return $node->symbol->declaration;
 	}
 
 	// includes BuiltinTypeClassDeclaration,
@@ -2614,7 +2720,7 @@ class ASTChecker
 		}
 		else {
 			$classkindred = $master_type->symbol->declaration;
-			$symbol = $this->find_member_symbol_in_class($classkindred, $node->name);
+			$symbol = $this->find_member_symbol_in_class_declaration($classkindred, $node->name);
 			if ($symbol === null) {
 				if ($master_type === TypeFactory::$_any) {
 					// let member type to Any on master is Any when member not defined
@@ -2637,7 +2743,7 @@ class ASTChecker
 		// }
 
 		// find static member for classes
-		$symbol = $this->find_member_symbol_in_class($declaration, $node->name);
+		$symbol = $this->find_member_symbol_in_class_declaration($declaration, $node->name);
 		if ($symbol === null) {
 			if ($node->name === _DOT_SIGN_CHAN) {
 				// for Chan type
@@ -2696,7 +2802,7 @@ class ASTChecker
 		$node->symbol = new Symbol(ASTFactory::$virtual_property_for_any, $node->name);
 	}
 
-	private function find_member_symbol_in_class(ClassKindredDeclaration $classkindred, string $member_name): ?Symbol
+	private function find_member_symbol_in_class_declaration(ClassKindredDeclaration $classkindred, string $member_name): ?Symbol
 	{
 		// 当作为外部调用时，应命中这里的逻辑
 		$declaration = $classkindred->aggregated_members[$member_name] ?? null;
@@ -2724,23 +2830,20 @@ class ASTChecker
 		}
 
 		// find in extends class
-		if ($classkindred->inherits) {
-			$symbol = $this->find_member_symbol_in_class($classkindred->inherits->symbol->declaration, $member_name);
-			if ($symbol) {
-				return $symbol;
+		$inherits = $classkindred->inherits;
+		if ($inherits and $inherits->symbol) {
+			$member_symbol = $this->find_member_symbol_in_class_declaration($inherits->symbol->declaration, $member_name);
+			if ($member_symbol) {
+				return $member_symbol;
 			}
 		}
 
 		// find in implements interfaces
 		if ($classkindred->baseds) {
 			foreach ($classkindred->baseds as $interface) {
-				if (!$interface->symbol) {
-					$this->require_classkindred_declaration($interface);
-				}
-
-				$symbol = $this->find_member_symbol_in_class($interface->symbol->declaration, $member_name);
-				if ($symbol) {
-					return $symbol;
+				$member_symbol = $this->find_member_symbol_in_interface_identifier($interface, $member_name);
+				if ($member_symbol) {
+					return $member_symbol;
 				}
 			}
 		}
@@ -2748,9 +2851,24 @@ class ASTChecker
 		return null;
 	}
 
+	private function find_member_symbol_in_interface_identifier(ClassKindredIdentifier $interface, string $member_name)
+	{
+		if ($interface->symbol) {
+			$interface_declar = $interface->symbol->declaration;
+		}
+		else {
+			$interface_declar = $this->get_classkindred_declaration($interface);
+			if ($interface_declar === null) {
+				return null;
+			}
+		}
+
+		return $this->find_member_symbol_in_class_declaration($interface_declar, $member_name);
+	}
+
 	private function require_class_member_symbol(ClassKindredDeclaration $classkindred, Identifiable $node): Symbol
 	{
-		$symbol = $this->find_member_symbol_in_class($classkindred, $node->name);
+		$symbol = $this->find_member_symbol_in_class_declaration($classkindred, $node->name);
 		if (!$symbol) {
 			throw $this->new_syntax_error("Member '{$node->name}' not found in '{$classkindred->name}'", $node);
 		}
@@ -2783,44 +2901,58 @@ class ASTChecker
 	// 	return $infered_type->symbol->declaration;
 	// }
 
-	private function require_classkindred_declaration(ClassKindredIdentifier $identifier)
+	private function get_classkindred_declaration(ClassKindredIdentifier $identifier, bool $required = false)
 	{
 		$symbol = $identifier->symbol;
-
-		if (!$symbol) {
-			$symbol = $this->get_symbol_for_classkindred_identifier($identifier);
+		if ($symbol === null) {
+			$symbol = $this->find_symbol_for_classkindred_identifier($identifier);
 			if ($symbol === null) {
-				throw $this->new_syntax_error("Symbol of '{$identifier->name}' not found when find classkindred identifier", $identifier);
+				if (!$required and $this->is_weakly_typed_system) {
+					return null;
+				}
+
+				$name = $this->get_type_name($identifier);
+				throw $this->new_syntax_error("Symbol of '{$name}' not found when find classkindred identifier", $identifier);
 			}
 
-			if ($symbol->declaration instanceof UseDeclaration) {
-				$symbol->declaration = $this->get_source_declaration_for_use($symbol->declaration);
-			}
-			elseif (!$symbol->declaration instanceof ClassKindredDeclaration) {
-				throw $this->new_syntax_error("Declaration of '{$identifier->name}' not a classkindred declaration", $identifier);
-			}
-
-			$identifier->symbol = $symbol;
+			$this->attach_symbol_for_classkindred_identifier($identifier, $symbol);
 		}
 
 		$declaration = $symbol->declaration;
-
-		$temp_program = $this->program;
-		$this->program = $declaration->program;
-		$this->check_classkindred_declaration($declaration);
-		$this->program = $temp_program;
+		$this->check_depends_classkindred_declaration($declaration);
 
 		return $declaration;
 	}
 
-	private function get_symbol_for_classkindred_identifier(ClassKindredIdentifier $identifier)
+	private function check_depends_classkindred_declaration(ClassKindredDeclaration $declaration)
+	{
+		if ($declaration->is_checked) {
+			return;
+		}
+
+		$temp_program = $this->program;
+		$this->program = $declaration->program;
+		$this->check_local_classkindred_declaration($declaration);
+		$this->program = $temp_program;
+	}
+
+	private function attach_symbol_for_classkindred_identifier(ClassKindredIdentifier $identifier, Symbol $symbol)
+	{
+		if ($symbol->declaration instanceof UseDeclaration) {
+			$symbol->declaration = $this->get_source_declaration_for_use($symbol->declaration);
+		}
+		elseif (!$symbol->declaration instanceof ClassKindredDeclaration) {
+			throw $this->new_syntax_error("Declaration of '{$identifier->name}' not a classkindred declaration", $identifier);
+		}
+
+		$identifier->symbol = $symbol;
+	}
+
+	private function find_symbol_for_classkindred_identifier(ClassKindredIdentifier $identifier)
 	{
 		if ($identifier->ns) {
-			$ns_declaration = $this->get_namespace_declaration($identifier->ns);
-			$symbol = $ns_declaration->symbols[$identifier->name] ?? null;
-			if ($symbol) {
-				$identifier->ns = null;
-			}
+			$symbol = $this->find_symbol_in_namespace($identifier->ns, $identifier->name, $this->unit)
+				?? $this->find_symbol_in_namespace($identifier->ns, $identifier->name, $this->builtin_unit);
 		}
 		else {
 			$symbol = $this->program->symbols[$identifier->name]
@@ -2832,18 +2964,16 @@ class ASTChecker
 		return $symbol;
 	}
 
-	private function get_namespace_declaration(NamespaceIdentifier $ns)
-	{
-		$names = $ns->names;
-		if ($names[0] === '') {
-			array_shift($names);
-		}
+	// private function require_namespace_declaration_in_unit(NamespaceIdentifier $identifier)
+	// {
+	// 	$ns_decl = $this->find_namespace_declaration_in_unit($this->unit, $identifier)
+	// 		?? $this->find_namespace_declaration_in_unit($this->builtin_unit, $identifier);
+	// 	if ($ns_decl === null) {
+	// 		throw $this->new_syntax_error("Namespace '{$identifier->uri}' not found in unit '{$this->unit->uri}'", $identifier);
+	// 	}
 
-		$uri = implode(_SLASH, $names);
-
-		$unit = $this->unit->use_units[$uri] ?? null;
-		return $unit;
-	}
+	// 	return $ns_decl;
+	// }
 
 	private function get_source_declaration_for_use(UseDeclaration $use): ?IRootDeclaration
 	{
@@ -2887,7 +3017,7 @@ class ASTChecker
 
 	protected function get_uses_unit_declaration(NamespaceIdentifier $ns): ?Unit
 	{
-		$unit = $this->unit->use_units[$ns->uri] ?? null;
+		$unit = $this->get_unit_by_uri($ns->uri);
 		if ($unit === null) {
 			// for PHP uses
 			if ($ns->uri === $this->unit->name) {
@@ -3000,7 +3130,7 @@ class ASTChecker
 			$name = join('|', $names);
 		}
 		else {
-			$name = $type ? $type->name : '-';
+			$name = $type ? static::get_identifier_name($type) : '-';
 		}
 
 		if ($type->nullable) {
@@ -3009,6 +3139,18 @@ class ASTChecker
 
 		if ($type->has_null) {
 			$name .= ' assigned none';
+		}
+
+		return $name;
+	}
+
+	static function get_identifier_name(Identifiable $identifier)
+	{
+		$name = $identifier->name;
+		if ($identifier instanceof ClassKindredIdentifier and $identifier->ns) {
+			$names = $identifier->ns->names;
+			$names[] = $name;
+			$name = join(static::NS_SEPARATOR, $names);
 		}
 
 		return $name;

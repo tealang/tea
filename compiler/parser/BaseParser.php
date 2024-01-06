@@ -11,7 +11,7 @@ namespace Tea;
 
 abstract class BaseParser
 {
-	const IS_IN_HEADER = false;
+	public $is_parsing_header = false;
 
 	protected $file;
 

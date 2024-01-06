@@ -159,23 +159,24 @@ class PHPParserLite extends BaseParser
 
 	private function read_namespace_statement()
 	{
-		if ($this->program->ns) {
+		if ($this->namespace !== null) {
 			throw $this->new_parse_error("Cannot redeclare a new namespace");
 		}
 
 		$token = $this->scan_token();
 		$names = $this->read_qualified_name_with($token);
 
-		$ns = $this->create_namespace_identifier($names);
+		$ns = $this->create_namespace_identifier($names, true);
+		$this->namespace = $ns;
 		$this->program->ns = $ns;
 
 		$statement = new NamespaceStatement($ns);
 		return $statement;
 	}
 
-	public function create_namespace_identifier(array $names)
+	private function create_namespace_identifier(array $names, bool $root_required = false)
 	{
-		$ns = new NamespaceIdentifier($names);
+		$ns = $this->factory->create_namespace_identifier($names, $root_required);
 		$ns->pos = $this->pos;
 
 		return $ns;
@@ -213,7 +214,7 @@ class PHPParserLite extends BaseParser
 				$next = $this->scan_token_ignore_empty();
 				if ($next === _BLOCK_BEGIN) {
 					// the multi targets mode
-					$ns = $this->create_namespace_identifier($names);
+					$ns = $this->create_namespace_identifier($names, true);
 					$targets = $this->read_use_targets($ns);
 					$this->expect_block_end();
 					break;
@@ -234,7 +235,7 @@ class PHPParserLite extends BaseParser
 		// the single target mode
 		if ($targets === null) {
 			$name = array_pop($names);
-			$ns = $this->create_namespace_identifier($names);
+			$ns = $this->create_namespace_identifier($names, true);
 
 			if ($alias_name) {
 				$target = $this->factory->append_use_target($ns, $alias_name, $name);
@@ -422,8 +423,9 @@ class PHPParserLite extends BaseParser
 	{
 		$name = $this->expect_identifier_name();
 
-		$declaration = $this->factory->create_interface_declaration($name, _PUBLIC);
-		$declaration->ns = $this->namespace;
+		$declaration = $this->factory->create_interface_declaration($name, _PUBLIC, $this->namespace);
+		$declaration->pos = $this->pos;
+
 		if ($this->skip_typed_token(T_EXTENDS)) {
 			$declaration->baseds = $this->expect_identifier_name();
 		}
@@ -442,9 +444,8 @@ class PHPParserLite extends BaseParser
 	{
 		$name = $this->expect_identifier_name();
 
-		$declaration = $this->factory->create_class_declaration($name, _PUBLIC);
+		$declaration = $this->factory->create_class_declaration($name, _PUBLIC, $this->namespace);
 		$declaration->pos = $this->pos;
-		$declaration->ns = $this->namespace;
 		$declaration->is_abstract = $is_abstract;
 
 		if ($this->skip_typed_token(T_EXTENDS)) {
@@ -596,8 +597,7 @@ class PHPParserLite extends BaseParser
 	private function read_constant_declaration(?string $doc)
 	{
 		$name = $this->expect_identifier_name();
-		$declaration = $this->factory->create_constant_declaration(_PUBLIC, $name);
-		$declaration->ns = $this->namespace;
+		$declaration = $this->factory->create_constant_declaration(_PUBLIC, $name, $this->namespace);
 
 		$this->expect_char_token(_ASSIGN);
 		$declaration->type = $this->read_value_type_skip($doc);
@@ -805,8 +805,7 @@ class PHPParserLite extends BaseParser
 	{
 		$name = $this->expect_identifier_name();
 
-		$declaration = $this->factory->create_function_declaration(_PUBLIC, $name);
-		$declaration->ns = $this->namespace;
+		$declaration = $this->factory->create_function_declaration(_PUBLIC, $name, $this->namespace);
 
 		$parameters = $this->read_parameters();
 		$return_type = $this->try_read_function_return_type();
@@ -1011,15 +1010,11 @@ class PHPParserLite extends BaseParser
 		$identifier->pos = $this->pos;
 
 		if ($ns_components) {
-			if ($ns_components[0] === _NOTHING) {
-				array_shift($ns_components);
-			}
-
 			$ns = $this->create_namespace_identifier($ns_components);
 			$identifier->set_namespace($ns);
 
-			$target = $this->factory->append_use_target($ns, $name);
-			$statement = $this->create_use_statement_when_not_exists($ns, [$target]);
+			// $target = $this->factory->append_use_target($ns, $name);
+			// $statement = $this->create_use_statement_when_not_exists($ns, [$target]);
 		}
 
 		$this->program->set_defer_check_identifier($identifier);

@@ -95,7 +95,7 @@ trait TeaSharpTrait
 		if (TeaHelper::is_constant_name($name)) {
 			$next = $this->get_token_ignore_space();
 			if ($next !== _BLOCK_BEGIN && $next !== _COLON && $next !== _AS) {
-				return $this->read_constant_declaration_without_value($name, _PUBLIC);
+				return $this->read_constant_declaration_without_value($name, _PUBLIC, $this->factory->root_namespace, true);
 			}
 		}
 
@@ -109,23 +109,19 @@ trait TeaSharpTrait
 				}
 			}
 
-			$this->is_declare_mode = true;
-
 			if (TeaHelper::is_interface_marked_name($name)) {
-				$declaration = $this->read_interface_declaration($name, _PUBLIC);
+				$declaration = $this->read_interface_declaration($name, _PUBLIC, $this->factory->root_namespace, true);
 			}
 			else {
-				$declaration = $this->read_class_declaration($name, _PUBLIC);
+				$declaration = $this->read_class_declaration($name, _PUBLIC, $this->factory->root_namespace, true);
 			}
-
-			$this->is_declare_mode = false;
 
 			if (isset($origin_name)) {
 				$declaration->origin_name = $origin_name;
 			}
 		}
 		elseif (TeaHelper::is_strict_less_function_name($name)) {
-			$declaration = $this->read_function_declaration($name, _PUBLIC, true);
+			$declaration = $this->read_function_declaration($name, _PUBLIC, $this->factory->root_namespace, true);
 		}
 		// elseif ($name === _DOLLAR) {
 		// 	$name = $this->expect_identifier_token();
@@ -214,7 +210,7 @@ trait TeaSharpTrait
 
 	protected function read_unit_declaration()
 	{
-		if (!static::IS_IN_HEADER) {
+		if (!$this->is_parsing_header) {
 			throw $this->new_parse_error("The '#unit' label could not be used at here.");
 		}
 
@@ -274,7 +270,7 @@ trait TeaSharpTrait
 			throw $this->new_parse_error(sprintf("It's too many namespace levels, the max levels is %d.", _NS_LEVELS_MAX));
 		}
 
-		$ns = new NamespaceIdentifier($names);
+		$ns = $this->factory->create_namespace_identifier($names, true);
 		$ns->pos = $this->pos;
 
 		return $ns;
@@ -302,7 +298,7 @@ trait TeaSharpTrait
 
 	private function read_use_statement()
 	{
-		if (!static::IS_IN_HEADER) {
+		if (!$this->is_parsing_header) {
 			throw $this->new_parse_error("The '#use' statements can only be used in the __unit.th or __public.th files.");
 		}
 

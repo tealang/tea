@@ -11,7 +11,7 @@ namespace Tea;
 
 interface IClassMemberDeclaration extends IMemberDeclaration {}
 
-trait IClassMemberDeclarationTrait
+trait ClassMemberDeclarationTrait
 {
 	public $modifier;
 	public $is_static = false;
@@ -20,7 +20,7 @@ trait IClassMemberDeclarationTrait
 
 class PropertyDeclaration extends BaseVariableDeclaration implements IClassMemberDeclaration, IBlock
 {
-	use IClassMemberDeclarationTrait;
+	use ClassMemberDeclarationTrait;
 
 	const KIND = 'property_declaration';
 
@@ -32,3 +32,5 @@ class PropertyDeclaration extends BaseVariableDeclaration implements IClassMembe
 		$this->type = $type;
 	}
 }
+
+// end

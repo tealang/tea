@@ -22,17 +22,24 @@ class NamespaceIdentifier extends Node
 
 	public function __construct(array $names)
 	{
-		$this->set_names($names);
-	}
-
-	public function set_names(array $names)
-	{
 		$this->names = $names;
 		$this->uri = join(_SLASH, $names);
 	}
 
 	public function get_last_name()
 	{
-		return $this->names[count($this->names) - 1];
+		return $this->names[array_key_last($this->names)];
+	}
+
+	public function get_namepath()
+	{
+		$names = $this->names;
+		if ($names[0] === '') {
+			array_shift($names);
+		}
+
+		return $names;
 	}
 }
+
+// end

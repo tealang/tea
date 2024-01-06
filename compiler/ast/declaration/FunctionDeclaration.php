@@ -10,12 +10,13 @@
 namespace Tea;
 
 interface IScopeBlock extends IBlock, ICallableDeclaration {}
+interface IFunctionDeclaration extends IScopeBlock {}
 
 trait IScopeBlockTrait
 {
 	use DeclarationTrait, IBlockTrait;
 
-	// public $is_static = false;
+	public $callbacks;
 
 	public $is_hinted_return_type = false;
 
@@ -27,30 +28,7 @@ trait IScopeBlockTrait
 
 	public $is_checking; // set true when on checking by ASTChecker
 
-	function set_body_with_expression(BaseExpression $expression)
-	{
-		$this->body = $expression;
-	}
-}
-
-class FunctionDeclaration extends Node implements IScopeBlock, IClassMemberDeclaration, IRootDeclaration
-{
-	use IClassMemberDeclarationTrait, IScopeBlockTrait;
-
-	const KIND = 'function_declaration';
-
-	public $ns;
-
-	// public $modifier;
-
-	public $callbacks;
-
-	/**
-	 * @var Program
-	 */
-	public $program;
-
-	function __construct(?string $modifier, string $name, IType $type = null, array $parameters = null)
+	public function __construct(?string $modifier, string $name, IType $type = null, array $parameters = null)
 	{
 		if ($modifier !== null && $modifier === _PUBLIC) {
 			$this->is_unit_level = true;
@@ -62,10 +40,26 @@ class FunctionDeclaration extends Node implements IScopeBlock, IClassMemberDecla
 		$this->parameters = $parameters;
 	}
 
-	// function set_callbacks(CallbackProtocol ...$callbacks)
-	// {
-	// 	$this->callbacks = $callbacks;
-	// }
+	public function set_body_with_expression(BaseExpression $expression)
+	{
+		$this->body = $expression;
+	}
+}
+
+class FunctionDeclaration extends RootDeclaration implements IFunctionDeclaration, IRootDeclaration
+{
+	use IScopeBlockTrait;
+
+	const KIND = 'function_declaration';
+
+	public $is_static = false;
+}
+
+class MethodDeclaration extends Node implements IFunctionDeclaration, IClassMemberDeclaration, IRootDeclaration
+{
+	use ClassMemberDeclarationTrait, IScopeBlockTrait;
+
+	const KIND = 'method_declaration';
 }
 
 // end

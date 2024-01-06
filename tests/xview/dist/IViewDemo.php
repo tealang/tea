@@ -2,7 +2,7 @@
 namespace tests\xview;
 
 #public
-interface IViewDemo extends IView {
+interface IViewDemo extends \IView {
 	public function set_css_class(string $names);
 }
 

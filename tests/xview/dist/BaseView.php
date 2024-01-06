@@ -2,7 +2,7 @@
 namespace tests\xview;
 
 #public
-class BaseView implements IView {
+class BaseView implements \IView {
 	public $name;
 
 	protected $props = [];

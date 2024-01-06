@@ -3,8 +3,8 @@ namespace tea\examples;
 
 const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
-$super_path = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR; // the workspace/vendor path
-require_once $super_path . 'tea/builtin/__public.php'; // the builtins
+$super_path = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR;
+require_once $super_path . 'tea-modules/tea/builtin/__public.php';
 
 // program end
 

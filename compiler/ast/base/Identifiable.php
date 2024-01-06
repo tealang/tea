@@ -68,6 +68,8 @@ class PlainIdentifier extends Identifiable implements IType
 
 	const KIND = 'plain_identifier';
 
+	public $ns;
+
 	public $generic_types;
 
 	public static function create_with_symbol(Symbol $symbol)
@@ -128,8 +130,6 @@ class VariableIdentifier extends PlainIdentifier
 class ClassKindredIdentifier extends PlainIdentifier
 {
 	const KIND = 'classkindred_identifier';
-
-	public $ns;
 
 	public function __construct(string $name)
 	{

@@ -133,6 +133,7 @@ class PHPCoder extends TeaCoder
 
 		$ns_uri = $program->unit->dist_ns_uri;
 		if ($ns_uri !== null) {
+			$ns_uri = ltrim($ns_uri, _BACK_SLASH);
 			$items[] = "namespace $ns_uri;\n";
 		}
 
@@ -269,7 +270,7 @@ class PHPCoder extends TeaCoder
 		return $code;
 	}
 
-	protected function generate_function_header(FunctionDeclaration $node)
+	protected function generate_function_header(IFunctionDeclaration $node)
 	{
 		$modifier = '';
 		if ($node->belong_block) {
@@ -369,6 +370,18 @@ class PHPCoder extends TeaCoder
 	public function render_masked_declaration(MaskedDeclaration $node)
 	{
 		return null;
+	}
+
+	public function render_method_declaration(MethodDeclaration $node)
+	{
+		if ($node->body === null) {
+			return null;
+		}
+
+		$header = $this->generate_function_header($node);
+		$body = $this->render_function_body($node);
+
+		return $header . ' ' . $body;
 	}
 
 	public function render_function_declaration(FunctionDeclaration $node)
@@ -541,7 +554,7 @@ class PHPCoder extends TeaCoder
 		if ($node->has_default_implementations) {
 			$trait_members = [];
 			foreach ($node->members as $member) {
-				if ($member instanceof PropertyDeclaration || ($member instanceof FunctionDeclaration && $member->body !== null)) {
+				if ($member instanceof PropertyDeclaration || ($member instanceof MethodDeclaration && $member->body !== null)) {
 					$trait_members[] = $member;
 				}
 			}
@@ -570,7 +583,7 @@ class PHPCoder extends TeaCoder
 				continue;
 			}
 
-			if ($member instanceof FunctionDeclaration) {
+			if ($member instanceof MethodDeclaration) {
 				$item = $this->render_interface_method($member);
 			}
 			elseif ($member instanceof ClassConstantDeclaration) {
@@ -586,7 +599,7 @@ class PHPCoder extends TeaCoder
 		return $members;
 	}
 
-	protected function render_interface_method(FunctionDeclaration $node)
+	protected function render_interface_method(MethodDeclaration $node)
 	{
 		$header = $this->generate_function_header($node);
 		return $header . static::CLASS_MEMBER_TERMINATOR;
@@ -916,7 +929,7 @@ class PHPCoder extends TeaCoder
 	private function get_normalized_class_member_name(IClassMemberDeclaration $declaration)
 	{
 		$name = $declaration->name;
-		if (isset(static::CLASS_MEMBER_NAMES_MAP[$name]) && $declaration instanceof FunctionDeclaration) {
+		if (isset(static::CLASS_MEMBER_NAMES_MAP[$name]) && $declaration instanceof MethodDeclaration) {
 			$name = static::CLASS_MEMBER_NAMES_MAP[$name];
 		}
 
@@ -1197,7 +1210,8 @@ class PHPCoder extends TeaCoder
 
 		if (!$node->is_call_mode) {
 			if ($declaration instanceof FunctionDeclaration) {
-				$name = sprintf("'%s%s%s'", $declaration->program->unit->dist_ns_uri, static::NS_SEPARATOR, $name);
+				$uri = ltrim($declaration->program->unit->dist_ns_uri, static::NS_SEPARATOR);
+				$name = sprintf("'%s%s%s'", $uri, static::NS_SEPARATOR, $name);
 			}
 			elseif ($declaration instanceof ClassKindredDeclaration) {
 				$name = TeaHelper::is_builtin_type_name($declaration->name)

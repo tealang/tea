@@ -36,7 +36,7 @@ trait IBaseViewTrait {
 	public function build_attributes() {
 		$items = [];
 		foreach ($this->attributes as $key => $value) {
-			$items[] = $key . '="' . htmlspecialchars($value, ENT_QUOTES) . '"';
+			$items[] = $key . '="' . \html_encode($value) . '"';
 		}
 
 		return implode("\n", $items);
@@ -59,7 +59,7 @@ class ListView implements IBaseView {
 
 	public function get_subviews() {
 		return array_map(function ($item) {
-			return '<li>' . ($item === null ? '' : htmlspecialchars($item, ENT_QUOTES)) . '</li>';
+			return '<li>' . \html_encode($item) . '</li>';
 		}, $this->subitems);
 	}
 

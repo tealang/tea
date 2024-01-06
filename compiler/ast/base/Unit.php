@@ -30,12 +30,17 @@ class Unit implements IRootDeclaration
 	public $as_main_unit = false;
 
 	/**
+	 * @var array <string: NamespaceDeclaration>
+	 */
+	public $namespaces = [];
+
+	/**
 	 * @var array<Program>
 	 */
 	public $programs = [];
 
 	/**
-	 * @var array<string: Symbol>
+	 * @var array<string: TopSymbol>
 	 */
 	public $symbols = [];
 
@@ -71,3 +76,5 @@ class Unit implements IRootDeclaration
 		return substr($path, strlen($this->path));
 	}
 }
+
+// end

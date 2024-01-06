@@ -17,10 +17,14 @@ class ASTFactory
 	// for properties of Any type object in AccessingIdentifer
 	public static $virtual_property_for_any;
 
+	public $root_namespace;
+
 	// use for untyped catch
 	public $base_exception_identifier;
 
 	public $parser;
+
+	private $ns;
 
 	private $unit;
 
@@ -56,6 +60,7 @@ class ASTFactory
 
 	public function __construct(Unit $unit)
 	{
+		$this->root_namespace = $this->create_namespace_identifier([], true);
 		$this->unit = $unit;
 
 		// the constant 'UNIT_PATH'
@@ -79,6 +84,7 @@ class ASTFactory
 			throw $this->parser->new_parse_error("Cannot redeclare the unit namespace");
 		}
 
+		$this->ns = $ns;
 		$this->unit->ns = $ns;
 		$this->unit->name = $ns->uri;
 	}
@@ -114,13 +120,11 @@ class ASTFactory
 		$declaration = new UseDeclaration($ns, $target_name, $source_name);
 		$this->parser->attach_position($declaration);
 
-		$symbol = new Symbol($declaration);
-
-		if ($this->parser::IS_IN_HEADER) {
-			$this->create_global_symbol($declaration, $symbol);
+		if ($this->parser->is_parsing_header) {
+			$this->create_internal_symbol($declaration);
 		}
 		else {
-			$this->create_program_symbol($declaration, $symbol);
+			$this->create_program_symbol($declaration);
 		}
 
 		// need to check
@@ -168,6 +172,15 @@ class ASTFactory
 		}
 
 		return $identifier;
+	}
+
+	public function create_namespace_identifier(array $names, bool $root_required = false)
+	{
+		if ($root_required) {
+			array_unshift($names, _NOTHING);
+		}
+
+		return new NamespaceIdentifier($names);
 	}
 
 	public function create_builtin_identifier(string $token): BaseExpression
@@ -243,10 +256,7 @@ class ASTFactory
 
 	private function set_defer_check(Identifiable $identifier)
 	{
-		if (!$this->declaration instanceof FunctionDeclaration) {
-			$this->declaration->set_defer_check_identifier($identifier);
-		}
-		elseif (!$this->seek_symbol_in_function($identifier)) {
+		if (!$this->declaration instanceof IFunctionDeclaration or !$this->seek_symbol_in_function($identifier)) {
 			$this->declaration->set_defer_check_identifier($identifier);
 		}
 	}
@@ -361,13 +371,14 @@ class ASTFactory
 		}
 
 		$declaration = new BuiltinTypeClassDeclaration(_PUBLIC, $name);
-		$this->begin_class($declaration);
 
-		$symbol = $this->create_global_symbol($declaration);
+		$symbol = $this->create_internal_symbol($declaration);
 		$this->bind_class_symbol($declaration, $symbol);
 
 		// bind to type
 		$type_identifier->symbol = $symbol;
+
+		$this->begin_class($declaration);
 
 		return $declaration;
 	}
@@ -397,28 +408,30 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_class_declaration(string $name, string $modifier)
+	public function create_class_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
 	{
 		$this->check_global_modifier($modifier, 'class');
 
 		$declaration = new ClassDeclaration($modifier, $name);
-		$this->begin_class($declaration);
 
-		$symbol = $this->create_global_symbol($declaration);
+		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns, $is_declare_mode);
 		$this->bind_class_symbol($declaration, $symbol);
+
+		$this->begin_class($declaration);
 
 		return $declaration;
 	}
 
-	public function create_interface_declaration(string $name, string $modifier)
+	public function create_interface_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
 	{
 		$this->check_global_modifier($modifier, 'interface');
 
 		$declaration = new InterfaceDeclaration($modifier, $name);
-		$this->begin_class($declaration);
 
-		$symbol = $this->create_global_symbol($declaration);
+		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns, $is_declare_mode);
 		$this->bind_class_symbol($declaration, $symbol);
+
+		$this->begin_class($declaration);
 
 		return $declaration;
 	}
@@ -450,7 +463,7 @@ class ASTFactory
 	public function create_masked_declaration(string $name)
 	{
 		$declaration = new MaskedDeclaration(_PUBLIC, $name);
-		new Symbol($declaration);
+		$this->new_top_symbol($declaration);
 
 		$this->begin_class_member($declaration);
 
@@ -464,7 +477,7 @@ class ASTFactory
 
 	public function create_method_declaration(?string $modifier, string $name)
 	{
-		$declaration = new FunctionDeclaration($modifier, $name);
+		$declaration = new MethodDeclaration($modifier, $name);
 		new Symbol($declaration);
 
 		$this->begin_class_member($declaration);
@@ -472,14 +485,15 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_function_declaration(string $modifier, string $name)
+	public function create_function_declaration(string $modifier, string $name, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
 	{
 		$this->check_global_modifier($modifier, 'function');
 
 		$declaration = new FunctionDeclaration($modifier, $name);
 
+		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns, $is_declare_mode);
+
 		$this->begin_root_declaration($declaration);
-		$this->create_global_symbol($declaration);
 
 		return $declaration;
 	}
@@ -504,15 +518,17 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_constant_declaration(string $modifier, string $name)
+	public function create_constant_declaration(string $modifier, string $name, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
 	{
-		$this->check_global_modifier($modifier, 'non class member constant');
+		$this->check_global_modifier($modifier, 'constant');
 
 		$declaration = new ConstantDeclaration($modifier, $name);
 
-		$this->begin_root_declaration($declaration);
-		$symbol = $this->create_global_symbol($declaration);
+		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns, $is_declare_mode);
+
 		// $this->add_scope_symbol($symbol);
+
+		$this->begin_root_declaration($declaration);
 
 		return $declaration;
 	}
@@ -522,7 +538,7 @@ class ASTFactory
 	// 	$declaration = new SuperVariableDeclaration($name, $type);
 
 	// 	$this->begin_root_declaration($declaration);
-	// 	$this->create_global_symbol($declaration);
+	// 	$this->create_internal_symbol($declaration);
 
 	// 	return $declaration;
 	// }
@@ -753,7 +769,7 @@ class ASTFactory
 			throw $this->parser->new_parse_error("Class member '{$declaration->name}' of '{$this->class->name}' has duplicated");
 		}
 
-		if ($declaration instanceof FunctionDeclaration) {
+		if ($declaration instanceof MethodDeclaration) {
 			$this->scope = $declaration;
 			$this->function = $declaration;
 		}
@@ -867,7 +883,7 @@ class ASTFactory
 
 		$symbol = $this->seek_symbol_in_encolsing($identifier->name, $seek_block);
 
-		if (!$symbol && $seek_block) {
+		if ($symbol === null && $seek_block) {
 			// add to lambda check list
 			if ($seek_block instanceof LambdaExpression) {
 				$seek_block->set_defer_check_identifier($identifier);
@@ -919,23 +935,25 @@ class ASTFactory
 	// 	return $symbol;
 	// }
 
-	private function create_program_symbol(IDeclaration $declaration, Symbol $symbol = null)
+	private function new_top_symbol(IDeclaration $declaration)
 	{
-		if (!$symbol) {
-			$symbol = new Symbol($declaration);
-		}
+		return new TopSymbol($declaration);
+	}
 
+	private function create_program_symbol(IDeclaration $declaration)
+	{
+		$symbol = $this->new_top_symbol($declaration);
 		$this->add_program_symbol($symbol);
 
 		return $symbol;
 	}
 
-	private function create_global_symbol(IDeclaration $declaration, Symbol $symbol = null)
+	private function create_internal_symbol(IDeclaration $declaration, Symbol $symbol = null)
 	{
 		$declaration->program = $this->program;
 
-		if (!$symbol) {
-			$symbol = new Symbol($declaration);
+		if ($symbol === null) {
+			$symbol = $this->new_top_symbol($declaration);
 		}
 
 		$this->add_program_symbol($symbol);
@@ -944,61 +962,72 @@ class ASTFactory
 		return $symbol;
 	}
 
-	// private function create_global_symbol_with_namepath(array $namepath, IDeclaration $declaration)
-	// {
-	// 	$declaration->program = $this->program;
-	// 	$symbol = new Symbol($declaration);
+	private function create_external_symbol(IDeclaration $declaration, NamespaceIdentifier $ns)
+	{
+		$declaration->set_namespace($ns);
+		$declaration->program = $this->program;
 
-	// 	$ns_name = array_shift($namepath);
-	// 	$ns_symbol = $this->unit->symbols[$ns_name] ?? null;
+		$symbol = $this->new_top_symbol($declaration);
 
-	// 	if ($ns_symbol) {
-	// 		// maybe already used as a class
-	// 		if (!$ns_symbol instanceof NamespaceSymbol) {
-	// 			throw $this->parser->new_parse_error("'$ns_name' is already in use, cannot reuse to declare {$declaration->name}");
-	// 		}
-	// 	}
-	// 	else {
-	// 		$ns_symbol = $this->create_symbol_for_ns($ns_name);
-	// 		$this->add_unit_symbol($ns_symbol);
-	// 	}
+		$ns_decl = $this->find_or_create_namespace_declaration($declaration->ns->names);
+		if (isset($ns_decl->symbols[$symbol->name])) {
+			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in namespace '{$ns_decl->uri}' of unit '{$this->unit->name}'");
+		}
 
-	// 	foreach ($namepath as $sub_ns_name) {
-	// 		$ns_symbol = $this->find_or_create_subsymbol_for_ns($ns_symbol, $sub_ns_name);
-	// 	}
+		$ns_decl->symbols[$symbol->name] = $symbol;
 
-	// 	// add as a sub-symbol for check
-	// 	$ns_symbol->declaration->symbols[$symbol->name] = $symbol;
+		return $symbol;
+	}
 
-	// 	return $symbol;
-	// }
+	private function create_symbol_for_top_declaration(RootDeclaration $declaration, ?NamespaceIdentifier $ns, bool $is_declare_mode)
+	{
+		$special_namespace = $ns !== null && ($this->ns === null || $ns->uri !== $this->ns->uri);
 
-	// private function create_symbol_for_ns(string $ns_name)
-	// {
-	// 	$declaration = new NamespaceDeclaration($ns_name);
-	// 	return new NamespaceSymbol($declaration);
-	// }
+		if ($special_namespace) {
+			$symbol = $this->create_external_symbol($declaration, $ns);
+			if ($is_declare_mode) {
+				$this->create_internal_symbol($declaration, $symbol);
+			}
+		}
+		else {
+			$symbol = $this->create_internal_symbol($declaration);
+		}
 
-	// private function find_or_create_subsymbol_for_ns(NamespaceSymbol $super_symbol, string $sub_ns_name)
-	// {
-	// 	$sub_ns_symbol = $super_symbol->declaration->symbols[$sub_ns_name] ?? null;
-	// 	if ($sub_ns_symbol) {
-	// 		if (!$sub_ns_symbol instanceof NamespaceSymbol) {
-	// 			throw $this->parser->new_parse_error("'$sub_ns_name' is already in use, cannot reuse to declare a namespace");
-	// 		}
-	// 	}
-	// 	else {
-	// 		$sub_ns_symbol = $this->create_symbol_for_ns($sub_ns_name);
-	// 		$super_symbol->declaration->symbols[$sub_ns_name] = $sub_ns_symbol;
-	// 	}
+		return $symbol;
+	}
 
-	// 	return $sub_ns_symbol;
-	// }
+	private function find_or_create_namespace_declaration(array $namepath)
+	{
+		$ns_name = array_shift($namepath);
+
+		$ns_decl = $this->unit->namespaces[$ns_name] ?? null;
+		if ($ns_decl === null) {
+			$ns_decl = $this->create_namespace_declaration($ns_name);
+			$this->unit->namespaces[$ns_name] = $ns_decl;
+		}
+
+		foreach ($namepath as $sub_ns_name) {
+			$sub_ns_decl = $ns_decl->namespaces[$sub_ns_name] ?? null;
+			if ($sub_ns_decl === null) {
+				$sub_ns_decl = $this->create_namespace_declaration($sub_ns_name);
+				$ns_decl->namespaces[$sub_ns_name] = $sub_ns_decl;
+			}
+
+			$ns_decl = $sub_ns_decl;
+		}
+
+		return $ns_decl;
+	}
+
+	private function create_namespace_declaration(string $name)
+	{
+		return new NamespaceDeclaration($name);
+	}
 
 	private function add_unit_symbol(Symbol $symbol)
 	{
 		if (isset($this->unit->symbols[$symbol->name])) {
-			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in unit '{$this->unit->name}', cannot redeclare");
+			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in unit '{$this->unit->name}'");
 		}
 
 		$this->unit->symbols[$symbol->name] = $symbol;
@@ -1007,7 +1036,7 @@ class ASTFactory
 	private function add_program_symbol(Symbol $symbol)
 	{
 		if (isset($this->program->symbols[$symbol->name])) {
-			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in current program, cannot redeclare");
+			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in current program");
 		}
 
 		$this->program->symbols[$symbol->name] = $symbol;
@@ -1016,7 +1045,7 @@ class ASTFactory
 	private function add_scope_symbol(Symbol $symbol)
 	{
 		if (isset($this->scope->symbols[$symbol->name])) {
-			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in current scope, cannot redeclare");
+			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in current scope");
 		}
 
 		$this->scope->symbols[$symbol->name] = $symbol;
@@ -1025,7 +1054,7 @@ class ASTFactory
 	private function add_block_symbol(Symbol $symbol)
 	{
 		if (isset($this->block->symbols[$symbol->name])) {
-			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in local block, cannot redeclare");
+			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in local block");
 		}
 
 		$this->block->symbols[$symbol->name] = $symbol;

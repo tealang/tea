@@ -12,6 +12,7 @@ namespace Tea;
 interface IBlock {}
 
 trait IBlockTrait {
+
 	public $label;
 
 	/**

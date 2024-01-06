@@ -16,8 +16,8 @@ const
 
 class Compiler
 {
-	const BASE_WORKSPACE = 0;
-	const BASE_SUPER = 1;
+	const BASED_FAMILLY = 0;
+	const BASED_WORKSPACE = 1;
 
 	// the path of current compiling unit
 	private $unit_path;
@@ -248,12 +248,12 @@ class Compiler
 
 	private function prepare_unit_paths()
 	{
-		$base_level = count($this->unit->ns->names);
-		if ($base_level > 1) {
-			$base_level -= 1;
+		$based_level = count($this->unit->ns->names) - 1; // the first is ''
+		if ($based_level > 1) {
+			$based_level--;
 		}
 
-		$this->work_path = dirname($this->unit_path, $base_level) . DS;
+		$this->work_path = dirname($this->unit_path, $based_level) . DS;
 		$this->super_path = dirname($this->work_path) . DS;
 
 		// set the dist paths
@@ -342,9 +342,9 @@ class Compiler
 		}
 
 		// find the target relative path
-		[$base_path_type, $unit_dir] = $this->find_unit_dir_for_namespace($ns);
+		[$path_based_type, $unit_dir] = $this->find_unit_dir_for_namespace($ns);
 
-		$unit_path = $base_path_type === self::BASE_SUPER
+		$unit_path = $path_based_type === self::BASED_WORKSPACE
 			? $this->super_path
 			: $this->work_path;
 
@@ -364,7 +364,7 @@ class Compiler
 		$unit->symbols = $this->builtin_symbols;
 
 		$loader_file = $unit_dir . DS . PUBLIC_LOADER_FILE_NAME; // for render the require statements
-		$this->loaders[$uri] = [$base_path_type, $loader_file];
+		$this->loaders[$uri] = [$path_based_type, $loader_file];
 
 		// add to pool, so do not need to reload
 		$this->units_pool[$uri] = $unit;
@@ -386,22 +386,26 @@ class Compiler
 		// second search
 		if ($relative_path === false) {
 			$relative_path = $this->try_search_all_dirs($ns->names, $this->super_path);
-			$base_path_type = self::BASE_SUPER;
+			$path_based_type = self::BASED_WORKSPACE;
 		}
 		else {
-			$base_path_type = self::BASE_WORKSPACE;
+			$path_based_type = self::BASED_FAMILLY;
 		}
 
 		if ($relative_path === false) {
-			$dirs = join('", and "', $this->search_dirs);
-			throw new Exception("The depends unit '{$ns->uri}' not found in (\"$dirs\"), based on path: '{$this->work_path}'");
+			$dirs = $this->work_path . join("', '{$this->work_path}", $this->search_dirs);
+			throw new Exception("The depends unit '{$ns->uri}' not found in ('{$dirs}')");
 		}
 
-		return [$base_path_type, $relative_path];
+		return [$path_based_type, $relative_path];
 	}
 
 	private function try_search_all_dirs(array $names, string $searching_path)
 	{
+		if ($names[0] === '') {
+			array_shift($names);
+		}
+
 		foreach ($this->search_dirs as $dir) {
 			$relative_path = $this->try_look_in_dir($dir, $names, $searching_path);
 			if ($relative_path) {
@@ -565,11 +569,16 @@ class Compiler
 
 	private function collect_autoloads(Program $program, string $dist_file_path, string $name_prefix = null)
 	{
+		if ($name_prefix !== null) {
+			$name_prefix = ltrim($name_prefix, _BACK_SLASH);
+		}
+
 		$dist_file_path = substr($dist_file_path, $this->unit_path_prefix_len);
 
 		foreach ($program->declarations as $node) {
 			if ($node instanceof ClassKindredDeclaration && !$node instanceof BuiltinTypeClassDeclaration && $node->label !== _PHP) {
 				$name = $name_prefix . $node->name;
+
 				$this->autoloads_map[$name] = $dist_file_path;
 
 				// 接口的伴生Trait

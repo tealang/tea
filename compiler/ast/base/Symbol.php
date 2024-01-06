@@ -26,17 +26,9 @@ class Symbol
 	}
 }
 
-class NamespaceSymbol extends Symbol
+class TopSymbol extends Symbol
 {
-	public $name;
-
-	public $declaration;
-
-	public function __construct(IMemberDeclaration $declaration)
-	{
-		$this->name = $declaration->name;
-		$this->declaration = $declaration;
-		$declaration->symbol = $this;
-	}
+	//
 }
 
+// end
