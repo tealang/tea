@@ -60,8 +60,8 @@ class ASTFactory
 
 	public function __construct(Unit $unit)
 	{
-		$this->root_namespace = $this->create_namespace_identifier([], true);
 		$this->unit = $unit;
+		$this->root_namespace = $this->create_namespace_identifier(['']);
 
 		// the constant 'UNIT_PATH'
 		$declaration = new ConstantDeclaration(_PUBLIC, _UNIT_PATH, TypeFactory::$_string, null);
@@ -174,13 +174,10 @@ class ASTFactory
 		return $identifier;
 	}
 
-	public function create_namespace_identifier(array $names, bool $root_required = false)
+	public function create_namespace_identifier(array $names)
 	{
-		if ($root_required) {
-			array_unshift($names, _NOTHING);
-		}
-
-		return new NamespaceIdentifier($names);
+		$ns = new NamespaceIdentifier($names);
+		return $ns;
 	}
 
 	public function create_builtin_identifier(string $token): BaseExpression

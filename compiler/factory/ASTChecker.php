@@ -13,8 +13,6 @@ class ASTChecker
 {
 	const NS_SEPARATOR = _SLASH;
 
-	const NS_ROOT_MARK = _SLASH;
-
 	protected $is_weakly_typed_system = false;
 
 	/**
@@ -2517,50 +2515,72 @@ class ASTChecker
 		}
 	}
 
+	private function find_symbol_for_type(BaseType $type)
+	{
+		$name = $type->name;
+
+		$symbol = $this->program->symbols[$name]
+			?? $this->get_symbol_in_unit($this->unit, $name)
+			?? $this->get_symbol_in_unit($this->builtin_unit, $name);
+
+		return $symbol;
+	}
+
 	private function find_symbol_for_plain_identifier(PlainIdentifier $identifier)
 	{
 		$name = $identifier->name;
+		$based_ns = $identifier->ns;
 
-		if ($identifier->ns) {
-			$symbol = $this->find_symbol_in_namespace($identifier->ns, $name, $this->unit)
-				?? $this->find_symbol_in_namespace($identifier->ns, $name, $this->builtin_unit);
-
-			if ($symbol === null) {
-				$ns_unit = $this->get_unit_by_uri($identifier->ns->uri);
-				if ($ns_unit !== null) {
-					$symbol = $this->get_symbol_in_unit($ns_unit, $name);
-				}
+		if ($based_ns) {
+			$this->check_namespace($based_ns);
+			$based_unit = $based_ns->based_unit;
+			if ($based_unit === null) {
+				// namespace mode
+				$symbol = $this->find_symbol_in_namespace($based_ns, $name, $this->unit)
+					?? $this->find_symbol_in_namespace($based_ns, $name, $this->builtin_unit);
+			}
+			else {
+				// unit mode
+				$symbol = $this->get_symbol_in_unit($based_unit, $name);
 			}
 		}
 		else {
-			$symbol = $this->program->symbols[$name] ?? null;
-			if ($symbol === null) {
-				$symbol = $this->get_symbol_in_unit($this->unit, $name)
-					?? $this->get_symbol_in_unit($this->builtin_unit, $name);
-				if ($symbol !== null) {
-					$symbol->declaration->is_unit_level = true;
-				}
-			}
+			$symbol = $this->program->symbols[$name]
+				?? $this->get_symbol_in_unit($this->unit, $name)
+				?? $this->get_symbol_in_unit($this->builtin_unit, $name);
 		}
 
 		return $symbol;
 	}
 
-	private function get_symbol_in_unit(Unit $unit, string $name)
+	private function check_namespace(NamespaceIdentifier $ns)
 	{
-		return $unit->symbols[$name] ?? null;
+		$names = $ns->get_namepath();
+
+		$found_unit = null;
+		while ($names) {
+			$uri = join(_SLASH, $names);
+			$found_unit = $this->unit->use_units[$uri] ?? null;
+			if ($found_unit !== null) {
+				break;
+			}
+
+			array_pop($names);
+		}
+
+		if ($found_unit) {
+			$ns->set_based_unit($found_unit);
+			$new_ns_names = $ns->get_namepath();
+			$new_ns_names = array_slice($new_ns_names, count($found_unit->ns->names));
+			$ns->set_names($new_ns_names);
+		}
 	}
 
-	private function find_symbol_for_type(BaseType $type)
+	private function get_symbol_in_unit(Unit $unit, string $name)
 	{
-		$name = $type->name;
-
-		$symbol = $this->program->symbols[$name] ?? null;
-		if ($symbol === null) {
-			$symbol = $this->unit->symbols[$name] ?? $this->builtin_unit->symbols[$name] ?? null;
-			if ($symbol !== null) {
-				$symbol->declaration->is_unit_level = true;
-			}
+		$symbol = $unit->symbols[$name] ?? null;
+		if ($symbol !== null) {
+			$symbol->declaration->is_unit_level = true;
 		}
 
 		return $symbol;
@@ -2905,7 +2925,7 @@ class ASTChecker
 	{
 		$symbol = $identifier->symbol;
 		if ($symbol === null) {
-			$symbol = $this->find_symbol_for_classkindred_identifier($identifier);
+			$symbol = $this->find_symbol_for_plain_identifier($identifier);
 			if ($symbol === null) {
 				if (!$required and $this->is_weakly_typed_system) {
 					return null;
@@ -2946,22 +2966,6 @@ class ASTChecker
 		}
 
 		$identifier->symbol = $symbol;
-	}
-
-	private function find_symbol_for_classkindred_identifier(ClassKindredIdentifier $identifier)
-	{
-		if ($identifier->ns) {
-			$symbol = $this->find_symbol_in_namespace($identifier->ns, $identifier->name, $this->unit)
-				?? $this->find_symbol_in_namespace($identifier->ns, $identifier->name, $this->builtin_unit);
-		}
-		else {
-			$symbol = $this->program->symbols[$identifier->name]
-				?? $this->program->unit->symbols[$identifier->name]
-				?? $this->builtin_unit->symbols[$identifier->name]
-				?? null;
-		}
-
-		return $symbol;
 	}
 
 	// private function require_namespace_declaration_in_unit(NamespaceIdentifier $identifier)

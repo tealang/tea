@@ -230,26 +230,47 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 
 #tea String {
 	masked length UInt
+
 	masked contains(val Any) Bool
+
 	masked find(str String, offset Int = #default) Int
+
 	masked find_last(str String, offset Int = #default) Int
+
 	masked copy(start Int, length Int = #default) String
+
 	masked lower_case() String
+
 	masked upper_case() String
+
 	masked byte_length UInt
+
 	masked byte_find(str String, offset Int = #default) Int
+
 	masked byte_find_last(str String, offset Int = #default) Int
+
 	masked byte_copy(start Int, length Int = #default) String
+
 	masked byte_lower() String
+
 	masked byte_upper() String
+
 	masked rune_length UInt
+
 	masked rune_find(str String, offset Int = #default) Int
+
 	masked rune_find_last(str String, offset Int = #default) Int
+
 	masked rune_copy(start Int, length Int = #default) String
+
 	masked rune_lower() String
+
 	masked rune_upper() String
+
 	masked count_width() UInt
+
 	masked split(delimiter String) String.Array
+
 	masked replace(search Any, replacement Any) String
 }
 
@@ -263,8 +284,11 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 
 #tea Float {
 	masked abs() Float
+
 	masked ceil() Int
+
 	masked floor() Int
+
 	masked round(precision Int = 0) Float
 }
 
@@ -274,30 +298,51 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 
 #tea Array {
 	masked length UInt
+
 	masked end UInt
+
 	masked has(key Int) Bool
+
 	masked contains(val Any) Bool
+
 	masked find(val Any) Any
+
 	masked copy(start Int, length UInt = #default) Array
+
 	masked reversed() Array
+
 	masked unshift(item Any) UInt
+
 	masked shift() Any
+
 	masked push(item Any) UInt
+
 	masked pop() Any
+
 	masked map(callback Callable) Array
+
 	masked reduce(callback Callable, initial Any = #default)
+
 	masked filter(callback Callable) Array
+
 	masked join(glue String = LF) String
 }
 
 #tea Dict {
 	masked length UInt
+
 	masked keys() String.Array
+
 	masked values() Array
+
 	masked has(key String) Bool
+
 	masked contains(val Any) Bool
+
 	masked get(key String) Any
+
 	masked find(val Any) Any
+
 	masked join(glue String = LF) String
 }
 
@@ -311,8 +356,11 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 
 #tea Regex {
 	masked test(string String) Bool
+
 	masked separate(string String) String.Array
+
 	masked capture(string String) String.Array
+
 	masked capture_all(string String) String.Array.Array
 }
 

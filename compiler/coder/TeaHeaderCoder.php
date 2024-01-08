@@ -24,6 +24,16 @@ class TeaHeaderCoder extends TeaCoder
 
 	protected function collect_use_statements(Program $program, IDeclaration $declaration)
 	{
+		$unit_header_program = $program->unit->programs['__unit'] ?? null;
+		if ($unit_header_program) {
+			// the non targets use statements used for namespace search
+			foreach ($unit_header_program->uses as $use_statement) {
+				if (!$use_statement->targets) {
+					$program->uses[$use_statement->ns->uri . '!'] = $use_statement;
+				}
+			}
+		}
+
 		foreach ($declaration->uses as $use) {
 			$uri = $use->ns->uri;
 

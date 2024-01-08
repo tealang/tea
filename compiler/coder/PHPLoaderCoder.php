@@ -71,7 +71,7 @@ class PHPLoaderCoder extends PHPCoder
 		$unit = $program->unit;
 		if ($loaders || $unit->as_main_unit) {
 			// workspace path
-			$based_level = count($unit->ns->names) - 1;
+			$based_level = count($unit->ns->names);
 			if ($based_level > 1) {
 				$based_level--;
 			}

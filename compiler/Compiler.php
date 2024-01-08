@@ -248,7 +248,7 @@ class Compiler
 
 	private function prepare_unit_paths()
 	{
-		$based_level = count($this->unit->ns->names) - 1; // the first is ''
+		$based_level = count($this->unit->ns->names);
 		if ($based_level > 1) {
 			$based_level--;
 		}

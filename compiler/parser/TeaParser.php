@@ -13,6 +13,8 @@ class TeaParser extends BaseParser
 {
 	use TeaTokenTrait, TeaStringTrait, TeaXBlockTrait, TeaSharpTrait, TeaDocsTrait;
 
+	const NS_SEPARATOR = _SLASH;
+
 	protected $root_statements = [];
 
 	public function read_program(): Program
@@ -1298,9 +1300,9 @@ class TeaParser extends BaseParser
 			// SquareAccessing or empty ArrayLiteral
 			if ($next = $this->get_token() and TeaHelper::is_identifier_name($next)) {
 				$this->scan_token();
-				$identifer = $this->factory->create_identifier($next);
-				$identifer->pos = $this->pos;
-				$expr = new SquareAccessing($identifer, true);
+				$identifier = $this->factory->create_identifier($next);
+				$identifier->pos = $this->pos;
+				$expr = new SquareAccessing($identifier, true);
 			}
 			else {
 				$expr = new ArrayLiteral();
@@ -1883,8 +1885,8 @@ class TeaParser extends BaseParser
 		}
 
 		$baseds = [];
-		while ($identifer = $this->try_read_classkindred_identifier()) {
-			$baseds[] = $identifer;
+		while ($identifier = $this->try_read_classkindred_identifier()) {
+			$baseds[] = $identifier;
 			if (!$this->skip_comma()) {
 				break;
 			}
@@ -1904,22 +1906,51 @@ class TeaParser extends BaseParser
 			return null;
 		}
 
-		$this->scan_token_ignore_empty();
-
 		if (!$this->is_in_tea_declaration && TypeFactory::exists_type($token)) {
 			throw $this->new_parse_error("Cannot use type '$token' as a class/interface.");
 		}
 
-		// return $this->read_classkindred_identifier($token);
-		$identifer = $this->factory->create_classkindred_identifier($token);
-		$identifer->pos = $this->pos;
+		$this->scan_token_ignore_empty();
+		$identifier = $this->read_classkindred_identifier_rest_and_create_instance($token);
 
 		if ($this->skip_token(_GENERIC_OPEN)) {
-			$identifer->generic_types = $this->read_generic_types();
+			$identifier->generic_types = $this->read_generic_types();
 			$this->expect_token(_GENERIC_CLOSE);
 		}
 
-		return $identifer;
+		return $identifier;
+	}
+
+	protected function read_classkindred_identifier_rest_and_create_instance(string $name)
+	{
+		if ($name === null) {
+			$name = $this->expect_identifier_token();
+		}
+
+		$ns_components = [];
+		while ($this->skip_token(static::NS_SEPARATOR)) {
+			$ns_components[] = $name;
+			$name = $this->expect_identifier_token();
+		}
+
+		$identifier = $this->factory->create_classkindred_identifier($name);
+
+		if ($ns_components) {
+			$ns = $this->create_namespace_identifier($ns_components);
+			$identifier->set_namespace($ns);
+		}
+
+		$identifier->pos = $this->pos;
+
+		return $identifier;
+	}
+
+	private function create_namespace_identifier(array $names)
+	{
+		$ns = $this->factory->create_namespace_identifier($names);
+		$ns->pos = $this->pos;
+
+		return $ns;
 	}
 
 	private function read_generic_types()
@@ -1928,12 +1959,12 @@ class TeaParser extends BaseParser
 		do {
 			$key = $this->scan_token_ignore_space();
 			if (!TeaHelper::is_identifier_name($key)) {
-				throw $this->new_parse_error("Expected a identifer for generic key");
+				throw $this->new_parse_error("Expected a identifier for generic key");
 			}
 
 			$type = $this->try_read_type_identifier();
 			if ($type === null) {
-				throw $this->new_parse_error("Expected a identifer for generic type");
+				throw $this->new_parse_error("Expected a identifier for generic type");
 			}
 
 			$map[$key] = $type;
@@ -1942,27 +1973,6 @@ class TeaParser extends BaseParser
 
 		return $map;
 	}
-
-	// protected function read_classkindred_identifier(string $name = null)
-	// {
-	// 	if ($name === null) {
-	// 		$name = $this->expect_identifier_token();
-	// 	}
-
-	// 	$ns = null;
-
-	// 	// do not support namespace now
-	// 	// if ($this->skip_token(_DOT)) {
-	// 	// 	$ns = $this->factory->create_identifier($name);
-	// 	// 	$name = $this->expect_identifier_token();
-	// 	// }
-
-	// 	// if ($this->skip_token(_DOT)) {
-	// 	// 	throw $this->new_parse_error("Namespaces that exceed two levels not supported.");
-	// 	// }
-
-	// 	return $this->factory->create_classkindred_identifier($ns, $name);
-	// }
 
 	protected function try_read_return_type_identifier()
 	{
@@ -1997,14 +2007,12 @@ class TeaParser extends BaseParser
 		}
 		elseif (TeaHelper::is_identifier_name($token)) {
 			$this->scan_token_ignore_space(); // skip
-			// $type = $this->read_classkindred_identifier($token);
-			$type = $this->factory->create_classkindred_identifier($token);
+			$type = $this->read_classkindred_identifier_rest_and_create_instance($token);
 		}
 		else {
 			return null;
 		}
 
-		$type->pos = $this->pos;
 		return $type;
 	}
 
@@ -2017,9 +2025,7 @@ class TeaParser extends BaseParser
 		}
 		elseif (TeaHelper::is_identifier_name($token)) {
 			$this->scan_token_ignore_space(); // skip
-			// $type = $this->read_classkindred_identifier($token);
-			$type = $this->factory->create_classkindred_identifier($token);
-			$type->pos = $this->pos;
+			$type = $this->read_classkindred_identifier_rest_and_create_instance($token);
 		}
 		else {
 			return null;

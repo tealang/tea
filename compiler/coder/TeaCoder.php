@@ -633,7 +633,12 @@ class TeaCoder
 
 	public function render_namespace_identifier(NamespaceIdentifier $node)
 	{
-		return $node->uri;
+		$names = $node->names;
+		if ($node->based_unit) {
+			array_unshift($names, $node->based_unit->ns->get_last_name());
+		}
+
+		return join(static::NS_SEPARATOR, $names);
 	}
 
 	public function render_accessing_identifier(AccessingIdentifier $node)

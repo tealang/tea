@@ -2,6 +2,7 @@
 
 #unit tests/syntax
 
+#use tests/xview
 #use tests/PHPDemoUnit { PHP_CONST_DEMO }
 #use tests/xview { BaseView }
 

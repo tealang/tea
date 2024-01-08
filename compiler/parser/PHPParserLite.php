@@ -166,7 +166,7 @@ class PHPParserLite extends BaseParser
 		$token = $this->scan_token();
 		$names = $this->read_qualified_name_with($token);
 
-		$ns = $this->create_namespace_identifier($names, true);
+		$ns = $this->create_namespace_identifier($names);
 		$this->namespace = $ns;
 		$this->program->ns = $ns;
 
@@ -174,9 +174,9 @@ class PHPParserLite extends BaseParser
 		return $statement;
 	}
 
-	private function create_namespace_identifier(array $names, bool $root_required = false)
+	private function create_namespace_identifier(array $names)
 	{
-		$ns = $this->factory->create_namespace_identifier($names, $root_required);
+		$ns = $this->factory->create_namespace_identifier($names);
 		$ns->pos = $this->pos;
 
 		return $ns;
@@ -214,7 +214,7 @@ class PHPParserLite extends BaseParser
 				$next = $this->scan_token_ignore_empty();
 				if ($next === _BLOCK_BEGIN) {
 					// the multi targets mode
-					$ns = $this->create_namespace_identifier($names, true);
+					$ns = $this->create_namespace_identifier($names);
 					$targets = $this->read_use_targets($ns);
 					$this->expect_block_end();
 					break;
@@ -235,7 +235,7 @@ class PHPParserLite extends BaseParser
 		// the single target mode
 		if ($targets === null) {
 			$name = array_pop($names);
-			$ns = $this->create_namespace_identifier($names, true);
+			$ns = $this->create_namespace_identifier($names);
 
 			if ($alias_name) {
 				$target = $this->factory->append_use_target($ns, $alias_name, $name);
