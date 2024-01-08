@@ -7,22 +7,22 @@
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
-namespace Tea;
+// namespace Tea;
 
-class ExpectDeclaration extends Node implements IRootDeclaration, IStatement
-{
-	use DeclarationTrait;
+// class ExpectDeclaration extends Node implements IRootDeclaration, IStatement
+// {
+// 	use DeclarationTrait;
 
-	const KIND = 'expect_declaration';
+// 	const KIND = 'expect_declaration';
 
-	// public $name = '__expect';
+// 	// public $name = '__expect';
 
-	public $parameters;
+// 	public $parameters;
 
-	public $program;
+// 	public $program;
 
-	public function __construct(ParameterDeclaration ...$parameters)
-	{
-		$this->parameters = $parameters;
-	}
-}
+// 	public function __construct(ParameterDeclaration ...$parameters)
+// 	{
+// 		$this->parameters = $parameters;
+// 	}
+// }

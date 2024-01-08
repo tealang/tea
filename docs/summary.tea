@@ -252,7 +252,6 @@ var ternary_result = uint_num == 1 ? 'one' : (uint_num == 2 ? 'two' : (uint_num 
 - 我们尝试将 else/elseif/catch/finally 这些副语句块与上述主语句块进行混搭
 - 目前除了 while 语句之外的语句都支持 elseif/else 语句块
 - 目前所有结构都支持 catch/finally 异常处理语句块
-- 后置条件语句"... when ...", 可用于 throw/condition/break/return/exit 等控制语句中
   @ref https://github.com/tealang/tea/commit/573a1eaed9d3efd718fe396051f6d8c36fe6c86a
 ---
 
@@ -293,16 +292,6 @@ i = 0
 #outer_loop while 1 {
 	#inner_loop while true {
 		i += 1
-
-		// the "when" keyword, use to the post-condition statements
-		// supports throw/condition/break/return/exit
-		// @ref https://github.com/tealang/tea/commit/573a1eaed9d3efd718fe396051f6d8c36fe6c86a
-
-		// it would be continue on i < 5
-		continue #inner_loop when i < 5
-
-		// it would be break on i > 10
-		break #outer_loop when i > 10
 	}
 }
 catch ex {

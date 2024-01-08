@@ -22,7 +22,8 @@ const
 	// system labels
 	_TEA = 'tea', _PHP  = 'php',
 	_UNIT = 'unit', _USE = 'use',
-	_MAIN = 'main', _EXPECT = 'expect', _INCLUDE = 'include',
+	_MAIN = 'main',
+	// _EXPECT = 'expect', _INCLUDE = 'include',
 	_TEXT = 'text', _DEFAULT = 'default',
 	_ASYNC = 'async', _AWAIT = 'await', _CO = 'co',
 	_FIRST = 'first',
@@ -95,7 +96,8 @@ const
 	_FOR = 'for', _WHILE = 'while', _LOOP = 'loop',
 	_TRY = 'try', _CATCH = 'catch', _FINALLY = 'finally',
 	_ECHO = 'echo', _PRINT = 'print',
-	_RETURN = 'return', _EXIT = 'exit', _BREAK = 'break', _CONTINUE = 'continue', _THROW = 'throw', _WHEN = 'when',
+	_RETURN = 'return', _EXIT = 'exit', _BREAK = 'break', _CONTINUE = 'continue', _THROW = 'throw',
+	// _WHEN = 'when',
 	_STATIC = 'static', _FINAL = 'final', _MASKED = 'masked',
 	_PUBLIC = 'public', _INTERNAL = 'internal', _PROTECTED = 'protected', _PRIVATE = 'private',
 	_THIS = 'this', _SUPER = 'super', _CONSTRUCT = 'construct', _DESTRUCT = 'destruct';

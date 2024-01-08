@@ -244,11 +244,11 @@ class TeaCoder
 	// 	return "{$async}{$node->name}($parameters){$type}";
 	// }
 
-	public function render_expect_declaration(ExpectDeclaration $node)
-	{
-		$parameters = $this->render_parameters($node->parameters);
-		return "#expect $parameters" . static::STATEMENT_TERMINATOR;
-	}
+	// public function render_expect_declaration(ExpectDeclaration $node)
+	// {
+	// 	$parameters = $this->render_parameters($node->parameters);
+	// 	return "#expect $parameters" . static::STATEMENT_TERMINATOR;
+	// }
 
 	public function render_masked_declaration(MaskedDeclaration $node)
 	{
@@ -1273,10 +1273,10 @@ class TeaCoder
 		return $items;
 	}
 
-	public function render_include_expression(IncludeExpression $expr)
-	{
-		return "#include({$expr->target})";
-	}
+	// public function render_include_expression(IncludeExpression $expr)
+	// {
+	// 	return "#include({$expr->target})";
+	// }
 
 	public function render_yield_expression(YieldExpression $node)
 	{

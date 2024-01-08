@@ -25,7 +25,9 @@ finally {}
 
 // for with catch-finally
 for v in [0, 1, 2, 3] {
-	throw ErrorException('some message') when v == 2
+	if v == 2 {
+		throw ErrorException('some message')
+	}
 }
 catch ex ErrorException {
 	echo ex.getMessage()

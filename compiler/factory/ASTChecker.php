@@ -173,9 +173,9 @@ class ASTChecker
 				$this->check_constant_declaration($node);
 				break;
 
-			case ExpectDeclaration::KIND:
-				$this->check_expect_declaration($node);
-				break;
+			// case ExpectDeclaration::KIND:
+			// 	$this->check_expect_declaration($node);
+			// 	break;
 
 			// case SuperVariableDeclaration::KIND:
 			// 	$this->check_variable_declaration($node);
@@ -456,11 +456,11 @@ class ASTChecker
 		}
 	}
 
-	private function check_expect_declaration(ExpectDeclaration $node)
-	{
-		$this->is_checked = true;
-		$this->check_parameters_for_node($node);
-	}
+	// private function check_expect_declaration(ExpectDeclaration $node)
+	// {
+	// 	$this->is_checked = true;
+	// 	$this->check_parameters_for_node($node);
+	// }
 
 	private function check_coroutine_block(CoroutineBlock $node)
 	{
@@ -1477,9 +1477,9 @@ class ASTChecker
 			// case NamespaceIdentifier::KIND:
 			// 	$infered_type = $this->infer_namespace_identifier($node);
 			//	break;
-			case IncludeExpression::KIND:
-				$infered_type = $this->infer_include_expression($node);
-				break;
+			// case IncludeExpression::KIND:
+			// 	$infered_type = $this->infer_include_expression($node);
+			// 	break;
 			case YieldExpression::KIND:
 				$infered_type = $this->infer_yield_expression($node);
 				break;
@@ -2009,33 +2009,33 @@ class ASTChecker
 		return TypeFactory::$_any;
 	}
 
-	private function infer_include_expression(IncludeExpression $node): ?IType
-	{
-		$including = $this->program;
-		$program = $this->require_program_declaration($node->target, $node);
+	// private function infer_include_expression(IncludeExpression $node): ?IType
+	// {
+	// 	$including = $this->program;
+	// 	$program = $this->require_program_declaration($node->target, $node);
 
-		$target_main = $program->main_function;
-		if ($target_main) {
-			// check all expect variables is decalared in current including place
-			foreach ($target_main->parameters as $parameter) {
-				$param_name = $parameter->name;
-				$symbol = $node->symbols[$param_name] ?? $this->find_plain_symbol_and_check_declaration($parameter);
-				if ($symbol === null) {
-					$checker = self::get_checker($including);
-					throw $checker->new_syntax_error("Expected var '{$param_name}' to #include('{$node->target}')", $node);
-				}
-			}
+	// 	$target_main = $program->main_function;
+	// 	if ($target_main) {
+	// 		// check all expect variables is decalared in current including place
+	// 		foreach ($target_main->parameters as $parameter) {
+	// 			$param_name = $parameter->name;
+	// 			$symbol = $node->symbols[$param_name] ?? $this->find_plain_symbol_and_check_declaration($parameter);
+	// 			if ($symbol === null) {
+	// 				$checker = self::get_checker($including);
+	// 				throw $checker->new_syntax_error("Expected var '{$param_name}' to #include('{$node->target}')", $node);
+	// 			}
+	// 		}
 
-			$infered_type = $target_main->type;
-		}
-		else {
-			$infered_type = null;
-		}
+	// 		$infered_type = $target_main->type;
+	// 	}
+	// 	else {
+	// 		$infered_type = null;
+	// 	}
 
-		$this->program = $including;
+	// 	$this->program = $including;
 
-		return $infered_type;
-	}
+	// 	return $infered_type;
+	// }
 
 	protected function require_program_declaration(string $name, Node $ref_node)
 	{
@@ -2723,7 +2723,7 @@ class ASTChecker
 		return $node->symbol->declaration;
 	}
 
-	private function attach_symbol_for_basetype_accessing_identifier(Node $node, BaseType $master_type)
+	private function attach_symbol_for_basetype_accessing_identifier(AccessingIdentifier $node, BaseType $master_type)
 	{
 		// if ($master_type === TypeFactory::$_any) {
 		// 	// let member type to Any on master is Any
@@ -2742,13 +2742,13 @@ class ASTChecker
 			$classkindred = $master_type->symbol->declaration;
 			$symbol = $this->find_member_symbol_in_class_declaration($classkindred, $node->name);
 			if ($symbol === null) {
-				if ($master_type === TypeFactory::$_any) {
-					// let member type to Any on master is Any when member not defined
-					$this->create_any_symbol_for_accessing_identifier($node);
-				}
-				else {
+				// if ($master_type === TypeFactory::$_any) {
+				// 	// let member type to Any on master is Any when member not defined
+				// 	$this->create_any_symbol_for_accessing_identifier($node);
+				// }
+				// else {
 					throw $this->new_syntax_error("Member '{$node->name}' not found in '{$classkindred->name}'", $node);
-				}
+				// }
 			}
 			else {
 				$node->symbol = $symbol;
@@ -2817,10 +2817,10 @@ class ASTChecker
 		return $accessable;
 	}
 
-	private function create_any_symbol_for_accessing_identifier(AccessingIdentifier $node)
-	{
-		$node->symbol = new Symbol(ASTFactory::$virtual_property_for_any, $node->name);
-	}
+	// private function create_any_symbol_for_accessing_identifier(AccessingIdentifier $node)
+	// {
+	// 	$node->symbol = new Symbol(ASTFactory::$virtual_property_for_any, $node->name);
+	// }
 
 	private function find_member_symbol_in_class_declaration(ClassKindredDeclaration $classkindred, string $member_name): ?Symbol
 	{

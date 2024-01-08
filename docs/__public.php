@@ -1,10 +1,10 @@
 <?php
-namespace tea\docs;
+namespace docs;
 
 const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
-$super_path = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR; // the workspace/vendor path
-require_once $super_path . 'tea/builtin/__public.php'; // the builtins
+$super_path = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR;
+require_once $super_path . 'tea-modules/tea/builtin/__public.php';
 
 function demo_function2(string $message = 'with a default value') {
 	echo 'this function can be called by local or foriegn units', LF;
@@ -32,12 +32,12 @@ function demo_function_with_callbacks(string $some, callable $success, callable 
 
 // autoloads
 const __AUTOLOADS = [
-	'tea\docs\IDemo' => 'dist/summary.php',
-	'tea\docs\IDemoTrait' => 'dist/summary.php',
-	'tea\docs\DemoInterface' => 'dist/summary.php',
-	'tea\docs\DemoInterfaceTrait' => 'dist/summary.php',
-	'tea\docs\DemoBaseClass' => 'dist/summary.php',
-	'tea\docs\DemoPublicClass' => 'dist/summary.php'
+	'docs\IDemo' => 'dist/summary.php',
+	'docs\IDemoTrait' => 'dist/summary.php',
+	'docs\DemoInterface' => 'dist/summary.php',
+	'docs\DemoInterfaceTrait' => 'dist/summary.php',
+	'docs\DemoBaseClass' => 'dist/summary.php',
+	'docs\DemoPublicClass' => 'dist/summary.php'
 ];
 
 spl_autoload_register(function ($class) {

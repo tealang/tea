@@ -7,21 +7,21 @@
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
-namespace Tea;
+// namespace Tea;
 
-class IncludeExpression extends BaseExpression
-{
-	const KIND = 'include_expression';
+// class IncludeExpression extends BaseExpression
+// {
+// 	const KIND = 'include_expression';
 
-	public $target;
+// 	public $target;
 
-	/**
-	 * @var Symbol[]
-	 */
-	public $symbols; // use for check
+// 	/**
+// 	 * @var Symbol[]
+// 	 */
+// 	public $symbols; // use for check
 
-	public function __construct(string $target)
-	{
-		$this->target = $target;
-	}
-}
+// 	public function __construct(string $target)
+// 	{
+// 		$this->target = $target;
+// 	}
+// }

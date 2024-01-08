@@ -15,7 +15,7 @@ class ASTFactory
 	public static $default_value_marker;
 
 	// for properties of Any type object in AccessingIdentifer
-	public static $virtual_property_for_any;
+	// public static $virtual_property_for_any;
 
 	public $root_namespace;
 
@@ -55,7 +55,7 @@ class ASTFactory
 		// just use None to simplify the processes
 		self::$default_value_marker = new NoneLiteral();
 		self::$default_value_marker->is_default_value_marker = true;
-		self::$virtual_property_for_any = new PropertyDeclaration(null, '__vprop__', TypeFactory::$_any, null);
+		// self::$virtual_property_for_any = new PropertyDeclaration(null, '__vprop__', TypeFactory::$_any, null);
 	}
 
 	public function __construct(Unit $unit)
@@ -233,15 +233,15 @@ class ASTFactory
 		return $identifier;
 	}
 
-	public function create_include_expression(string $target)
-	{
-		$expression = new IncludeExpression($target);
+	// public function create_include_expression(string $target)
+	// {
+	// 	$expression = new IncludeExpression($target);
 
-		// prepare for check #expect of target program
-		$expression->symbols = $this->collect_created_symbols_in_current_function();
+	// 	// prepare for check #expect of target program
+	// 	$expression->symbols = $this->collect_created_symbols_in_current_function();
 
-		return $expression;
-	}
+	// 	return $expression;
+	// }
 
 	public function create_yield_expression(BaseExpression $argument)
 	{
@@ -338,27 +338,27 @@ class ASTFactory
 		return $program;
 	}
 
-	public function create_program_expection(ParameterDeclaration ...$parameters)
-	{
-		$main_function = $this->program->main_function;
-		if ($main_function->parameters) {
-			throw $this->parser->new_parse_error("'#expect' statement has duplicated");
-		}
-		elseif (!$parameters) {
-			throw $this->parser->new_parse_error("'#expect' statement required parameters");
-		}
+	// public function create_program_expection(ParameterDeclaration ...$parameters)
+	// {
+	// 	$main_function = $this->program->main_function;
+	// 	if ($main_function->parameters) {
+	// 		throw $this->parser->new_parse_error("'#expect' statement has duplicated");
+	// 	}
+	// 	elseif (!$parameters) {
+	// 		throw $this->parser->new_parse_error("'#expect' statement required parameters");
+	// 	}
 
-		foreach ($parameters as $parameter) {
-			$symbol = new Symbol($parameter);
-			$main_function->symbols[$parameter->name] = $symbol;
-		}
+	// 	foreach ($parameters as $parameter) {
+	// 		$symbol = new Symbol($parameter);
+	// 		$main_function->symbols[$parameter->name] = $symbol;
+	// 	}
 
-		$main_function->parameters = $parameters;
-		$declaration = new ExpectDeclaration(...$parameters);
-		$declaration->program = $this->program;
+	// 	$main_function->parameters = $parameters;
+	// 	$declaration = new ExpectDeclaration(...$parameters);
+	// 	$declaration->program = $this->program;
 
-		return $declaration;
-	}
+	// 	return $declaration;
+	// }
 
 	public function create_builtin_type_class_declaration(string $name)
 	{

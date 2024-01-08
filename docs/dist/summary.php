@@ -1,5 +1,5 @@
 <?php
-namespace tea\docs;
+namespace docs;
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 
@@ -100,7 +100,7 @@ $str_with_interpolation = "Escaped string with interpolation " . (5 * 6) . "\n";
 
 $safe_html = '<strong>Some strong text.</strong>';
 $unsafe_html = '<script>alert("XSS!")</script>';
-$html_escaped_interpolation = "html-unescaped: {$safe_html}. html-escaped: " . htmlspecialchars($unsafe_html, ENT_QUOTES);
+$html_escaped_interpolation = "html-unescaped: {$safe_html}. html-escaped: " . \html_encode($unsafe_html);
 
 $text_labeled = "would not process interpolation \${5 * 6}";
 
@@ -118,7 +118,7 @@ $xview = '<div>
 	<h1>XView是什么？</h1>
 	<p>XView类似字符串，但无需引号，可以直接按HTML标签方式编写</p>
 	<p>Interpolation with origin ' . $uint_num * 10 . '</p>
-	<p>Interpolation with html-escaped ' . htmlspecialchars($unsafe_html, ENT_QUOTES) . '</p>
+	<p>Interpolation with html-escaped ' . \html_encode($unsafe_html) . '</p>
 </div>';
 
 $regex = '/^[a-z0-9\'_"]+$/i';
@@ -242,7 +242,7 @@ catch (\Exception $ex) {
 	// no any
 }
 
-fn1('tea\docs\fn0');
+fn1('docs\fn0');
 
 demo_function1('hei')(123);
 

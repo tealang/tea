@@ -2,8 +2,10 @@
 // normal while
 i = 0
 while i < 10 {
-	// the post-condition
-	continue when i == 5
+	if i == 5 {
+		continue
+	}
+
 	i += 1
 }
 catch ex {
@@ -22,7 +24,12 @@ i = 0
 #outer_loop while 1 {
 	#inner_loop while true {
 		i = i + 1
-		continue #inner_loop when i < 3
-		break #outer_loop when i > 5
+		if i < 3 {
+			continue #inner_loop
+		}
+
+		if i > 5 {
+			break #outer_loop
+		}
 	}
 }

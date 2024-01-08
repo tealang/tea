@@ -1,6 +1,6 @@
 // the public declarations
 
-#unit tea/docs
+#unit docs
 
 public __TRAIT__ String
 

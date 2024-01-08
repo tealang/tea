@@ -8,6 +8,7 @@ try {
 		if ($i == 5) {
 			continue;
 		}
+
 		$i += 1;
 	}
 }
@@ -22,6 +23,7 @@ while (1) {
 		if ($i < 3) {
 			continue;
 		}
+
 		if ($i > 5) {
 			break 2;
 		}

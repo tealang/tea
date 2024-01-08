@@ -417,19 +417,19 @@ class TeaParser extends BaseParser
 		return $statement;
 	}
 
-	protected function try_attach_post_condition(PostConditionAbleStatement $statement)
-	{
-		if (!$this->skip_token_ignore_space(_WHEN)) {
-			return;
-		}
+	// protected function try_attach_post_condition(PostConditionAbleStatement $statement)
+	// {
+	// 	if (!$this->skip_token_ignore_space(_WHEN)) {
+	// 		return;
+	// 	}
 
-		$condition = $this->read_expression_inline();
-		if ($condition === null) {
-			throw $this->new_parse_error("Expected a post condition expression");
-		}
+	// 	$condition = $this->read_expression_inline();
+	// 	if ($condition === null) {
+	// 		throw $this->new_parse_error("Expected a post condition expression");
+	// 	}
 
-		$statement->condition = $condition;
-	}
+	// 	$statement->condition = $condition;
+	// }
 
 	protected function read_continue_statement()
 	{
@@ -449,7 +449,7 @@ class TeaParser extends BaseParser
 			$statement->switch_layers = $this->factory->count_switch_layers_contains_in_block(IContinueAble::class);
 		}
 
-		$this->try_attach_post_condition($statement);
+		// $this->try_attach_post_condition($statement);
 
 		return $statement;
 	}
@@ -472,7 +472,7 @@ class TeaParser extends BaseParser
 			$this->factory->count_switch_layers_contains_in_block(IBreakAble::class);
 		}
 
-		$this->try_attach_post_condition($statement);
+		// $this->try_attach_post_condition($statement);
 
 		return $statement;
 	}
@@ -483,15 +483,15 @@ class TeaParser extends BaseParser
 		// exit int expression
 		// exit when condition-expression
 
-		if ($this->get_token_ignore_space() === _WHEN) {
-			$argument = null;
-		}
-		else {
+		// if ($this->get_token_ignore_space() === _WHEN) {
+		// 	$argument = null;
+		// }
+		// else {
 			$argument = $this->read_expression_inline();
-		}
+		// }
 
 		$statement = $this->factory->create_exit_statement($argument);
-		$this->try_attach_post_condition($statement);
+		// $this->try_attach_post_condition($statement);
 
 		return $statement;
 	}
@@ -502,15 +502,15 @@ class TeaParser extends BaseParser
 		// return expression
 		// return when condition-expression
 
-		if ($this->get_token_ignore_space() === _WHEN) {
-			$argument = null;
-		}
-		else {
+		// if ($this->get_token_ignore_space() === _WHEN) {
+		// 	$argument = null;
+		// }
+		// else {
 			$argument = $this->read_expression_inline();
-		}
+		// }
 
 		$statement = $this->factory->create_return_statement($argument);
-		$this->try_attach_post_condition($statement);
+		// $this->try_attach_post_condition($statement);
 
 		return $statement;
 	}
@@ -525,7 +525,7 @@ class TeaParser extends BaseParser
 		}
 
 		$statement = $this->factory->create_throw_statement($argument);
-		$this->try_attach_post_condition($statement);
+		// $this->try_attach_post_condition($statement);
 
 		return $statement;
 	}

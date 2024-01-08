@@ -33,16 +33,30 @@ class PHPCoder extends TeaCoder
 
 	const NONE = 'null';
 
-	const NAMESPACE_REPLACES = [_STRIKETHROUGH => _UNDERSCORE, _DOT => _UNDERSCORE, _SLASH => _BACK_SLASH];
+	const NAMESPACE_REPLACES = [
+		_STRIKETHROUGH => _UNDERSCORE,
+		_DOT => _UNDERSCORE,
+		_SLASH => _BACK_SLASH
+	];
 
 	const CASTABLE_TYPES = ['string', 'int', 'float', 'bool', 'array', 'object'];
 
 	const TYPE_MAP = [
-		_VOID => 'void', _ANY => '',
-		_STRING => 'string', _INT => 'int', _UINT => 'int', _FLOAT => 'float', _BOOL => 'bool',
-		_ARRAY => 'array', _DICT => 'array',
-		_CALLABLE => 'callable', _ITERABLE => 'iterable', _OBJECT => 'object',
-		_REGEX => 'string', _XVIEW => 'string', _METATYPE => 'string',
+		_VOID => 'void',
+		_ANY => '',
+		_STRING => 'string',
+		_INT => 'int',
+		_UINT => 'int',
+		_FLOAT => 'float',
+		_BOOL => 'bool',
+		_ARRAY => 'array',
+		_DICT => 'array',
+		_CALLABLE => 'callable',
+		_ITERABLE => 'iterable',
+		_OBJECT => 'object',
+		_REGEX => 'string',
+		_XVIEW => 'string',
+		_METATYPE => 'string',
 	];
 
 	const EXTRA_RESERVEDS = [
@@ -52,7 +66,9 @@ class PHPCoder extends TeaCoder
 	];
 
 	const CLASS_MEMBER_NAMES_MAP = [
-		_CONSTRUCT => '__construct', _DESTRUCT => '__destruct',  'to_string' => '__toString',
+		_CONSTRUCT => '__construct',
+		_DESTRUCT => '__destruct',
+		'to_string' => '__toString',
 		'CLASS' => '__CLASS', // 'CLASS' can not to use as a class constant name in PHP
 	];
 
@@ -957,9 +973,11 @@ class PHPCoder extends TeaCoder
 			return '\Swoole\Coroutine\Channel';
 		}
 
-		$name = $declaration === ASTFactory::$virtual_property_for_any
-			? $node->name
-			: $this->get_normalized_class_member_name($declaration);
+		// $name = $declaration === ASTFactory::$virtual_property_for_any
+		// 	? $node->name
+		// 	: $this->get_normalized_class_member_name($declaration);
+
+		$name = $this->get_normalized_class_member_name($declaration);
 
 		if ($node->master instanceof CallExpression && $node->master->is_class_new()) {
 			// for the class new expression
@@ -1125,7 +1143,7 @@ class PHPCoder extends TeaCoder
 		// object member as callee, must be got it result, then handle call
 		if ($node->infered_callee_declaration instanceof IVariableDeclaration
 			and $node->callee instanceof AccessingIdentifier
-			and $node->callee->symbol->declaration !== ASTFactory::$virtual_property_for_any
+			// and $node->callee->symbol->declaration !== ASTFactory::$virtual_property_for_any
 		) {
 			$callee = "($callee)";
 		}
@@ -1701,17 +1719,17 @@ class PHPCoder extends TeaCoder
 		return $expr;
 	}
 
-	public function render_include_expression(IncludeExpression $expr)
-	{
-		$path = $this->generate_include_string($expr->target);
-		return "(include $path)";
-	}
+	// public function render_include_expression(IncludeExpression $expr)
+	// {
+	// 	$path = $this->generate_include_string($expr->target);
+	// 	return "(include $path)";
+	// }
 
-	private function generate_include_string(string $name)
-	{
-		$filename = $this->program->unit->include_prefix . $name . '.php';
-		return "UNIT_PATH . '{$filename}'";
-	}
+	// private function generate_include_string(string $name)
+	// {
+	// 	$filename = $this->program->unit->include_prefix . $name . '.php';
+	// 	return "UNIT_PATH . '{$filename}'";
+	// }
 
 	protected function render_with_post_condition(PostConditionAbleStatement $node, string $code)
 	{

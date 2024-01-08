@@ -32,8 +32,8 @@ trait TeaSharpTrait
 				$this->read_unit_declaration();
 				return null;
 
-			case _EXPECT:
-				return $this->read_expect_declaration();
+			// case _EXPECT:
+			// 	return $this->read_expect_declaration();
 
 			case _MAIN:
 				$this->factory->set_as_main_program();
@@ -139,40 +139,40 @@ trait TeaSharpTrait
 		return $declaration;
 	}
 
-	protected function read_expect_declaration()
-	{
-		// #expect var0 Type0, var1 Type1, ...
+	// private function read_expect_declaration()
+	// {
+	// 	// #expect var0 Type0, var1 Type1, ...
 
-		$items[] = $this->read_expect_parameter();
+	// 	$items[] = $this->read_expect_parameter();
 
-		while ($this->skip_comma()) {
-			$items[] = $this->read_expect_parameter();
-		}
+	// 	while ($this->skip_comma()) {
+	// 		$items[] = $this->read_expect_parameter();
+	// 	}
 
-		return $this->factory->create_program_expection(...$items);
-	}
+	// 	return $this->factory->create_program_expection(...$items);
+	// }
 
-	protected function read_expect_parameter()
-	{
-		$name = $this->scan_token_ignore_space();
+	// private function read_expect_parameter()
+	// {
+	// 	$name = $this->scan_token_ignore_space();
 
-		$type = null;
-		$value = null;
+	// 	$type = null;
+	// 	$value = null;
 
-		if (!TeaHelper::is_declarable_variable_name($name) && $name !== _THIS) {
-			throw $this->new_unexpected_error();
-		}
+	// 	if (!TeaHelper::is_declarable_variable_name($name) && $name !== _THIS) {
+	// 		throw $this->new_unexpected_error();
+	// 	}
 
-		$next = $this->get_token_ignore_empty();
-		if (TeaHelper::is_type_name($next)) {
-			$type = $this->try_read_type_identifier();
-		}
+	// 	$next = $this->get_token_ignore_empty();
+	// 	if (TeaHelper::is_type_name($next)) {
+	// 		$type = $this->try_read_type_identifier();
+	// 	}
 
-		$parameter = new ParameterDeclaration($name, $type, $value);
-		$parameter->pos = $this->pos;
+	// 	$parameter = new ParameterDeclaration($name, $type, $value);
+	// 	$parameter->pos = $this->pos;
 
-		return $parameter;
-	}
+	// 	return $parameter;
+	// }
 
 	private function read_other_label_statement_with(string $label)
 	{
@@ -353,8 +353,8 @@ trait TeaSharpTrait
 			case _DEFAULT:
 				return ASTFactory::$default_value_marker;
 
-			case _INCLUDE:
-				return $this->read_include_expression();
+			// case _INCLUDE:
+			// 	return $this->read_include_expression();
 
 			// case _SINGLE_QUOTE:
 			// 	$expression = $this->read_single_quoted_expression();
@@ -377,27 +377,27 @@ trait TeaSharpTrait
 		}
 	}
 
-	protected function read_include_expression()
-	{
-		$this->expect_token(_PAREN_OPEN);
-		$this->expect_token(_SINGLE_QUOTE);
+	// private function read_include_expression()
+	// {
+	// 	$this->expect_token(_PAREN_OPEN);
+	// 	$this->expect_token(_SINGLE_QUOTE);
 
-		$name = '';
-		while (($token = $this->get_token()) !== null) {
-			if (TeaHelper::is_identifier_name($token) || $token === _SLASH || $token === _STRIKETHROUGH) {
-				$this->scan_token();
-				$name .= $token;
-			}
-			else {
-				break;
-			}
-		}
+	// 	$name = '';
+	// 	while (($token = $this->get_token()) !== null) {
+	// 		if (TeaHelper::is_identifier_name($token) || $token === _SLASH || $token === _STRIKETHROUGH) {
+	// 			$this->scan_token();
+	// 			$name .= $token;
+	// 		}
+	// 		else {
+	// 			break;
+	// 		}
+	// 	}
 
-		$this->expect_token(_SINGLE_QUOTE);
-		$this->expect_token(_PAREN_CLOSE);
+	// 	$this->expect_token(_SINGLE_QUOTE);
+	// 	$this->expect_token(_PAREN_CLOSE);
 
-		return $this->factory->create_include_expression($name);
-	}
+	// 	return $this->factory->create_include_expression($name);
+	// }
 
 	private function read_string_literal()
 	{
