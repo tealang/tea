@@ -9,11 +9,17 @@
 
 namespace Tea;
 
-// define PHP8 constants to compatible
-if (!defined('T_NAME_QUALIFIED')) {
-	define('T_NAME_QUALIFIED', 1001);
-	define('T_NAME_FULLY_QUALIFIED', 1002);
+const SUPPORT_PHP_VERSION = '8.1.10';
+
+if (version_compare(PHP_VERSION, SUPPORT_PHP_VERSION, '<')) {
+	trigger_error('The minimum supported PHP version for parser is "' . SUPPORT_PHP_VERSION . '".', E_USER_ERROR);
 }
+
+// // define PHP8 constants to compatible
+// if (!defined('T_NAME_QUALIFIED')) {
+// 	define('T_NAME_QUALIFIED', 1001);
+// 	define('T_NAME_FULLY_QUALIFIED', 1002);
+// }
 
 /**
  * A lite Parser uses to supported the Mixed Programming
@@ -341,10 +347,10 @@ class PHPParserLite extends BaseParser
 			switch ($token_type) {
 				case T_STRING:
 					if ($token_content === 'null') {
-						$expr = $this->factory->create_builtin_identifier('none');
+						$expr = $this->factory->create_builtin_identifier(_VAL_NONE);
 					}
 					else {
-						$expr = $this->create_uncheck_identifier($token_content);
+						$expr = $this->create_unchecking_identifier($token_content);
 					}
 					break;
 				case T_NS_SEPARATOR:
@@ -352,7 +358,7 @@ class PHPParserLite extends BaseParser
 					break;
 				case T_NAME_QUALIFIED:
 				case T_NAME_FULLY_QUALIFIED:
-					$expr = $this->create_uncheck_identifier($token_content);
+					$expr = $this->create_unchecking_identifier($token_content);
 					break;
 				case T_CONSTANT_ENCAPSED_STRING:
 					$quote = $token_content[0];
@@ -375,9 +381,10 @@ class PHPParserLite extends BaseParser
 					$this->pos--;
 					break 2;
 				case T_COMMENT:
+				case T_DOC_COMMENT:
 					continue 2;
 				default:
-					$this->print_token($token);
+					// $this->print_token($token);
 					throw $this->new_unexpected_error();
 			}
 
@@ -387,7 +394,7 @@ class PHPParserLite extends BaseParser
 		return $expr;
 	}
 
-	private function create_uncheck_identifier(string $name)
+	private function create_unchecking_identifier(string $name)
 	{
 		$identifier = new PlainIdentifier($name);
 		$identifier->pos = $this->pos;
@@ -399,10 +406,10 @@ class PHPParserLite extends BaseParser
 		$not_opened && $this->expect_char_token(_BRACKET_OPEN);
 
 		$is_dict = false;
-		while ($expr = $this->read_expression($debug_name)) {
+		while ($expr1 = $this->read_expression($debug_name)) {
 			if ($this->skip_typed_token(T_DOUBLE_ARROW)) {
 				$is_dict = true;
-				$value_expr = $this->read_expression();
+				$expr2 = $this->read_expression();
 			}
 
 			while ($this->get_token_ignore_empty()[0] === T_COMMENT) {
@@ -719,7 +726,7 @@ class PHPParserLite extends BaseParser
 				break;
 
 			default:
-				$this->print_token($token);
+				// $this->print_token($token);
 				throw $this->new_unexpected_error();
 		}
 
@@ -861,17 +868,19 @@ class PHPParserLite extends BaseParser
 			$token = $this->expect_typed_token_ignore_empty();
 		}
 
+		$following_comment = $this->scan_comments_ignore_empty();
+
 		// $this->print_token($token);
 		$token_type = $token[0];
 		if ($token_type === T_STRING) {
-			$type = $this->create_type_identifier($token[1]);
+			$type = $this->create_type_identifier($token[1], false, $following_comment);
 			$token = $this->scan_token_ignore_empty();
 		}
 		elseif ($token_type === T_ARRAY) {
-			if ($this->current_following_comment === '/*list*/') {
+			if ($following_comment === '/*list*/') {
 				$type = TypeFactory::$_array;
 			}
-			elseif ($this->current_following_comment === '/*dict*/') {
+			elseif ($following_comment === '/*dict*/') {
 				$type = TypeFactory::$_dict;
 			}
 			else {
@@ -1040,18 +1049,20 @@ class PHPParserLite extends BaseParser
 		$nullable = $this->skip_char_token('?');
 		$name = $this->expect_identifier_name();
 
-		return $this->create_type_identifier($name, $nullable);
+		$following_comment = $this->scan_comments_ignore_empty();
+
+		return $this->create_type_identifier($name, $nullable, $following_comment);
 	}
 
-	private function create_type_identifier(string $name, bool $nullable = false)
+	private function create_type_identifier(string $name, bool $nullable = false, string $following_comment = null)
 	{
 		$lower_case_name = strtolower($name);
 		if (isset(static::TYPE_MAP[$lower_case_name])) {
 			$name = static::TYPE_MAP[$lower_case_name];
-			if ($this->current_following_comment === '/*list*/') {
+			if ($following_comment === '/*list*/') {
 				$name = _ARRAY;
 			}
-			elseif ($this->current_following_comment === '/*dict*/') {
+			elseif ($following_comment === '/*dict*/') {
 				$name = _DICT;
 			}
 
@@ -1274,6 +1285,24 @@ class PHPParserLite extends BaseParser
 		return $token;
 	}
 
+	private function scan_comments_ignore_empty()
+	{
+		$comment = null;
+		$next = $this->get_token_ignore_empty();
+		if ($next !== null and ($next[0] === T_DOC_COMMENT || $next[0] === T_COMMENT) and !strpos("\n", $this->get_token()[1])) {
+			$comment = $next[1];
+			do {
+				$this->pos++;
+				$tmp = $this->tokens[$this->pos] ?? null;
+				if ($tmp !== _SPACE && (!is_array($tmp) || $tmp[0] !== T_WHITESPACE)) {
+					break;
+				}
+			} while ($tmp !== null);
+		}
+
+		return $comment;
+	}
+
 	private function scan_token_ignore_empty()
 	{
 		do {
@@ -1283,22 +1312,6 @@ class PHPParserLite extends BaseParser
 				break;
 			}
 		} while ($token !== null);
-
-		$this->current_following_comment = null;
-
-		// read the following comment
-		$next = $this->get_token_ignore_empty();
-		if ($next !== null and ($next[0] === T_DOC_COMMENT || $next[0] === T_COMMENT) and !strpos("\n", $this->get_token()[1])) {
-			$this->current_following_comment = $next[1];
-
-			do {
-				$this->pos++;
-				$temp = $this->tokens[$this->pos] ?? null;
-				if ($temp !== _SPACE && (!is_array($temp) || $temp[0] !== T_WHITESPACE)) {
-					break;
-				}
-			} while ($temp !== null);
-		}
 
 		return $token;
 	}
@@ -1322,6 +1335,7 @@ class PHPParserLite extends BaseParser
 		do {
 			$pos++;
 			$token = $this->tokens[$pos] ?? null;
+
 			if ($token !== _SPACE && (!is_array($token) || $token[0] !== T_WHITESPACE)) {
 				break;
 			}
@@ -1372,8 +1386,12 @@ class PHPParserLite extends BaseParser
 		return $this->tokens[$pos][2];
 	}
 
-	protected function get_previous_code_inline(int $pos): string
+	protected function get_previous_code_inline(int $pos = null): string
 	{
+		if ($pos === null) {
+			$pos = $this->pos;
+		}
+
 		$code = '';
 		$temp_line = null;
 
@@ -1397,15 +1415,22 @@ class PHPParserLite extends BaseParser
 		return $code;
 	}
 
-	private function print_token($token = null)
+	private function print_token($token = null, string $marker = null)
 	{
-		$token === null && $token = $this->tokens[$this->pos];
+		$token === null and ($token = $this->tokens[$this->pos] ?? null);
+
+		if ($marker) {
+			echo $marker . "\t";
+		}
 
 		if (is_string($token)) {
 			echo $token, LF;
 		}
+		elseif ($token) {
+			echo token_name($token[0]), " $token[1]\n";
+		}
 		else {
-			echo token_name($token[0]), " '$token[1]'\n";
+			echo "no token at pos {$this->pos}\n";
 		}
 	}
 }

@@ -6,6 +6,8 @@
 #use tests/PHPDemoUnit { PHP_CONST_DEMO }
 #use tests/xview { BaseView }
 
+public MY_CONST Dict
+
 public PHPClassInMixed1 {
 	protected PREFIX String
 	public construct(caller String, items Any, some Bool = #default)

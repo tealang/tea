@@ -62,8 +62,8 @@ try {
 	echo "\n$count programs compiled.\n\n";
 }
 catch (\Exception $e) {
+	echo $e->getTraceAsString(), LF, LF;
 	halt(LF . $e->getMessage());
-	// echo $e->getTraceAsString(), LF, LF;
 }
 
 // stats end
