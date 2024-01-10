@@ -93,6 +93,8 @@ class ParameterDeclaration extends BaseVariableDeclaration
 
 	public $is_value_mutable = false;
 
+	public $is_variadic = false; // is a variadic parameter
+
 	/**
 	 * @var RuleOptions
 	 */

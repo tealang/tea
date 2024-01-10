@@ -9,6 +9,7 @@
 
 namespace Tea;
 
+// for classs/functions/constants
 class UseDeclaration extends Node implements IMemberDeclaration
 {
 	use DeclarationTrait;

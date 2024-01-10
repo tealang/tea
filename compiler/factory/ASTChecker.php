@@ -625,9 +625,9 @@ class ASTChecker
 		elseif ($infered_type) {
 			$node->type = $infered_type;
 		}
-		else {
-			throw $this->new_syntax_error("Type required for class constant '{$node->name}'", $node);
-		}
+		// else {
+		// 	throw $this->new_syntax_error("Type required for class constant '{$node->name}'", $node);
+		// }
 	}
 
 	private function check_local_classkindred_declaration(ClassKindredDeclaration $node)
@@ -3148,7 +3148,7 @@ class ASTChecker
 		return $name;
 	}
 
-	static function get_identifier_name(Identifiable $identifier)
+	static function get_identifier_name(IType $identifier)
 	{
 		$name = $identifier->name;
 		if ($identifier instanceof ClassKindredIdentifier and $identifier->ns) {

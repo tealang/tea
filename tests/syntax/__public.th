@@ -9,8 +9,11 @@
 public MY_CONST Dict
 
 public PHPClassInMixed1 {
-	protected PREFIX String
-	public construct(caller String, items Any, some Bool = #default)
+	protected CONST1 String
+	public CONST2
+	public object Object
+	public some /Exception
+	public construct(caller String, items Array, some Bool = #default)
 	public get_message() String
 }
 

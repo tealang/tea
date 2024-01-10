@@ -227,14 +227,6 @@ try {
 	while (1) {
 		while (true) {
 			$i += 1;
-
-			if ($i < 5) {
-				continue;
-			}
-
-			if ($i > 10) {
-				break 2;
-			}
 		}
 	}
 }

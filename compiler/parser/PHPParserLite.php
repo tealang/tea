@@ -38,6 +38,14 @@ class PHPParserLite extends BaseParser
 		'object' => _OBJECT,
 	];
 
+	const TYPING_TOKEN_TYPES = [
+		T_STRING,
+		T_ARRAY,
+		T_CALLABLE,
+		T_NAME_QUALIFIED,
+		T_NAME_FULLY_QUALIFIED
+	];
+
 	const METHOD_MAP = [
 		'__construct' => _CONSTRUCT,
 		'__destruct' => _DESTRUCT,
@@ -64,7 +72,7 @@ class PHPParserLite extends BaseParser
 
 	private const EXPRESSION_ENDINGS = [null, _PAREN_CLOSE, _BRACKET_CLOSE, _BLOCK_END, _COMMA, _SEMICOLON];
 
-	private const VALID_TOKEN_TYPES = [T_STRING, T_PRINT, T_ECHO, T_EXIT];
+	private const VALID_TOKEN_TYPES = [T_STRING, T_PRINT, T_ECHO, T_EXIT, T_USE];
 
 	/**
 	 * @var NamespaceIdentifier
@@ -470,16 +478,6 @@ class PHPParserLite extends BaseParser
 
 		$this->expect_block_begin();
 
-		if ($this->skip_typed_token(T_USE)) {
-			$used_traits = [];
-			do {
-				$used_traits[] = $this->read_classkindred_identifier();
-			}
-			while ($this->skip_char_token(_COMMA));
-
-			$this->expect_statement_end();
-		}
-
 		while ($this->read_class_member());
 
 		$this->expect_block_end();
@@ -559,12 +557,25 @@ class PHPParserLite extends BaseParser
 		$modifier = null;
 		if (in_array($token[0], [T_PUBLIC, T_PROTECTED, T_PRIVATE], true)) {
 			$modifier = $token[1];
-			$token = $this->expect_typed_token_ignore_empty();
+			$token = $this->scan_token_ignore_empty();;
 		}
 
 		$is_static = false;
 		if ($token[0] === T_STATIC) {
 			$is_static = true;
+			$token = $this->scan_token_ignore_empty();;
+		}
+
+		// for property/constant
+		$nullable = false;
+		if (is_string($token)) {
+			if ($token === '?') {
+				$nullable = true;
+			}
+			else {
+				throw $this->new_unexpected_error();
+			}
+
 			$token = $this->expect_typed_token_ignore_empty();
 		}
 
@@ -574,8 +585,15 @@ class PHPParserLite extends BaseParser
 				$token = $this->expect_typed_token_ignore_empty();
 				// unbreak
 			case T_VARIABLE:
-			case T_STRING: // maybe the type hint
 				$declaration = $this->read_property_declaration($token, $modifier, $doc);
+				break;
+
+			case T_STRING: // type annotated property
+			case T_ARRAY:
+			case T_NAME_FULLY_QUALIFIED:
+				$type_identifier = $this->read_type_tailing_and_create_identifier($token[1], $nullable);
+				$token = $this->expect_typed_token_ignore_empty();
+				$declaration = $this->read_property_declaration($token, $modifier, $doc, $type_identifier);
 				break;
 
 			case T_CONST:
@@ -589,16 +607,35 @@ class PHPParserLite extends BaseParser
 			case T_COMMENT:
 				return $this->read_class_member();
 
+			case T_USE:
+				$declaration = $this->read_trait_use_declaration();
+				break;
+
 			default:
-				// $this->print_token($token);
+				$this->print_token($token);
 				throw $this->new_unexpected_error();
 		}
 
-		$declaration->is_static = $is_static;
+		if ($is_static) {
+			$declaration->is_static = $is_static;
+		}
 
 		$this->factory->end_class_member();
 
 		return $declaration;
+	}
+
+	private function read_trait_use_declaration()
+	{
+		$used_traits = [];
+		do {
+			$used_traits[] = $this->read_classkindred_identifier();
+		}
+		while ($this->skip_char_token(_COMMA));
+
+		$this->expect_statement_end();
+
+		return new ClassUseTraitsDeclaration([]);
 	}
 
 	private function read_constant_declaration(?string $doc)
@@ -634,12 +671,8 @@ class PHPParserLite extends BaseParser
 		$temp_pos = $this->pos;
 
 		$type = $this->try_detatch_assign_value_type_and_skip($name);
-		if ($type === null) {
-			$doc && $type = $this->get_type_in_doc($doc, $doc_kind);
-			if ($type === null && $doc_kind === 'const') {
-				$this->pos = $temp_pos;
-				throw $this->new_parse_error("Item $name required a type hint '@{$doc_kind} string/int/float/bool/array/dict...' in it's docs");
-			}
+		if ($type === null and $doc) {
+			$type = $this->get_type_in_doc($doc, $doc_kind);
 		}
 
 		return $type;
@@ -740,25 +773,14 @@ class PHPParserLite extends BaseParser
 		return $type;
 	}
 
-	private function read_property_declaration(array $token, string $modifier, ?string $doc)
+	private function read_property_declaration(array $token, string $modifier, ?string $doc, IType $type = null)
 	{
-		$type_name = null;
-		if ($token[0] === T_STRING) {
-			$type_name = $token[1];
-
-			// scan the next token
-			$token = $this->expect_typed_token_ignore_empty();
-		}
-
 		$name = ltrim($token[1], '$');
 		$declaration = $this->factory->create_property_declaration($modifier, $name);
 		$declaration->pos = $this->pos;
 
-		if ($type_name === null) {
+		if ($type === null) {
 			$type = $this->get_type_in_doc($doc, 'var');
-		}
-		else {
-			$type = $this->create_type_identifier($type_name);
 		}
 
 		if ($this->skip_char_token(_ASSIGN)) {
@@ -770,10 +792,9 @@ class PHPParserLite extends BaseParser
 				$type = $this->read_value_type_skip($doc, 'var');
 			}
 		}
-		elseif ($type === null) {
-			$type = TypeFactory::$_any;
-			// throw $this->new_parse_error("Property '{$token[1]}' required a type hint '@var string/int/float/bool/...' in it's docs.");
-		}
+		// elseif ($type === null) {
+		// 	$type = TypeFactory::$_any;
+		// }
 
 		$this->expect_statement_end();
 		$declaration->type = $type;
@@ -863,49 +884,38 @@ class PHPParserLite extends BaseParser
 
 		$this->scan_token_ignore_empty();
 
-		$nullable = $token === _INVALIDABLE_SIGN;
-		if ($nullable) {
+		// $this->print_token($token);
+		$token_type = $token[0];
+
+		// parameters at __construct maybe has modifiers
+		$modifier = null;
+		if (in_array($token_type, [T_PUBLIC, T_PROTECTED, T_PRIVATE])) {
+			$modifier = $token[1];
+			$token = $this->scan_token_ignore_empty();
+			$token_type = $token[0];
+		}
+
+		$type = $this->try_read_type_identifier_with_token($token);
+		if ($type) {
+			$token = $this->scan_token_ignore_empty();
+		}
+
+		// variadic feature, the '...' operator
+		$is_variadic = false;
+		if ($token[0] === T_ELLIPSIS) {
+			$is_variadic = true;
 			$token = $this->expect_typed_token_ignore_empty();
 		}
 
-		$following_comment = $this->scan_comments_ignore_empty();
-
-		// $this->print_token($token);
-		$token_type = $token[0];
-		if ($token_type === T_STRING) {
-			$type = $this->create_type_identifier($token[1], false, $following_comment);
-			$token = $this->scan_token_ignore_empty();
-		}
-		elseif ($token_type === T_ARRAY) {
-			if ($following_comment === '/*list*/') {
-				$type = TypeFactory::$_array;
-			}
-			elseif ($following_comment === '/*dict*/') {
-				$type = TypeFactory::$_dict;
-			}
-			else {
-				$type = TypeFactory::$_any; // maybe Array / Dict type
-			}
-
-			$token = $this->scan_token_ignore_empty();
-		}
-		elseif ($token_type === T_NAME_FULLY_QUALIFIED) {
-			$type = $this->read_classkindred_identifier($token);
-			$token = $this->scan_token_ignore_empty();
-		}
-		else {
-			// $this->print_token($token);exit;
-			$type = TypeFactory::$_any;
-		}
-
-		$reference = $token === _REFERENCE
+		// &
+		$is_reference = $token === _REFERENCE
 			|| $token[0] === T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG;
-		if ($reference) {
+		if ($is_reference) {
 			$token = $this->expect_typed_token_ignore_empty();
 		}
 
 		if ($token[0] !== T_VARIABLE) {
-			// $this->print_token($token);exit;
+			$this->print_token($token);
 			throw $this->new_unexpected_error();
 		}
 
@@ -921,12 +931,37 @@ class PHPParserLite extends BaseParser
 			$value = ASTFactory::$default_value_marker;
 		}
 
-		$type->nullable = $nullable;
-
 		$declar = new ParameterDeclaration($name, $type, $value);
-		$declar->is_value_mutable = $reference;
+		$declar->is_value_mutable = $is_reference;
+		$declar->is_variadic = $is_variadic;
 
 		return $declar;
+	}
+
+	private function try_read_type_identifier_with_token($token)
+	{
+		$nullable = $token === _INVALIDABLE_SIGN;
+		if ($nullable) {
+			$token = $this->expect_typed_token_ignore_empty();
+		}
+
+		$following_comment = $this->scan_comments_ignore_empty();
+
+		$token_type = $token[0];
+		if (in_array($token_type, self::TYPING_TOKEN_TYPES)) {
+			$name = $token[1];
+			$type = $this->create_type_identifier($name, $nullable, $following_comment);
+			while ($this->skip_char_token('|')) {
+				$member_name = $this->expect_identifier_name();
+				$member_type = $this->create_type_identifier($member_name);
+				$type->unite_type($member_type);
+			}
+		}
+		else {
+			$type = null;
+		}
+
+		return $type;
 	}
 
 	private function read_function_block()
@@ -1049,9 +1084,15 @@ class PHPParserLite extends BaseParser
 		$nullable = $this->skip_char_token('?');
 		$name = $this->expect_identifier_name();
 
-		$following_comment = $this->scan_comments_ignore_empty();
+		return $this->read_type_tailing_and_create_identifier($name, $nullable);
+	}
 
-		return $this->create_type_identifier($name, $nullable, $following_comment);
+	private function read_type_tailing_and_create_identifier(string $name, bool $nullable)
+	{
+		$following_comment = $this->scan_comments_ignore_empty();
+		$identifier = $this->create_type_identifier($name, $nullable, $following_comment);
+
+		return $identifier;
 	}
 
 	private function create_type_identifier(string $name, bool $nullable = false, string $following_comment = null)
@@ -1061,9 +1102,6 @@ class PHPParserLite extends BaseParser
 			$name = static::TYPE_MAP[$lower_case_name];
 			if ($following_comment === '/*list*/') {
 				$name = _ARRAY;
-			}
-			elseif ($following_comment === '/*dict*/') {
-				$name = _DICT;
 			}
 
 			$identifier = TypeFactory::get_type($name);

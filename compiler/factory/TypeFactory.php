@@ -34,6 +34,7 @@ class TypeFactory
 	static $_iterable;
 	static $_array;
 	static $_dict;
+	static $_harray; // hybrid array, for PHP array
 	static $_chan;
 
 	static $_xview;
@@ -78,6 +79,8 @@ class TypeFactory
 		self::$_iterable = self::create_type(IterableType::class);
 		self::$_array = self::create_type(ArrayType::class);
 		self::$_dict = self::create_type(DictType::class);
+		self::$_harray = self::create_union_type([self::$_array, self::$_dict]);
+
 		self::$_chan = self::create_type(ChanType::class);
 
 		self::$_xview = self::create_type(XViewType::class);
