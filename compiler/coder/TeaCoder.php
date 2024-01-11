@@ -23,7 +23,7 @@ class TeaCoder
 
 	const USE_DECLARE_PREFIX = '#use ';
 
-	const NS_SEPARATOR = _SLASH;
+	const NS_SEPARATOR = TeaParser::NS_SEPARATOR;
 
 	const STATEMENT_TERMINATOR = '';
 

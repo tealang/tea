@@ -1,6 +1,6 @@
 // the public declarations
 
-#unit tea/examples
+#unit tea\examples
 
 public M_PI Float
 

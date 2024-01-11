@@ -17,7 +17,7 @@ class PHPCoder extends TeaCoder
 
 	const USE_DECLARE_PREFIX = 'use ';
 
-	const NS_SEPARATOR = _BACK_SLASH;
+	const NS_SEPARATOR = PHPParser::NS_SEPARATOR;
 
 	const STATEMENT_TERMINATOR = ';';
 
@@ -36,7 +36,7 @@ class PHPCoder extends TeaCoder
 	const NAMESPACE_REPLACES = [
 		_STRIKETHROUGH => _UNDERSCORE,
 		_DOT => _UNDERSCORE,
-		_SLASH => _BACK_SLASH
+		TeaParser::NS_SEPARATOR => PHPParser::NS_SEPARATOR
 	];
 
 	const CASTABLE_TYPES = ['string', 'int', 'float', 'bool', 'array', 'object'];
@@ -149,7 +149,7 @@ class PHPCoder extends TeaCoder
 
 		$ns_uri = $program->unit->dist_ns_uri;
 		if ($ns_uri !== null) {
-			$ns_uri = ltrim($ns_uri, _BACK_SLASH);
+			$ns_uri = ltrim($ns_uri, static::NS_SEPARATOR);
 			$items[] = "namespace $ns_uri;\n";
 		}
 
@@ -1433,7 +1433,7 @@ class PHPCoder extends TeaCoder
 			// check is need to escape
 			$need_escape = true;
 			for ($i = strlen($item) - 1; $i >= 0; $i--) {
-				if ($item[$i] === _BACK_SLASH) {
+				if ($item[$i] === static::NS_SEPARATOR) {
 					$need_escape = !$need_escape;
 				}
 				else {
@@ -1442,7 +1442,7 @@ class PHPCoder extends TeaCoder
 			}
 
 			if ($need_escape) {
-				$item .= _BACK_SLASH;
+				$item .= static::NS_SEPARATOR;
 			}
 		}
 

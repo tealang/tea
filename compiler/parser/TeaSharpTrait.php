@@ -252,7 +252,7 @@ trait TeaSharpTrait
 		$domain = $this->read_domain_name();
 
 		$names = [];
-		while ($this->skip_token(_SLASH)) {
+		while ($this->skip_token(static::NS_SEPARATOR)) {
 			$token = $this->scan_token();
 			if (!TeaHelper::is_subnamespace_name($token)) {
 				throw $this->new_parse_error("Invalid subnamespace name.");

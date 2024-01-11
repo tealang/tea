@@ -1,6 +1,6 @@
 // the public declarations
 
-#unit tea/builtin
+#unit tea\builtin
 
 public LF String = "\n"
 public __DIR__ String

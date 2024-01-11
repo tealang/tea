@@ -13,7 +13,7 @@ class TeaParser extends BaseParser
 {
 	use TeaTokenTrait, TeaStringTrait, TeaXBlockTrait, TeaSharpTrait, TeaDocsTrait;
 
-	const NS_SEPARATOR = _SLASH;
+	const NS_SEPARATOR = _BACK_SLASH;
 
 	protected $root_statements = [];
 
@@ -1901,17 +1901,25 @@ class TeaParser extends BaseParser
 
 	protected function try_read_classkindred_identifier()
 	{
-		$token = $this->get_token_ignore_empty();
-		if (!TeaHelper::is_identifier_name($token)) {
-			return null;
+		$is_based_root_ns = false;
+		if ($this->skip_token_ignore_space(static::NS_SEPARATOR)) {
+			$is_based_root_ns = true;
+			$token = $this->expect_identifier_token();
+		}
+		else {
+			$token = $this->get_token_ignore_empty();
+			if (!TeaHelper::is_identifier_name($token)) {
+				return null;
+			}
+
+			$this->scan_token_ignore_empty();
 		}
 
 		if (!$this->is_in_tea_declaration && TypeFactory::exists_type($token)) {
 			throw $this->new_parse_error("Cannot use type '$token' as a class/interface.");
 		}
 
-		$this->scan_token_ignore_empty();
-		$identifier = $this->read_classkindred_identifier_rest_and_create_instance($token);
+		$identifier = $this->read_classkindred_identifier_rest_and_create_instance($token, $is_based_root_ns);
 
 		if ($this->skip_token(_GENERIC_OPEN)) {
 			$identifier->generic_types = $this->read_generic_types();
@@ -1921,13 +1929,14 @@ class TeaParser extends BaseParser
 		return $identifier;
 	}
 
-	protected function read_classkindred_identifier_rest_and_create_instance(string $name)
+	protected function read_classkindred_identifier_rest_and_create_instance(string $name, bool $is_based_root_ns = false)
 	{
 		if ($name === null) {
 			$name = $this->expect_identifier_token();
 		}
 
-		$ns_components = [];
+		$ns_components = $is_based_root_ns ? [''] : [];
+
 		while ($this->skip_token(static::NS_SEPARATOR)) {
 			$ns_components[] = $name;
 			$name = $this->expect_identifier_token();
@@ -2066,24 +2075,25 @@ class TeaParser extends BaseParser
 		$i = 0;
 		while ($this->skip_token(_DOT)) {
 			if ($i === _STRUCT_DIMENSIONS_MAX) {
-				throw $this->new_parse_error('The dimensions of Array/Dict exceeds, the max is ' . _STRUCT_DIMENSIONS_MAX);
+				throw $this->new_parse_error('The dimensions of type identifier exceeds, the max is ' . _STRUCT_DIMENSIONS_MAX);
 			}
 
 			$kind = $this->scan_token();
-			if ($kind === _DOT_SIGN_ARRAY) {
-				$type = TypeFactory::create_array_type($type);
-			}
-			elseif ($kind === _DOT_SIGN_DICT) {
-				$type = TypeFactory::create_dict_type($type);
-			}
-			elseif ($kind === _DOT_SIGN_CHAN) {
-				$type = TypeFactory::create_chan_type($type);
-			}
-			elseif ($kind === _DOT_SIGN_METATYPE) {
-				$type = TypeFactory::create_meta_type($type);
-			}
-			else {
-				throw $this->new_unexpected_error();
+			switch ($kind) {
+				case _DOT_SIGN_ARRAY:
+					$type = TypeFactory::create_array_type($type);
+					break;
+				case _DOT_SIGN_DICT:
+					$type = TypeFactory::create_dict_type($type);
+					break;
+				case _DOT_SIGN_CHAN:
+					$type = TypeFactory::create_chan_type($type);
+					break;
+				case _DOT_SIGN_METATYPE:
+					$type = TypeFactory::create_meta_type($type);
+					break;
+				default:
+					throw $this->new_unexpected_error();
 			}
 
 			$i++;

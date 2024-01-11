@@ -31,7 +31,7 @@ class NamespaceIdentifier extends Node
 	public function __construct(array $names)
 	{
 		$this->names = $names;
-		$this->uri = join(_SLASH, $names);
+		$this->uri = join(TeaParser::NS_SEPARATOR, $names);
 	}
 
 	public function set_based_unit(Unit $unit)

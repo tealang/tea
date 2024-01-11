@@ -11,7 +11,7 @@ namespace Tea;
 
 class ASTChecker
 {
-	const NS_SEPARATOR = _SLASH;
+	const NS_SEPARATOR = TeaParser::NS_SEPARATOR;
 
 	protected $is_weakly_typed_system = false;
 
@@ -2559,7 +2559,7 @@ class ASTChecker
 
 		$found_unit = null;
 		while ($names) {
-			$uri = join(_SLASH, $names);
+			$uri = join(static::NS_SEPARATOR, $names);
 			$found_unit = $this->unit->use_units[$uri] ?? null;
 			if ($found_unit !== null) {
 				break;

@@ -648,7 +648,7 @@ class Compiler
 
 	private function parse_php_program(string $file)
 	{
-		$parser = new PHPParserLite($this->ast_factory, $file);
+		$parser = new PHPParser($this->ast_factory, $file);
 		return $parser->read_program();
 	}
 

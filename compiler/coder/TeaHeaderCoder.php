@@ -51,7 +51,7 @@ class TeaHeaderCoder extends TeaCoder
 
 		$items = parent::render_program_statements($program);
 
-		$uri = ltrim($program->unit->ns->uri, _SLASH);
+		$uri = ltrim($program->unit->ns->uri, static::NS_SEPARATOR);
 		$unit_declaration = "#unit {$uri}\n";
 		array_unshift($items, $unit_declaration);
 

@@ -11,9 +11,7 @@ namespace Tea;
 
 class PHPChecker extends ASTChecker
 {
-	const NS_SEPARATOR = _BACK_SLASH;
-
-	const NS_ROOT_MARK = _BACK_SLASH;
+	const NS_SEPARATOR = PHPParser::NS_SEPARATOR;
 
 	protected $is_weakly_typed_system = true;
 

@@ -16,7 +16,7 @@ const
 	// some basic settings
 	_NS_LEVELS_MAX = 3,
 	_STRUCT_DIMENSIONS_MAX = 12,
-	_BUILTIN_NS = 'tea/builtin',
+	_BUILTIN_NS = 'tea\builtin',
 	_UNIT_OPTIONAL_KEYS = ['type', 'loader'],
 
 	// system labels

@@ -24,8 +24,10 @@ if (version_compare(PHP_VERSION, SUPPORT_PHP_VERSION, '<')) {
 /**
  * A lite Parser uses to supported the Mixed Programming
  */
-class PHPParserLite extends BaseParser
+class PHPParser extends BaseParser
 {
+	const NS_SEPARATOR = _BACK_SLASH;
+
 	const TYPE_MAP = [
 		'void' => _VOID,
 		'string' => _STRING,
@@ -1110,8 +1112,8 @@ class PHPParserLite extends BaseParser
 				$identifier->nullable = true;
 			}
 		}
-		elseif (strpos($name, _BACK_SLASH) !== false) {
-			$names = explode(_BACK_SLASH, $name);
+		elseif (strpos($name, static::NS_SEPARATOR) !== false) {
+			$names = explode(static::NS_SEPARATOR, $name);
 			$identifier = $this->create_classkindred_identifier(array_pop($names), $names);
 			$identifier->nullable = $nullable;
 		}

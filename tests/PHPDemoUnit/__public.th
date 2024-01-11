@@ -1,5 +1,5 @@
 
-#unit tests/PHPDemoUnit
+#unit tests\PHPDemoUnit
 
 // a php const
 public PHP_CONST_DEMO String

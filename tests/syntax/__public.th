@@ -1,10 +1,10 @@
 // the public declarations
 
-#unit tests/syntax
+#unit tests\syntax
 
-#use tests/xview
-#use tests/PHPDemoUnit { PHP_CONST_DEMO }
-#use tests/xview { BaseView }
+#use tests\xview
+#use tests\PHPDemoUnit { PHP_CONST_DEMO }
+#use tests\xview { BaseView }
 
 public MY_CONST Dict
 
@@ -12,7 +12,7 @@ public PHPClassInMixed1 {
 	protected CONST1 String
 	public CONST2
 	public object Object
-	public some /Exception
+	public some \Exception
 	public construct(caller String, items Array, some Bool = #default)
 	public get_message() String
 }
