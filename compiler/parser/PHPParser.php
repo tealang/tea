@@ -30,6 +30,7 @@ class PHPParser extends BaseParser
 
 	const TYPE_MAP = [
 		'void' => _VOID,
+		'mixed' => _ANY,
 		'string' => _STRING,
 		'int' => _INT,
 		'float' => _FLOAT,
@@ -148,6 +149,10 @@ class PHPParser extends BaseParser
 
 			case T_INTERFACE:
 				$node = $this->read_interface_declaration();
+				break;
+
+			case T_TRAIT:
+				$node = $this->read_trait_declaration();
 				break;
 
 			case T_FUNCTION:
@@ -457,6 +462,23 @@ class PHPParser extends BaseParser
 		return $declaration;
 	}
 
+	private function read_trait_declaration()
+	{
+		$name = $this->expect_identifier_name();
+
+		$declaration = $this->factory->create_trait_declaration($name, _PUBLIC, $this->namespace);
+		$declaration->pos = $this->pos;
+
+		$this->expect_block_begin();
+
+		while ($this->read_class_member());
+
+		$this->expect_block_end();
+		$this->factory->end_class();
+
+		return $declaration;
+	}
+
 	private function read_class_declaration(bool $is_abstract = false)
 	{
 		$name = $this->expect_identifier_name();
@@ -509,7 +531,7 @@ class PHPParser extends BaseParser
 		}
 
 		$modifier = null;
-		if (in_array($token[0], [T_PUBLIC, T_PROTECTED, T_PRIVATE], true)) {
+		if (in_array($token[0], [T_PUBLIC], true)) {
 			$modifier = $token[1];
 			$token = $this->expect_typed_token_ignore_empty();
 		}
@@ -637,7 +659,7 @@ class PHPParser extends BaseParser
 
 		$this->expect_statement_end();
 
-		return new ClassUseTraitsDeclaration([]);
+		return new ClassUseTraitsDeclaration($used_traits);
 	}
 
 	private function read_constant_declaration(?string $doc)

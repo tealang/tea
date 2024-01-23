@@ -162,9 +162,7 @@ class ASTChecker
 				break;
 
 			case ClassDeclaration::KIND:
-				$this->check_local_classkindred_declaration($node);
-				break;
-
+			case TraitDeclaration::KIND:
 			case InterfaceDeclaration::KIND:
 				$this->check_local_classkindred_declaration($node);
 				break;

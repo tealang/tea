@@ -433,6 +433,20 @@ class ASTFactory
 		return $declaration;
 	}
 
+	public function create_trait_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
+	{
+		$this->check_global_modifier($modifier, 'trait');
+
+		$declaration = new TraitDeclaration($modifier, $name);
+
+		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns, $is_declare_mode);
+		$this->bind_class_symbol($declaration, $symbol);
+
+		$this->begin_class($declaration);
+
+		return $declaration;
+	}
+
 	private function bind_class_symbol(ClassKindredDeclaration $declaration, Symbol $symbol)
 	{
 		// create 'this' symbol
