@@ -371,6 +371,23 @@ class TeaCoder
 		return $code . static::STATEMENT_TERMINATOR;
 	}
 
+	public function render_var_statement(VarStatement $node)
+	{
+		$items = [];
+		foreach ($node->members as $member) {
+			$member_code = $member->name;
+			if ($member->value) {
+				$member_code .= ' = ' . $member->value->render($this);
+			}
+
+			$items[] = $member_code;
+		}
+
+		$code = static::VAR_DECLARE_PREFIX . join(', ', $items);
+
+		return $code . static::STATEMENT_TERMINATOR;
+	}
+
 	public function render_variable_declaration(VariableDeclaration $node)
 	{
 		$code = static::VAR_DECLARE_PREFIX . $node->name;

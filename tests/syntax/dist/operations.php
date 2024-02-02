@@ -10,7 +10,7 @@ const PI = 3.1415926;
 $some = 'abc' . (1 + fmod((2 & 2) * 2 ** 3 / 5, 6));
 
 $uint_num = 123;
-$int_num = 123;
+$int_num = -123;
 
 $uint_from_string = uint_ensure((int)'123');
 

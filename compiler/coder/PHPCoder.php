@@ -1314,6 +1314,26 @@ class PHPCoder extends TeaCoder
 		return strtr($identifier->uri, static::NAMESPACE_REPLACES);
 	}
 
+	public function render_var_statement(VarStatement $node)
+	{
+		$items = [];
+		foreach ($node->members as $member) {
+			if ($member->value) {
+				$value = $member->value->render($this);
+			}
+			else {
+				$value = 'null';
+			}
+
+			$name = $this->add_variable_prefix($member->name);
+			$items[] = $name . ' = ' . $value . static::STATEMENT_TERMINATOR;
+		}
+
+		$code = join("\n", $items);
+
+		return $code;
+	}
+
 	public function render_variable_declaration(VariableDeclaration $node)
 	{
 		$code = $this->add_variable_prefix($node->name);

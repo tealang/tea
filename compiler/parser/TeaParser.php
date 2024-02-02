@@ -277,7 +277,7 @@ class TeaParser extends BaseParser
 	{
 		switch ($type) {
 			case _VAR:
-				$node = $this->read_variable_declaration();
+				$node = $this->read_var_statement();
 				break;
 			case _RETURN:
 				$node = $this->read_return_statement();
@@ -381,6 +381,19 @@ class TeaParser extends BaseParser
 
 		$args = $this->read_inline_arguments();
 		return new EchoStatement(...$args);
+	}
+
+	protected function read_var_statement()
+	{
+		// var var0 Type0, var1 Type1, ...
+
+		$members[] = $this->read_variable_declaration();
+
+		while ($this->skip_comma()) {
+			$members[] = $this->read_variable_declaration();
+		}
+
+		return new VarStatement(...$members);
 	}
 
 	protected function read_variable_declaration()

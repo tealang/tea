@@ -1165,9 +1165,13 @@ class ASTChecker
 				$this->check_throw_statement($node);
 				break;
 
-			case VariableDeclaration::KIND:
-				$this->check_variable_declaration($node);
+			case VarStatement::KIND:
+				$this->check_var_statement($node);
 				break;
+
+			// case VariableDeclaration::KIND:
+			// 	$this->check_variable_declaration($node);
+			// 	break;
 
 			case ReturnStatement::KIND:
 				return $this->infer_return_statement($node);
@@ -1275,6 +1279,13 @@ class ASTChecker
 	private function check_condition_clause(PostConditionAbleStatement $node)
 	{
 		$this->infer_expression($node->condition);
+	}
+
+	private function check_var_statement(VarStatement $node)
+	{
+		foreach ($node->members as $member) {
+			$this->check_variable_declaration($member);
+		}
 	}
 
 	private function check_echo_statement(EchoStatement $node)
