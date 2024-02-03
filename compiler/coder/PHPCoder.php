@@ -1257,11 +1257,6 @@ class PHPCoder extends TeaCoder
 		return static::TYPE_MAP[$node->name] ?? $node->name;
 	}
 
-	public function render_union_type_identifier(UnionType $node)
-	{
-		return static::TYPE_MAP[_ANY];
-	}
-
 	public function render_classkindred_identifier(ClassKindredIdentifier $node)
 	{
 		if ($node->ns) {

@@ -137,7 +137,7 @@ class HeaderParser extends TeaParser
 	{
 		$declaration = $this->factory->create_class_constant_declaration($modifier, $name);
 
-		$declaration->type = $this->try_read_type_identifier();
+		$declaration->type = $this->try_read_type_expression();
 
 		if ($this->skip_token_ignore_space(_ASSIGN)) {
 			$declaration->value = $this->read_compile_time_value();
@@ -158,7 +158,7 @@ class HeaderParser extends TeaParser
 		$parameters = $this->read_parameters_with_parentheses();
 		$this->factory->set_scope_parameters($parameters);
 
-		$declaration->type = $this->try_read_return_type_identifier();
+		$declaration->type = $this->try_read_return_type_expression();
 
 		return $declaration;
 	}

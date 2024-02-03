@@ -1,15 +1,16 @@
 
-internal TeaDemoClass {
+public TeaDemoClass {
+
 	static static_prop1 = 'static prop value'
 
-	prop1 = 'prop1 value'
+	prop1 String|Int = 'prop1 value'
 
 	static static_method(some Dict) {
 		// some['k'] = 123   // error, cannot change a immutable item
 		return this.static_prop1
 	}
 
-	method1(param1 String) {
+	method1(param1 String|Int) {
 		return this.prop1
 	}
 

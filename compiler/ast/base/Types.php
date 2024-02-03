@@ -40,7 +40,7 @@ trait ITypeTrait
 	public function is_accept_type(IType $target) {
 		if ($target instanceof UnionType) {
 			$accept = false;
-			foreach ($target->types as $target_member) {
+			foreach ($target->get_members() as $target_member) {
 				if ($this->is_accept_single_type($target_member)) {
 					$accept = true;
 					break;
@@ -63,8 +63,7 @@ trait ITypeTrait
 				$united = $this;
 			}
 			else {
-				$united = new UnionType();
-				$united->types = [$this, $target];
+				$united = new UnionType([$this, $target]);
 			}
 		}
 
@@ -178,31 +177,41 @@ abstract class SingleGenericType extends BaseType
 
 class UnionType extends BaseType
 {
-	const KIND = 'union_type_identifier';
+	const KIND = 'union_type_expression';
 
 	public $name = _UNIONTYPE;
 
-	public $types = [];
+	public $members = [];
 
-	public function __construct(array $types = []) {
-		$this->types = $types;
+	public function __construct(array $members = []) {
+		$this->members = $members;
+	}
+
+	public function get_members()
+	{
+		return $this->members;
+	}
+
+	public function count()
+	{
+		return count($this->members);
 	}
 
 	public function remove_nullable() {
 		$this->nullable = false;
-		foreach ($this->types as $key => $type) {
+		foreach ($this->members as $key => $type) {
 			if ($type->nullable or $type->has_null) {
 				$type = clone $type; // not to be affected the source
 				$type->remove_nullable();
 
 				// use the cloned one
-				$this->types[$key] = $type;
+				$this->members[$key] = $type;
 			}
 		}
 	}
 
 	public function is_all_array_types() {
-		foreach ($this->types as $member_type) {
+		foreach ($this->members as $member_type) {
 			if (!$member_type instanceof ArrayType) {
 				return false;
 			}
@@ -212,7 +221,7 @@ class UnionType extends BaseType
 	}
 
 	public function is_all_dict_types() {
-		foreach ($this->types as $member_type) {
+		foreach ($this->members as $member_type) {
 			if (!$member_type instanceof DictType) {
 				return false;
 			}
@@ -223,7 +232,7 @@ class UnionType extends BaseType
 
 	public function unite_type(IType $target): IType {
 		if ($target instanceof UnionType) {
-			foreach ($target->types as $target_member) {
+			foreach ($target->get_members() as $target_member) {
 				$this->add_single_type($target_member);
 			}
 		}
@@ -236,14 +245,14 @@ class UnionType extends BaseType
 
 	public function add_single_type(IType $target) {
 		$this->is_contains_single_type($target)
-			or $this->types[] = $target;
+			or $this->members[] = $target;
 
 		return $this;
 	}
 
 	public function is_contains_single_type(IType $target) {
 		$contains = false;
-		foreach ($this->types as $member) {
+		foreach ($this->members as $member) {
 			if ($member->is_same_with($target)) {
 				$contains = true;
 				break;
@@ -255,7 +264,7 @@ class UnionType extends BaseType
 
 	public function get_members_type_except(IType $target) {
 		$items = [];
-		foreach ($this->types as $member) {
+		foreach ($this->members as $member) {
 			if (!$member->is_same_or_based_with($target)) {
 				$items[] = $member;
 			}
@@ -269,11 +278,11 @@ class UnionType extends BaseType
 	}
 
 	public function is_same_with(IType $target) {
-		if (!$target instanceof UnionType or count($this->types) !== count($target->types)) {
+		if (!$target instanceof UnionType or $this->count() !== $target->count()) {
 			return false;
 		}
 
-		foreach ($target->types as $target_member) {
+		foreach ($target->get_members() as $target_member) {
 			if (!$this->is_contains_single_type($target_member)) {
 				return false;
 			}
@@ -283,7 +292,7 @@ class UnionType extends BaseType
 	}
 
 	public function is_based_with(IType $target) {
-		foreach ($this->types as $member) {
+		foreach ($this->members as $member) {
 			if (!$member->is_based_with($target)) {
 				return false;
 			}
@@ -293,7 +302,7 @@ class UnionType extends BaseType
 	}
 
 	public function is_same_or_based_with(IType $target) {
-		foreach ($this->types as $member) {
+		foreach ($this->members as $member) {
 			if (!$member->is_same_or_based_with($target)) {
 				return false;
 			}
@@ -304,7 +313,7 @@ class UnionType extends BaseType
 
 	public function is_accept_single_type(IType $target) {
 		$accept = false;
-		foreach ($this->types as $member) {
+		foreach ($this->members as $member) {
 			if ($member->is_accept_type($target)) {
 				$accept = true;
 				break;

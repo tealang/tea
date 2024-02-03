@@ -7,7 +7,7 @@ require_once dirname(__DIR__, 1) . '/__public.php';
 
 require_once UNIT_PATH . '_mixed2.php';
 
-#internal
+#public
 class TeaDemoClass {
 	public static $static_prop1 = 'static prop value';
 
@@ -17,7 +17,7 @@ class TeaDemoClass {
 		return TeaDemoClass::$static_prop1;
 	}
 
-	public function method1(string $param1) {
+	public function method1(string|int $param1) {
 		return $this->prop1;
 	}
 

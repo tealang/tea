@@ -204,7 +204,7 @@ class TeaParser extends BaseParser
 		$parameters = $this->read_parameters_with_parentheses();
 		$this->factory->set_scope_parameters($parameters);
 
-		$declaration->type = $this->try_read_return_type_identifier();
+		$declaration->type = $this->try_read_return_type_expression();
 
 		if (!$is_declare_mode) {
 			$this->read_body_statements($declaration);
@@ -269,7 +269,7 @@ class TeaParser extends BaseParser
 	{
 		$declaration = $this->factory->create_constant_declaration($modifier, $name, $ns, $is_declare_mode);
 		$declaration->pos = $this->pos;
-		$declaration->type = $this->try_read_type_identifier();
+		$declaration->type = $this->try_read_type_expression();
 		return $declaration;
 	}
 
@@ -349,7 +349,7 @@ class TeaParser extends BaseParser
 			$this->factory->set_scope_parameters($parameters);
 		}
 
-		$declaration->type = $this->try_read_return_type_identifier();
+		$declaration->type = $this->try_read_return_type_expression();
 
 		$this->expect_token_ignore_empty(_ARROW);
 
@@ -404,7 +404,7 @@ class TeaParser extends BaseParser
 
 		$name = $this->scan_token_ignore_empty();
 
-		$type = $this->try_read_type_identifier();
+		$type = $this->try_read_type_expression();
 
 		$value = null;
 		if ($this->get_token_ignore_empty() === _ASSIGN) {
@@ -1412,7 +1412,7 @@ class TeaParser extends BaseParser
 
 	protected function read_lambda_combination(array $parameters, $arrow_is_optional = false)
 	{
-		$return_type = $this->try_read_return_type_identifier();
+		$return_type = $this->try_read_return_type_expression();
 
 		$next = $this->get_token_ignore_space();
 		if ($next === _ARROW) {
@@ -1686,7 +1686,7 @@ class TeaParser extends BaseParser
 	{
 		$is_not = $this->skip_token_ignore_space(_NOT);
 
-		$assert_type = $this->try_read_type_identifier();
+		$assert_type = $this->try_read_type_expression();
 		if ($assert_type === null) {
 			throw $this->new_parse_error("Expected a type name for the 'is' expression.");
 		}
@@ -1700,7 +1700,7 @@ class TeaParser extends BaseParser
 	private function read_cast_operation(BaseExpression $expression)
 	{
 		if ($this->skip_token(_PAREN_OPEN)) {
-			$as_type = $this->try_read_type_identifier();
+			$as_type = $this->try_read_type_expression();
 			$this->expect_token(_PAREN_CLOSE);
 		}
 		else {
@@ -1932,7 +1932,7 @@ class TeaParser extends BaseParser
 			throw $this->new_parse_error("Cannot use type '$token' as a class/interface.");
 		}
 
-		$identifier = $this->read_classkindred_identifier_rest_and_create_instance($token, $is_based_root_ns);
+		$identifier = $this->read_classkindred_identifier_with($token, $is_based_root_ns);
 
 		if ($this->skip_token(_GENERIC_OPEN)) {
 			$identifier->generic_types = $this->read_generic_types();
@@ -1942,11 +1942,11 @@ class TeaParser extends BaseParser
 		return $identifier;
 	}
 
-	protected function read_classkindred_identifier_rest_and_create_instance(string $name, bool $is_based_root_ns = false)
+	protected function read_classkindred_identifier_with(string $name, bool $is_based_root_ns = false)
 	{
-		if ($name === null) {
-			$name = $this->expect_identifier_token();
-		}
+		// if ($name === null) {
+		// 	$name = $this->expect_identifier_token();
+		// }
 
 		$ns_components = $is_based_root_ns ? [''] : [];
 
@@ -1984,7 +1984,7 @@ class TeaParser extends BaseParser
 				throw $this->new_parse_error("Expected a identifier for generic key");
 			}
 
-			$type = $this->try_read_type_identifier();
+			$type = $this->try_read_type_expression();
 			if ($type === null) {
 				throw $this->new_parse_error("Expected a identifier for generic type");
 			}
@@ -1996,9 +1996,9 @@ class TeaParser extends BaseParser
 		return $map;
 	}
 
-	protected function try_read_return_type_identifier()
+	protected function try_read_return_type_expression()
 	{
-		$type = $this->try_read_type_identifier();
+		$type = $this->try_read_type_expression();
 		if ($type === null) {
 			return null;
 		}
@@ -2029,10 +2029,41 @@ class TeaParser extends BaseParser
 		}
 		elseif (TeaHelper::is_identifier_name($token)) {
 			$this->scan_token_ignore_space(); // skip
-			$type = $this->read_classkindred_identifier_rest_and_create_instance($token);
+			$type = $this->read_classkindred_identifier_with($token);
 		}
 		else {
 			return null;
+		}
+
+		return $type;
+	}
+
+	protected function try_read_type_expression()
+	{
+		$type = $this->try_read_type_identifier();
+		if ($type === null) {
+			return null;
+		}
+
+		// union with members
+		while ($this->skip_token_ignore_space(_UNION)) {
+			$member_type = $this->try_read_type_identifier();
+			if ($member_type === null) {
+				throw $this->new_parse_error("Required a member type name");
+			}
+
+			$type = $type->unite_type($member_type);
+		}
+
+		if ($this->skip_token(_INVALIDABLE_SIGN)) {
+			if ($type instanceof BaseType) {
+				$type = $type->get_nullable_instance();
+			}
+			else {
+				$type->let_nullable();
+			}
+
+			$type->pos = $this->pos;
 		}
 
 		return $type;
@@ -2047,7 +2078,7 @@ class TeaParser extends BaseParser
 		}
 		elseif (TeaHelper::is_identifier_name($token)) {
 			$this->scan_token_ignore_space(); // skip
-			$type = $this->read_classkindred_identifier_rest_and_create_instance($token);
+			$type = $this->read_classkindred_identifier_with($token);
 		}
 		else {
 			return null;
@@ -2062,17 +2093,6 @@ class TeaParser extends BaseParser
 		elseif ($next === _DOT) {
 			// the String.Array.Dict style compound type
 			$type = $this->read_dots_style_compound_type($type);
-		}
-
-		if ($this->skip_token(_INVALIDABLE_SIGN)) {
-			if ($type instanceof BaseType) {
-				$type = $type->get_nullable_instance();
-			}
-			else {
-				$type->let_nullable();
-			}
-
-			$type->pos = $this->pos;
 		}
 
 		return $type;
@@ -2220,7 +2240,7 @@ class TeaParser extends BaseParser
 		$declaration = $this->factory->create_class_constant_declaration($modifier, $name);
 		$declaration->pos = $this->pos;
 
-		$declaration->type = $this->try_read_type_identifier();
+		$declaration->type = $this->try_read_type_expression();
 
 		if ($this->skip_token_ignore_space(_ASSIGN)) {
 			$declaration->value = $this->read_compile_time_value();
@@ -2254,7 +2274,7 @@ class TeaParser extends BaseParser
 
 		// the type name
 		if (TeaHelper::is_type_name($token)) {
-			$declaration->type = $this->try_read_type_identifier();
+			$declaration->type = $this->try_read_type_expression();
 			$token = $this->get_token_ignore_space();
 		}
 
@@ -2283,7 +2303,7 @@ class TeaParser extends BaseParser
 		$parameters = $this->read_parameters_with_parentheses();
 		$this->factory->set_scope_parameters($parameters);
 
-		$declaration->type = $this->try_read_return_type_identifier();
+		$declaration->type = $this->try_read_return_type_expression();
 
 		$next = $this->get_token_ignore_empty();
 		if ($next === _BLOCK_BEGIN) {
@@ -2334,7 +2354,7 @@ class TeaParser extends BaseParser
 	// 	}
 
 	// 	$parameters = $this->read_parameters_with_parentheses();
-	// 	$return_type = $this->try_read_return_type_identifier();
+	// 	$return_type = $this->try_read_return_type_expression();
 
 	// 	$node = new CallbackProtocol($is_async, $name, $return_type, ...$parameters);
 	// 	$node->pos = $this->pos;
@@ -2394,7 +2414,7 @@ class TeaParser extends BaseParser
 
 		$next = $this->get_token_ignore_space();
 		if (TeaHelper::is_type_name($next)) {
-			$type = $this->try_read_type_identifier();
+			$type = $this->try_read_type_expression();
 			$next = $this->get_token_ignore_space();
 		}
 		elseif ($next === _PAREN_OPEN) { // the Callable protocol
@@ -2435,7 +2455,7 @@ class TeaParser extends BaseParser
 	protected function read_callable_type()
 	{
 		$parameters = $this->read_parameters_with_parentheses();
-		$return_type = $this->try_read_return_type_identifier();
+		$return_type = $this->try_read_return_type_expression();
 
 		$node = TypeFactory::create_callable_type($return_type, $parameters);
 		$node->pos = $this->pos;

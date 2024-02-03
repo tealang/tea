@@ -125,7 +125,7 @@ trait TeaSharpTrait
 		}
 		// elseif ($name === _DOLLAR) {
 		// 	$name = $this->expect_identifier_token();
-		// 	$type = $this->try_read_type_identifier();
+		// 	$type = $this->try_read_type_expression();
 		// 	if (!$type) {
 		// 		throw $this->new_parse_error("Expected type for declared super variable '$name'.");
 		// 	}
@@ -165,7 +165,7 @@ trait TeaSharpTrait
 
 	// 	$next = $this->get_token_ignore_empty();
 	// 	if (TeaHelper::is_type_name($next)) {
-	// 		$type = $this->try_read_type_identifier();
+	// 		$type = $this->try_read_type_expression();
 	// 	}
 
 	// 	$parameter = new ParameterDeclaration($name, $type, $value);

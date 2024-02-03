@@ -168,7 +168,7 @@ public _str_replace(master String, search Any, replacement Any) String
 
 #php array_search(search Any, master Any, strict Bool = false) UInt
 
-public _array_search(master Array, search Any) Any
+public _array_search(master Array, search Any) Bool|UInt
 
 public array_last_index(array Array) UInt
 
@@ -182,7 +182,7 @@ public array_last_index(array Array) UInt
 
 public dict_get(dict Dict, key String) Any
 
-public _dict_search(master Dict, search Any) Any
+public _dict_search(master Dict, search Any) Bool|String
 
 #php json_encode(data Any, flags Int = 0, depth UInt = 512) String
 
@@ -305,7 +305,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 
 	masked contains(val Any) Bool
 
-	masked find(val Any) Any
+	masked find(val Any) Bool|UInt
 
 	masked copy(start Int, length UInt = #default) Array
 
@@ -341,7 +341,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 
 	masked get(key String) Any
 
-	masked find(val Any) Any
+	masked find(val Any) Bool|String
 
 	masked join(glue String = LF) String
 }

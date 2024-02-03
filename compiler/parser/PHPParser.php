@@ -919,7 +919,7 @@ class PHPParser extends BaseParser
 			$token_type = $token[0];
 		}
 
-		$type = $this->try_read_type_identifier_with_token($token);
+		$type = $this->try_read_type_expression_with_token($token);
 		if ($type) {
 			$token = $this->scan_token_ignore_empty();
 		}
@@ -962,7 +962,7 @@ class PHPParser extends BaseParser
 		return $declar;
 	}
 
-	private function try_read_type_identifier_with_token($token)
+	private function try_read_type_expression_with_token($token)
 	{
 		$nullable = $token === _INVALIDABLE_SIGN;
 		if ($nullable) {
@@ -975,10 +975,10 @@ class PHPParser extends BaseParser
 		if (in_array($token_type, self::TYPING_TOKEN_TYPES)) {
 			$name = $token[1];
 			$type = $this->create_type_identifier($name, $nullable, $following_comment);
-			while ($this->skip_char_token('|')) {
+			while ($this->skip_char_token(_UNION)) {
 				$member_name = $this->expect_identifier_name();
 				$member_type = $this->create_type_identifier($member_name);
-				$type->unite_type($member_type);
+				$type = $type->unite_type($member_type);
 			}
 		}
 		else {

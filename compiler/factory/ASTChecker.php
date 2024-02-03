@@ -1529,7 +1529,7 @@ class ASTChecker
 			}
 
 			$member_value_types = [];
-			foreach ($body_type->types as $member) {
+			foreach ($body_type->get_members() as $member) {
 				$member_value_types[] = $member->generic_type;
 			}
 
@@ -1606,7 +1606,7 @@ class ASTChecker
 			}
 
 			$member_value_types = [];
-			foreach ($left_type->types as $member) {
+			foreach ($left_type->get_members() as $member) {
 				$member_value_types[] = $member->generic_type;
 			}
 
@@ -1955,7 +1955,7 @@ class ASTChecker
 				$type->generic_type !== null && $this->check_type($type->generic_type);
 			}
 			elseif ($type instanceof UnionType) {
-				foreach ($type->types as $member) {
+				foreach ($type->get_members() as $member) {
 					$this->check_type($member);
 				}
 			}
@@ -3136,7 +3136,7 @@ class ASTChecker
 		}
 		elseif ($type instanceof UnionType) {
 			$names = [];
-			foreach ($type->types as $member) {
+			foreach ($type->get_members() as $member) {
 				$names[] = static::get_type_name($member);
 			}
 

@@ -610,7 +610,16 @@ class TeaCoder
 		}
 		elseif ($node instanceof IterableType) {
 			if ($node->generic_type) {
-				return $node->generic_type->render($this) . '.' . $node->name;
+				$gtype = $node->generic_type;
+				if ($gtype instanceof UnionType) {
+					$item = $this->render_union_type_expression($gtype);
+					$item = "($item)";
+				}
+				else {
+					$item = $gtype->render($this);
+				}
+
+				return $item . '.' . $node->name;
 			}
 		}
 		elseif ($node instanceof CallableType) {
@@ -620,9 +629,15 @@ class TeaCoder
 		return $node->name;
 	}
 
-	public function render_union_type_identifier(UnionType $node)
+	public function render_union_type_expression(UnionType $node)
 	{
-		return _ANY;
+		$items = [];
+		foreach ($node->get_members() as $member) {
+			$item = $this->render_type_identifier($member);
+			$items[] = $item;
+		}
+
+		return join(_UNION, $items);
 	}
 
 	protected function render_callable_type(CallableType $node)

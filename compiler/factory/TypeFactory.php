@@ -118,7 +118,7 @@ class TypeFactory
 	// 	}
 	// 	elseif ($type instanceof UnionType) {
 	// 		$result = true;
-	// 		foreach ($type->types as $member_type) {
+	// 		foreach ($type->get_members() as $member_type) {
 	// 			if (!TypeFactory::is_iterable_type($member_type)) {
 	// 				$result = false;
 	// 				break;
@@ -145,7 +145,7 @@ class TypeFactory
 			return true;
 		}
 		elseif ($type instanceof UnionType) {
-			foreach ($type->types as $member_type) {
+			foreach ($type->get_members() as $member_type) {
 				if (!TypeFactory::is_dict_key_directly_supported_type($member_type)) {
 					return false;
 				}
@@ -169,7 +169,7 @@ class TypeFactory
 		}
 
 		if ($type instanceof UnionType) {
-			foreach ($type->types as $subtype) {
+			foreach ($type->get_members() as $subtype) {
 				if (!static::is_number_type($subtype)) {
 					return false;
 				}
