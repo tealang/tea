@@ -350,10 +350,6 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	// no any
 }
 
-#tea Chan {
-	masked length UInt
-}
-
 #tea Regex {
 	masked test(string String) Bool
 

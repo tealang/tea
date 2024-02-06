@@ -21,8 +21,6 @@ public php_get_num() Int
 
 #php range(start Int, end Int, step Int = 1) Array
 
-#php usleep(micro_seconds UInt)
-
 public fn0(str Any) String
 
 public TeaDemoClass {

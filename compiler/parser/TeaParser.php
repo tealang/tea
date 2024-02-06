@@ -814,34 +814,12 @@ class TeaParser extends BaseParser
 	protected function read_while_block(string $label = null)
 	{
 		// e.g. while test_expression {}
-		// e.g. while #first or test_expression {} // less useful, removed
-
-		// $do_the_first = false;
-		// if ($this->skip_token_ignore_space(_SHARP)) {
-		// 	if (!$this->skip_token_ignore_space(_FIRST) || !$this->skip_token_ignore_space(_OR)) {
-		// 		throw $this->new_unexpected_error();
-		// 	}
-
-		// 	$do_the_first = true;
-		// }
 
 		$test = $this->read_expression();
 		$master_block = $this->factory->create_while_block($test);
 		$master_block->label = $label;
 
 		$this->read_block_body($master_block);
-
-		// if ($do_the_first) {
-		// 	$master_block->do_the_first = true;
-		// 	if ($this->skip_token_ignore_empty(_ELSE) || $this->skip_token_ignore_empty(_ELSEIF)) {
-		// 		throw $this->new_unexpected_error();
-		// 	}
-		// }
-		// else { // do not support else/elseif in while-block
-		// 	// the while condition would be test in every loop, so need a tmp var to record is looped
-		// 	$else_block = $this->try_read_else_block();
-		// 	$else_block && $master_block->set_else_block($else_block);
-		// }
 
 		$this->try_attach_except_block($master_block);
 
@@ -1998,26 +1976,7 @@ class TeaParser extends BaseParser
 
 	protected function try_read_return_type_expression()
 	{
-		$type = $this->try_read_type_expression();
-		if ($type === null) {
-			return null;
-		}
-
-		// the collector feature, e.g. IView >> Array
-		if ($this->skip_token_ignore_space(_COLLECT)) {
-			$target_type = $this->scan_token_ignore_space();
-			if ($target_type !== _ARRAY) {
-				throw $this->new_parse_error("The target type for collector should be 'Array'.");
-			}
-
-			if ($type === TypeFactory::$_string || $type === TypeFactory::$_any) {
-				throw $this->new_parse_error("The type to collect do not supported String or Any.");
-			}
-
-			$type = TypeFactory::create_collector_type($type);
-		}
-
-		return $type;
+		return $this->try_read_type_expression();
 	}
 
 	protected function try_read_simple_type_identifier()
@@ -2084,7 +2043,7 @@ class TeaParser extends BaseParser
 			return null;
 		}
 
-		// try read Dict/Array/Chan
+		// try read Dict/Array
 		$next = $this->get_token();
 		if ($next === _BRACKET_OPEN) {
 			// the String[][:] style compound type
@@ -2102,7 +2061,6 @@ class TeaParser extends BaseParser
 	{
 		// e.g. String.Dict
 		// e.g. String.Array
-		// e.g. String.Chan
 
 		$type = $generic_type;
 		$i = 0;
@@ -2118,9 +2076,6 @@ class TeaParser extends BaseParser
 					break;
 				case _DOT_SIGN_DICT:
 					$type = TypeFactory::create_dict_type($type);
-					break;
-				case _DOT_SIGN_CHAN:
-					$type = TypeFactory::create_chan_type($type);
 					break;
 				case _DOT_SIGN_METATYPE:
 					$type = TypeFactory::create_meta_type($type);

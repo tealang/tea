@@ -25,10 +25,6 @@ const _BINARY_OP_PRECEDENCES = [
 	_DOUBLE_COLON => 1, // pipe call
 	// () []
 
-	// L2
-	// _PUT => 2,		// for Channel
-	// _NOTIFY => 2, 	// for Channel and Callback
-
 	// L3
 	_EXPONENTIATION => 3, // math
 

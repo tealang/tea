@@ -25,8 +25,7 @@ const
 	_MAIN = 'main',
 	// _EXPECT = 'expect', _INCLUDE = 'include',
 	_TEXT = 'text', _DEFAULT = 'default',
-	_ASYNC = 'async', _AWAIT = 'await', _CO = 'co',
-	_FIRST = 'first',
+	_ASYNC = 'async', _AWAIT = 'await',
 
 	// builtin types
 	_INVALIDABLE_SIGN = '?',
@@ -37,7 +36,7 @@ const
 	_STRING = 'String',
 	_INT = 'Int', _UINT = 'UInt', _FLOAT = 'Float', _BOOL = 'Bool',
 	_ITERABLE = 'Iterable', _DICT = 'Dict', _ARRAY = 'Array', // 'Pair', 'Matrix', 'Tensor'
-	_OBJECT = 'Object', _XVIEW = 'XView', _REGEX = 'Regex', _CHANNEL = 'Chan',
+	_OBJECT = 'Object', _XVIEW = 'XView', _REGEX = 'Regex',
 	_CALLABLE = 'Callable', _NAMESPACE = 'Namespace', // _CLASS = 'Class',
 	_BUILTIN_TYPE_NAMES = [
 		_UNIONTYPE, _METATYPE, _ANY, _VOID, _NONE,
@@ -46,7 +45,7 @@ const
 	],
 
 	// dot signs of compound types
-	_DOT_SIGN_ARRAY = 'Array', _DOT_SIGN_DICT = 'Dict', _DOT_SIGN_CHAN = 'Chan', _DOT_SIGN_METATYPE = 'Type',
+	_DOT_SIGN_ARRAY = 'Array', _DOT_SIGN_DICT = 'Dict', _DOT_SIGN_METATYPE = 'Type',
 
 	// number system
 	_BASE_BINARY = 'b', _BASE_OCTAL = 'o', _BASE_DECIMAL = '', _BASE_HEX = 'x',
@@ -75,7 +74,6 @@ const
 	_NONE_COALESCING = '??', _CONDITIONAL = '?',
 	_DOT = '.', _DOUBLE_COLON = '::',
 	_PUT = '<-', _NOTIFY = '->', _ARROW = '=>', _RELAY = '==>',
-	_COLLECT = '>>',
 	_SHIFT_LEFT = '<<', _SHIFT_RIGHT = '>>',
 
 	_ASSIGN_OPERATORS = [_ASSIGN, '.=', '**=', '+=', '-=', '*=', '/=', '&=', '|=', '^=', '<<=', '>>='], // '??='
@@ -101,6 +99,7 @@ const
 	// _WHEN = 'when',
 	_STATIC = 'static', _FINAL = 'final', _MASKED = 'masked',
 	_PUBLIC = 'public', _INTERNAL = 'internal', _PROTECTED = 'protected', _PRIVATE = 'private',
+	_CLASS = 'class', _INTERFACE = 'interface', _TRAIT = 'trait', _ENUM = 'enum', _FUNC = 'func',
 	_THIS = 'this', _SUPER = 'super', _CONSTRUCT = 'construct', _DESTRUCT = 'destruct';
 
 

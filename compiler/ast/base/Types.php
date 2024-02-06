@@ -431,7 +431,6 @@ class IterableType extends SingleGenericType {
 
 class ArrayType extends IterableType {
 	public $name = _ARRAY;
-	public $is_collect_mode;
 }
 
 // 当Float作为PHP Array下标时, 将会自动转为Int, 容易出问题, 需转换成String
@@ -522,10 +521,6 @@ class XViewType extends BaseType {
 
 		return $target->symbol->declaration->is_same_or_based_with_symbol(TypeFactory::$_iview_symbol);
 	}
-}
-
-class ChanType extends SingleGenericType {
-	public $name = _CHANNEL;
 }
 
 class NamespaceType extends BaseType {

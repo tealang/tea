@@ -536,11 +536,6 @@ class ASTChecker
 					throw $this->new_syntax_error("The infered returns type is '{$infered_type_name}', do not compatibled with the declared '{$declared_type_name}'", $node);
 				}
 			}
-			elseif ($declared_type instanceof ArrayType && $declared_type->is_collect_mode) {
-				// process the auto collect return data logic
-				$builder = new ReturnBuilder($node, $declared_type->generic_type);
-				$node->fixed_body = $builder->build_return_statements();
-			}
 			elseif ($declared_type !== TypeFactory::$_void && $declared_type !== TypeFactory::$_yield_generator) {
 				throw $this->new_syntax_error("Function required return type '{$declared_type->name}'", $node);
 			}
@@ -1534,9 +1529,6 @@ class ASTChecker
 			}
 
 			$infered_type = $this->reduce_types($member_value_types);
-		}
-		elseif ($body_type instanceof AccessingIdentifier and $body_type->symbol === TypeFactory::$_chan->symbol) {
-			$infered_type = $body_type->master;
 		}
 		else {
 			$type_name = $this->get_type_name($body_type);
@@ -2774,15 +2766,7 @@ class ASTChecker
 		// find static member for classes
 		$symbol = $this->find_member_symbol_in_class_declaration($declaration, $node->name);
 		if ($symbol === null) {
-			if ($node->name === _DOT_SIGN_CHAN) {
-				// for Chan type
-				$chan_type = TypeFactory::create_chan_type($master_type);
-				$node->symbol = $chan_type->symbol;
-				return;
-			}
-			else {
-				throw $this->new_syntax_error("Member '{$node->name}' not found in '{$declaration->name}'", $node);
-			}
+			throw $this->new_syntax_error("Member '{$node->name}' not found in '{$declaration->name}'", $node);
 		}
 
 		// check static member

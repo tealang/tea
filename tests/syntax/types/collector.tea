@@ -19,37 +19,3 @@ internal new_collector_demo() {
 	return CollectorDemo()
 }
 
-internal collector1() XView >> Array {
-
-	// collect
-	<div>hei~</div>
-
-	// collect
-	CollectorDemo()
-
-	// collect
-	CollectorDemo().text('red').subnode = new_collector_demo()
-
-	// not collect, because it assigned to a variable
-	abc = CollectorDemo()
-
-	factory = CollectorDemoFactory()
-
-	// collect, because it returns IView
-	factory.new_collector_demo()
-	new_collector_demo()
-
-	if 1 {
-		// collect
-		CollectorDemo().text('red').text('hei~')
-	}
-
-	// collect each one
-	for item in [1, 2, 3] {
-		CollectorDemo().text('hello')
-	}
-}
-
-result = collector1()
-var_dump(result)
-

@@ -859,12 +859,6 @@ class PHPCoder extends TeaCoder
 				return "array_unshift({$expr}, {$right})" . static::STATEMENT_TERMINATOR;
 			}
 
-			// render for Swoole Channel
-			// 暂未处理复合表达式的情况
-			if ($master->expression instanceof PlainIdentifier and $master->expression->symbol->declaration->type->symbol === TypeFactory::$_chan->symbol) {
-				return "{$expr}->push({$right})" . static::STATEMENT_TERMINATOR;
-			}
-
 			$master =  "{$expr}[]";
 		}
 		else {
@@ -966,11 +960,6 @@ class PHPCoder extends TeaCoder
 		$declaration = $node->symbol->declaration;
 		if ($declaration instanceof MaskedDeclaration) {
 			return $this->render_masked_accessing_identifier($node);
-		}
-
-		// the Chan type instance
-		if ($declaration->symbol === TypeFactory::$_chan->symbol) {
-			return '\Swoole\Coroutine\Channel';
 		}
 
 		// $name = $declaration === ASTFactory::$virtual_property_for_any
@@ -1364,13 +1353,7 @@ class PHPCoder extends TeaCoder
 		$master = $this->render_master_expression($node->expression);
 
 		if ($node->is_prefix) {
-			if ($node->expression->symbol->declaration->type->symbol === TypeFactory::$_chan->symbol) {
-				// for Swoole Channel
-				$code = "{$master}->pop()";
-			}
-			else {
-				$code = "array_shift({$master})";
-			}
+			$code = "array_shift({$master})";
 		}
 		else {
 			$code = "array_pop({$master})";

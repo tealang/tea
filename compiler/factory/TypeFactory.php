@@ -35,7 +35,6 @@ class TypeFactory
 	static $_array;
 	static $_dict;
 	static $_harray; // hybrid array, for PHP array
-	static $_chan;
 
 	static $_xview;
 	static $_regex;
@@ -80,8 +79,6 @@ class TypeFactory
 		self::$_array = self::create_type(ArrayType::class);
 		self::$_dict = self::create_type(DictType::class);
 		self::$_harray = self::create_union_type([self::$_array, self::$_dict]);
-
-		self::$_chan = self::create_type(ChanType::class);
 
 		self::$_xview = self::create_type(XViewType::class);
 		self::$_regex = self::create_type(RegexType::class);
@@ -223,15 +220,6 @@ class TypeFactory
 		return $type_object;
 	}
 
-	static function create_collector_type(IType $generic_type)
-	{
-		$type = new ArrayType($generic_type);
-		$type->symbol = self::$_array->symbol;
-		$type->is_collect_mode = true;
-
-		return $type;
-	}
-
 	static function create_array_type(IType $generic_type)
 	{
 		$type = new ArrayType($generic_type);
@@ -244,14 +232,6 @@ class TypeFactory
 	{
 		$type = new DictType($generic_type);
 		$type->symbol = self::$_dict->symbol;
-
-		return $type;
-	}
-
-	static function create_chan_type(IType $generic_type)
-	{
-		$type = new ChanType($generic_type);
-		$type->symbol = self::$_chan->symbol;
 
 		return $type;
 	}
