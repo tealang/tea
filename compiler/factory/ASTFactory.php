@@ -219,8 +219,8 @@ class ASTFactory
 		elseif ($token === _VAL_FALSE) {
 			$identifier = new BooleanLiteral(false);
 		}
-		elseif ($token === _VAL_NONE) {
-			$identifier = new NoneLiteral();
+		elseif ($token === TeaParser::VAL_NONE) {
+			$identifier = $this->create_none_identifier();
 		}
 		elseif ($token === _UNIT_PATH) {
 			$identifier = new ConstantIdentifier(_UNIT_PATH);
@@ -231,6 +231,11 @@ class ASTFactory
 		}
 
 		return $identifier;
+	}
+
+	public function create_none_identifier()
+	{
+		return new NoneLiteral();
 	}
 
 	// public function create_include_expression(string $target)

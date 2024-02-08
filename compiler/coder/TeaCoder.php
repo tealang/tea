@@ -37,7 +37,7 @@ class TeaCoder
 
 	const DICT_EMPTY_VALUE = '[:]';
 
-	const NONE = 'none';
+	const VAL_NONE = TeaParser::VAL_NONE;
 
 	const PROGRAM_HEADER = LF; // an empty line
 
@@ -713,7 +713,7 @@ class TeaCoder
 
 		$items = [];
 		foreach ($nodes as $arg) {
-			$items[] = $arg ? $arg->render($this) : 'null';
+			$items[] = $arg ? $arg->render($this) : static::VAL_NONE;
 		}
 
 		$code = join(', ', $items);
@@ -741,7 +741,7 @@ class TeaCoder
 			return '#default';
 		}
 
-		return static::NONE;
+		return static::VAL_NONE;
 	}
 
 	public function render_bool_literal(BooleanLiteral $node)

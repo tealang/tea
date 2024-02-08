@@ -23,7 +23,6 @@ const
 	_TEA = 'tea', _PHP  = 'php',
 	_UNIT = 'unit', _USE = 'use',
 	_MAIN = 'main',
-	// _EXPECT = 'expect', _INCLUDE = 'include',
 	_TEXT = 'text', _DEFAULT = 'default',
 	_ASYNC = 'async', _AWAIT = 'await',
 
@@ -31,7 +30,7 @@ const
 	_INVALIDABLE_SIGN = '?',
 	_UNIONTYPE = 'UnionType',
 	_METATYPE = 'MetaType',
-	_VOID = 'Void', _NONE = 'None', _ANY = 'Any',
+	_VOID = 'Void', _TYPE_NONE = 'None', _ANY = 'Any',
 	// _SCALAR = 'Scalar', _BYTES = 'Bytes', _RUNES = 'Runes',
 	_STRING = 'String',
 	_INT = 'Int', _UINT = 'UInt', _FLOAT = 'Float', _BOOL = 'Bool',
@@ -39,7 +38,7 @@ const
 	_OBJECT = 'Object', _XVIEW = 'XView', _REGEX = 'Regex',
 	_CALLABLE = 'Callable', _NAMESPACE = 'Namespace', // _CLASS = 'Class',
 	_BUILTIN_TYPE_NAMES = [
-		_UNIONTYPE, _METATYPE, _ANY, _VOID, _NONE,
+		_UNIONTYPE, _METATYPE, _ANY, _VOID, _TYPE_NONE,
 		_STRING, _INT, _UINT, _FLOAT, _BOOL, _DICT, _ARRAY,
 		_ITERABLE, _OBJECT, _XVIEW, _REGEX, _CALLABLE, _NAMESPACE,
 	],
@@ -49,7 +48,7 @@ const
 
 	// number system
 	_BASE_BINARY = 'b', _BASE_OCTAL = 'o', _BASE_DECIMAL = '', _BASE_HEX = 'x',
-	_LOW_CASE_E = 'e', _UP_CASE_E = 'E', _ZERO = '0',
+	_LOW_CASE_E = 'e', _ZERO = '0',
 
 	// blank chars
 	// some blank chars did not supported now, e.g. \f, \v, [0x2000 - 0x200B], line separator \u2028, paragraph separator \u2029
@@ -87,8 +86,8 @@ const
 	_BLOCK_BEGIN = _BRACE_OPEN, _BLOCK_END = _BRACE_CLOSE,
 	_DOCS_MARK = '---', _INLINE_COMMENT_MARK = '//', _COMMENTS_OPEN = '/*', _COMMENTS_CLOSE = '*/',
 
-	// reserved words
 	_UNIT_PATH = 'UNIT_PATH',
+	_VAL_NULL = 'null', // PHP
 	_VAL_NONE = 'none', _VAL_TRUE = 'true', _VAL_FALSE = 'false',
 	_VAR = 'var', _MUT = 'mut', _YIELD = 'yield', _GLOBAL = 'global', _UNSET = 'unset',
 	_IF = 'if', _ELSE = 'else', _ELSEIF = 'elseif', _SWITCH = 'switch', _CASE = 'case',

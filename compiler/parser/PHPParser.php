@@ -28,6 +28,8 @@ class PHPParser extends BaseParser
 {
 	const NS_SEPARATOR = _BACK_SLASH;
 
+	const VAL_NONE = _VAL_NULL;
+
 	const TYPE_MAP = [
 		'void' => _VOID,
 		'mixed' => _ANY,
@@ -361,8 +363,8 @@ class PHPParser extends BaseParser
 
 			switch ($token_type) {
 				case T_STRING:
-					if ($token_content === 'null') {
-						$expr = $this->factory->create_builtin_identifier(_VAL_NONE);
+					if ($token_content === static::VAL_NONE) {
+						$expr = $this->factory->create_none_identifier();
 					}
 					else {
 						$expr = $this->create_unchecking_identifier($token_content);

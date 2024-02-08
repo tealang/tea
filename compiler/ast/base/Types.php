@@ -337,7 +337,7 @@ class VoidType extends BaseType {
 
 class NoneType extends BaseType {
 
-	public $name = _NONE;
+	public $name = _TYPE_NONE;
 
 	public function get_nullable_instance(): IType {
 		return $this;

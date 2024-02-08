@@ -1710,8 +1710,10 @@ class ASTChecker
 			throw $this->new_syntax_error("Invalid 'is' expression '{$kind}'", $node);
 		}
 
-		// it self is a type assertion
-		$node->type_assertion = $node;
+		if ($node->left instanceof Identifiable) {
+			// it self is a type assertion
+			$node->type_assertion = $node;
+		}
 
 		return TypeFactory::$_bool;
 	}

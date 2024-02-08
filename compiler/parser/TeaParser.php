@@ -15,6 +15,8 @@ class TeaParser extends BaseParser
 
 	const NS_SEPARATOR = _BACK_SLASH;
 
+	const VAL_NONE = _VAL_NONE;
+
 	protected $root_statements = [];
 
 	public function read_program(): Program
@@ -1095,21 +1097,21 @@ class TeaParser extends BaseParser
 			// has dot
 			if ($this->skip_token(_DOT)) {
 				$fractional_part = $this->scan_token();
-				if (!preg_match('/^[0-9_]+(e\+?[0-9_]*)?$/i', $fractional_part)) {
+				if (!preg_match('/^[0-9_]+(e\+?[0-9_]*)?$/', $fractional_part)) {
 					throw $this->new_unexpected_error();
 				}
 
 				$token .= _DOT . $fractional_part; // the real type number
 
-				if ($token[-1] === _LOW_CASE_E || $token[-1] === _UP_CASE_E) {
-					// e.g. 0.123e-6 or 0.123E-6
+				if ($token[-1] === _LOW_CASE_E) {
+					// e.g. 0.123e-6
 					return $this->read_scientific_notation_number_with($token);
 				}
 
 				return new FloatLiteral($token);
 			}
-			elseif ($token[-1] === _LOW_CASE_E || $token[-1] === _UP_CASE_E) {
-				// e.g. 123e-6 or 123E-6
+			elseif ($token[-1] === _LOW_CASE_E) {
+				// e.g. 123e-6
 				return $this->read_scientific_notation_number_with($token);
 			}
 		}

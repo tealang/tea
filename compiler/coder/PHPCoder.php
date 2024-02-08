@@ -31,7 +31,7 @@ class PHPCoder extends TeaCoder
 
 	const DICT_EMPTY_VALUE = '[]';
 
-	const NONE = 'null';
+	const VAL_NONE = PHPParser::VAL_NONE;
 
 	const NAMESPACE_REPLACES = [
 		_STRIKETHROUGH => _UNDERSCORE,
@@ -1160,7 +1160,7 @@ class PHPCoder extends TeaCoder
 				$item = $arg->render($this);
 			}
 			else {
-				$item = 'null';
+				$item = static::VAL_NONE;
 			}
 
 			$items[] = $item;
@@ -1306,7 +1306,7 @@ class PHPCoder extends TeaCoder
 				$value = $member->value->render($this);
 			}
 			else {
-				$value = 'null';
+				$value = static::VAL_NONE;
 			}
 
 			$name = $this->add_variable_prefix($member->name);
@@ -1701,7 +1701,7 @@ class PHPCoder extends TeaCoder
 
 			if ($item instanceof CastOperation) {
 				$test = $item->left->render($this);
-				$expr = sprintf("isset(%s) ? %s : %s", $test, $left, $expr ?? static::NONE);
+				$expr = sprintf("isset(%s) ? %s : %s", $test, $left, $expr ?? static::VAL_NONE);
 				if ($i !== 0) {
 					$expr = "($expr)";
 				}
