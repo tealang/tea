@@ -950,7 +950,7 @@ class PHPParser extends BaseParser
 		$value = null;
 		if ($this->skip_char_token(_ASSIGN)) {
 			$value = $this->read_expression($name);
-			if ($value instanceof DictType) {
+			if ($type === null and $value instanceof DictType) {
 				$type = TypeFactory::$_dict;
 			}
 
@@ -1124,7 +1124,22 @@ class PHPParser extends BaseParser
 	private function create_type_identifier(string $name, bool $nullable = false, string $following_comment = null)
 	{
 		$lower_case_name = strtolower($name);
-		if (isset(static::TYPE_MAP[$lower_case_name])) {
+		if ($lower_case_name === 'array') {
+			if ($following_comment === '/*list*/') {
+				$identifier = TypeFactory::$_array;
+			}
+			elseif ($following_comment === '/*dict*/') {
+				$identifier = TypeFactory::$_dict;
+			}
+			else {
+				$identifier = TypeFactory::$_hashtable;
+			}
+
+			if ($nullable) {
+				$identifier = clone $identifier;
+			}
+		}
+		elseif (isset(static::TYPE_MAP[$lower_case_name])) {
 			$name = static::TYPE_MAP[$lower_case_name];
 			if ($following_comment === '/*list*/') {
 				$name = _ARRAY;
@@ -1133,19 +1148,17 @@ class PHPParser extends BaseParser
 			$identifier = TypeFactory::get_type($name);
 			if ($nullable) {
 				$identifier = clone $identifier;
-				$identifier->nullable = true;
 			}
 		}
 		elseif (strpos($name, static::NS_SEPARATOR) !== false) {
 			$names = explode(static::NS_SEPARATOR, $name);
 			$identifier = $this->create_classkindred_identifier(array_pop($names), $names);
-			$identifier->nullable = $nullable;
 		}
 		else {
 			$identifier = $this->create_classkindred_identifier($name);
-			$identifier->nullable = $nullable;
 		}
 
+		$identifier->nullable = $nullable;
 		$identifier->pos = $this->pos;
 
 		return $identifier;

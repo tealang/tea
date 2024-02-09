@@ -34,7 +34,7 @@ class TypeFactory
 	static $_iterable;
 	static $_array;
 	static $_dict;
-	static $_harray; // hybrid array, for PHP array
+	static $_hashtable; // for PHP array, same as Array|Dict
 
 	static $_xview;
 	static $_regex;
@@ -78,7 +78,7 @@ class TypeFactory
 		self::$_iterable = self::create_type(IterableType::class);
 		self::$_array = self::create_type(ArrayType::class);
 		self::$_dict = self::create_type(DictType::class);
-		self::$_harray = self::create_union_type([self::$_array, self::$_dict]);
+		self::$_hashtable = self::create_union_type([self::$_array, self::$_dict]);
 
 		self::$_xview = self::create_type(XViewType::class);
 		self::$_regex = self::create_type(RegexType::class);

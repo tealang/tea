@@ -1008,24 +1008,14 @@ class ASTChecker
 
 	private function infer_forin_block(ForInBlock $node): ?IType
 	{
-		$infered_iter_type = $this->infer_expression($node->iterable);
-
-		if ($infered_iter_type instanceof IterableType) {
-			// for Array or Dict
-			$key_type = $infered_iter_type instanceof ArrayType
-				? TypeFactory::$_uint
-				: TypeFactory::create_union_type([TypeFactory::$_uint, TypeFactory::$_string]);
-			$val_type = $infered_iter_type->generic_type ?? TypeFactory::$_any;
-		}
-		elseif ($infered_iter_type instanceof PlainIdentifier and $based_iter_ident = TypeFactory::find_iterator_identifier($infered_iter_type)) {
-			// for Iterator
-			$key_type = $based_iter_ident->generic_types['K'] ?? TypeFactory::$_any;
-			$val_type = $based_iter_ident->generic_types['V'] ?? TypeFactory::$_any;
-		}
-		else {
-			$type_name = self::get_type_name($infered_iter_type);
+		$expr_type = $this->infer_expression($node->iterable);
+		$element_types = $this->infer_iter_element_types($expr_type);
+		if ($element_types === null) {
+			$type_name = self::get_type_name($expr_type);
 			throw $this->new_syntax_error("Expect a Iterable type, '{$type_name}' supplied", $node->iterable);
 		}
+
+		[$key_type, $val_type] = $element_types;
 
 		if ($node->key_var) {
 			$node->key_var->symbol->declaration->type = $key_type;
@@ -1046,6 +1036,49 @@ class ASTChecker
 		}
 
 		return $result_type;
+	}
+
+	private function infer_iter_element_types(IType $expr_type)
+	{
+		if ($expr_type instanceof IterableType) {
+			// for Array or Dict
+			$key_type = $expr_type instanceof ArrayType
+				? TypeFactory::$_uint
+				: TypeFactory::create_union_type([TypeFactory::$_uint, TypeFactory::$_string]);
+			$val_type = $expr_type->generic_type ?? TypeFactory::$_any;
+			$element_types = [$key_type, $val_type];
+		}
+		elseif ($expr_type instanceof PlainIdentifier and $based_iter_ident = TypeFactory::find_iterator_identifier($expr_type)) {
+			// for Iterator
+			$key_type = $based_iter_ident->generic_types['K'] ?? TypeFactory::$_any;
+			$val_type = $based_iter_ident->generic_types['V'] ?? TypeFactory::$_any;
+			$element_types = [$key_type, $val_type];
+		}
+		elseif ($expr_type instanceof UnionType) {
+			$element_types = $this->infer_iter_element_types_for_union_type($expr_type);
+		}
+		else {
+			$element_types = null;
+		}
+
+		return $element_types;
+	}
+
+	private function infer_iter_element_types_for_union_type(UnionType $type) {
+		$key_types = [];
+		$val_types = [];
+		foreach ($type->get_members() as $member_type) {
+			$element_types = $this->infer_iter_element_types($member_type);
+			if ($element_types === null) {
+				return null;
+			}
+
+			[$key_type, $val_type] = $element_types;
+			$key_types[] = $key_type;
+			$val_types[] = $val_type;
+		}
+
+		return [TypeFactory::create_union_type($key_types), TypeFactory::create_union_type($val_types)];
 	}
 
 	private function infer_forto_block(ForToBlock $node): ?IType
