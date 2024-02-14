@@ -28,7 +28,7 @@ trait IDemoTrait {
 	public static $a_static_prop = "a static property.";
 
 	public static function say_hello_with_static(string $name = 'Benny') {
-		echo "Hello, {$name}\n";
+		echo "Hello, {$name}", LF;
 	}
 }
 
@@ -75,7 +75,7 @@ echo "Hello, 世界", LF;
 
 echo 'Hello, ', '世界', LF;
 
-echo 'string1', 'string2', 'string3';
+print('Hello, 世界');
 
 echo LF;
 

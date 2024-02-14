@@ -1,7 +1,7 @@
 <?php
 namespace tests\syntax;
 
-use tests\PHPDemoUnit\{ BaseInterface };
+use tests\phpdemo\{ BaseInterface };
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 

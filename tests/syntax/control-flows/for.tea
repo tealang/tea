@@ -16,7 +16,7 @@ list = [
 
 // for-in
 for value in list {
-	print value, ','
+	print(value concat ',')
 }
 
 echo
@@ -36,7 +36,7 @@ else {
 for i = 0 to 9 {
 	// i = 10	// error, i is a final value variable
 	i + 3
-	print i, ','
+	echo i, ','
 }
 else {
 	echo 'no loops'
@@ -46,10 +46,10 @@ echo
 
 // for-downto
 for i = 9 * 2 downto 0 + 5 step 2 {
-	print i, ','
+	echo i, ','
 }
 elseif list {
-	print 'oh!'
+	echo 'oh!'
 }
 catch ex {
 	//

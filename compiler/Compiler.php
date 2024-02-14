@@ -578,7 +578,6 @@ class Compiler
 		foreach ($program->declarations as $node) {
 			if ($node instanceof ClassKindredDeclaration && !$node instanceof BuiltinTypeClassDeclaration && $node->label !== _PHP) {
 				$name = $name_prefix . $node->name;
-
 				$this->autoloads_map[$name] = $dist_file_path;
 
 				// 接口的伴生Trait

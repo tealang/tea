@@ -1,7 +1,7 @@
 <?php
 namespace tests\syntax;
 
-use tests\PHPDemoUnit\{ NS1\Demo as PHPClassDemo, function php_function_demo, const PHP_CONST_DEMO };
+use tests\phpdemo\{ NS1\Demo as PHPClassDemo, function php_function_demo, const PHP_CONST_DEMO };
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 

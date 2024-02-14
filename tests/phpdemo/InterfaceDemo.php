@@ -1,5 +1,5 @@
 <?php
-namespace tests\PHPDemoUnit;
+namespace tests\phpdemo;
 
 interface BaseInterface {
 	public function get_class_name(string $caller = 'anonymous'): string;

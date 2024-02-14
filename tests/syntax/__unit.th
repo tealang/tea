@@ -12,5 +12,5 @@ The syntax tests for Tea
 
 #use tests\xview
 #use tests\xview { BaseView, IViewDemo }
-#use tests\PHPDemoUnit { BaseInterface, PHPClassDemo, PHP_CONST_DEMO, php_function_demo }
+#use tests\phpdemo { BaseInterface, PHPClassDemo, PHP_CONST_DEMO, php_function_demo }
 

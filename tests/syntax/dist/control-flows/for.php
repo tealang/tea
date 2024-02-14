@@ -10,7 +10,7 @@ $list = [
 ];
 
 foreach ($list as $value) {
-	echo $value, ',';
+	print($value . ',');
 }
 
 echo LF;
@@ -30,7 +30,7 @@ else {
 if (0 <= 9) {
 	foreach (\xrange(0, 9) as $i) {
 		$i + 3;
-		echo $i, ',';
+		echo $i, ',', LF;
 	}
 }
 else {
@@ -44,11 +44,11 @@ try {
 	$__tmp1 = 0 + 5;
 	if ($__tmp0 >= $__tmp1) {
 		foreach (\xrange($__tmp0, $__tmp1, -2) as $i) {
-			echo $i, ',';
+			echo $i, ',', LF;
 		}
 	}
 	elseif ($list) {
-		echo 'oh!';
+		echo 'oh!', LF;
 	}
 }
 catch (\Exception $ex) {

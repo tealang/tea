@@ -60,16 +60,26 @@ class PHPCoder extends TeaCoder
 	];
 
 	const EXTRA_RESERVEDS = [
-		'class', 'interface', 'abstract', 'trait', 'final',
-		'function', 'const', 'array', 'callable',
-		'list', 'each', 'foreach', 'default'
+		'abstract',
+		'final',
+		'class',
+		'interface',
+		'trait',
+		'function',
+		'const',
+		'array',
+		'callable',
+		'list',
+		'each',
+		'foreach',
+		'default',
+		'print',
 	];
 
-	const CLASS_MEMBER_NAMES_MAP = [
+	const METHOD_NAMES_MAP = [
 		_CONSTRUCT => '__construct',
 		_DESTRUCT => '__destruct',
 		'to_string' => '__toString',
-		'CLASS' => '__CLASS', // 'CLASS' can not to use as a class constant name in PHP
 	];
 
 	const OPERATOR_MAP = [
@@ -308,7 +318,7 @@ class PHPCoder extends TeaCoder
 
 		// thats method
 		if ($node->belong_block) {
-			$name = $this->get_normalized_class_member_name($node);
+			$name = $this->get_normalized_method_name($node->name);
 		}
 		else {
 			$name = $this->get_normalized_name($node->name);
@@ -936,23 +946,24 @@ class PHPCoder extends TeaCoder
 		return "'/{$pattern}/{$node->flags}'";
 	}
 
-	private function get_normalized_class_member_name(IClassMemberDeclaration $declaration)
+	private function get_normalized_method_name(string $name)
 	{
-		$name = $declaration->name;
-		if (isset(static::CLASS_MEMBER_NAMES_MAP[$name]) && $declaration instanceof MethodDeclaration) {
-			$name = static::CLASS_MEMBER_NAMES_MAP[$name];
-		}
-
-		return $name;
+		return static::METHOD_NAMES_MAP[$name] ?? $name;
 	}
 
 	private function get_normalized_name(string $name)
 	{
 		if (in_array(strtolower($name), static::EXTRA_RESERVEDS, true)) {
-			$name = '__' . $name;
+			$name = 't__' . $name;
 		}
 
 		return $name;
+	}
+
+	private function get_normalized_name_with_declaration(IDeclaration $node)
+	{
+		$name = $node->name;
+		return $node->label === _PHP ? $name : $this->get_normalized_name($name);
 	}
 
 	public function render_accessing_identifier(AccessingIdentifier $node)
@@ -962,11 +973,17 @@ class PHPCoder extends TeaCoder
 			return $this->render_masked_accessing_identifier($node);
 		}
 
-		// $name = $declaration === ASTFactory::$virtual_property_for_any
-		// 	? $node->name
-		// 	: $this->get_normalized_class_member_name($declaration);
-
-		$name = $this->get_normalized_class_member_name($declaration);
+		$name = $declaration->name;
+		$is_property = $declaration instanceof PropertyDeclaration;
+		if ($is_property) {
+			//
+		}
+		if ($declaration instanceof MethodDeclaration) {
+			$name = $this->get_normalized_method_name($name);
+		}
+		elseif ($declaration instanceof ClassConstantDeclaration) {
+			$name = $this->get_normalized_name($name);
+		}
 
 		if ($node->master instanceof CallExpression && $node->master->is_class_new()) {
 			// for the class new expression
@@ -997,7 +1014,7 @@ class PHPCoder extends TeaCoder
 				}
 			}
 
-			if ($declaration instanceof PropertyDeclaration) {
+			if ($is_property) {
 				$name = $this->add_variable_prefix($name);
 			}
 
@@ -1012,7 +1029,7 @@ class PHPCoder extends TeaCoder
 			// $super need map to parent
 			$master = 'parent';
 
-			if ($declaration instanceof PropertyDeclaration) {
+			if ($is_property) {
 				$name = $this->add_variable_prefix($name);
 			}
 
@@ -1212,7 +1229,7 @@ class PHPCoder extends TeaCoder
 		}
 		else {
 			// function/constant
-			$name = $this->get_normalized_name($node->name);
+			$name = $this->get_normalized_name_with_declaration($declaration);
 		}
 
 		if (!$node->is_call_mode) {

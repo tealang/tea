@@ -74,7 +74,7 @@ class ListView implements IBaseView {
 $list = new ListView('demo');
 $list->add_subitem('A simple text title');
 $list->add_subitem('A title has HTML chars <x>');
-echo $list;
+echo $list, LF;
 // ---------
 
 // program end

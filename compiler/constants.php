@@ -88,12 +88,14 @@ const
 
 	_UNIT_PATH = 'UNIT_PATH',
 	_VAL_NULL = 'null', // PHP
-	_VAL_NONE = 'none', _VAL_TRUE = 'true', _VAL_FALSE = 'false',
-	_VAR = 'var', _MUT = 'mut', _YIELD = 'yield', _GLOBAL = 'global', _UNSET = 'unset',
+	_VAL_NONE = 'none',
+	_VAL_TRUE = 'true', _VAL_FALSE = 'false',
+	_VAR = 'var', _MUT = 'mut',
+	_YIELD = 'yield', _UNSET = 'unset',
 	_IF = 'if', _ELSE = 'else', _ELSEIF = 'elseif', _SWITCH = 'switch', _CASE = 'case',
 	_FOR = 'for', _WHILE = 'while', _LOOP = 'loop',
 	_TRY = 'try', _CATCH = 'catch', _FINALLY = 'finally',
-	_ECHO = 'echo', _PRINT = 'print',
+	_ECHO = 'echo',
 	_RETURN = 'return', _EXIT = 'exit', _BREAK = 'break', _CONTINUE = 'continue', _THROW = 'throw',
 	// _WHEN = 'when',
 	_STATIC = 'static', _FINAL = 'final', _MASKED = 'masked',

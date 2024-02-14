@@ -1,14 +1,14 @@
 <?php
 namespace tests\syntax;
 
-use tests\PHPDemoUnit\{ const PHP_CONST_DEMO };
+use tests\phpdemo\{ const PHP_CONST_DEMO };
 
 const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
 $super_path = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR;
 require_once $super_path . 'tea-modules/tea/builtin/__public.php';
 require_once $super_path . 'tests/xview/__public.php';
-require_once $super_path . 'tests/PHPDemoUnit/__public.php';
+require_once $super_path . 'tests/phpdemo/__public.php';
 
 function fn0($str) {
 	echo $str, LF;

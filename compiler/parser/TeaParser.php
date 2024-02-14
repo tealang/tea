@@ -76,9 +76,6 @@ class TeaParser extends BaseParser
 		elseif (TeaHelper::is_modifier($token)) {
 			$node = $this->read_definition_with_modifier($token);
 		}
-		// elseif (TeaHelper::is_classkindred_name($token) && ($node = $this->try_read_classkindred_declaration($token))) {
-		// 	// that's the class declaration
-		// }
 		else {
 			$node = $this->read_expression_with_token($token);
 			if ($this->is_next_assign_operator()) {
@@ -287,9 +284,6 @@ class TeaParser extends BaseParser
 			case _ECHO:
 				$node = $this->read_echo_statement();
 				break;
-			case _PRINT:
-				$node = $this->read_print_statement();
-				break;
 
 			case _BREAK:
 				$node = $this->read_break_statement();
@@ -358,22 +352,6 @@ class TeaParser extends BaseParser
 		$declaration->set_body_with_expression($this->read_expression());
 
 		return $declaration;
-	}
-
-	protected function read_print_statement()
-	{
-		// print
-		// print argument0, argument1, ...
-
-		$args = $this->read_inline_arguments();
-		if (!$args) {
-			throw $this->new_parse_error("Required arguments for print.");
-		}
-
-		$node = new EchoStatement(...$args);
-		$node->end_newline = false;
-
-		return $node;
 	}
 
 	protected function read_echo_statement()

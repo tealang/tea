@@ -7,7 +7,7 @@ echo "Hello, 世界"
 ---
 ## 01. 简要介绍
 
-Tea语言是一门新的计算机编程语言，采用强规范设计（规范即语法），拥有简约的强类型系统和单元模块体系，支持类型推断，支持面向对象和函数式编程，语法精炼简洁。其目标是成为一个友好的，支持多端开发的编程语言，并尽量支持常用编程语言生态，让开发者可以继续使用已有工作成果。目前通过编译生成PHP代码运行，可调用PHP库，预计后期版本将支持一些其它编程语言。
+Tea语言拥有简约的强类型系统和模块体系，支持类型推断，支持面向对象和函数式编程，语法精炼简洁。其目标是成为一个友好的，支持多端开发的编程语言，并尽量支持常用编程语言生态，让开发者可以继续使用已有工作成果。目前通过编译生成PHP代码运行，可调用PHP库，预计后期版本将支持一些其它编程语言。
 
 （安装和使用请见README.md。本文档同时也是一个Tea语言程序，可被Tea语言编译器编译通过）
 ---
@@ -20,13 +20,13 @@ Tea语言是一门新的计算机编程语言，采用强规范设计（规范�
 ---
 
 // 带换行符结尾的字符串输出，支持输出多项
-echo 'Hello, ', '世界' // 相当于print 'Hello,', '世界', "\n"
+echo 'Hello, ', '世界' // 相当于 print('Hello,' concat '世界' concat "\n")
 
-// 不带换行符结尾的字符串输出，支持输出多项
-print 'string1', 'string2', 'string3'
+// 不带换行符结尾的输出
+print('Hello, 世界')
 
-// LF是内置常量，被定义为 "\n"
-print LF
+// 仅输出一个换行符
+echo
 
 // 返回，可带一个参数，或不带任何参数
 // 可用于函数/方法中返回数据，也可用于被#include的程序文件中返回数据
@@ -148,8 +148,8 @@ var str_dict_array String.Dict.Array = [
 - Tea语言中有public、internal、protected、private四种修饰符
 - 四种修饰符均可用于类成员的声明/定义
 - public、internal可用于类、接口、独立常量、独立函数的声明/定义
-- public修饰的可被外部Unit调用
-- internal修饰的只能被本Unit调用
+- public修饰的可被外部模块调用
+- internal修饰的只能被本模块调用
 - protected修饰的类成员可被继承的类调用
 - private修饰的类成员只能被本类调用
 ---
@@ -157,14 +157,14 @@ var str_dict_array String.Dict.Array = [
 ---
 ## 05. 常量
 - 常量声明/定义必须以internal/public修饰符开始
-- 常量作用域为Unit级别，声明为public的可以被其它Unit引入使用
+- 常量作用域为模块级别，声明为public的可以被其它模块引入使用
 - 常量名必须为大写，以[A-Z_]开始，可包括[A-Z0-9_]
 ---
 
-// internal修饰的常量，只能在本Unit中调用
+// internal修饰的常量，只能在本模块中调用
 // internal STRING_CONST = 'abcdefg'
 
-// public修饰的常量，可在其它Unit中调用
+// public修饰的常量，可在其它模块中调用
 // public PI = 3.1415926
 
 // 可使用Array/Dict字面量作为常量的值
@@ -301,7 +301,7 @@ catch ex {
 ---
 ## 09. 函数
 - 函数声明/定义必须以internal/public修饰符开始
-- 函数作用域为Unit级别，声明为public的可以被其它Unit引入使用
+- 函数作用域为模块级别，声明为public的可以被其它模块引入使用
 - Tea语言函数名规范为小写，必须以[a-z_]开始，可包括[a-z0-9_]
 - 如果为PHP函数，可使用大写字母，但首字符仍必须为小写字母
 ---
@@ -316,7 +316,7 @@ internal fn1(callee Callable) {
 
 fn1(fn0)
 
-// internal修饰的函数，只能在本Unit中调用
+// internal修饰的函数，只能在本模块中调用
 internal demo_function1(message String) {
 	echo 'this function can only be called by local unit'
 	return (a Int) => {
@@ -326,7 +326,7 @@ internal demo_function1(message String) {
 
 demo_function1('hei')(123)
 
-// public修饰的函数，可在其它Unit中调用
+// public修饰的函数，可在其它模块中调用
 public demo_function2(message String = 'with a default value') {
 	echo 'this function can be called by local or foriegn units'
 }
@@ -364,7 +364,7 @@ var ret2 = demo_function_with_callbacks('some data') -> success(message) {
 ---
 ## 10. 类与接口
 - 类/接口定义必须以internal/public修饰符开始
-- 类/接口作用域为Unit级别，声明为public的可以被其它Unit引入使用
+- 类/接口作用域为模块级别，声明为public的可以被其它模块引入使用
 - 类/接口名必须以大写字母开始，可包括[A-Za-z0-9_]
 - 类/接口成员的命名规范与常量、变量、函数一致
 - 接口名风格1：以字母I作为前缀，并且第二个字母必须为大写
@@ -375,7 +375,7 @@ var ret2 = demo_function_with_callbacks('some data') -> success(message) {
 
 // 这是一个I前缀风格的接口
 public IDemo {
-	// 这是一个类常量，未标注修饰符，默认为public，可被外部Unit调用
+	// 这是一个类常量，未标注修饰符，默认为public，可被外部模块调用
 	CONST1 = 'This is a constant!'
 
 	// 这是一个静态属性
@@ -383,7 +383,7 @@ public IDemo {
 
 	// 这是一个静态方法
 	static say_hello_with_static(name String = 'Benny') {
-		print "Hello, $name\n"
+		echo "Hello, $name"
 	}
 }
 
@@ -418,7 +418,7 @@ internal DemoBaseClass {
 }
 
 // 本类继承了DemoBaseClass类，并实现了IDemo和DemoInterface接口
-// 本类使用public修饰，可被外部Unit调用
+// 本类使用public修饰，可被外部模块调用
 public DemoPublicClass: DemoBaseClass, IDemo, DemoInterface {
 	// 实现DemoInterface中的方法
 	set_message(message String) {
@@ -439,17 +439,17 @@ DemoPublicClass.say_hello_with_static()
 ---
 ## 11. 标签（Label）
 - Tea语言使用#作为语法的一部分，称为“标签”，即“Label”
-- 预定义的标签有：#tea #php #unit #use #main #expect #include #text 等，其中#tea标签用于内部用途，其它分别有不同用途
+- 预定义的标签有：#tea #php #unit #use #main #text 等，其中#tea标签用于内部用途，其它分别有不同用途
 ---
 
 ---
-## 12. 单元模块
-- 使用#unit标签声明单元模块（Unit）
-- 每个Unit拥有一个独立的名称空间，Unit内部不支持定义名称空间
-- Unit用于将程序内容作用域与外部隔离，声明为public的常量、函数、类和接口可被外部Unit调用，声明为internal的只能在Unit内部调用
-- 在指定目录中创建“__unit.tea”文件，并在文件的开始写上类似 "#unit tealang.org/demo" 即定义了一个Tea Unit，#unit后边的URI即为这个Unit的名称空间
-- 该单元模块的目录名称，须与#unit所声明的名称空间完全匹配，编译器将根据名称空间查找所在目录（可参考tests/xview）
-- 使用#use标签引入外部Unit中的类，以供当前程序调用，如："#use tealang.org/libs { DemoClass1, DemoClass2 }"
+## 12. 模块
+- 使用#unit标签声明模块
+- 每个模块拥有一个独立的名称空间，模块内部不支持定义名称空间
+- 模块用于将程序内容作用域与外部隔离，声明为public的常量、函数、类和接口可被外部模块调用，声明为internal的只能在模块内部调用
+- 在指定目录中创建“__unit.tea”文件，并在文件的开始写上类似 "#unit tealang.org/demo" 即定义了一个Tea 模块，#unit后边的URI即为这个模块的名称空间
+- 该模块的目录名称，须与#unit所声明的名称空间完全匹配，编译器将根据名称空间查找所在目录（可参考tests/xview）
+- 使用#use标签引入外部模块中的类，以供当前程序调用，如："#use tealang.org/libs { DemoClass1, DemoClass2 }"
 - #use标签目前仅限于在声明文件中使用（包括__unit.th和__public.th），后续可能会开放给*.tea程序文件使用
 ---
 
@@ -457,7 +457,7 @@ DemoPublicClass.say_hello_with_static()
 ## 13. 将程序文件设置为入口
 - 在目标Tea语言程序文件的开头加上“#main”标签，即可声明该程序文件为“入口程序”
 - 当前程序文件的编译结果中将自动加上依赖项加载语句
-- 当前Unit的编译结果中将自动加上内置库加载语句
+- 当前模块的编译结果中将自动加上内置库加载语句
 ---
 
 #main  // set current file as a main program
@@ -483,16 +483,18 @@ DemoPublicClass.say_hello_with_static()
 
 ---
 ## 15. 使用有名称空间的PHP库
-- 在所在库的目录中创建“__public.th”文件，并在文件的开始写上类似 "#unit NS1/NS2/NS3"，即定义了一个可被Tea语言调用的Unit
-- 代码库所在目录名称，须与#unit所声明的名称空间完全匹配，编译器将根据名称空间查找所在目录（可参考tests/PHPDemoUnit）
+- 在所在库的目录中创建“__public.th”文件，并在文件的开始写上类似 "#unit NS1/NS2/NS3"，即定义了一个可被Tea语言调用的模块
+- 代码库所在目录名称，须与#unit所声明的名称空间完全匹配，编译器将根据名称空间查找所在目录（可参考"tests/PHPDemoLib"）
 ---
 
 ---
 ## 16. 标识符强规范
-- Tea语言特点之一是标识符强命名规范，标识符包括变量名、常量名、函数名、类名、接口名等，区分大小写
-- Tea语言中没有class、interface、function、const等关键字，编译器根据标识符风格来识别常量、函数、类和接口、属性、方法等
-- 标识符前缀为下划线时，约定只能使用一个下划线作为前缀，双下划线前缀被编译器保留使用
-- 标识符强编码规范有助于保持一致的代码风格，有助于更快速、更清晰的阅读理解代码
+- Tea语言提倡一致的命名规范，标识符包括变量名、常量名、函数名、类名等，区分大小写
+- 在没有指定 class/func/const 时，编译器将根据标识符风格来识别类、函数与常量等，其中：
+  "snake_case"风格的将被识别为函数名/方法名/属性名，
+  "UPPER_CASE"风格的将被识别为常量名，
+  "PascalCased"风格的将被识别为类名。
+- 使用一致的编码规范有助于更快速、更清晰的阅读与理解代码
 ---
 
 ---

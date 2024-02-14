@@ -1,7 +1,7 @@
 <?php
-namespace tests\PHPDemoUnit\NS1;
+namespace tests\phpdemo\NS1;
 
-use tests\PHPDemoUnit\Interface1;
+use tests\phpdemo\Interface1;
 
 class Demo implements Interface1 {
 	public function get_class_name(string $caller = 'anonymous'): string {
