@@ -1,5 +1,5 @@
 <?php
-namespace tea\examples;
+namespace tests\examples;
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 

@@ -1,6 +1,6 @@
 // the public declarations
 
-#unit docs
+#unit docs\syntax
 
 public __TRAIT__ String
 

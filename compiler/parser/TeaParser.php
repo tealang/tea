@@ -2253,7 +2253,7 @@ class TeaParser extends BaseParser
 	protected function read_method_declaration(string $name, ?string $modifier, bool $static, bool $is_declare_mode)
 	{
 		$declaration = $this->factory->create_method_declaration($modifier, $name);
-		$declaration->pos = $declaration;
+		$declaration->pos = $this->pos;
 
 		$declaration->is_static = $static;
 

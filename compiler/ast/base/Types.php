@@ -97,17 +97,18 @@ class BaseType extends Node implements IType
 
 	public function is_accept_single_type(IType $target) {
 		if ($target->has_null and !$this->nullable and !$this->has_null) {
-			return false;
+			$result = false;
+		}
+		elseif ($target instanceof NoneType) {
+			$result = $this->nullable;
+		}
+		else {
+			$result = $target === $this
+				|| in_array($target->name, static::ACCEPT_TYPES, true)
+				|| $target->symbol->declaration === $this->symbol->declaration;
 		}
 
-		if ($target instanceof NoneType) {
-			return $this->nullable;
-		}
-
-		return $target === $this
-			// || $target === TypeFactory::$_none
-			|| in_array($target->name, static::ACCEPT_TYPES, true)
-			|| $target->symbol->declaration === $this->symbol->declaration;
+		return $result;
 	}
 }
 
@@ -505,21 +506,12 @@ class XViewType extends BaseType {
 	public $name = _XVIEW;
 
 	public function is_accept_single_type(IType $target) {
-		if ($target->has_null and !$this->nullable and !$this->has_null) {
-			return false;
+		$result = parent::is_accept_single_type($target);
+		if ($result === false) {
+			$result = $target->symbol->declaration->is_same_or_based_with_symbol(TypeFactory::$_iview_symbol);
 		}
 
-		if ($target instanceof NoneType) {
-			return $this->nullable;
-		}
-
-		if ($target === $this
-			// || $target === TypeFactory::$_none
-			|| $target->symbol->declaration === $this->symbol->declaration) {
-			return true;
-		}
-
-		return $target->symbol->declaration->is_same_or_based_with_symbol(TypeFactory::$_iview_symbol);
+		return $result;
 	}
 }
 

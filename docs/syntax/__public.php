@@ -1,5 +1,5 @@
 <?php
-namespace docs;
+namespace docs\syntax;
 
 const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
@@ -32,12 +32,12 @@ function demo_function_with_callbacks(string $some, callable $success, callable 
 
 // autoloads
 const __AUTOLOADS = [
-	'docs\IDemo' => 'dist/summary.php',
-	'docs\IDemoTrait' => 'dist/summary.php',
-	'docs\DemoInterface' => 'dist/summary.php',
-	'docs\DemoInterfaceTrait' => 'dist/summary.php',
-	'docs\DemoBaseClass' => 'dist/summary.php',
-	'docs\DemoPublicClass' => 'dist/summary.php'
+	'docs\syntax\IDemo' => 'dist/summary.php',
+	'docs\syntax\IDemoTrait' => 'dist/summary.php',
+	'docs\syntax\DemoInterface' => 'dist/summary.php',
+	'docs\syntax\DemoInterfaceTrait' => 'dist/summary.php',
+	'docs\syntax\DemoBaseClass' => 'dist/summary.php',
+	'docs\syntax\DemoPublicClass' => 'dist/summary.php'
 ];
 
 spl_autoload_register(function ($class) {

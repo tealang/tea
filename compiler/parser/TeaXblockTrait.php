@@ -185,7 +185,7 @@ trait TeaXBlockTrait
 					elseif ($next === _SLASH) { // the </
 						if ($this->read_tag_name() !== $tag) {
 							// a wrong close tag
-							throw $this->new_parse_error("Unexpected XView close tag '</$tag>'.");
+							throw $this->new_parse_error("Unexpected close tag '</$tag>'.");
 						}
 
 						$this->expect_token_ignore_empty(_XTAG_CLOSE); // the >
@@ -230,7 +230,7 @@ trait TeaXBlockTrait
 		}
 
 		// the close not found
-		throw $this->new_parse_error("Missed XView close tag '</$tag>'.");
+		throw $this->new_parse_error("Missed close tag '</$tag>'.");
 	}
 
 	protected function strip_previous_spaces_for_items(array $items, string $block_previous_spaces)

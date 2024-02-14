@@ -1,5 +1,5 @@
 <?php
-namespace tea\examples;
+namespace tests\examples;
 
 #internal
 interface IBaseView {

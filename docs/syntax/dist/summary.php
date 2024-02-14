@@ -1,5 +1,5 @@
 <?php
-namespace docs;
+namespace docs\syntax;
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 
@@ -234,7 +234,7 @@ catch (\Exception $ex) {
 	// no any
 }
 
-fn1('docs\fn0');
+fn1('docs\syntax\fn0');
 
 demo_function1('hei')(123);
 

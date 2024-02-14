@@ -45,7 +45,7 @@ class TypeFactory
 	static $_iiterator;
 	static $_yield_generator;
 
-	// for check XView accepts
+	// for check accepts
 	static $_iview_symbol;
 
 	// for check Iterable type accepts
