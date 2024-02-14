@@ -774,14 +774,14 @@ class PHPCoder extends TeaCoder
 
 		if ($node->is_downto_mode) {
 			// $for_code = "for ($var = $start; $var >= $end; $var -= $step) $body";
-			$for_code = "foreach (\\xrange($start, $end, -$step) as $var) $body";
+			$for_code = "foreach (\\range($start, $end, -$step) as $var) $body";
 		}
 		elseif ($step === 1) {
-			$for_code = "foreach (\\xrange($start, $end) as $var) $body";
+			$for_code = "foreach (\\range($start, $end) as $var) $body";
 		}
 		else {
 			// $for_code = "for ($var = $start; $var <= $end; $var += $step) $body";
-			$for_code = "foreach (\\xrange($start, $end, $step) as $var) $body";
+			$for_code = "foreach (\\range($start, $end, $step) as $var) $body";
 		}
 
 		if ($node->else) {

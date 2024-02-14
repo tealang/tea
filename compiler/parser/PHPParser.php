@@ -62,10 +62,8 @@ class PHPParser extends BaseParser
 		'.' => _CONCAT,
 		'&&' => _AND,
 		'||' => _OR,
-		'%' => _REMAINDER,
+		// '%' => _REMAINDER,
 		// '**' => _EXPONENTIATION,
-		// '^' => _BITWISE_XOR,
-		// '^=' => '^|=',
 	];
 
 	const PREFIX_OPERATOR_MAP = [

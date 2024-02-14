@@ -34,6 +34,8 @@ public PREG_SPLIT_DELIM_CAPTURE Int
 
 #php var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default)
 
+#php print(expr Any) Int
+
 #php print_r(expr Any, is_return Bool = #default)
 
 #php header(info String, replace Bool = true, http_response_code Int = #default)

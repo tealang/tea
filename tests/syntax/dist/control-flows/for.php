@@ -28,7 +28,7 @@ else {
 }
 
 if (0 <= 9) {
-	foreach (\xrange(0, 9) as $i) {
+	foreach (\range(0, 9) as $i) {
 		$i + 3;
 		echo $i, ',', LF;
 	}
@@ -43,7 +43,7 @@ try {
 	$__tmp0 = 9 * 2;
 	$__tmp1 = 0 + 5;
 	if ($__tmp0 >= $__tmp1) {
-		foreach (\xrange($__tmp0, $__tmp1, -2) as $i) {
+		foreach (\range($__tmp0, $__tmp1, -2) as $i) {
 			echo $i, ',', LF;
 		}
 	}

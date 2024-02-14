@@ -65,10 +65,13 @@ const
 	_UNION = '|',
 	_REFERENCE = '&',
 	_NEGATION = '-', // -1, -num
-	_ADDITION = '+', _SUBTRACTION = '-', _MULTIPLICATION = '*', _DIVISION = '/', _REMAINDER = 'rem', _EXPONENTIATION = '**',
+	_ADDITION = '+', _SUBTRACTION = '-', _MULTIPLICATION = '*', _DIVISION = '/', _REMAINDER = '%', _EXPONENTIATION = '**',
 	_BITWISE_NOT = '~', _BITWISE_AND = '&', _BITWISE_OR = '|', _BITWISE_XOR = '^', //bitwise
 	_CONCAT = 'concat', _VCAT = 'vcat', // _MERGE = 'merge',
 	_ASSIGN = '=', _EQUAL = '==', _NOT_EQUAL = '!=', _IDENTICAL = '===', _NOT_IDENTICAL = '!==',
+	_LESS_THAN = '<', _GREATER_THAN = '>',
+	_LESS_THAN_OR_EQUAL_TO = '<=', _GREATER_THAN_OR_EQUAL_TO = '>=',
+	_SPACESHIP = '<=>',
 	_NOT = 'not', _AND = 'and', _OR = 'or', // bool
 	_NONE_COALESCING = '??', _CONDITIONAL = '?',
 	_DOT = '.', _DOUBLE_COLON = '::',

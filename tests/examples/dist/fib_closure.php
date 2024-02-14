@@ -16,7 +16,7 @@ function fib_closure() {
 
 // ---------
 $f = fib_closure();
-foreach (\xrange(0, 9) as $i) {
+foreach (\range(0, 9) as $i) {
 	echo "{$i} ==> " . $f(), LF;
 }
 // ---------

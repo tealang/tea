@@ -10,9 +10,9 @@
 namespace Tea;
 
 const _PREFIX_OP_PRECEDENCES = [
-	// L2
-	_NEGATION => 2, _BITWISE_NOT => 2,
-	// _REFERENCE => 2,
+	// L3
+	_NEGATION => 3, _BITWISE_NOT => 3,
+	// _REFERENCE => 3,
 
 	// L8
 	_NOT => 8,
@@ -25,8 +25,8 @@ const _BINARY_OP_PRECEDENCES = [
 	_DOUBLE_COLON => 1, // pipe call
 	// () []
 
-	// L3
-	_EXPONENTIATION => 3, // math
+	// L2
+	_EXPONENTIATION => 2, // math
 
 	// L4
 	_MULTIPLICATION => 4, _DIVISION => 4, _REMAINDER => 4, // math
@@ -43,8 +43,8 @@ const _BINARY_OP_PRECEDENCES = [
 	// 'pop', 'take'  // todo?
 
 	// L7 comparisons
-	'<' => 7, '>' => 7, '<=' => 7, '>=' => 7,
-	_EQUAL => 7, _IDENTICAL => 7, _NOT_EQUAL => 7, _NOT_IDENTICAL => 7, '<=>' => 7,
+	_LESS_THAN => 7, _GREATER_THAN => 7, _LESS_THAN_OR_EQUAL_TO => 7, _GREATER_THAN_OR_EQUAL_TO => 7,
+	_EQUAL => 7, _IDENTICAL => 7, _NOT_EQUAL => 7, _NOT_IDENTICAL => 7, _SPACESHIP => 7,
 	_IS => 7, // type / class, and maybe pattern?
 
 	// L9
@@ -92,9 +92,9 @@ class OperatorFactory
 
 	static $_is;
 	static $_lessthan;
-	static $_morethan;
+	static $_greatethan;
 	static $_lessthan_or_equal;
-	static $_morethan_or_equal;
+	static $_greatethan_or_equal;
 	static $_equal;
 	static $_strict_equal;
 
@@ -154,11 +154,11 @@ class OperatorFactory
 
 		self::$_is = self::create_normal_operator(_IS);
 
-		self::$_lessthan = self::create_normal_operator('<');
-		self::$_morethan = self::create_normal_operator('>');
-		self::$_lessthan_or_equal = self::create_normal_operator('<=');
-		self::$_morethan_or_equal = self::create_normal_operator('>=');
-		self::$_comparison = self::create_normal_operator('<=>');
+		self::$_lessthan = self::create_normal_operator(_LESS_THAN);
+		self::$_greatethan = self::create_normal_operator(_GREATER_THAN);
+		self::$_lessthan_or_equal = self::create_normal_operator(_LESS_THAN_OR_EQUAL_TO);
+		self::$_greatethan_or_equal = self::create_normal_operator(_GREATER_THAN_OR_EQUAL_TO);
+		self::$_comparison = self::create_normal_operator(_SPACESHIP);
 
 		self::$_equal = self::create_normal_operator(_EQUAL);
 		self::$_strict_equal = self::create_normal_operator(_IDENTICAL);
@@ -190,7 +190,7 @@ class OperatorFactory
 		self::$bool_operators = [
 			self::$_bool_and, self::$_bool_or,
 			self::$_equal, self::$_strict_equal, self::$_not_equal, self::$_strict_not_equal, self::$_is,
-			self::$_lessthan, self::$_morethan, self::$_lessthan_or_equal, self::$_morethan_or_equal
+			self::$_lessthan, self::$_greatethan, self::$_lessthan_or_equal, self::$_greatethan_or_equal
 		];
 	}
 
