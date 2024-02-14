@@ -181,20 +181,21 @@ var var_without_decared = 123
 - When nesting ternary operators, parentheses must be used to specify the order of operations.
 	Therefore, associativity does not need to be considered.
 
-	Precedence	Operators						Information
-	1			. [] () :: #					Member accessing, Element accessing, Function Call / Class New, Pipe Call, Type Casting
-	2			**								Exponentiation
-	3			- ~								Negation, Bitwise Not
-	4			* / % << >> &					Multiplication, Division, Remainder, Bitwise Shift Left, Bitwise Shift Right, Bitwise And
-	5			+ - | ^  						Addition, Subtraction, Bitwise Or, Bitwise Xor
-	6			concat 							String Concat
-	7			<=> < <= > >= != !== == === is  Comparisons
-	8			not 							Logical Not
-	9			and 							Logical And
-	10			or 								Logical Or
-	11			??								None Coalescing
-	12			condition ? exp1 : exp2 		Ternary
-	13  		= *= /= += -= .= &= |= ^= <<= >>= 	Assignments
+|Precedence	|	Operators							|	Information	|
+|-----------|---------------------------------------|---------------|
+|1 			|	. [] () :: #						|	Member accessing, Element accessing, Function Call or Class New, Pipe Call, Type Casting	|
+|2			|	**									|	Exponentiation	|
+|3			|	- ~									|	Negation, Bitwise Not	|
+|4			|	* / % << >> &						|	Multiplication, Division, Remainder, Bitwise Shift Left, Bitwise Shift Right, Bitwise And	|
+|5			|	+ - \| ^  							|	Addition, Subtraction, Bitwise Or, Bitwise Xor	|
+|6			|	concat 								|	String Concat	|
+|7			|	<=> < <= > >= != !== == === is  	|	Comparisons	|
+|8			|	not 								|	Logical Not	|
+|9			|	and 								|	Logical And	|
+|10			|	or 									|	Logical Or	|
+|11			|	??									|	None Coalescing	|
+|12			|	condition ? exp1 : exp2 			|	Ternary	|
+|13  		|	= *= /= += -= .= &= |= ^= <<= >>= 	|	Assignments	|
 
 ```tea
 // The concatenation operator is used for joining strings or arrays.
@@ -276,9 +277,6 @@ i = 0
 	}
 }
 ```
-
----
-
 
 ---
 
