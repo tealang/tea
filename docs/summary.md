@@ -181,7 +181,7 @@ var var_without_decared = 123
 - When nesting ternary operators, parentheses must be used to specify the order of operations.
 	Therefore, associativity does not need to be considered.
 
-|Precedence	|	Operators							|	Information	|
+|Precedence	|	Operators							|	Notes	|
 |-----------|---------------------------------------|---------------|
 |1 			|	. [] () :: #						|	Member accessing, Element accessing, Function Call or Class New, Pipe Call, Type Casting	|
 |2			|	**									|	Exponentiation	|
@@ -195,7 +195,7 @@ var var_without_decared = 123
 |10			|	or 									|	Logical Or	|
 |11			|	??									|	None Coalescing	|
 |12			|	condition ? exp1 : exp2 			|	Ternary	|
-|13  		|	= *= /= += -= .= &= |= ^= <<= >>= 	|	Assignments	|
+|13  		|	= *= /= += -= .= &= \|= ^= <<= >>= 	|	Assignments	|
 
 ```tea
 // The concatenation operator is used for joining strings or arrays.
