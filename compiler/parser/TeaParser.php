@@ -76,6 +76,10 @@ class TeaParser extends BaseParser
 		elseif (TeaHelper::is_modifier($token)) {
 			$node = $this->read_definition_with_modifier($token);
 		}
+		elseif ($this->get_token_ignore_space() === _COLON) {
+			$this->scan_token_ignore_space();
+			$node = $this->read_custom_label_statement_with($token);
+		}
 		else {
 			$node = $this->read_expression_with_token($token);
 			if ($this->is_next_assign_operator()) {
@@ -127,6 +131,10 @@ class TeaParser extends BaseParser
 		elseif (TeaHelper::is_structure_key($token)) {
 			$node = $this->read_structure($token);
 		}
+		elseif ($this->get_token_ignore_space() === _COLON) {
+			$this->scan_token_ignore_space();
+			$node = $this->read_custom_label_statement_with($token);
+		}
 		else {
 			$node = $this->read_expression_with_token($token);
 			if ($this->is_next_assign_operator()) {
@@ -146,7 +154,7 @@ class TeaParser extends BaseParser
 		return $node;
 	}
 
-	protected function read_assignment($assignalbe)
+	protected function read_assignment(BaseExpression $assignalbe)
 	{
 		if (!$assignalbe instanceof IAssignable) {
 			throw $this->new_parse_error("Invalid assigned expression.");
@@ -432,14 +440,16 @@ class TeaParser extends BaseParser
 
 		$statement = new ContinueStatement();
 
+		$target_label = $this->get_identifier_token_ignore_space();
+
 		// the target label
-		if ($this->skip_token_ignore_space(_SHARP)) {
-			$target_label = $this->expect_identifier_token();
-			[$statement->target_layers, $statement->switch_layers] = $this->factory->count_target_block_layers_with_label($target_label, IContinueAble::class);
-			$statement->target_label = $target_label;
+		if ($target_label === null) {
+			$statement->switch_layers = $this->factory->count_switch_layers_contains_in_block(IContinueAble::class);
 		}
 		else {
-			$statement->switch_layers = $this->factory->count_switch_layers_contains_in_block(IContinueAble::class);
+			$this->scan_token_ignore_space();
+			[$statement->target_layers, $statement->switch_layers] = $this->factory->count_target_block_layers_with_label($target_label, IContinueAble::class);
+			$statement->target_label = $target_label;
 		}
 
 		// $this->try_attach_post_condition($statement);
@@ -455,14 +465,16 @@ class TeaParser extends BaseParser
 
 		$statement = new BreakStatement();
 
+		$target_label = $this->get_identifier_token_ignore_space();
+
 		// the target label
-		if ($this->skip_token_ignore_space(_SHARP)) {
-			$target_label = $this->expect_identifier_token();
-			[$statement->target_layers] = $this->factory->count_target_block_layers_with_label($target_label, IBreakAble::class);
-			$statement->target_label = $target_label;
+		if ($target_label === null) {
+			$this->factory->count_switch_layers_contains_in_block(IBreakAble::class);
 		}
 		else {
-			$this->factory->count_switch_layers_contains_in_block(IBreakAble::class);
+			$this->scan_token_ignore_space();
+			[$statement->target_layers] = $this->factory->count_target_block_layers_with_label($target_label, IBreakAble::class);
+			$statement->target_label = $target_label;
 		}
 
 		// $this->try_attach_post_condition($statement);
@@ -910,7 +922,7 @@ class TeaParser extends BaseParser
 				}
 
 				// check is prefix operator
-				$prefix_operator = OperatorFactory::get_prefix_operator($token);
+				$prefix_operator = OperatorFactory::get_tea_prefix_operator($token);
 				if ($prefix_operator !== null) {
 					$expression = $this->read_prefix_operation($prefix_operator);
 					break;
@@ -1145,7 +1157,7 @@ class TeaParser extends BaseParser
 		return new RegularExpression($pattern, $flags);
 	}
 
-	protected function read_conditional_expression_with(BaseExpression $test)
+	protected function read_ternary_expression_with(BaseExpression $test)
 	{
 		// 由于三元条件运算符优先级最低，故可直接读取，无需与子表达式比较优先级
 
@@ -1155,7 +1167,7 @@ class TeaParser extends BaseParser
 		else {
 			$this->expect_space("Missed space char after '?'.");
 			$then = $this->read_expression();
-			if ($then instanceof ConditionalExpression) {
+			if ($then instanceof TernaryExpression) {
 				throw $this->new_parse_error("Required () for compound conditional expressions");
 			}
 
@@ -1167,11 +1179,11 @@ class TeaParser extends BaseParser
 		}
 
 		$else = $this->read_expression();
-		if ($else instanceof ConditionalExpression) {
+		if ($else instanceof TernaryExpression) {
 			throw $this->new_parse_error("Required () for compound conditional expressions");
 		}
 
-		$expression = new ConditionalExpression($test, $then, $else);
+		$expression = new TernaryExpression($test, $then, $else);
 		$expression->pos = $else->pos;
 
 		return $expression;
@@ -1533,36 +1545,36 @@ class TeaParser extends BaseParser
 		$call = new CallExpression($handler, $args);
 		$call->pos = $this->pos;
 
-		if ($callbacks = $this->try_read_callback_arguments()) {
-			$call->set_callbacks(...$callbacks);
-		}
+		// if ($callbacks = $this->try_read_callback_arguments()) {
+		// 	$call->set_callbacks(...$callbacks);
+		// }
 
 		return $call;
 	}
 
-	protected function try_read_callback_arguments()
-	{
-		if (!$this->skip_token_ignore_empty(_NOTIFY)) {
-			return null;
-		}
+	// private function try_read_callback_arguments()
+	// {
+	// 	if (!$this->skip_token_ignore_empty(_NOTIFY)) {
+	// 		return null;
+	// 	}
 
-		// the simple mode, just support one callback
-		if ($this->get_token_ignore_empty() === _BLOCK_BEGIN) {
-			$lambda = $this->read_lambda_combination([], true);
-			return [$this->create_callback_argument(null, $lambda)];
-		}
+	// 	// the simple mode, just support one callback
+	// 	if ($this->get_token_ignore_empty() === _BLOCK_BEGIN) {
+	// 		$lambda = $this->read_lambda_combination([], true);
+	// 		return [$this->create_callback_argument(null, $lambda)];
+	// 	}
 
-		// the normal mode
-		$items = [];
-		while ($item = $this->read_callback_argument()) {
-			$items[] = $item;
-			if (!$this->skip_token_ignore_empty(_NOTIFY)) {
-				break;
-			}
-		}
+	// 	// the normal mode
+	// 	$items = [];
+	// 	while ($item = $this->read_callback_argument()) {
+	// 		$items[] = $item;
+	// 		if (!$this->skip_token_ignore_empty(_NOTIFY)) {
+	// 			break;
+	// 		}
+	// 	}
 
-		return $items;
-	}
+	// 	return $items;
+	// }
 
 	protected function read_callback_argument()
 	{
@@ -1600,31 +1612,31 @@ class TeaParser extends BaseParser
 	{
 		$token = $this->get_token_ignore_empty();
 
-		$operator = OperatorFactory::get_normal_operator($token);
+		$operator = OperatorFactory::get_tea_normal_operator($token);
 		if ($operator === null) {
 			return $expression;
 		}
 
 		// compare operator precedences
 		if ($prev_operator !== null) {
-			if ($prev_operator->precedence < $operator->precedence) {
-				return $expression;
-			}
-			elseif ($prev_operator->precedence === $operator->precedence && $operator->is_left_associativity) {
+			$prev_prec = $prev_operator->tea_prec;
+			$curr_prec = $operator->tea_prec;
+			$is_priority = ($prev_prec < $curr_prec) || ($prev_prec === $curr_prec && $operator->tea_assoc !== OP_R);
+			if ($is_priority) {
 				return $expression;
 			}
 		}
 
-		if ($operator === OperatorFactory::$_is) {
-			$this->scan_token_ignore_empty(); // skip the operator
+		if ($operator === OperatorFactory::$is) {
+			$this->scan_token_ignore_empty(); // skip operator
 			$expression = $this->read_is_operation($expression);
 		}
-		elseif ($operator === OperatorFactory::$_conditional) {
-			$this->scan_token_ignore_empty(); // skip the operator
-			$expression = $this->read_conditional_expression_with($expression);
+		elseif ($operator === OperatorFactory::$ternary) {
+			$this->scan_token_ignore_empty(); // skip operator
+			$expression = $this->read_ternary_expression_with($expression);
 		}
-		elseif ($operator === OperatorFactory::$_none_coalescing) {
-			$this->scan_token_ignore_empty(); // skip the operator
+		elseif ($operator === OperatorFactory::$none_coalescing) {
+			$this->scan_token_ignore_empty(); // skip operator
 			$expression = $this->read_none_coalescing_with($expression, $operator);
 		}
 		else {
@@ -1985,7 +1997,7 @@ class TeaParser extends BaseParser
 		}
 
 		// union with members
-		while ($this->skip_token_ignore_space(_UNION)) {
+		while ($this->skip_token_ignore_space(_TYPE_UNION)) {
 			$member_type = $this->try_read_type_identifier();
 			if ($member_type === null) {
 				throw $this->new_parse_error("Required a member type name");

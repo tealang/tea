@@ -16,6 +16,8 @@ class UseDeclaration extends Node implements IMemberDeclaration
 
 	const KIND = 'use_declaration';
 
+	public $program;
+
 	public $ns;
 
 	public $name;

@@ -9,6 +9,17 @@
 
 namespace Tea;
 
+// operator constants
+const
+	OP_PRE = 0x00,	// prefix
+	OP_POST = 0x01,	// postfix
+	OP_BIN = 0x02,  // binary
+	OP_TERNARY = 0x04,
+	OP_NA = 0x20,  	// n/a associative,
+	OP_NON = 0x21, 	// non associative, cannot be used next to each other
+	OP_L = 0x22,  	// left associative
+	OP_R = 0x24;  	// right associative
+
 const
 	// do not use the DIRECTORY_SEPARATOR to render targets code
 	DS = '/',
@@ -62,20 +73,23 @@ const
 	_IS = 'is', // for check Type
 	_IN = 'in', _TO = 'to', _DOWNTO = 'downto', _STEP = 'step', // just use in the 'for' block
 
-	_UNION = '|',
+	_TYPE_UNION = '|',
 	_REFERENCE = '&',
 	_NEGATION = '-', // -1, -num
 	_ADDITION = '+', _SUBTRACTION = '-', _MULTIPLICATION = '*', _DIVISION = '/', _REMAINDER = '%', _EXPONENTIATION = '**',
-	_BITWISE_NOT = '~', _BITWISE_AND = '&', _BITWISE_OR = '|', _BITWISE_XOR = '^', //bitwise
-	_CONCAT = 'concat', _VCAT = 'vcat', // _MERGE = 'merge',
+	_BITWISE_NOT = '~', _BITWISE_AND = '&', _BITWISE_OR = '|', _BITWISE_XOR = '^',
+	_CONCAT = 'concat', _ARRAY_CONCAT = 'array_concat',
+	_ARRAY_UNION = 'union',
 	_ASSIGN = '=', _EQUAL = '==', _NOT_EQUAL = '!=', _IDENTICAL = '===', _NOT_IDENTICAL = '!==',
 	_LESS_THAN = '<', _GREATER_THAN = '>',
 	_LESS_THAN_OR_EQUAL_TO = '<=', _GREATER_THAN_OR_EQUAL_TO = '>=',
 	_SPACESHIP = '<=>',
-	_NOT = 'not', _AND = 'and', _OR = 'or', // bool
-	_NONE_COALESCING = '??', _CONDITIONAL = '?',
-	_DOT = '.', _DOUBLE_COLON = '::',
-	_PUT = '<-', _NOTIFY = '->', _ARROW = '=>', _RELAY = '==>',
+	_NOT = 'not', _AND = 'and', _OR = 'or', _XOR = 'xor',
+	_NONE_COALESCING = '??', _QUESTION = '?',
+	_DOT = '.',
+	_DOUBLE_COLON = '::',
+	// _PUT = '<-', _NOTIFY = '->',
+	_ARROW = '=>',
 	_SHIFT_LEFT = '<<', _SHIFT_RIGHT = '>>',
 
 	_ASSIGN_OPERATORS = [_ASSIGN, '.=', '**=', '+=', '-=', '*=', '/=', '&=', '|=', '^=', '<<=', '>>='], // '??='
@@ -93,6 +107,8 @@ const
 	_VAL_NULL = 'null', // PHP
 	_VAL_NONE = 'none',
 	_VAL_TRUE = 'true', _VAL_FALSE = 'false',
+
+	// _NEW = 'new', _CLONE = 'clone',
 	_VAR = 'var', _MUT = 'mut',
 	_YIELD = 'yield', _UNSET = 'unset',
 	_IF = 'if', _ELSE = 'else', _ELSEIF = 'elseif', _SWITCH = 'switch', _CASE = 'case',

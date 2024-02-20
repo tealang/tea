@@ -90,6 +90,8 @@ public xrange(start Int, end Int, step Int = 1) IIterator
 
 #php file_put_contents(file Any, data String, flags Int = #default) UInt
 
+#php pow(num Any, exponent Any) UInt
+
 #php max(n1 Any, n2 Any, n3 Any = #default) Any
 
 #php min(n1 Any, n2 Any, n3 Any = #default) Any

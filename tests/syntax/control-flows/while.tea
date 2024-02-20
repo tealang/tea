@@ -14,15 +14,15 @@ catch ex {
 
 // labeled loops
 i = 0
-#outer_loop while 1 {
-	#inner_loop while true {
+outer_loop: while 1 {
+	inner_loop: while true {
 		i = i + 1
 		if i < 3 {
-			continue #inner_loop
+			continue inner_loop
 		}
 
 		if i > 5 {
-			break #outer_loop
+			break outer_loop
 		}
 	}
 }

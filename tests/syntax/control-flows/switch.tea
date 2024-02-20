@@ -3,7 +3,7 @@
 num = 1
 str = 'abc'
 
-#outer switch num {
+outer: switch num {
 	case num * 3:
 		switch str {
 			case 'some${num}', 'hello', ('a' concat 123):
@@ -11,7 +11,7 @@ str = 'abc'
 				echo str
 			case 'a':
 				num = num * 2
-				break #outer
+				break outer
 		}
 		else {
 			echo 'not matched.'

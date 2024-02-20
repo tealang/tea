@@ -13,6 +13,8 @@ class NormalStatement extends BaseStatement
 {
 	const KIND = 'normal_statement';
 
+	public $label;
+
 	public $expression;
 
 	public function __construct(BaseExpression $expression)

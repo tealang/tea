@@ -448,6 +448,8 @@ class CallableType extends BaseType implements ICallableDeclaration {
 
 	public $parameters = [];
 
+	public $is_checked;
+
 	public function __construct(IType $return_type = null, array $parameters = []) {
 		$this->type = $return_type;
 		$this->parameters = $parameters;

@@ -17,26 +17,25 @@ internal Cell: BaseView {
 var xview XView = Cell('string')
 
 // 仅一个回调，且无需传参数时
-DemoList('demo-list', 'title') -> {
+DemoList('demo-list', 'title', [], () => {
 	return Cell()
-}
+})
 
 // 有回调需要传参时
-DemoList('demo-list', 'Demo List', ['A', 'B', 'C']) -> error(message String) {
+DemoList('demo-list', 'Demo List', ['A', 'B', 'C'], none, (message String) => {
 	echo message
-}
+})
 
 str = 'str'
 num = 2
 
 // 有多个回调
-abc = DemoList('name', 'title', ['A', 'B', 'C'])
-	-> error(message) {
+abc = DemoList('name', 'title', ['A', 'B', 'C'], () => {
+		return Cell()
+	}, (message) => {
 		echo str, num
 	}
-	-> each() Cell {
-		return Cell()
-	}
+)
 
 // echo abc
 

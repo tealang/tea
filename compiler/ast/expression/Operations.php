@@ -37,9 +37,11 @@ class CastOperation extends BinaryOperation
 {
 	const KIND = 'cast_operation';
 
+	public $is_call_mode;
+
 	public function __construct(BaseExpression $left, IType $right)
 	{
-		$this->operator = OperatorFactory::$_cast;
+		$this->operator = OperatorFactory::$cast;
 		$this->left = $left;
 		$this->right = $right;
 	}
@@ -53,7 +55,7 @@ class IsOperation extends BinaryOperation
 
 	public function __construct(BaseExpression $left, IType $right, bool $is_not = false)
 	{
-		$this->operator = OperatorFactory::$_is;
+		$this->operator = OperatorFactory::$is;
 		$this->left = $left;
 		$this->right = $right;
 		$this->is_not = $is_not;
@@ -70,14 +72,14 @@ class NoneCoalescingOperation extends MultiOperation
 	public $items;
 
 	public function __construct(BaseExpression ...$items) {
-		$this->operator = OperatorFactory::$_none_coalescing;
+		$this->operator = OperatorFactory::$none_coalescing;
 		$this->items = $items;
 	}
 }
 
-class ConditionalExpression extends MultiOperation
+class TernaryExpression extends MultiOperation
 {
-	const KIND = 'conditional_expression';
+	const KIND = 'ternary_expression';
 
 	public $condition;
 	public $then;
@@ -85,7 +87,7 @@ class ConditionalExpression extends MultiOperation
 
 	public function __construct(BaseExpression $condition, ?BaseExpression $then, BaseExpression $else)
 	{
-		$this->operator = OperatorFactory::$_conditional;
+		$this->operator = OperatorFactory::$ternary;
 		$this->condition = $condition;
 		$this->then = $then;
 		$this->else = $else;

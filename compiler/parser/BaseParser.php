@@ -36,6 +36,8 @@ abstract class BaseParser
 	// the total tokens
 	protected $tokens_count = 0;
 
+	protected $factory;
+
 	public function __construct(ASTFactory $factory, string $file)
 	{
 		$this->factory = $factory;

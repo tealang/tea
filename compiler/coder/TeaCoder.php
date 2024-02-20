@@ -637,7 +637,7 @@ class TeaCoder
 			$items[] = $item;
 		}
 
-		return join(_UNION, $items);
+		return join(_TYPE_UNION, $items);
 	}
 
 	protected function render_callable_type(CallableType $node)
@@ -963,7 +963,7 @@ class TeaCoder
 	public function render_prefix_operation(BaseExpression $node)
 	{
 		$expression = $node->expression->render($this);
-		return $node->operator->sign . $expression;
+		return $this->get_operator_sign($node->operator) . $expression;
 	}
 
 	// public function render_postfix_operation(BaseExpression $node)
@@ -974,11 +974,16 @@ class TeaCoder
 
 	public function render_binary_operation(BinaryOperation $node)
 	{
-		$operator = $node->operator->sign;
+		$operator = $this->get_operator_sign($node->operator);
 		$left = $node->left->render($this);
 		$right = $node->right->render($this);
 
 		return sprintf('%s %s %s', $left, $operator, $right);
+	}
+
+	protected function get_operator_sign(Operator $oper)
+	{
+		return $oper->tea_sign;
 	}
 
 	public function render_none_coalescing_operation(NoneCoalescingOperation $node)
@@ -991,7 +996,7 @@ class TeaCoder
 		return join(' ?? ', $items);
 	}
 
-	public function render_conditional_expression(ConditionalExpression $node)
+	public function render_ternary_expression(TernaryExpression $node)
 	{
 		if ($node->then === null) {
 			$code = sprintf('%s ?: %s',
@@ -1026,10 +1031,10 @@ class TeaCoder
 		return "/{$node->pattern}/{$node->flags}";
 	}
 
-	public function render_newline_statement()
-	{
-		return LF;
-	}
+	// public function render_newline_statement()
+	// {
+	// 	return LF;
+	// }
 
 	public function render_use_statement(UseStatement $node)
 	{

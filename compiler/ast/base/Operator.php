@@ -11,19 +11,28 @@ namespace Tea;
 
 class Operator
 {
-	public $sign;
-	public $precedence;
+	/**
+	 * @var int
+	 */
+	private $id;
 
-	// for render
-	public $dist_sign;
-	public $dist_precedence;
+	public $tea_sign;
+	public $tea_prec;	// precedence
+	public $tea_assoc; 	// associativity
 
-	public $is_left_associativity = true;
+	public $php_sign;
+	public $php_prec;
+	public $php_assoc;
 
-	public function __construct(string $sign, int $precedence)
+	public function __construct(int $id)
 	{
-		$this->sign = $sign;
-		$this->precedence = $precedence;
+		$this->id = $id;
+	}
+
+	public function is(int $id)
+	{
+		return $this->id === $id;
 	}
 }
 
+// end

@@ -7,7 +7,7 @@ require_once dirname(__DIR__, 1) . '/__public.php';
 const PI = 3.1415926;
 
 // ---------
-$some = 'abc' . (1 + fmod((2 & 2) * 2 ** 3 / 5, 6));
+$some = 'abc' . 1 + fmod((2 & 2) * pow(2, 3) / 5, 6);
 
 $uint_num = 123;
 $int_num = -123;
@@ -38,7 +38,7 @@ if ($found === false) {
 
 $str = 'abc';
 $num = 3;
-$result = -strlen($str) + -$num * PI ** 2 - 12;
+$result = -strlen($str) + -$num * pow(PI, 2) - 12;
 
 $is_greater = 3 > $num;
 

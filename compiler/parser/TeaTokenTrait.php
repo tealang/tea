@@ -412,6 +412,12 @@ trait TeaTokenTrait
 		throw $this->new_parse_error("Invalid identifier token '{$token}'", 1);
 	}
 
+	protected function get_identifier_token_ignore_space()
+	{
+		$token = $this->get_token_ignore_space();
+		return TeaHelper::is_identifier_name($token) ? $token : null;
+	}
+
 	// protected function expect_block_begin_ignore_empty()
 	// {
 	// 	$this->expect_token_ignore_empty(_BLOCK_BEGIN);

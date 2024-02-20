@@ -11,8 +11,15 @@ namespace Tea;
 
 interface ILiteral {}
 
+trait LiteralTrait
+{
+	public $is_call_mode;
+}
+
 trait LiteralTraitWithValue
 {
+	use LiteralTrait;
+
 	/**
 	 * @var string
 	 */
@@ -78,11 +85,13 @@ class BooleanLiteral extends BaseExpression implements ILiteral
 
 class ArrayLiteral extends ArrayExpression implements ILiteral
 {
+	use LiteralTrait;
 	const KIND = 'array_literal';
 }
 
 class DictLiteral extends DictExpression implements ILiteral
 {
+	use LiteralTrait;
 	const KIND = 'dict_literal';
 }
 

@@ -39,6 +39,8 @@ class ASTChecker
 	 */
 	private $block;
 
+	private $current_function;
+
 	private static $builtin_checker_instance;
 	private static $native_checker_instance;
 	private static $normal_checker_instances = [];
@@ -257,15 +259,15 @@ class ASTChecker
 		}
 
 		if ($value instanceof BinaryOperation) {
-			if ($value->operator === OperatorFactory::$_concat) {
+			if ($value->operator === OperatorFactory::$concat) {
 				$left_type = $this->infer_expression($value->left);
 				if ($left_type instanceof ArrayType) {
 					throw $this->new_syntax_error("Array concat operation cannot use as a compile-time value", $value);
 				}
 			}
-			// elseif ($value->operator === OperatorFactory::$_merge) {
-			// 	throw $this->new_syntax_error("Array/Dict merge operation cannot use for constant value", $value);
-			// }
+			elseif ($value->operator === OperatorFactory::$array_union) {
+				throw $this->new_syntax_error("Array/Dict union operation cannot use for constant value", $value);
+			}
 		}
 	}
 
@@ -359,6 +361,7 @@ class ASTChecker
 			}
 
 			$node->type->has_null = true;
+			$node->type->let_nullable();
 		}
 	}
 
@@ -1496,8 +1499,8 @@ class ASTChecker
 			case NoneCoalescingOperation::KIND:
 				$infered_type = $this->infer_none_coalescing_expression($node);
 				break;
-			case ConditionalExpression::KIND:
-				$infered_type = $this->infer_conditional_expression($node);
+			case TernaryExpression::KIND:
+				$infered_type = $this->infer_ternary_expression($node);
 				break;
 			case DictExpression::KIND:
 				$infered_type = $this->infer_dict_expression($node);
@@ -1523,9 +1526,9 @@ class ASTChecker
 			case RegularExpression::KIND:
 				$infered_type = $this->infer_regular_expression($node);
 				break;
-			// case ReferenceOperation::KIND:
-			// 	$infered_type = $this->infer_expression($node->identifier);
-			// 	break;
+			case ReferenceOperation::KIND:
+				$infered_type = $this->infer_expression($node->identifier);
+				break;
 			// case RelayExpression::KIND:
 			// 	$infered_type = $this->infer_relay_expression($node);
 			// 	break;
@@ -1655,7 +1658,7 @@ class ASTChecker
 			$this->assert_math_operable($left_type, $node->left);
 			$this->assert_math_operable($right_type, $node->right);
 
-			if ($operator === OperatorFactory::$_division || $left_type === TypeFactory::$_float || $right_type === TypeFactory::$_float) {
+			if ($operator === OperatorFactory::$division || $left_type === TypeFactory::$_float || $right_type === TypeFactory::$_float) {
 				$node->infered_type = TypeFactory::$_float;
 			}
 			elseif ($left_type === TypeFactory::$_int || $right_type === TypeFactory::$_int) {
@@ -1670,7 +1673,7 @@ class ASTChecker
 
 			// assign type assertion for and-operation
 			// uses for assert type in if-block/conditional-expression
-			if ($operator === OperatorFactory::$_bool_and) {
+			if ($operator === OperatorFactory::$bool_and) {
 				if ($node->left instanceof BinaryOperation and $node->left->type_assertion) {
 					$node->type_assertion = $node->left->type_assertion;
 				}
@@ -1679,11 +1682,11 @@ class ASTChecker
 				}
 			}
 		}
-		elseif ($operator === OperatorFactory::$_concat) {
-			// string or array
+		elseif ($operator === OperatorFactory::$concat) {
+			// String or Array
 			if ($left_type instanceof ArrayType) {
 				$this->assert_type_compatible($left_type, $right_type, $node->right, _CONCAT);
-				$node->operator = OperatorFactory::$_vcat; // replace to array concat
+				$node->operator = OperatorFactory::$array_concat; // replace to array concat
 				$node->infered_type = $left_type;
 			}
 			elseif ($left_type === TypeFactory::$_any || $left_type instanceof DictType) {
@@ -1694,15 +1697,15 @@ class ASTChecker
 				$node->infered_type = TypeFactory::$_string;
 			}
 		}
-		// elseif ($operator === OperatorFactory::$_merge) {
-		// 	// array or dict
-		// 	if (!$left_type instanceof ArrayType && !$left_type instanceof DictType) {
-		// 		throw $this->new_syntax_error("'merge' operation just support Array/Dict type targets", $node);
-		// 	}
+		elseif ($operator === OperatorFactory::$array_union) {
+			// Array or Dict
+			if (!$left_type instanceof ArrayType && !$left_type instanceof DictType) {
+				throw $this->new_syntax_error("'union' operation just support Array/Dict type targets", $node);
+			}
 
-		// 	$this->assert_type_compatible($left_type, $right_type, $node->right, _MERGE);
-		// 	$node->infered_type = $left_type;
-		// }
+			$this->assert_type_compatible($left_type, $right_type, $node->right, _ARRAY_UNION);
+			$node->infered_type = $left_type;
+		}
 		elseif (OperatorFactory::is_bitwise_operator($operator)) {
 			$node->infered_type = $this->reduce_types([$left_type, $right_type]);
 		}
@@ -1755,11 +1758,11 @@ class ASTChecker
 	{
 		$expr_type = $this->infer_expression($node->expression);
 
-		if ($node->operator === OperatorFactory::$_bool_not) {
+		if ($node->operator === OperatorFactory::$bool_not) {
 			$this->assert_bool_operable($expr_type, $node->expression);
 			$infered = TypeFactory::$_bool;
 		}
-		elseif ($node->operator === OperatorFactory::$_negation) {
+		elseif ($node->operator === OperatorFactory::$negation) {
 			$this->assert_math_operable($expr_type, $node->expression);
 
 			// if is UInt or contais UInt, it must be became to Int after negation
@@ -1775,10 +1778,10 @@ class ASTChecker
 				$infered = $expr_type;
 			}
 		}
-		// elseif ($node->operator === OperatorFactory::$_reference) {
-		// 	$infered = $expr_type;
-		// }
-		elseif ($node->operator === OperatorFactory::$_bitwise_not) {
+		elseif ($node->operator === OperatorFactory::$reference) {
+			$infered = $expr_type;
+		}
+		elseif ($node->operator === OperatorFactory::$bitwise_not) {
 			$this->assert_bitwise_operable($expr_type, $node->expression);
 			$infered = $expr_type === TypeFactory::$_uint || $expr_type === TypeFactory::$_int || $expr_type === TypeFactory::$_float
 				? TypeFactory::$_int
@@ -1838,14 +1841,14 @@ class ASTChecker
 		return $reduced;
 	}
 
-	private function infer_conditional_expression(ConditionalExpression $node): IType
+	private function infer_ternary_expression(TernaryExpression $node): IType
 	{
 		$condition_type = $this->infer_expression($node->condition);
 
 		// infer with type assert
 		if ($node->condition instanceof BinaryOperation and $node->condition->type_assertion) {
 			// with type assertion
-			$infered_types = $this->infer_conditional_expression_with_asserttion($node, $condition_type);
+			$infered_types = $this->infer_ternary_expression_with_asserttion($node, $condition_type);
 		}
 		else {
 			// without type assertion
@@ -1864,7 +1867,7 @@ class ASTChecker
 		return $this->reduce_types($infered_types);
 	}
 
-	private function infer_conditional_expression_with_asserttion(ConditionalExpression $node, IType $condition_type): array
+	private function infer_ternary_expression_with_asserttion(TernaryExpression $node, IType $condition_type): array
 	{
 		$type_assertion = $node->condition->type_assertion;
 

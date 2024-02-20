@@ -9,114 +9,76 @@
 
 namespace Tea;
 
-const _PREFIX_OP_PRECEDENCES = [
-	// L3
-	_NEGATION => 3, _BITWISE_NOT => 3,
-	// _REFERENCE => 3,
-
-	// L8
-	_NOT => 8,
-];
-
-const _BINARY_OP_PRECEDENCES = [
-	// L1
-	_DOT => 1,  		// class/object
-	_SHARP => 1, 		// type mark
-	_DOUBLE_COLON => 1, // pipe call
-	// () []
-
-	// L2
-	_EXPONENTIATION => 2, // math
-
-	// L4
-	_MULTIPLICATION => 4, _DIVISION => 4, _REMAINDER => 4, // math
-	_SHIFT_LEFT => 4, _SHIFT_RIGHT => 4, _BITWISE_AND => 4, // bitwise
-
-	// L5
-	_ADDITION => 5, _SUBTRACTION => 5, // math
-	_BITWISE_OR => 5, _BITWISE_XOR => 5, // bitwise
-
-	// L6
-	_CONCAT => 6, // String / Array,  concat to the end of the left expression
-	_VCAT => 6, // Array,  concat to the end of the left array expression
-	// _MERGE => 6, // Dict / Array,  merge by key or index
-	// 'pop', 'take'  // todo?
-
-	// L7 comparisons
-	_LESS_THAN => 7, _GREATER_THAN => 7, _LESS_THAN_OR_EQUAL_TO => 7, _GREATER_THAN_OR_EQUAL_TO => 7,
-	_EQUAL => 7, _IDENTICAL => 7, _NOT_EQUAL => 7, _NOT_IDENTICAL => 7, _SPACESHIP => 7,
-	_IS => 7, // type / class, and maybe pattern?
-
-	// L9
-	_AND => 9,
-
-	// L10
-	_OR => 10, // _XOR => 10,
-
-	// L11
-	_NONE_COALESCING => 11,
-
-	// L12
-	_CONDITIONAL => 12, // ternary conditional expression
-];
-
 class OperatorFactory
 {
-	static $_dot;
+	static $new;
+	static $clone;
 
-	// static $_put;
-	// static $_notify;
+	static $reference;
+	static $identity;
+	static $negation;
+	static $bitwise_not;
+	static $bool_not;
 
-	static $_negation;
-	static $_bitwise_not; // e.g. ~0 == -1
-	// static $_reference;
+	static $pre_increment;
+	static $pre_decrement;
+	static $post_increment;
+	static $post_decrement;
 
-	static $_cast;
-	static $_pipe;
+	static $dot;
+	static $cast;
+	static $pipe;
 
-	static $_exponentiation;
+	static $exponentiation;
+	static $multiplication;
+	static $division;
+	static $remainder;
+	static $addition;
+	static $subtraction;
 
-	static $_multiplication;
-	static $_division;
-	static $_remainder;
+	static $concat;
+	static $array_concat;
+	static $array_union;
 
-	static $_addition;
-	static $_subtraction;
+	static $is;
 
-	static $_concat;
-	static $_vcat;
-	// static $_merge;
+	static $equal;
+	static $identical;
+	static $not_equal;
+	static $not_identical;
+	static $lessthan;
+	static $greatethan;
+	static $lessthan_or_equal;
+	static $greatethan_or_equal;
+	static $spaceship;
 
-	static $_shift_left;
-	static $_shift_right;
+	static $shift_left;
+	static $shift_right;
+	static $bitwise_and;
+	static $bitwise_xor;
+	static $bitwise_or;
 
-	static $_is;
-	static $_lessthan;
-	static $_greatethan;
-	static $_lessthan_or_equal;
-	static $_greatethan_or_equal;
-	static $_equal;
-	static $_strict_equal;
+	static $bool_and;
+	static $bool_xor;
+	static $bool_or;
 
-	static $_not_equal;
-	static $_strict_not_equal;
+	static $none_coalescing;
+	static $ternary; // exp0 ? exp1 : exp2, or exp0 ?: exp1
 
-	static $_comparison;
+	static $assignment;
 
-	static $_bitwise_and;
-	static $_bitwise_xor;
-	static $_bitwise_or;
+	private static $operator_map = [];
 
-	static $_none_coalescing;
-	static $_conditional; // exp0 ? exp1 : exp2, or exp0 ?: exp1
+	private static $tea_prefix_map = [];
+	private static $tea_postfix_map = [];
+	private static $tea_normal_map = [];
 
-	static $_bool_not;
-	static $_bool_and;
-	// static $_bool_xor;
-	static $_bool_or;
+	private static $php_prefix_map = [];
+	private static $php_postfix_map = [];
+	private static $php_normal_map = [];
 
-	private static $prefix_op_symbol_map = [];
-	private static $binary_op_symbol_map = [];
+	// private static $prefix_operator_map = [];
+	// private static $normal_operator_map = [];
 
 	private static $number_operators;
 	private static $bitwise_operators;
@@ -124,128 +86,271 @@ class OperatorFactory
 
 	public static function init()
 	{
-		self::$_negation = self::create_prefix_operator(_NEGATION);
-		self::$_bitwise_not = self::create_prefix_operator(_BITWISE_NOT);
-		// self::$_reference = self::create_prefix_operator(_REFERENCE);
-		self::$_bool_not = self::create_prefix_operator(_NOT);
+		self::$new = self::create_operator(OPID::NEW);
+		self::$clone = self::create_operator(OPID::CLONE);
 
-		self::$_dot = self::create_normal_operator(_DOT);
-		self::$_cast = self::create_normal_operator(_DOUBLE_COLON);
-		// self::$_pipe = self::create_normal_operator(_DOUBLE_COLON);
+		self::$dot = self::create_operator(OPID::DOT);
+		self::$cast = self::create_operator(OPID::CAST);
+		self::$pipe = self::create_operator(OPID::PIPE);
 
-		// self::$_put = self::create_normal_operator(_PUT);
-		// self::$_notify = self::create_normal_operator(_NOTIFY);
+		self::$reference = self::create_operator(OPID::REFERENCE);
+		self::$identity = self::create_operator(OPID::IDENTITY);
+		self::$negation = self::create_operator(OPID::NEGATION);
+		self::$bitwise_not = self::create_operator(OPID::BITWISE_NOT);
+		self::$bool_not = self::create_operator(OPID::BOOL_NOT);
 
-		self::$_exponentiation = self::create_normal_operator(_EXPONENTIATION);
+		self::create_operator(OPID::PRE_INCREMENT);
+		self::create_operator(OPID::PRE_DECREMENT);
+		self::create_operator(OPID::POST_INCREMENT);
+		self::create_operator(OPID::POST_DECREMENT);
 
-		self::$_multiplication = self::create_normal_operator(_MULTIPLICATION);
-		self::$_division = self::create_normal_operator(_DIVISION);
-		self::$_remainder = self::create_normal_operator(_REMAINDER);
+		self::$exponentiation = self::create_operator(OPID::EXPONENTIATION);
 
-		self::$_addition = self::create_normal_operator(_ADDITION);
-		self::$_subtraction = self::create_normal_operator(_SUBTRACTION);
+		self::$multiplication = self::create_operator(OPID::MULTIPLICATION);
+		self::$division = self::create_operator(OPID::DIVISION);
+		self::$remainder = self::create_operator(OPID::REMAINDER);
 
-		self::$_concat = self::create_normal_operator(_CONCAT);
-		self::$_vcat = self::create_normal_operator(_VCAT);
-		// self::$_merge = self::create_normal_operator(_MERGE);
+		self::$addition = self::create_operator(OPID::ADDITION);
+		self::$subtraction = self::create_operator(OPID::SUBTRACTION);
 
-		self::$_shift_left = self::create_normal_operator(_SHIFT_LEFT);
-		self::$_shift_right = self::create_normal_operator(_SHIFT_RIGHT);
+		self::$concat = self::create_operator(OPID::CONCAT);
+		self::$array_concat = self::create_operator(OPID::ARRAY_CONCAT);
+		self::$array_union = self::create_operator(OPID::ARRAY_UNION);
 
-		self::$_is = self::create_normal_operator(_IS);
+		self::$shift_left = self::create_operator(OPID::SHIFT_LEFT);
+		self::$shift_right = self::create_operator(OPID::SHIFT_RIGHT);
 
-		self::$_lessthan = self::create_normal_operator(_LESS_THAN);
-		self::$_greatethan = self::create_normal_operator(_GREATER_THAN);
-		self::$_lessthan_or_equal = self::create_normal_operator(_LESS_THAN_OR_EQUAL_TO);
-		self::$_greatethan_or_equal = self::create_normal_operator(_GREATER_THAN_OR_EQUAL_TO);
-		self::$_comparison = self::create_normal_operator(_SPACESHIP);
+		self::$is = self::create_operator(OPID::IS);
+		self::$equal = self::create_operator(OPID::EQUAL);
+		self::$identical = self::create_operator(OPID::IDENTICAL);
+		self::$not_equal = self::create_operator(OPID::NOT_EQUAL);
+		self::$not_identical = self::create_operator(OPID::NOT_IDENTICAL);
+		self::$lessthan = self::create_operator(OPID::LESSTHAN);
+		self::$greatethan = self::create_operator(OPID::GREATERTHAN);
+		self::$lessthan_or_equal = self::create_operator(OPID::LESSTHAN_OR_EQUAL);
+		self::$greatethan_or_equal = self::create_operator(OPID::GREATERTHAN_OR_EQUAL);
+		self::$spaceship = self::create_operator(OPID::SPACESHIP);
 
-		self::$_equal = self::create_normal_operator(_EQUAL);
-		self::$_strict_equal = self::create_normal_operator(_IDENTICAL);
+		self::$bool_and = self::create_operator(OPID::BOOL_AND);
+		// self::$bool_xor = self::create_operator(OPID::BOOL_XOR);
+		self::$bool_or = self::create_operator(OPID::BOOL_OR);
 
-		self::$_not_equal = self::create_normal_operator(_NOT_EQUAL);
-		self::$_strict_not_equal = self::create_normal_operator(_NOT_IDENTICAL);
+		self::$bitwise_and = self::create_operator(OPID::BITWISE_AND);
+		self::$bitwise_xor = self::create_operator(OPID::BITWISE_XOR);
+		self::$bitwise_or = self::create_operator(OPID::BITWISE_OR);
 
-		self::$_bitwise_and = self::create_normal_operator(_BITWISE_AND);
-		self::$_bitwise_xor = self::create_normal_operator(_BITWISE_XOR);
-		self::$_bitwise_or = self::create_normal_operator(_BITWISE_OR);
+		self::$none_coalescing = self::create_operator(OPID::NONE_COALESCING);
+		self::$ternary = self::create_operator(OPID::TERNARY);
 
-		self::$_none_coalescing = self::create_normal_operator(_NONE_COALESCING);
+		self::create_operator(OPID::ASSIGNMENT);
 
-		self::$_conditional = self::create_normal_operator(_CONDITIONAL);
+		self::create_operator(OPID::YIELD_FROM);
+		self::create_operator(OPID::YIELD);
+		self::create_operator(OPID::PRINT);
 
-		self::$_bool_and = self::create_normal_operator(_AND);
-		self::$_bool_or = self::create_normal_operator(_OR);
+		self::create_operator(OPID::LOW_BOOL_AND);
+		self::create_operator(OPID::LOW_BOOL_XOR);
+		self::create_operator(OPID::LOW_BOOL_OR);
 
+		self::make_groups();
+		self::prepare_for_tea();
+		self::prepare_for_php();
+	}
+
+	private static function make_groups()
+	{
 		// number
 		self::$number_operators = [
-			self::$_addition, self::$_subtraction, self::$_multiplication, self::$_division, self::$_remainder, self::$_exponentiation,
-			self::$_comparison
+			self::$exponentiation,
+			self::$addition,
+			self::$subtraction,
+			self::$multiplication,
+			self::$division,
+			self::$remainder,
+			self::$spaceship
 		];
 
 		// bitwise
-		self::$bitwise_operators = [self::$_bitwise_and, self::$_bitwise_xor, self::$_bitwise_or, self::$_shift_left, self::$_shift_right];
+		self::$bitwise_operators = [
+			self::$bitwise_and,
+			self::$bitwise_xor,
+			self::$bitwise_or,
+			self::$shift_left,
+			self::$shift_right
+		];
 
 		// bool
 		self::$bool_operators = [
-			self::$_bool_and, self::$_bool_or,
-			self::$_equal, self::$_strict_equal, self::$_not_equal, self::$_strict_not_equal, self::$_is,
-			self::$_lessthan, self::$_greatethan, self::$_lessthan_or_equal, self::$_greatethan_or_equal
+			self::$is,
+			self::$bool_and,
+			self::$bool_xor,
+			self::$bool_or,
+			self::$equal,
+			self::$identical,
+			self::$not_equal,
+			self::$not_identical,
+			self::$lessthan,
+			self::$greatethan,
+			self::$lessthan_or_equal,
+			self::$greatethan_or_equal
 		];
 	}
 
-	/**
-	 * 设置待渲染的目标语言符号映射和优先级
-	 * @map array [src sign => dist sign]
-	 * @precedences array [dist sign => precedence]
-	 */
-	public static function set_render_options(array $map, array $precedences)
+	// public static function set_prefix_resultant_maps(array $sign_map, array $precedence_map)
+	// {
+	// 	foreach (self::$prefix_operator_map as $sign => $operator) {
+	// 		$resultant_sign = $sign_map[$sign] ?? $sign;
+	// 		$resultant_precedence = $precedence_map[$resultant_sign] ?? null;
+	// 		if ($resultant_precedence === null) {
+	// 			throw new Exception("Unknow precedence for prefix '$resultant_sign' when render PHP programe.");
+	// 		}
+
+	// 		$operator->resultant_sign = $resultant_sign;
+	// 		$operator->resultant_precedence = $resultant_precedence;
+	// 	}
+	// }
+
+	// public static function set_normal_resultant_maps(array $sign_map, array $precedence_map)
+	// {
+	// 	foreach (self::$normal_operator_map as $sign => $operator) {
+	// 		$resultant_sign = $sign_map[$sign] ?? $sign;
+	// 		$resultant_precedence = $precedence_map[$resultant_sign] ?? null;
+	// 		if ($resultant_precedence === null) {
+	// 			throw new Exception("Unknow precedence for prefix '$resultant_sign' when render PHP programe.");
+	// 		}
+
+	// 		$operator->resultant_sign = $resultant_sign;
+	// 		$operator->resultant_precedence = $resultant_precedence;
+	// 	}
+	// }
+
+	public static function is_number_operator(Operator $operator)
 	{
-		foreach (self::$binary_op_symbol_map as $sign => $symbol) {
-			$dist_sign = $map[$sign] ?? $sign;
+		return in_array($operator, self::$number_operators, true);
+	}
 
-			if (!isset($precedences[$dist_sign])) {
-				throw new Exception("Dist precedence of '$dist_sign' not found.");
+	public static function is_bitwise_operator(Operator $operator)
+	{
+		return in_array($operator, self::$bitwise_operators, true);
+	}
+
+	public static function is_bool_operator(Operator $operator)
+	{
+		return in_array($operator, self::$bool_operators, true);
+	}
+
+	// public static function get_prefix_operator(?string $sign)
+	// {
+	// 	return self::$prefix_operator_map[$sign] ?? null;
+	// }
+
+	// public static function get_normal_operator(?string $sign)
+	// {
+	// 	return self::$normal_operator_map[$sign] ?? null;
+	// }
+
+	public static function get_tea_prefix_operator(?string $sign)
+	{
+		return self::$tea_prefix_map[$sign] ?? null;
+	}
+
+	public static function get_tea_postfix_operator(?string $sign)
+	{
+		return self::$tea_postfix_map[$sign] ?? null;
+	}
+
+	public static function get_tea_normal_operator(?string $sign)
+	{
+		return self::$tea_normal_map[$sign] ?? null;
+	}
+
+	public static function get_php_prefix_operator(?string $sign)
+	{
+		return self::$php_prefix_map[$sign] ?? null;
+	}
+
+	public static function get_php_postfix_operator(?string $sign)
+	{
+		return self::$php_postfix_map[$sign] ?? null;
+	}
+
+	public static function get_php_normal_operator(?string $sign)
+	{
+		return self::$php_normal_map[$sign] ?? null;
+	}
+
+	private static function prepare_for_tea()
+	{
+		foreach (TeaSyntax::OPERATORS as $prec => $group) {
+			foreach ($group as $id => $opt) {
+				$operator = self::$operator_map[$id] ?? null;
+				if ($operator === null) {
+					throw new Exception("Unknow operator id {$id}");
+				}
+
+				$sign = $opt[0];
+				$type = $opt[1];
+				$operator->tea_sign = $sign;
+				$operator->tea_assoc = $opt[2];
+				$operator->tea_prec = $prec;
+
+				switch ($type) {
+					case OP_PRE:
+						self::$tea_prefix_map[$sign] = $operator;
+						break;
+					case OP_POST:
+						self::$tea_postfix_map[$sign] = $operator;
+						break;
+					case OP_BIN:
+					case OP_TERNARY:
+						self::$tea_normal_map[$sign] = $operator;
+						break;
+					default:
+						throw new Exception("Unknow operator type $type");
+				}
 			}
-
-			$symbol->dist_sign = $dist_sign;
-			$symbol->dist_precedence = $precedences[$dist_sign];
 		}
 	}
 
-	public static function is_number_operator(Operator $symbol)
+	private static function prepare_for_php()
 	{
-		return in_array($symbol, self::$number_operators, true);
+		foreach (PHPSyntax::OPERATORS as $prec => $group) {
+			foreach ($group as $id => $opt) {
+				$operator = self::$operator_map[$id] ?? null;
+				if ($operator === null) {
+					throw new Exception("Unknow operator id {$id}");
+				}
+
+				$sign = $opt[0];
+				$type = $opt[1];
+				$operator->php_sign = $sign;
+				$operator->php_assoc = $opt[2];
+				$operator->php_prec = $prec;
+
+				switch ($type) {
+					case OP_PRE:
+						self::$php_prefix_map[$sign] = $operator;
+						break;
+					case OP_POST:
+						self::$php_postfix_map[$sign] = $operator;
+						break;
+					case OP_BIN:
+					case OP_TERNARY:
+						self::$php_normal_map[$sign] = $operator;
+						break;
+					default:
+						throw new Exception("Unknow operator type $type");
+				}
+			}
+		}
 	}
 
-	public static function is_bitwise_operator(Operator $symbol)
+	private static function create_operator(int $id)
 	{
-		return in_array($symbol, self::$bitwise_operators, true);
-	}
-
-	public static function is_bool_operator(Operator $symbol)
-	{
-		return in_array($symbol, self::$bool_operators, true);
-	}
-
-	public static function get_prefix_operator(?string $sign)
-	{
-		return self::$prefix_op_symbol_map[$sign] ?? null;
-	}
-
-	public static function get_normal_operator(?string $sign)
-	{
-		return self::$binary_op_symbol_map[$sign] ?? null;
-	}
-
-	private static function create_prefix_operator(string $sign)
-	{
-		return self::$prefix_op_symbol_map[$sign] = new Operator($sign, _PREFIX_OP_PRECEDENCES[$sign]);
-	}
-
-	private static function create_normal_operator(string $sign)
-	{
-		return self::$binary_op_symbol_map[$sign] = new Operator($sign, _BINARY_OP_PRECEDENCES[$sign]);
+		$op = new Operator($id);
+		self::$operator_map[$id] = $op;
+		return $op;
 	}
 }
 
+// end

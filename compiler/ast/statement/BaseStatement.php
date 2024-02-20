@@ -14,4 +14,7 @@ interface IStatement {}
 class BaseStatement extends Node implements IStatement
 {
 	public $docs;
+
+	public $belong_block;
+
 }

@@ -82,36 +82,44 @@ class PHPCoder extends TeaCoder
 		'to_string' => '__toString',
 	];
 
-	const OPERATOR_MAP = [
+	const PREFIX_OPERATOR_MAP = [
+		_NOT => '!',
+	];
+
+	const NORMAL_OPERATOR_MAP = [
 		_IS => 'instanceof',
 		_CONCAT => '.',
-		_NOT => '!',
 		_AND => '&&',
 		_OR => '||',
-		_REMAINDER => '%',
-		// _EXPONENTIATION => '**',
-		// _BITWISE_XOR => '^',
+	];
+
+	// precedences for PrefixOperation
+	const PREFIX_OPERATOR_PRECEDENCES = [
+		'!' => 5, '-' => 5, '+' => 5, '~' => 5,
 	];
 
 	// precedences for MultiOperation
-	const OPERATOR_PRECEDENCES = [
-		_VCAT => 0, 		// array concat, use function
-		// _MERGE => 0,		// array/dict merge, use function
-		_DOUBLE_COLON => 1, // cast
-		'**' => 2, 			// 幂运算符
-		'instanceof' => 3, 	// 类型
-		'*' => 4, '/' => 4, '%' => 4, 	// 算术运算符
-		'+' => 5, '-' => 5, '.' => 5,	// 算术运算符和字符串运算符
-		'<<' => 6, '>>' => 6, 			// 位运算符
-		'<' => 7, '<=' => 7, '>' => 7, '>=' => 7, 	// 比较运算符
-		'==' => 8, '!=' => 8, '===' => 8, '!==' => 8, '<=>' => 8, 	// 比较运算符
-		'&' => 9, 		// 位运算符和引用
-		'^' => 10, 		// 位运算符
-		'|' => 11, 		// 位运算符
-		'&&' => 12, 	// 逻辑运算符
-		'||' => 13, 	// 逻辑运算符
-		'??' => 14, 	// 比较运算符
-		'?' => 15,		// 三元运算符
+	const NORMAL_OPERATOR_PRECEDENCES = [
+		_ARRAY_CONCAT => 0, 	// array concat, use function
+		_EXPONENTIATION => 2, 	// arithmetic
+		_DOUBLE_COLON => 3, 	// cast
+		'instanceof' => 4, 		// type
+
+		'*' => 6, '/' => 6, '%' => 6, 	// arithmetic
+		'+' => 7, 	// arithmetic, array
+		'-' => 7, 	// arithmetic
+		// '.' => 7,			// string (prior to PHP 8.0.0)
+		'<<' => 8, '>>' => 8, 	// bitwise
+		'.' => 9,				// string PHP8.0
+		'<' => 10, '<=' => 10, '>' => 10, '>=' => 10, 	// comparison
+		'==' => 11, '!=' => 11, '===' => 11, '!==' => 11, '<=>' => 11, 	// comparison
+		'&' => 12, 		// bitwise and references
+		'^' => 13, 		// bitwise
+		'|' => 14, 		// bitwise
+		'&&' => 15, 	// logical
+		'||' => 16, 	// logical
+		'??' => 17, 	// null coalescing
+		'?' => 18,		// ternary
 	];
 
 	const PROGRAM_HEADER = '<?php';
@@ -899,7 +907,7 @@ class PHPCoder extends TeaCoder
 	{
 		foreach ($items as $k => $item) {
 			if ($item instanceof BaseExpression) {
-				$expr = $this->render_subexpression($item, OperatorFactory::$_concat);
+				$expr = $this->render_subexpression($item, OperatorFactory::$concat);
 				$items[$k] = $expr;
 			}
 			else {
@@ -1251,7 +1259,7 @@ class PHPCoder extends TeaCoder
 	{
 		$code = $node->render($this);
 
-		if ($code && $node->nullable) {
+		if ($code && $node->nullable && !$node->has_null) {
 			$code = '?' . $code;
 		}
 
@@ -1577,7 +1585,7 @@ class PHPCoder extends TeaCoder
 		$type_name = static::TYPE_MAP[$node->right->name] ?? null;
 
 		if ($type_name !== null && in_array($type_name, static::CASTABLE_TYPES, true)) {
-			$left = $this->render_subexpression($node->left, OperatorFactory::$_cast);
+			$left = $this->render_subexpression($node->left, OperatorFactory::$cast);
 			if ($node->right->name === _UINT) {
 				$code = "uint_ensure((int)$left)";
 			}
@@ -1597,7 +1605,7 @@ class PHPCoder extends TeaCoder
 
 	public function render_is_operation(IsOperation $node)
 	{
-		$left = $this->render_subexpression($node->left, OperatorFactory::$_is);
+		$left = $this->render_subexpression($node->left, OperatorFactory::$is);
 		$type_name = static::TYPE_MAP[$node->right->name] ?? null;
 
 		if ($type_name) {
@@ -1627,18 +1635,15 @@ class PHPCoder extends TeaCoder
 
 	public function render_prefix_operation(BaseExpression $node)
 	{
-		$expression = $node->expression->render($this);
-		if ($node->operator === OperatorFactory::$_bool_not) {
-			$operator = '!';
-			if ($node->expression instanceof MultiOperation) {
-				$expression = "($expression)";
-			}
-		}
-		else {
-			$operator = $node->operator->sign;
+		$operator = $node->operator;
+		$expression = $node->expression;
+
+		$expr_code = $expression->render($this);
+		if ($this->is_need_parentheses_for_operation_item($expression, $operator, true)) {
+			$expr_code = "($expr_code)";
 		}
 
-		return $operator . $expression;
+		return $this->get_operator_sign($operator) . $expr_code;
 	}
 
 	public function render_binary_operation(BinaryOperation $node)
@@ -1647,62 +1652,59 @@ class PHPCoder extends TeaCoder
 		$left = $node->left->render($this);
 		$right = $node->right->render($this);
 
-		if ($operator === OperatorFactory::$_vcat) {
+		if ($operator === OperatorFactory::$array_concat) {
 			// concat Arrays
 			// $code = sprintf('array_merge(%s, array_values(%s))', $left, $right);
 			$code = sprintf('array_merge(%s, %s)', $left, $right);
 		}
-		// elseif ($operator === OperatorFactory::$_merge) {
-		// 	// merge Arrays / Dicts
-		// 	// $code = "$right + $left"; // the order would be incorrect in some times
-		// 	$code = sprintf('array_replace(%s, %s)', $left, $right);
-		// }
-		elseif ($operator === OperatorFactory::$_remainder && $node->infered_type === TypeFactory::$_float) {
+		elseif ($operator === OperatorFactory::$array_union) {
+			// union Arrays / Dicts
+			$code = "$right + $left";
+		}
+		elseif ($operator === OperatorFactory::$remainder && $node->infered_type === TypeFactory::$_float) {
 			// use the 'fmod' function for the float arguments
 			$code = sprintf('fmod(%s, %s)', $left, $right);
 		}
 		else {
-			if ($this->is_need_parentheses_for_operation_item($node->left, $operator, false)) {
+			if ($this->is_need_parentheses_for_operation_item($node->left, $operator)) {
 				$left = "($left)";
 			}
 
-			if ($this->is_need_parentheses_for_operation_item($node->right, $operator)) {
+			if ($this->is_need_parentheses_for_operation_item($node->right, $operator, true)) {
 				$right = "($right)";
 			}
 
-			$code = sprintf('%s %s %s', $left, $operator->dist_sign, $right);
+			$code = sprintf('%s %s %s', $left, $this->get_operator_sign($operator), $right);
 		}
 
 		return $code;
 	}
 
-	protected function is_need_parentheses_for_operation_item(BaseExpression $expr, Operator $operator, bool $is_rightside = true)
+	protected function get_operator_sign(Operator $oper)
 	{
-		if ($expr instanceof MultiOperation) {
-			$sub_operator = $expr->operator;
-			if ($sub_operator->dist_precedence > $operator->dist_precedence) {
-				return true;
-			}
-			elseif ($is_rightside && $sub_operator->dist_precedence === $operator->dist_precedence) {
-				return true;
-			}
-			elseif ($sub_operator->dist_precedence === $operator->dist_precedence && $operator === OperatorFactory::$_exponentiation) {
-				// the '**' operator is right associative in PHP
-				return true;
-			}
+		return $oper->php_sign;
+	}
+
+	private function is_need_parentheses_for_operation_item(BaseExpression $expr, Operator $prev_operator, bool $right_side = false)
+	{
+		if ($expr instanceof BaseOperation) {
+			$prev_prec = $prev_operator->php_prec;
+			$curr_prec = $expr->operator->php_prec;
+			$need = ($curr_prec > $prev_prec)
+				|| (($right_side || ($prev_operator->php_assoc === OP_R)) && ($curr_prec === $prev_prec));
 		}
-		elseif ($operator === OperatorFactory::$_exponentiation && $expr instanceof UnaryOperation) {
-			// the precedence of '**' operator is higher than unary-operator in PHP
-			return true;
+		else {
+			$need = false;
 		}
 
-		return false;
+		return $need;
 	}
 
 	protected function render_subexpression(BaseExpression $expr, Operator $operator)
 	{
 		$code = $expr->render($this);
-		if ($expr instanceof MultiOperation && $expr->operator->dist_precedence >= $operator->dist_precedence) {
+		if ($expr instanceof MultiOperation
+			&& $expr->operator->php_prec >= $operator->php_prec) {
 			$code = '(' . $code . ')';
 		}
 

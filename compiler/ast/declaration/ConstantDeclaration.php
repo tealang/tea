@@ -38,6 +38,8 @@ class ConstantDeclaration extends RootDeclaration implements IConstantDeclaratio
 	use ConstantDeclarationTrait;
 
 	const KIND = 'constant_declaration';
+
+	public $is_static;
 }
 
 class ClassConstantDeclaration extends Node implements IConstantDeclaration, IClassMemberDeclaration

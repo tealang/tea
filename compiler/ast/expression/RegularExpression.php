@@ -16,6 +16,8 @@ class RegularExpression extends BaseExpression
 	public $pattern;
 	public $flags;
 
+	public $is_call_mode;
+
 	public function __construct(string $pattern, string $flags)
 	{
 		$this->pattern = $pattern;

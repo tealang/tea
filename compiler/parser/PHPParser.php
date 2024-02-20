@@ -57,21 +57,18 @@ class PHPParser extends BaseParser
 		'__toString' => 'to_string',
 	];
 
-	const BINARY_OPERATOR_MAP = [
+	const PREFIX_OPERATOR_MAP = [
+		'!' => _NOT,
+	];
+
+	const NORMAL_OPERATOR_MAP = [
 		'instanceof' => _IS,
 		'.' => _CONCAT,
 		'&&' => _AND,
 		'||' => _OR,
-		// '%' => _REMAINDER,
-		// '**' => _EXPONENTIATION,
 	];
 
-	const PREFIX_OPERATOR_MAP = [
-		'!' => _NOT,
-		'-' => '-',
-		'+' => '+',
-		'~' => '~',
-	];
+	const PREFIX_OPERATORS = ['!', '-', '+', '~'];
 
 	private const EXPRESSION_ENDINGS = [null, _PAREN_CLOSE, _BRACKET_CLOSE, _BLOCK_END, _COMMA, _SEMICOLON];
 
@@ -327,19 +324,19 @@ class PHPParser extends BaseParser
 
 					default:
 						if ($expr === null) {
-							$op_token = static::PREFIX_OPERATOR_MAP[$token] ?? $token;
-							$operator = OperatorFactory::get_prefix_operator($op_token);
+							// $op_token = static::PREFIX_OPERATOR_MAP[$token] ?? $token;
+							$operator = OperatorFactory::get_php_prefix_operator($token);
 						}
 						else {
-							$op_token = static::BINARY_OPERATOR_MAP[$token] ?? $token;
-							$operator = OperatorFactory::get_normal_operator($op_token);
+							// $op_token = static::NORMAL_OPERATOR_MAP[$token] ?? $token;
+							$operator = OperatorFactory::get_php_normal_operator($token);
 						}
 
 						if ($operator === null) {
 							return $expr;
 						}
 
-						// we dont care the precedences
+						// we don't care the precedences
 						$right_expr = $this->read_expression();
 
 						if ($expr === null) {
@@ -730,7 +727,7 @@ class PHPParser extends BaseParser
 						: TypeFactory::$_dict;
 				}
 			}
-			elseif (isset(self::PREFIX_OPERATOR_MAP[$token])) {
+			elseif (in_array($token, self::PREFIX_OPERATORS, true)) {
 				if ($token === '!') {
 					$this->read_expression(); // skip the expression when is bool
 					return TypeFactory::$_bool;
@@ -975,7 +972,7 @@ class PHPParser extends BaseParser
 		if (in_array($token_type, self::TYPING_TOKEN_TYPES)) {
 			$name = $token[1];
 			$type = $this->create_type_identifier($name, $nullable, $following_comment);
-			while ($this->skip_char_token(_UNION)) {
+			while ($this->skip_char_token(_TYPE_UNION)) {
 				$member_name = $this->expect_identifier_name();
 				$member_type = $this->create_type_identifier($member_name);
 				$type = $type->unite_type($member_type);

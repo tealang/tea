@@ -72,6 +72,8 @@ class PlainIdentifier extends Identifiable implements IType
 
 	public $generic_types;
 
+	public $lambda;
+
 	public static function create_with_symbol(Symbol $symbol)
 	{
 		$identifier = new static($symbol->name);

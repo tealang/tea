@@ -15,6 +15,11 @@ class Program extends Node
 
 	const KIND = 'program';
 
+	/**
+	 * @var BaseParser
+	 */
+	public $parser;
+
 	public $as_main_program = false;
 
 	public $is_using_coroutine = false;

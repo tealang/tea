@@ -44,7 +44,11 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 
 	public $belong_block; // aways none
 
+	public $this_class_symbol;
+
 	public $this_object_symbol;
+
+	public $define_mode;
 
 	public function __construct(?string $modifier, $name)
 	{

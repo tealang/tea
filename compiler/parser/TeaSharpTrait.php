@@ -19,10 +19,12 @@ trait TeaSharpTrait
 		switch ($token) {
 			case _TEA:
 				$node = $this->read_tea_declaration();
+				$node->label = $token;
 				break;
 
 			case _PHP:
 				$node = $this->read_php_declaration();
+				$node->label = $token;
 				break;
 
 			case _USE:
@@ -37,10 +39,9 @@ trait TeaSharpTrait
 				return;
 
 			default:
-				$node = $this->read_other_label_statement_with($token);
+				$node = $this->read_custom_label_statement_with($token);
 		}
 
-		$node->label = $token;
 		return $node;
 	}
 
@@ -116,38 +117,40 @@ trait TeaSharpTrait
 		return $declaration;
 	}
 
-	private function read_other_label_statement_with(string $label)
+	private function read_custom_label_statement_with(string $label)
 	{
 		// normal statement
 		$expression = $this->read_sharp_expression_with($label);
 		if ($expression !== null) {
 			$expression = $this->read_expression_combination($expression);
-			return new NormalStatement($expression);
-		}
-
-		if (TeaHelper::is_reserveds($label)) {
-			throw $this->new_parse_error("Cannot use a reserveds keyword '$label' as a label name.");
-		}
-
-		// labeled block
-		$next = $this->scan_token_ignore_space();
-		if ($next === _FOR) {
-			$block = $this->read_for_block($label);
-		}
-		elseif ($next === _WHILE) {
-			$block = $this->read_while_block($label);
-		}
-		// elseif ($next === _LOOP) {
-		// 	$block = $this->read_loop_block($label);
-		// }
-		elseif ($next === _SWITCH) {
-			$block = $this->read_switch_block($label);
+			$node = new NormalStatement($expression);
 		}
 		else {
-			throw $this->new_parse_error("Expected a inline statement after label #{$label}.");
+			if (TeaHelper::is_reserveds($label)) {
+				throw $this->new_parse_error("Cannot use a reserveds keyword '$label' as a label name.");
+			}
+
+			// labeled block
+			$next = $this->scan_token_ignore_space();
+			if ($next === _FOR) {
+				$node = $this->read_for_block($label);
+			}
+			elseif ($next === _WHILE) {
+				$node = $this->read_while_block($label);
+			}
+			// elseif ($next === _LOOP) {
+			// 	$node = $this->read_loop_block($label);
+			// }
+			elseif ($next === _SWITCH) {
+				$node = $this->read_switch_block($label);
+			}
+			else {
+				throw $this->new_parse_error("Expected a inline statement after label #{$label}.");
+			}
 		}
 
-		return $block;
+		$node->label = $label;
+		return $node;
 	}
 
 	protected function read_unit_declaration()

@@ -177,25 +177,24 @@ var var_without_decared = 123
 - The priority and associativity of operators vary in different programming languages.
 	Tea language attempts to simplify these rules and make them as natural as possible.
 - Regarding associativity, prefix unary operators are right-associative,
-	while binary operators (except `??` and `**` operators) are left-associative.
+	while binary operators (except the `??` operator) are left-associative.
 - When nesting ternary operators, parentheses must be used to specify the order of operations.
 	Therefore, associativity does not need to be considered.
 
 |Precedence	|	Operators							|	Notes	|
 |-----------|---------------------------------------|---------------|
 |1 			|	. [] () :: #						|	Member accessing, Element accessing, Function Call or Class New, Pipe Call, Type Casting	|
-|2			|	**									|	Exponentiation	|
-|3			|	- ~									|	Negation, Bitwise Not	|
-|4			|	* / % << >> &						|	Multiplication, Division, Remainder, Bitwise Shift Left, Bitwise Shift Right, Bitwise And	|
-|5			|	+ - \| ^  							|	Addition, Subtraction, Bitwise Or, Bitwise Xor	|
-|6			|	concat 								|	String Concat	|
-|7			|	<=> < <= > >= != !== == === is  	|	Comparisons	|
-|8			|	not 								|	Logical Not	|
-|9			|	and 								|	Logical And	|
-|10			|	or 									|	Logical Or	|
-|11			|	??									|	None Coalescing	|
-|12			|	condition ? exp1 : exp2 			|	Ternary	|
-|13  		|	= *= /= += -= .= &= \|= ^= <<= >>= 	|	Assignments	|
+|2			|	- ~									|	Negation, Bitwise Not	|
+|3			|	* / % << >> &						|	Multiplication, Division, Remainder, Bitwise Shift Left, Bitwise Shift Right, Bitwise And	|
+|4			|	+ - \| ^  							|	Addition, Subtraction, Bitwise Or, Bitwise Xor	|
+|5			|	concat 								|	String Concat	|
+|6			|	<=> < <= > >= != !== == === is  	|	Comparisons	|
+|7			|	not 								|	Logical Not	|
+|8			|	and 								|	Logical And	|
+|9			|	or 									|	Logical Or	|
+|10			|	??									|	None Coalescing	|
+|11			|	condition ? exp1 : exp2 			|	Ternary	|
+|12  		|	= *= /= += -= .= &= \|= ^= <<= >>= 	|	Assignments	|
 
 ```tea
 // The concatenation operator is used for joining strings or arrays.
@@ -331,12 +330,12 @@ public demo_function_with_callbacks(some String, success (message String) String
 var ret1 = demo_function_with_a_return_type('some data')
 
 // Call with callbacks
-var ret2 = demo_function_with_callbacks('some data') -> success(message) {
+var ret2 = demo_function_with_callbacks('some data', (message) => {
 	echo message
-	return 'some return data'
-} -> failure(error) {
+	return 'Cool!'
+}, (error) => {
 	echo error
-}
+})
 ```
 
 ---

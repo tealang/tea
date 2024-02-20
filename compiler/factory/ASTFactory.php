@@ -47,6 +47,8 @@ class ASTFactory
 	 */
 	private $block;
 
+	private $unit_path_symbol;
+
 	public static function init_ast_system()
 	{
 		TypeFactory::init();
