@@ -235,6 +235,7 @@ const __AUTOLOADS = [
 	'Tea\LambdaExpression' => 'ast/expression/LambdaExpression.php',
 	'Tea\CoroutineBlock' => 'ast/expression/LambdaExpression.php',
 	'Tea\ILiteral' => 'ast/expression/Literal.php',
+	'Tea\LiteralTrait' => 'ast/expression/Literal.php',
 	'Tea\LiteralTraitWithValue' => 'ast/expression/Literal.php',
 	'Tea\NoneLiteral' => 'ast/expression/Literal.php',
 	'Tea\StringLiteral' => 'ast/expression/Literal.php',

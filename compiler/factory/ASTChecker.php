@@ -259,13 +259,13 @@ class ASTChecker
 		}
 
 		if ($value instanceof BinaryOperation) {
-			if ($value->operator === OperatorFactory::$concat) {
+			if ($value->operator->is(OPID::CONCAT)) {
 				$left_type = $this->infer_expression($value->left);
 				if ($left_type instanceof ArrayType) {
 					throw $this->new_syntax_error("Array concat operation cannot use as a compile-time value", $value);
 				}
 			}
-			elseif ($value->operator === OperatorFactory::$array_union) {
+			elseif ($value->operator->is(OPID::ARRAY_UNION)) {
 				throw $this->new_syntax_error("Array/Dict union operation cannot use for constant value", $value);
 			}
 		}
@@ -1526,9 +1526,9 @@ class ASTChecker
 			case RegularExpression::KIND:
 				$infered_type = $this->infer_regular_expression($node);
 				break;
-			case ReferenceOperation::KIND:
-				$infered_type = $this->infer_expression($node->identifier);
-				break;
+			// case ReferenceOperation::KIND:
+			// 	$infered_type = $this->infer_expression($node->identifier);
+			// 	break;
 			// case RelayExpression::KIND:
 			// 	$infered_type = $this->infer_relay_expression($node);
 			// 	break;
@@ -1658,7 +1658,7 @@ class ASTChecker
 			$this->assert_math_operable($left_type, $node->left);
 			$this->assert_math_operable($right_type, $node->right);
 
-			if ($operator === OperatorFactory::$division || $left_type === TypeFactory::$_float || $right_type === TypeFactory::$_float) {
+			if ($operator->is(OPID::DIVISION) || $left_type === TypeFactory::$_float || $right_type === TypeFactory::$_float) {
 				$node->infered_type = TypeFactory::$_float;
 			}
 			elseif ($left_type === TypeFactory::$_int || $right_type === TypeFactory::$_int) {
@@ -1673,7 +1673,7 @@ class ASTChecker
 
 			// assign type assertion for and-operation
 			// uses for assert type in if-block/conditional-expression
-			if ($operator === OperatorFactory::$bool_and) {
+			if ($operator->is(OPID::BOOL_AND)) {
 				if ($node->left instanceof BinaryOperation and $node->left->type_assertion) {
 					$node->type_assertion = $node->left->type_assertion;
 				}
@@ -1682,7 +1682,7 @@ class ASTChecker
 				}
 			}
 		}
-		elseif ($operator === OperatorFactory::$concat) {
+		elseif ($operator->is(OPID::CONCAT)) {
 			// String or Array
 			if ($left_type instanceof ArrayType) {
 				$this->assert_type_compatible($left_type, $right_type, $node->right, _CONCAT);
@@ -1697,7 +1697,7 @@ class ASTChecker
 				$node->infered_type = TypeFactory::$_string;
 			}
 		}
-		elseif ($operator === OperatorFactory::$array_union) {
+		elseif ($operator->is(OPID::ARRAY_UNION)) {
 			// Array or Dict
 			if (!$left_type instanceof ArrayType && !$left_type instanceof DictType) {
 				throw $this->new_syntax_error("'union' operation just support Array/Dict type targets", $node);
@@ -1710,7 +1710,8 @@ class ASTChecker
 			$node->infered_type = $this->reduce_types([$left_type, $right_type]);
 		}
 		else {
-			throw $this->new_syntax_error("Unknow operator: '{$node->operator->sign}'", $node);
+			$sign = $node->operator->get_debug_sign();
+			throw $this->new_syntax_error("Unknow operator: {$sign}", $node);
 		}
 
 		return $node->infered_type;
@@ -1758,11 +1759,11 @@ class ASTChecker
 	{
 		$expr_type = $this->infer_expression($node->expression);
 
-		if ($node->operator === OperatorFactory::$bool_not) {
+		if ($node->operator->is(OPID::BOOL_NOT)) {
 			$this->assert_bool_operable($expr_type, $node->expression);
 			$infered = TypeFactory::$_bool;
 		}
-		elseif ($node->operator === OperatorFactory::$negation) {
+		elseif ($node->operator->is(OPID::NEGATION)) {
 			$this->assert_math_operable($expr_type, $node->expression);
 
 			// if is UInt or contais UInt, it must be became to Int after negation
@@ -1778,17 +1779,18 @@ class ASTChecker
 				$infered = $expr_type;
 			}
 		}
-		elseif ($node->operator === OperatorFactory::$reference) {
+		elseif ($node->operator->is(OPID::REFERENCE)) {
 			$infered = $expr_type;
 		}
-		elseif ($node->operator === OperatorFactory::$bitwise_not) {
+		elseif ($node->operator->is(OPID::BITWISE_NOT)) {
 			$this->assert_bitwise_operable($expr_type, $node->expression);
 			$infered = $expr_type === TypeFactory::$_uint || $expr_type === TypeFactory::$_int || $expr_type === TypeFactory::$_float
 				? TypeFactory::$_int
 				: $expr_type;
 		}
 		else {
-			throw $this->new_syntax_error("Unknow operator: '{$node->operator->sign}'", $node);
+			$sign = $node->operator->get_debug_sign();
+			throw $this->new_syntax_error("Unknow operator: {$sign}", $node);
 		}
 
 		return $infered;

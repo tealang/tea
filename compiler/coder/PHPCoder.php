@@ -1585,7 +1585,7 @@ class PHPCoder extends TeaCoder
 		$type_name = static::TYPE_MAP[$node->right->name] ?? null;
 
 		if ($type_name !== null && in_array($type_name, static::CASTABLE_TYPES, true)) {
-			$left = $this->render_subexpression($node->left, OperatorFactory::$cast);
+			$left = $this->render_subexpression($node->left, $node->operator);
 			if ($node->right->name === _UINT) {
 				$code = "uint_ensure((int)$left)";
 			}
@@ -1605,7 +1605,7 @@ class PHPCoder extends TeaCoder
 
 	public function render_is_operation(IsOperation $node)
 	{
-		$left = $this->render_subexpression($node->left, OperatorFactory::$is);
+		$left = $this->render_subexpression($node->left, $node->operator);
 		$type_name = static::TYPE_MAP[$node->right->name] ?? null;
 
 		if ($type_name) {
@@ -1652,16 +1652,16 @@ class PHPCoder extends TeaCoder
 		$left = $node->left->render($this);
 		$right = $node->right->render($this);
 
-		if ($operator === OperatorFactory::$array_concat) {
+		if ($operator->is(OPID::ARRAY_CONCAT)) {
 			// concat Arrays
 			// $code = sprintf('array_merge(%s, array_values(%s))', $left, $right);
 			$code = sprintf('array_merge(%s, %s)', $left, $right);
 		}
-		elseif ($operator === OperatorFactory::$array_union) {
+		elseif ($operator->is(OPID::ARRAY_UNION)) {
 			// union Arrays / Dicts
 			$code = "$right + $left";
 		}
-		elseif ($operator === OperatorFactory::$remainder && $node->infered_type === TypeFactory::$_float) {
+		elseif ($operator->is(OPID::REMAINDER) && $node->infered_type === TypeFactory::$_float) {
 			// use the 'fmod' function for the float arguments
 			$code = sprintf('fmod(%s, %s)', $left, $right);
 		}

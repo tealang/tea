@@ -11,9 +11,6 @@ namespace Tea;
 
 class Operator
 {
-	/**
-	 * @var int
-	 */
 	private $id;
 
 	public $tea_sign;
@@ -32,6 +29,11 @@ class Operator
 	public function is(int $id)
 	{
 		return $this->id === $id;
+	}
+
+	public function get_debug_sign()
+	{
+		return $this->tea_sign ?? $this->php_sign ?? $this->id;
 	}
 }
 

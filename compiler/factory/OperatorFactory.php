@@ -11,61 +11,49 @@ namespace Tea;
 
 class OperatorFactory
 {
-	static $new;
-	static $clone;
-
-	static $reference;
-	static $identity;
-	static $negation;
-	static $bitwise_not;
-	static $bool_not;
-
-	static $pre_increment;
-	static $pre_decrement;
-	static $post_increment;
-	static $post_decrement;
-
-	static $dot;
 	static $cast;
-	static $pipe;
+	static $concat;
+	static $array_concat;
+	static $none_coalescing;
+	static $ternary; // exp0 ? exp1 : exp2, or exp0 ?: exp1
 
 	static $exponentiation;
+	static $identity;
+	static $negation;
+	static $pre_increment;
+	static $post_increment;
+	static $pre_decrement;
+	static $post_decrement;
+	static $addition;
+	static $subtraction;
 	static $multiplication;
 	static $division;
 	static $remainder;
-	static $addition;
-	static $subtraction;
+	static $spaceship;
 
-	static $concat;
-	static $array_concat;
-	static $array_union;
+	static $bitwise_not;
+	static $bitwise_and;
+	static $bitwise_xor;
+	static $bitwise_or;
+	static $shift_left;
+	static $shift_right;
 
-	static $is;
-
-	static $equal;
-	static $identical;
-	static $not_equal;
-	static $not_identical;
 	static $lessthan;
 	static $greatethan;
 	static $lessthan_or_equal;
 	static $greatethan_or_equal;
-	static $spaceship;
-
-	static $shift_left;
-	static $shift_right;
-	static $bitwise_and;
-	static $bitwise_xor;
-	static $bitwise_or;
-
+	static $equal;
+	static $identical;
+	static $not_equal;
+	static $not_identical;
+	static $is;
+	static $bool_not;
 	static $bool_and;
-	static $bool_xor;
+	// static $bool_xor;
 	static $bool_or;
-
-	static $none_coalescing;
-	static $ternary; // exp0 ? exp1 : exp2, or exp0 ?: exp1
-
-	static $assignment;
+	static $low_bool_and;
+	static $low_bool_xor;
+	static $low_bool_or;
 
 	private static $operator_map = [];
 
@@ -77,32 +65,29 @@ class OperatorFactory
 	private static $php_postfix_map = [];
 	private static $php_normal_map = [];
 
-	// private static $prefix_operator_map = [];
-	// private static $normal_operator_map = [];
-
 	private static $number_operators;
 	private static $bitwise_operators;
 	private static $bool_operators;
 
 	public static function init()
 	{
-		self::$new = self::create_operator(OPID::NEW);
-		self::$clone = self::create_operator(OPID::CLONE);
+		self::create_operator(OPID::NEW);
+		self::create_operator(OPID::CLONE);
 
-		self::$dot = self::create_operator(OPID::DOT);
+		self::create_operator(OPID::DOT);
 		self::$cast = self::create_operator(OPID::CAST);
-		self::$pipe = self::create_operator(OPID::PIPE);
+		self::create_operator(OPID::PIPE);
 
-		self::$reference = self::create_operator(OPID::REFERENCE);
+		self::create_operator(OPID::REFERENCE);
 		self::$identity = self::create_operator(OPID::IDENTITY);
 		self::$negation = self::create_operator(OPID::NEGATION);
 		self::$bitwise_not = self::create_operator(OPID::BITWISE_NOT);
 		self::$bool_not = self::create_operator(OPID::BOOL_NOT);
 
-		self::create_operator(OPID::PRE_INCREMENT);
-		self::create_operator(OPID::PRE_DECREMENT);
-		self::create_operator(OPID::POST_INCREMENT);
-		self::create_operator(OPID::POST_DECREMENT);
+		self::$pre_increment = self::create_operator(OPID::PRE_INCREMENT);
+		self::$post_increment = self::create_operator(OPID::PRE_DECREMENT);
+		self::$pre_decrement = self::create_operator(OPID::POST_INCREMENT);
+		self::$post_decrement = self::create_operator(OPID::POST_DECREMENT);
 
 		self::$exponentiation = self::create_operator(OPID::EXPONENTIATION);
 
@@ -115,7 +100,7 @@ class OperatorFactory
 
 		self::$concat = self::create_operator(OPID::CONCAT);
 		self::$array_concat = self::create_operator(OPID::ARRAY_CONCAT);
-		self::$array_union = self::create_operator(OPID::ARRAY_UNION);
+		self::create_operator(OPID::ARRAY_UNION);
 
 		self::$shift_left = self::create_operator(OPID::SHIFT_LEFT);
 		self::$shift_right = self::create_operator(OPID::SHIFT_RIGHT);
@@ -148,9 +133,9 @@ class OperatorFactory
 		self::create_operator(OPID::YIELD);
 		self::create_operator(OPID::PRINT);
 
-		self::create_operator(OPID::LOW_BOOL_AND);
-		self::create_operator(OPID::LOW_BOOL_XOR);
-		self::create_operator(OPID::LOW_BOOL_OR);
+		self::$low_bool_and = self::create_operator(OPID::LOW_BOOL_AND);
+		self::$low_bool_xor = self::create_operator(OPID::LOW_BOOL_XOR);
+		self::$low_bool_or = self::create_operator(OPID::LOW_BOOL_OR);
 
 		self::make_groups();
 		self::prepare_for_tea();
@@ -162,6 +147,12 @@ class OperatorFactory
 		// number
 		self::$number_operators = [
 			self::$exponentiation,
+			self::$identity,
+			self::$negation,
+			self::$pre_increment,
+			self::$post_increment,
+			self::$pre_decrement,
+			self::$post_decrement,
 			self::$addition,
 			self::$subtraction,
 			self::$multiplication,
@@ -172,6 +163,7 @@ class OperatorFactory
 
 		// bitwise
 		self::$bitwise_operators = [
+			self::$bitwise_not,
 			self::$bitwise_and,
 			self::$bitwise_xor,
 			self::$bitwise_or,
@@ -181,48 +173,24 @@ class OperatorFactory
 
 		// bool
 		self::$bool_operators = [
-			self::$is,
-			self::$bool_and,
-			self::$bool_xor,
-			self::$bool_or,
+			self::$lessthan,
+			self::$greatethan,
+			self::$lessthan_or_equal,
+			self::$greatethan_or_equal,
 			self::$equal,
 			self::$identical,
 			self::$not_equal,
 			self::$not_identical,
-			self::$lessthan,
-			self::$greatethan,
-			self::$lessthan_or_equal,
-			self::$greatethan_or_equal
+			self::$is,
+			self::$bool_not,
+			self::$bool_and,
+			// self::$bool_xor,
+			self::$bool_or,
+			self::$low_bool_and,
+			self::$low_bool_xor,
+			self::$low_bool_or,
 		];
 	}
-
-	// public static function set_prefix_resultant_maps(array $sign_map, array $precedence_map)
-	// {
-	// 	foreach (self::$prefix_operator_map as $sign => $operator) {
-	// 		$resultant_sign = $sign_map[$sign] ?? $sign;
-	// 		$resultant_precedence = $precedence_map[$resultant_sign] ?? null;
-	// 		if ($resultant_precedence === null) {
-	// 			throw new Exception("Unknow precedence for prefix '$resultant_sign' when render PHP programe.");
-	// 		}
-
-	// 		$operator->resultant_sign = $resultant_sign;
-	// 		$operator->resultant_precedence = $resultant_precedence;
-	// 	}
-	// }
-
-	// public static function set_normal_resultant_maps(array $sign_map, array $precedence_map)
-	// {
-	// 	foreach (self::$normal_operator_map as $sign => $operator) {
-	// 		$resultant_sign = $sign_map[$sign] ?? $sign;
-	// 		$resultant_precedence = $precedence_map[$resultant_sign] ?? null;
-	// 		if ($resultant_precedence === null) {
-	// 			throw new Exception("Unknow precedence for prefix '$resultant_sign' when render PHP programe.");
-	// 		}
-
-	// 		$operator->resultant_sign = $resultant_sign;
-	// 		$operator->resultant_precedence = $resultant_precedence;
-	// 	}
-	// }
 
 	public static function is_number_operator(Operator $operator)
 	{
@@ -238,16 +206,6 @@ class OperatorFactory
 	{
 		return in_array($operator, self::$bool_operators, true);
 	}
-
-	// public static function get_prefix_operator(?string $sign)
-	// {
-	// 	return self::$prefix_operator_map[$sign] ?? null;
-	// }
-
-	// public static function get_normal_operator(?string $sign)
-	// {
-	// 	return self::$normal_operator_map[$sign] ?? null;
-	// }
 
 	public static function get_tea_prefix_operator(?string $sign)
 	{

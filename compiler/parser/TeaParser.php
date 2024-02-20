@@ -1627,15 +1627,15 @@ class TeaParser extends BaseParser
 			}
 		}
 
-		if ($operator === OperatorFactory::$is) {
+		if ($operator->is(OPID::IS)) {
 			$this->scan_token_ignore_empty(); // skip operator
 			$expression = $this->read_is_operation($expression);
 		}
-		elseif ($operator === OperatorFactory::$ternary) {
+		elseif ($operator->is(OPID::TERNARY)) {
 			$this->scan_token_ignore_empty(); // skip operator
 			$expression = $this->read_ternary_expression_with($expression);
 		}
-		elseif ($operator === OperatorFactory::$none_coalescing) {
+		elseif ($operator->is(OPID::NONE_COALESCING)) {
 			$this->scan_token_ignore_empty(); // skip operator
 			$expression = $this->read_none_coalescing_with($expression, $operator);
 		}
