@@ -9,7 +9,11 @@
 
 namespace Tea;
 
-const _PATTERN_MODIFIER_REGEX = '/^[imu]+$/';
+const _BUILTIN_TYPE_NAMES = [
+	_UNIONTYPE, _METATYPE, _ANY, _VOID, _TYPE_NONE,
+	_STRING, _INT, _UINT, _FLOAT, _BOOL, _DICT, _ARRAY,
+	_ITERABLE, _OBJECT, _XVIEW, _REGEX, _CALLABLE, _NAMESPACE,
+];
 
 const _STRUCTURE_KEYS = [
 	_VAR, _UNSET,
@@ -22,7 +26,7 @@ const _ACCESSING_MODIFIERS = [_MASKED, _PUBLIC, _INTERNAL, _PROTECTED, _PRIVATE]
 const _BUILTIN_IDENTIFIERS = [_THIS, _SUPER, TeaParser::VAL_NONE, _VAL_TRUE, _VAL_FALSE, _UNIT_PATH];
 
 const _OTHER_RESERVEDS = [
-	_CONSTRUCT, _DESTRUCT,
+	// _CONSTRUCT, _DESTRUCT,
 	_STATIC,
 	_ELSEIF, _ELSE, _CATCH, _FINALLY,
 	// _WHEN,
@@ -38,6 +42,8 @@ define('_TEA_RESERVEDS', array_merge(
 
 class TeaHelper
 {
+	private const MODIFIER_PATTERN = '/^[imu]+$/';
+
 	/**
 	 * Check token is a number
 	 * return the number base type when is a number format
@@ -107,42 +113,27 @@ class TeaHelper
 
 	static function is_identifier_name(?string $token)
 	{
-		return preg_match('/^_*[a-z][a-z0-9_]*$/i', $token);
+		return preg_match('/^_{0,2}[a-z][a-z0-9_]*$/i', $token);
 	}
 
-	static function is_declarable_variable_name(?string $token)
+	static function is_normal_variable_name(?string $token)
 	{
-		return (preg_match('/^_?[a-z][a-z0-9_]*$/', $token) && !self::is_reserveds($token)) || $token === '_';
+		return (preg_match('/^_{0,2}[a-z][a-z0-9_]*$/', $token) && !self::is_reserveds($token)) || $token === '_';
 	}
 
-	static function is_constant_name(?string $token)
+	static function is_normal_constant_name(?string $token)
 	{
-		return preg_match('/^_*[A-Z][A-Z0-9_]+$/', $token);
+		return preg_match('/^_{0,2}[A-Z][A-Z0-9_]+$/', $token);
 	}
 
-	static function is_function_name(?string $token)
+	static function is_normal_function_name(?string $token)
 	{
-		return preg_match('/^_?[a-z][a-z0-9_]*$/', $token);
+		return preg_match('/^_{0,2}[a-z][a-z0-9_]*$/', $token);
 	}
 
-	static function is_strict_less_function_name(?string $token)
-	{
-		return preg_match('/^[_a-z]+[a-z0-9_]*$/i', $token);
-	}
-
-	static function is_classkindred_name(?string $token)
+	static function is_normal_classkindred_name(?string $token)
 	{
 		return preg_match('/^[A-Z][a-zA-Z0-9_]*$/', $token);
-	}
-
-	static function is_interface_marked_name(string $name)
-	{
-		return ($name[0] === 'I' && preg_match('/^I[A-Z]/', $name)) || substr($name, -9) === 'Interface';
-	}
-
-	static function is_type_name(?string $token)
-	{
-		return self::is_builtin_type_name($token) || self::is_classkindred_name($token);
 	}
 
 	static function is_builtin_type_name(?string $token)
@@ -167,6 +158,8 @@ class TeaHelper
 
 	static function is_regex_flags($token)
 	{
-		return preg_match(_PATTERN_MODIFIER_REGEX, $token);
+		return preg_match(self::MODIFIER_PATTERN, $token);
 	}
 }
+
+// end

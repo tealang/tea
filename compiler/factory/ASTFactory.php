@@ -308,7 +308,7 @@ class ASTFactory
 
 	private function auto_declare_for_assigning_identifier(BaseExpression $identifier)
 	{
-		if (!TeaHelper::is_declarable_variable_name($identifier->name)) {
+		if (!TeaHelper::is_normal_variable_name($identifier->name)) {
 			throw $this->parser->new_parse_error("Identifier '$identifier->name' not a valid variable name");
 		}
 

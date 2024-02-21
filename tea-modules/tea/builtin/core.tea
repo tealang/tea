@@ -263,11 +263,11 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array? {
 // 考虑禁止在调用函数的参数中改变数据（需要推断出可能改变数据的函数，或直接禁止参数带函数调用），纯表达式?
 // 部分实现中，参数编译后顺序有变化，使用时应避免当前字符串被delimiter表达式所改变
 
-// public IShareAble {
+// public interface IShareAble {
 // 	vshare() Object
 // }
 
-// public ICloneAble {
+// public interface ICloneAble {
 // 	vclone() Object
 // }
 
@@ -401,7 +401,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array? {
 
 #tea Iterable {} // accept Iterator
 
-public IView {}
+public interface IView {}
 
 #php interface Iterator {
 	current() Any

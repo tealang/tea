@@ -48,11 +48,6 @@ const
 	_ITERABLE = 'Iterable', _DICT = 'Dict', _ARRAY = 'Array', // 'Pair', 'Matrix', 'Tensor'
 	_OBJECT = 'Object', _XVIEW = 'XView', _REGEX = 'Regex',
 	_CALLABLE = 'Callable', _NAMESPACE = 'Namespace', // _CLASS = 'Class',
-	_BUILTIN_TYPE_NAMES = [
-		_UNIONTYPE, _METATYPE, _ANY, _VOID, _TYPE_NONE,
-		_STRING, _INT, _UINT, _FLOAT, _BOOL, _DICT, _ARRAY,
-		_ITERABLE, _OBJECT, _XVIEW, _REGEX, _CALLABLE, _NAMESPACE,
-	],
 
 	// dot signs of compound types
 	_DOT_SIGN_ARRAY = 'Array', _DOT_SIGN_DICT = 'Dict', _DOT_SIGN_METATYPE = 'Type',

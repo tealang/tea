@@ -38,7 +38,7 @@ class HeaderParser extends TeaParser
 			return $this->read_root_statement($leading, $docs);
 		}
 		elseif (TeaHelper::is_modifier($token)) {
-			$node = $this->read_declaration_with_modifier($token);
+			$node = $this->read_header_declaration_with_modifier($token);
 		}
 		else {
 			throw $this->new_unexpected_error();
@@ -53,7 +53,7 @@ class HeaderParser extends TeaParser
 		return $node;
 	}
 
-	protected function read_declaration_with_modifier(string $modifier)
+	protected function read_header_declaration_with_modifier(string $modifier)
 	{
 		$token = $this->scan_token_ignore_space();
 
