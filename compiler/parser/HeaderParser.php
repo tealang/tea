@@ -37,6 +37,9 @@ class HeaderParser extends TeaParser
 			$this->skip_current_line();
 			return $this->read_root_statement($leading, $docs);
 		}
+		elseif ($token === _RUNTIME) {
+			$node = $this->read_runtime_declaration();
+		}
 		elseif (TeaHelper::is_modifier($token)) {
 			$node = $this->read_header_declaration_with_modifier($token);
 		}

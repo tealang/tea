@@ -2,34 +2,34 @@
 
 #unit tests\examples
 
-#php const M_PI Float
+runtime const M_PI Float
 
-#php func imagecreatetruecolor(width Int, height Int) Any
+runtime func imagecreatetruecolor(width Int, height Int) Any
 
-#php func imagecolorallocatealpha(image Any, r Int, g Int, b Int, a Int) Int
+runtime func imagecolorallocatealpha(image Any, r Int, g Int, b Int, a Int) Int
 
-#php func imagefill(image Any, x Int, y Int, color Int) Bool
+runtime func imagefill(image Any, x Int, y Int, color Int) Bool
 
-#php func imagerotate(image Any, angle Float, background_color Int) Any
+runtime func imagerotate(image Any, angle Float, background_color Int) Any
 
-#php func imagesx(image Any) Int
+runtime func imagesx(image Any) Int
 
-#php func imagesy(image Any) Int
+runtime func imagesy(image Any) Int
 
-#php func imagettfbbox(size Float, angle Float, fontfile String, text String) Int.Array
+runtime func imagettfbbox(size Float, angle Float, fontfile String, text String) Int.Array
 
-#php func imagettftext(image Any, size Float, angle Float, x Int, y Int, color Int, fontfile String, text String) Int.Array
+runtime func imagettftext(image Any, size Float, angle Float, x Int, y Int, color Int, fontfile String, text String) Int.Array
 
-#php func imagepng(image Any, to String = none, quality Int = -1, filters Int = #default) Bool
+runtime func imagepng(image Any, to String = none, quality Int = -1, filters Int = #default) Bool
 
-#php func imagedestroy(image Any)
+runtime func imagedestroy(image Any)
 
-#php class PDOStatement {
+runtime class PDOStatement {
 	fetch(fetch_style Int = #default) String.Dict
 	fetchAll(fetch_style Int = #default) String.Dict.Array
 }
 
-#php class PDO {
+runtime class PDO {
 	internal const FETCH_ASSOC Int
 	internal const FETCH_COLUMN Int
 	construct(dsn String, username String = #default, passwd String = #default, options Dict = #default)
@@ -45,7 +45,7 @@ public class SQLitePDO: PDO {
 	construct(filename String)
 }
 
-#php func pi() Float
+runtime func pi() Float
 
 public class ListView: IBaseView {
 	get_subviews() Array

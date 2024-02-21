@@ -435,20 +435,19 @@ DemoPublicClass.say_hello_with_static()
 
 ## 13. Using PHP Libraries without Namespaces
 
-- Declare PHP constants, functions, classes, interfaces,
-	and superglobal variables without namespaces using the `#php` tag for use in Tea language programs.
+- Declare PHP constants, functions, classes, interfaces without namespaces using the `runtime` modifier for use in Tea language programs.
 - Both PHP built-in and user-defined elements are supported.
 - For user-defined elements, you need to add the relevant loading statements yourself.
 
 ```tea
 // Declaring a PHP built-in constant
-#php PHP_VERSION String
+runtime const PHP_VERSION String
 
 // Declaring a PHP built-in function
-#php phpinfo() Void
+runtime func phpinfo() Void
 
 // Declaring a PHP built-in class
-#php BadFunctionCallException: Exception {
+runtime class BadFunctionCallException: Exception {
 	public getCode() Int
 	public getMessage() String
 }

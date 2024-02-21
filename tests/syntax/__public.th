@@ -19,7 +19,7 @@ public class PHPClassInMixed1 {
 
 public func php_get_num() Int
 
-#php func range(start Int, end Int, step Int = 1) Array
+runtime func range(start Int, end Int, step Int = 1) Array
 
 public func fn0(str Any) String
 

@@ -25,19 +25,21 @@ const _ACCESSING_MODIFIERS = [_MASKED, _PUBLIC, _INTERNAL, _PROTECTED, _PRIVATE]
 
 const _BUILTIN_IDENTIFIERS = [_THIS, _SUPER, TeaParser::VAL_NONE, _VAL_TRUE, _VAL_FALSE, _UNIT_PATH];
 
-const _OTHER_RESERVEDS = [
-	// _CONSTRUCT, _DESTRUCT,
-	_STATIC,
-	_ELSEIF, _ELSE, _CATCH, _FINALLY,
-	// _WHEN,
-];
-
-define('_TEA_RESERVEDS', array_merge(
-	_BUILTIN_TYPE_NAMES,
+define('_CASE_SENSITIVE_RESERVEDS', array_merge(
 	_STRUCTURE_KEYS,
 	_ACCESSING_MODIFIERS,
 	_BUILTIN_IDENTIFIERS,
-	_OTHER_RESERVEDS
+	[
+		// _CONSTRUCT, _DESTRUCT,
+		_STATIC,
+		_ELSEIF, _ELSE, _CATCH, _FINALLY,
+		// _WHEN,
+	]
+));
+
+define('_CASE_INSENSITIVE_RESERVEDS', array_merge(
+	_BUILTIN_TYPE_NAMES,
+	[_UNIT_PATH],
 ));
 
 class TeaHelper
@@ -86,9 +88,10 @@ class TeaHelper
 		return $token === _SPACE || $token === _TAB || $token === LF || $token === _CR;
 	}
 
-	static function is_reserveds($token)
+	static function is_reserved($token)
 	{
-		return in_array(strtolower($token), _TEA_RESERVEDS, true);
+		return in_array($token, _CASE_INSENSITIVE_RESERVEDS, true)
+			|| in_array(strtolower($token), _CASE_SENSITIVE_RESERVEDS, true);
 	}
 
 	static function is_modifier($token)
@@ -118,7 +121,8 @@ class TeaHelper
 
 	static function is_normal_variable_name(?string $token)
 	{
-		return (preg_match('/^_{0,2}[a-z][a-z0-9_]*$/', $token) && !self::is_reserveds($token)) || $token === '_';
+		return (preg_match('/^_{0,2}[a-z][a-z0-9_]*$/', $token)
+			&& !self::is_reserved($token)) || $token === '_';
 	}
 
 	static function is_normal_constant_name(?string $token)

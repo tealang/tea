@@ -163,6 +163,7 @@ class ASTChecker
 				$this->check_function_declaration($node);
 				break;
 
+			case BuiltinTypeClassDeclaration::KIND:
 			case ClassDeclaration::KIND:
 			case TraitDeclaration::KIND:
 			case InterfaceDeclaration::KIND:

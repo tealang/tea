@@ -555,7 +555,8 @@ class Compiler
 		foreach ($this->unit->symbols as $symbol) {
 			$declaration = $symbol->declaration;
 			$belong_program = $declaration->program;
-			if (isset($declaration->modifier) && $declaration->modifier === _PUBLIC
+			$modifier = $declaration->modifier ?? null;
+			if (($modifier === _PUBLIC || $modifier === _RUNTIME)
 				&& $belong_program->unit === $this->unit
 				&& !$belong_program->is_external
 			) {
@@ -577,7 +578,7 @@ class Compiler
 		$dist_file_path = substr($dist_file_path, $this->unit_path_prefix_len);
 
 		foreach ($program->declarations as $node) {
-			if ($node instanceof ClassKindredDeclaration && !$node instanceof BuiltinTypeClassDeclaration && $node->label !== _PHP) {
+			if ($node instanceof ClassKindredDeclaration && !$node instanceof BuiltinTypeClassDeclaration && !$node->is_runtime) {
 				$name = $name_prefix . $node->name;
 				$this->autoloads_map[$name] = $dist_file_path;
 

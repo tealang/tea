@@ -31,11 +31,12 @@ const
 	_UNIT_OPTIONAL_KEYS = ['type', 'loader'],
 
 	// system labels
-	_TEA = 'tea', _PHP  = 'php',
-	_UNIT = 'unit', _USE = 'use',
+	// _PHP  = 'php',
+	_UNIT = 'unit',
+	_USE = 'use',
 	_MAIN = 'main',
-	_TEXT = 'text', _DEFAULT = 'default',
-	_ASYNC = 'async', _AWAIT = 'await',
+	_TEXT = 'text',
+	_DEFAULT = 'default',
 
 	// builtin types
 	_INVALIDABLE_SIGN = '?',
@@ -112,9 +113,11 @@ const
 	_ECHO = 'echo',
 	_RETURN = 'return', _EXIT = 'exit', _BREAK = 'break', _CONTINUE = 'continue', _THROW = 'throw',
 	// _WHEN = 'when',
+	// _ASYNC = 'async', _AWAIT = 'await',
 	_STATIC = 'static', _FINAL = 'final', _MASKED = 'masked',
+	_RUNTIME = 'runtime',
 	_PUBLIC = 'public', _INTERNAL = 'internal', _PROTECTED = 'protected', _PRIVATE = 'private',
-	_CLASS = 'class', _INTERFACE = 'interface', _TRAIT = 'trait', _ENUM = 'enum', _FUNC = 'func', _CONST = 'const',
+	_TYPE = 'type', _CLASS = 'class', _INTERFACE = 'interface', _TRAIT = 'trait', _ENUM = 'enum', _FUNC = 'func', _CONST = 'const',
 	_ABSTRACT = 'abstract',
 	_THIS = 'this', _SUPER = 'super', _CONSTRUCT = 'construct', _DESTRUCT = 'destruct';
 

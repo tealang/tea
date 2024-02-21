@@ -73,6 +73,9 @@ class TeaParser extends BaseParser
 		elseif (TeaHelper::is_modifier($token)) {
 			$node = $this->read_root_declaration_with_modifier($token);
 		}
+		elseif ($token === _RUNTIME) {
+			$node = $this->read_runtime_declaration();
+		}
 		elseif (TeaHelper::is_structure_key($token)) {
 			$node = $this->read_structure($token);
 		}
@@ -157,7 +160,7 @@ class TeaParser extends BaseParser
 	protected function read_assignment(BaseExpression $assignalbe)
 	{
 		if (!$assignalbe instanceof IAssignable) {
-			throw $this->new_parse_error("Invalid assigned expression.");
+			throw $this->new_parse_error("Invalid assigned expression");
 		}
 
 		$operator = $this->scan_token_ignore_empty();
@@ -168,10 +171,10 @@ class TeaParser extends BaseParser
 		return $node;
 	}
 
-	protected function assert_not_reserveds_word($token)
+	protected function assert_not_reserved_word($token)
 	{
-		if (TeaHelper::is_reserveds($token)) {
-			throw $this->new_parse_error("'$token' is a reserveds word, cannot use for a class/function/constant/variable name.");
+		if (TeaHelper::is_reserved($token)) {
+			throw $this->new_parse_error("'$token' is a reserved word, cannot use for declaration name");
 		}
 	}
 
@@ -180,6 +183,10 @@ class TeaParser extends BaseParser
 		$token = $this->scan_token_ignore_space();
 
 		switch ($token) {
+			case _TYPE:
+				$name = $this->expect_identifier_token_ignore_space();
+				$declaration = $this->read_type_declaration($name, $modifier);
+				break;
 			case _CLASS:
 				$name = $this->expect_identifier_token_ignore_space();
 				$declaration = $this->read_class_declaration($name, $modifier);
@@ -206,6 +213,23 @@ class TeaParser extends BaseParser
 				$declaration = $this->check_and_read_normal_root_declaration($token, $modifier);
 				break;
 		}
+
+		return $declaration;
+	}
+
+	protected function read_type_declaration(string $name, string $modifier)
+	{
+		// use to allow extends with a builtin type class
+		$this->is_in_tea_declaration = true;
+
+		$declaration = $this->factory->create_builtin_type_class_declaration($name);
+		if ($declaration === null) {
+			throw $this->new_parse_error("'$name' not a builtin type, cannot use the #tea label.");
+		}
+
+		$this->read_rest_for_classkindred_declaration($declaration);
+
+		$this->is_in_tea_declaration = false;
 
 		return $declaration;
 	}
@@ -293,7 +317,7 @@ class TeaParser extends BaseParser
 
 	protected function read_constant_declaration_without_value(string $name, string $modifier = null, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
 	{
-		$this->assert_not_reserveds_word($name);
+		$this->assert_not_reserved_word($name);
 
 		$declaration = $this->read_constant_declaration_header($name, $modifier, $ns, $is_declare_mode);
 		if (!$declaration->type) {

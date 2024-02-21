@@ -307,6 +307,19 @@ class TeaCoder
 		return sprintf('(%s) => ', $parameters) . $body;
 	}
 
+	public function render_type_declaration(BuiltinTypeClassDeclaration $node)
+	{
+		$body = $this->render_block_nodes($node->members);
+
+		$code = sprintf("%s%s %s",
+			$this->generate_classkindred_header($node, _TYPE),
+			$this->generate_class_baseds($node),
+			$this->wrap_block_code($body)
+		);
+
+		return $code;
+	}
+
 	public function render_class_declaration(ClassDeclaration $node)
 	{
 		$body = $this->render_block_nodes($node->members);

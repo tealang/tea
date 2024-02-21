@@ -21,7 +21,7 @@ trait ConstantDeclarationTrait
 
 	public function __construct(?string $modifier, string $name, BaseType $type = null, BaseExpression $value = null)
 	{
-		if ($modifier !== null && $modifier === _PUBLIC) {
+		if ($modifier === _RUNTIME || $modifier === _PUBLIC) {
 			$this->is_unit_level = true;
 		}
 
@@ -40,6 +40,8 @@ class ConstantDeclaration extends RootDeclaration implements IConstantDeclaratio
 	const KIND = 'constant_declaration';
 
 	public $is_static;
+
+	public $is_runtime;
 }
 
 class ClassConstantDeclaration extends Node implements IConstantDeclaration, IClassMemberDeclaration

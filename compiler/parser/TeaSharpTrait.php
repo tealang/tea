@@ -17,15 +17,10 @@ trait TeaSharpTrait
 	{
 		$token = $this->scan_token();
 		switch ($token) {
-			case _TEA:
-				$node = $this->read_tea_declaration();
-				$node->label = $token;
-				break;
-
-			case _PHP:
-				$node = $this->read_php_declaration();
-				$node->label = $token;
-				break;
+			// case _PHP:
+			// 	$node = $this->read_runtime_declaration();
+			// 	$node->label = $token;
+			// 	break;
 
 			case _USE:
 				return $this->read_use_statement();
@@ -39,34 +34,16 @@ trait TeaSharpTrait
 				return;
 
 			default:
+				// throw $this->new_parse_error("Unknow sharp labeled statement");
 				$node = $this->read_custom_label_statement_with($token);
 		}
 
 		return $node;
 	}
 
-	protected function read_tea_declaration()
+	protected function read_runtime_declaration()
 	{
-		$name = $this->scan_token_ignore_space();
-
-		// use to allow extends with a builtin type class
-		$this->is_in_tea_declaration = true;
-
-		$declaration = $this->factory->create_builtin_type_class_declaration($name);
-		if ($declaration === null) {
-			throw $this->new_parse_error("'$name' not a builtin type, cannot use the #tea label.");
-		}
-
-		$this->read_rest_for_classkindred_declaration($declaration);
-
-		$this->is_in_tea_declaration = false;
-
-		return $declaration;
-	}
-
-	protected function read_php_declaration()
-	{
-		$modifier = _PUBLIC;
+		$modifier = _RUNTIME;
 		$token = $this->scan_token_ignore_space();
 		$root_namespace = $this->factory->root_namespace;
 
@@ -105,6 +82,7 @@ trait TeaSharpTrait
 		}
 
 		$declaration->origin_name = $origin_name;
+		$declaration->is_runtime = true;
 
 		return $declaration;
 	}
@@ -159,8 +137,8 @@ trait TeaSharpTrait
 			$node = new NormalStatement($expression);
 		}
 		else {
-			if (TeaHelper::is_reserveds($label)) {
-				throw $this->new_parse_error("Cannot use a reserveds keyword '$label' as a label name.");
+			if (TeaHelper::is_reserved($label)) {
+				throw $this->new_parse_error("Cannot use a reserved keyword '$label' as a label name.");
 			}
 
 			// labeled block

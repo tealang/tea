@@ -48,6 +48,8 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 
 	public $define_mode;
 
+	public $is_runtime;
+
 	public function __construct(?string $modifier, $name)
 	{
 		$this->modifier = $modifier;
@@ -137,7 +139,7 @@ class ClassDeclaration extends ClassKindredDeclaration implements ICallableDecla
 
 class BuiltinTypeClassDeclaration extends ClassDeclaration
 {
-	const KIND = 'class_declaration';
+	const KIND = 'type_declaration';
 }
 
 class InterfaceDeclaration extends ClassKindredDeclaration

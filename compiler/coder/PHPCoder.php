@@ -398,7 +398,7 @@ class PHPCoder extends TeaCoder
 
 	public function render_constant_declaration(IConstantDeclaration $node)
 	{
-		if ($node->label === _PHP) {
+		if ($node->is_runtime) {
 			return null;
 		}
 
@@ -542,9 +542,14 @@ class PHPCoder extends TeaCoder
 
 // ---
 
+	public function render_type_declaration(BuiltinTypeClassDeclaration $node)
+	{
+		return null;
+	}
+
 	public function render_class_declaration(ClassDeclaration $node)
 	{
-		if ($node instanceof BuiltinTypeClassDeclaration || $node->label === _PHP) {
+		if ($node->is_runtime) {
 			return null;
 		}
 
@@ -579,7 +584,7 @@ class PHPCoder extends TeaCoder
 
 	public function render_interface_declaration(InterfaceDeclaration $node)
 	{
-		if ($node->label === _PHP) return null;
+		if ($node->is_runtime) return null;
 
 		// interface declare
 		$code = sprintf("%s%s %s",
@@ -975,7 +980,7 @@ class PHPCoder extends TeaCoder
 	private function get_normalized_name_with_declaration(IDeclaration $node)
 	{
 		$name = $node->name;
-		return $node->label === _PHP ? $name : $this->get_normalized_name($name);
+		return $node->is_runtime ? $name : $this->get_normalized_name($name);
 	}
 
 	public function render_accessing_identifier(AccessingIdentifier $node)
