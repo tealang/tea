@@ -83,6 +83,8 @@ class PHPParser extends BaseParser
 
 	public function read_program(): Program
 	{
+		$this->is_declare_mode = false;
+
 		$max_pos = $this->tokens_count - 1;
 
 		// while ($this->pos < $max_pos) {

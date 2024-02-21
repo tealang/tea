@@ -412,13 +412,13 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_class_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
+	public function create_class_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'class');
 
 		$declaration = new ClassDeclaration($modifier, $name);
 
-		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns, $is_declare_mode);
+		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns);
 		$this->bind_class_symbol($declaration, $symbol);
 
 		$this->begin_class($declaration);
@@ -426,13 +426,13 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_interface_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
+	public function create_interface_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'interface');
 
 		$declaration = new InterfaceDeclaration($modifier, $name);
 
-		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns, $is_declare_mode);
+		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns);
 		$this->bind_class_symbol($declaration, $symbol);
 
 		$this->begin_class($declaration);
@@ -440,13 +440,13 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_trait_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
+	public function create_trait_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'trait');
 
 		$declaration = new TraitDeclaration($modifier, $name);
 
-		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns, $is_declare_mode);
+		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns);
 		$this->bind_class_symbol($declaration, $symbol);
 
 		$this->begin_class($declaration);
@@ -503,13 +503,13 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_function_declaration(string $modifier, string $name, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
+	public function create_function_declaration(string $modifier, string $name, NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'function');
 
 		$declaration = new FunctionDeclaration($modifier, $name);
 
-		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns, $is_declare_mode);
+		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns);
 
 		$this->begin_root_declaration($declaration);
 
@@ -536,13 +536,13 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_constant_declaration(string $modifier, string $name, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
+	public function create_constant_declaration(string $modifier, string $name, NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'constant');
 
 		$declaration = new ConstantDeclaration($modifier, $name);
 
-		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns, $is_declare_mode);
+		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns);
 
 		// $this->add_scope_symbol($symbol);
 
@@ -997,13 +997,13 @@ class ASTFactory
 		return $symbol;
 	}
 
-	private function create_symbol_for_top_declaration(RootDeclaration $declaration, ?NamespaceIdentifier $ns, bool $is_declare_mode)
+	private function create_symbol_for_top_declaration(RootDeclaration $declaration, ?NamespaceIdentifier $ns)
 	{
 		$special_namespace = $ns !== null && ($this->ns === null || $ns->uri !== $this->ns->uri);
 
 		if ($special_namespace) {
 			$symbol = $this->create_external_symbol($declaration, $ns);
-			if ($is_declare_mode) {
+			if ($this->parser->is_declare_mode) {
 				$this->create_internal_symbol($declaration, $symbol);
 			}
 		}

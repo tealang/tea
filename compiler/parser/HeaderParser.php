@@ -59,6 +59,7 @@ class HeaderParser extends TeaParser
 	protected function read_header_declaration_with_modifier(string $modifier)
 	{
 		$token = $this->scan_token_ignore_space();
+		$this->is_declare_mode = true;
 
 		switch ($token) {
 			case _CLASS:
@@ -79,7 +80,7 @@ class HeaderParser extends TeaParser
 				break;
 			case _FUNC:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_function_declaration($name, $modifier, null, true);
+				$declaration = $this->read_function_declaration($name, $modifier);
 				break;
 			case _CONST:
 				[$origin_name, $name] = $this->read_header_declaration_names();
@@ -104,7 +105,7 @@ class HeaderParser extends TeaParser
 		return $components;
 	}
 
-	protected function read_class_constant_declaration(string $name, ?string $modifier, bool $is_declare_mode = false)
+	protected function read_class_constant_declaration(string $name, ?string $modifier)
 	{
 		$declaration = $this->factory->create_class_constant_declaration($modifier, $name);
 
@@ -120,7 +121,7 @@ class HeaderParser extends TeaParser
 		return $declaration;
 	}
 
-	protected function read_method_declaration(string $name, ?string $modifier, bool $static, bool $is_declare_mode = false)
+	protected function read_method_declaration(string $name, ?string $modifier, bool $static)
 	{
 		$declaration = $this->factory->create_method_declaration($modifier, $name);
 		$declaration->pos = $this->pos;

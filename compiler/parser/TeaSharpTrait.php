@@ -46,31 +46,32 @@ trait TeaSharpTrait
 		$modifier = _PUBLIC;
 		$token = $this->scan_token_ignore_space();
 		$root_namespace = $this->factory->root_namespace;
+		$this->is_declare_mode = true;
 
 		switch ($token) {
 			case _CLASS:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_class_declaration($name, $modifier, $root_namespace, true);
+				$declaration = $this->read_class_declaration($name, $modifier, $root_namespace);
 				break;
 			case _ABSTRACT:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_class_declaration($name, $modifier, $root_namespace, true);
+				$declaration = $this->read_class_declaration($name, $modifier, $root_namespace);
 				$declaration->is_abstract = true;
 				break;
 			case _INTERFACE:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_interface_declaration($name, $modifier, $root_namespace, true);
+				$declaration = $this->read_interface_declaration($name, $modifier, $root_namespace);
 				break;
 			case _TRAIT:
 				[$origin_name, $name] = $this->read_header_declaration_names();
 				break;
 			case _FUNC:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_function_declaration($name, $modifier, $root_namespace, true);
+				$declaration = $this->read_function_declaration($name, $modifier, $root_namespace);
 				break;
 			case _CONST:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_constant_declaration_without_value($name, $modifier, $root_namespace, true);
+				$declaration = $this->read_constant_declaration_without_value($name, $modifier, $root_namespace);
 				break;
 			// case _VAR:
 			//	$origin_name = null;

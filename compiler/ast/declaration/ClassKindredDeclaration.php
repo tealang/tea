@@ -96,9 +96,6 @@ class ClassDeclaration extends ClassKindredDeclaration implements ICallableDecla
 {
 	const KIND = 'class_declaration';
 
-	// if not declare mode, set true
-	public $define_mode = false;
-
 	public $is_abstract;
 
 	public $is_readonly;

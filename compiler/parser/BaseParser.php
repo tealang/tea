@@ -13,6 +13,10 @@ abstract class BaseParser
 {
 	public $is_parsing_header = false;
 
+	public $is_declare_mode = false;
+
+	public $origin_declare_mode;
+
 	protected $file;
 
 	/**
@@ -52,6 +56,17 @@ abstract class BaseParser
 		if ($this->program->name === _MAIN) {
 			$this->factory->set_as_main_program();
 		}
+	}
+
+	protected function set_declare_mode(bool $mode)
+	{
+		$this->origin_declare_mode = $this->is_declare_mode;
+		$this->is_declare_mode = $mode;
+	}
+
+	protected function fallback_declare_mode()
+	{
+		$this->is_declare_mode = $this->origin_declare_mode;
 	}
 
 	// public function get_program_ast()
