@@ -123,17 +123,31 @@ class TeaCoder
 
 	protected function generate_classkindred_header(ClassKindredDeclaration $node, string $kind)
 	{
+		$modifier = $this->get_declaration_modifier($node, _INTERNAL);
+		$name = $this->get_declaration_name($node);
+		return "$modifier $kind $name";
+	}
+
+	protected function get_declaration_modifier(IDeclaration $node, string $default_modifier = null)
+	{
 		if ($node->label) {
-			$prefix = _SHARP . $node->label;
-			if ($node->origin_name) {
-				$prefix .= " $node->origin_name as";
-			}
+			$modifier = _SHARP . $node->label;
 		}
 		else {
-			$prefix = $node->modifier ?? _INTERNAL;
+			$modifier = $node->is_runtime ? _RUNTIME : ($node->modifier ?? $default_modifier);
 		}
 
-		return "$prefix $kind $node->name";
+		return $modifier;
+	}
+
+	protected function get_declaration_name(IDeclaration $node)
+	{
+		$name = $node->name;
+		if ($node->origin_name) {
+			$name .= "{$node->origin_name} as $name";
+		}
+
+		return $name;
 	}
 
 	protected function generate_class_baseds(ClassKindredDeclaration $node)
@@ -153,21 +167,37 @@ class TeaCoder
 	protected function generate_function_header(IFunctionDeclaration $node)
 	{
 		$items = [];
-		if ($node instanceof MethodDeclaration) {
-			if ($node->modifier) {
-				$items[] = $node->modifier;
-			}
+		if ($modifier = $this->get_declaration_modifier($node)) {
+			$items[] = $modifier;
+		}
 
+		if ($node instanceof MethodDeclaration) {
 			if ($node->is_static) {
 				$items[] = _STATIC;
 			}
 		}
 		else {
-			$items[] = $node->label ? (_SHARP . $node->label) : ($node->modifier ?? _INTERNAL);
 			$items[] = _FUNC;
 		}
 
-		$items[] = $node->name;
+		$items[] = $this->get_declaration_name($node);
+
+		// if ($node instanceof MethodDeclaration) {
+		// 	if ($node->modifier) {
+		// 		$items[] = $node->modifier;
+		// 	}
+
+		// 	if ($node->is_static) {
+		// 		$items[] = _STATIC;
+		// 	}
+		// }
+		// else {
+		// 	$items[] = $node->label ? (_SHARP . $node->label) : ($node->modifier ?? _INTERNAL);
+		// 	$items[] = _FUNC;
+		// }
+
+		// $items[] = $node->name;
+
 		$prefix = join(' ', $items);
 
 		$parameters = $this->render_parameters($node->parameters);
@@ -195,10 +225,13 @@ class TeaCoder
 
 	protected function generate_constant_header(IConstantDeclaration $node)
 	{
+		$modifier = $this->get_declaration_modifier($node, _INTERNAL);
+		$name = $this->get_declaration_name($node);
+
 		$items = [
-			$node->label ? (_SHARP . $node->label) : ($node->modifier ?? _INTERNAL),
+			$modifier,
 			_CONST,
-			$node->name
+			$name
 		];
 
 		if ($node->type) {

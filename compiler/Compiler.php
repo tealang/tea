@@ -556,7 +556,7 @@ class Compiler
 			$declaration = $symbol->declaration;
 			$belong_program = $declaration->program;
 			$modifier = $declaration->modifier ?? null;
-			if (($modifier === _PUBLIC || $modifier === _RUNTIME)
+			if (($modifier === _PUBLIC)
 				&& $belong_program->unit === $this->unit
 				&& !$belong_program->is_external
 			) {
@@ -578,11 +578,13 @@ class Compiler
 		$dist_file_path = substr($dist_file_path, $this->unit_path_prefix_len);
 
 		foreach ($program->declarations as $node) {
-			if ($node instanceof ClassKindredDeclaration && !$node instanceof BuiltinTypeClassDeclaration && !$node->is_runtime) {
+			if ($node instanceof ClassKindredDeclaration
+				&& !$node instanceof BuiltinTypeClassDeclaration
+				&& !$node->is_runtime) {
 				$name = $name_prefix . $node->name;
 				$this->autoloads_map[$name] = $dist_file_path;
 
-				// 接口的伴生Trait
+				// traits
 				if ($node instanceof InterfaceDeclaration && $node->has_default_implementations) {
 					$trait_name = $name . 'Trait';
 					$this->autoloads_map[$trait_name] = $dist_file_path;

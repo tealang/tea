@@ -43,7 +43,7 @@ trait TeaSharpTrait
 
 	protected function read_runtime_declaration()
 	{
-		$modifier = _RUNTIME;
+		$modifier = _PUBLIC;
 		$token = $this->scan_token_ignore_space();
 		$root_namespace = $this->factory->root_namespace;
 

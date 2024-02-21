@@ -48,8 +48,6 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 
 	public $define_mode;
 
-	public $is_runtime;
-
 	public function __construct(?string $modifier, $name)
 	{
 		$this->modifier = $modifier;

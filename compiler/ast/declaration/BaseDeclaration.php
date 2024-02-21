@@ -22,10 +22,14 @@ trait DeclarationTrait {
 
 	public $label;
 
+	public $is_runtime;
+
 	/**
 	 * @var string
 	 */
 	public $name;
+
+	public $origin_name;
 
 	/**
 	 * @var IType
@@ -82,7 +86,10 @@ trait DeclarationTrait {
 			return;
 		}
 
-		$this->defer_check_identifiers = array_merge($this->defer_check_identifiers, $declaration->defer_check_identifiers);
+		$this->defer_check_identifiers = array_merge(
+			$this->defer_check_identifiers,
+			$declaration->defer_check_identifiers
+		);
 	}
 }
 

@@ -584,7 +584,9 @@ class PHPCoder extends TeaCoder
 
 	public function render_interface_declaration(InterfaceDeclaration $node)
 	{
-		if ($node->is_runtime) return null;
+		if ($node->is_runtime) {
+			return null;
+		}
 
 		// interface declare
 		$code = sprintf("%s%s %s",

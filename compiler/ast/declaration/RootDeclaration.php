@@ -7,8 +7,6 @@ abstract class RootDeclaration extends Node implements IRootDeclaration, IStatem
 {
 	use DeclarationTrait;
 
-	public $origin_name;
-
 	/**
 	 * @var NamespaceIdentifier
 	 */

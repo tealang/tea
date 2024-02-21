@@ -30,7 +30,7 @@ trait IScopeBlockTrait
 
 	public function __construct(?string $modifier, string $name, IType $type = null, array $parameters = null)
 	{
-		if ($modifier === _RUNTIME || $modifier === _PUBLIC) {
+		if ($modifier === _PUBLIC) {
 			$this->is_unit_level = true;
 		}
 
@@ -53,8 +53,6 @@ class FunctionDeclaration extends RootDeclaration implements IFunctionDeclaratio
 	const KIND = 'function_declaration';
 
 	public $is_static = false;
-
-	public $is_runtime;
 }
 
 class MethodDeclaration extends Node implements IFunctionDeclaration, IClassMemberDeclaration, IRootDeclaration

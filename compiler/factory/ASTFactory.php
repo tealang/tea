@@ -863,7 +863,7 @@ class ASTFactory
 		return self::find_super_scope($block);
 	}
 
-	const GLOBAL_MODIFIERS = [_PUBLIC, _INTERNAL, _RUNTIME];
+	const GLOBAL_MODIFIERS = [_PUBLIC, _INTERNAL];
 	private function check_global_modifier(?string $modifier, string $type_label)
 	{
 		if ($modifier && !in_array($modifier, self::GLOBAL_MODIFIERS, true)) {
