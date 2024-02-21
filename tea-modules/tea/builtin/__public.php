@@ -1,7 +1,6 @@
 <?php
 const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
-#public
 const LF = "\n";
 
 function is_uint($val): bool {

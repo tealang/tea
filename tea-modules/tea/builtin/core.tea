@@ -7,30 +7,30 @@ The builtin libs for Tea
 
 public LF = "\n"
 
-#php isset(expr Any) Bool
-#php is_int(val) Bool
-#php is_array(val) Bool
-#php is_numeric(val) Bool
+#php func isset(expr Any) Bool
+#php func is_int(val) Bool
+#php func is_array(val) Bool
+#php func is_numeric(val) Bool
 
-#php empty(expr Any) Bool
-#php var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default)
-#php print(expr) Int
-#php print_r(expr, is_return Bool = #default)
-#php header(info String, replace = true, http_response_code Int = #default)
+#php func empty(expr Any) Bool
+#php func var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default)
+#php func print(expr) Int
+#php func print_r(expr, is_return Bool = #default)
+#php func header(info String, replace = true, http_response_code Int = #default)
 
 // dates & times
-#php time() Int
-#php date(format String, timestamp Int = #default) String
-#php strtotime(datetime, now Int = #default) Int
+#php func time() Int
+#php func date(format String, timestamp Int = #default) String
+#php func strtotime(datetime, now Int = #default) Int
 
-#php str_repeat(input, multiplier Int) String
+#php func str_repeat(input, multiplier Int) String
 
 // php builtin constants
-#php __DIR__ String
-#php __FILE__ String
-#php __LINE__ UInt
-#php __CLASS__ UInt
-#php __FUNCTION__ UInt
+#php const __DIR__ String
+#php const __FILE__ String
+#php const __LINE__ UInt
+#php const __CLASS__ UInt
+#php const __FUNCTION__ UInt
 
 // php super variables, unsupported, use filter_input function instead
 // #php $_GET Dict
@@ -40,26 +40,26 @@ public LF = "\n"
 
 // the function to get value of $_GET/$_POST/$_COOKIE/$_ENV/$_SERVER
 // input methods
-#php INPUT_GET Int
-#php INPUT_POST Int
-#php INPUT_COOKIE Int
-#php INPUT_ENV Int
-#php INPUT_SERVER Int
+#php const INPUT_GET Int
+#php const INPUT_POST Int
+#php const INPUT_COOKIE Int
+#php const INPUT_ENV Int
+#php const INPUT_SERVER Int
 // filter types
-#php FILTER_INT Int
-#php FILTER_EMAIL Int
+#php const FILTER_INT Int
+#php const FILTER_EMAIL Int
 
-#php filter_input(type Int, key String, filter Int = #default, options Dict = #default) Any
+#php func filter_input(type Int, key String, filter Int = #default, options Dict = #default) Any
 
 // exceptions
-#php Exception {
+#php class Exception {
 	public construct(message String, code Int = 0)
 	public getCode() Int
 	public getMessage() String
 }
 
-#php ErrorException: Exception {}
-#php LogicException: Exception {}
+#php class ErrorException: Exception {}
+#php class LogicException: Exception {}
 
 // helper functions
 
@@ -123,80 +123,80 @@ public xrange(start Int, end Int, step = 1) {
 }
 
 // file
-#php file_exists(filename) Bool
-#php dirname(path, levels UInt = #default) String
-#php basename(path, suffix String = #default) String
-#php realpath(path) String
-#php chdir(dir) Bool
-#php unlink(file) Bool
-#php file_get_contents(file) String
-#php file_put_contents(file, data String, flags Int = #default) UInt
-#php FILE_APPEND Int
-#php LOCK_EX Int
+#php func file_exists(filename) Bool
+#php func dirname(path, levels UInt = #default) String
+#php func basename(path, suffix String = #default) String
+#php func realpath(path) String
+#php func chdir(dir) Bool
+#php func unlink(file) Bool
+#php func file_get_contents(file) String
+#php func file_put_contents(file, data String, flags Int = #default) UInt
+#php const FILE_APPEND Int
+#php const LOCK_EX Int
 
 // math
-#php pow(num, exponent) UInt|Int|Float
-#php max(n1, n2, n3 = #default) Any
-#php min(n1, n2, n3 = #default) Any
-#php abs(val) Float
-#php round(val, precision = 0) Float
-#php ceil(val) Int
-#php floor(val) Int
+#php func pow(num, exponent) UInt|Int|Float
+#php func max(n1, n2, n3 = #default) Any
+#php func min(n1, n2, n3 = #default) Any
+#php func abs(val) Float
+#php func round(val, precision = 0) Float
+#php func ceil(val) Int
+#php func floor(val) Int
 
 // string
-#php trim(str, char_mask String = #default) String
-#php rtrim(str, char_mask String = #default) String
-#php ltrim(str, char_mask String = #default) String
+#php func trim(str, char_mask String = #default) String
+#php func rtrim(str, char_mask String = #default) String
+#php func ltrim(str, char_mask String = #default) String
 
 // with default charset
-#php iconv_strlen(str String) UInt
-#php iconv_substr(str String, start Int, length Int = #default) String
+#php func iconv_strlen(str String) UInt
+#php func iconv_substr(str String, start Int, length Int = #default) String
 
 // first pos in default charset
-#php iconv_strpos(str String, search String, offset Int = 0) Int  // would return false on not found
+#php func iconv_strpos(str String, search String, offset Int = 0) Int  // would return false on not found
 
 // last pos in default charset
-#php iconv_strrpos(str String, search String, offset Int = 0) Int  // would return false on not found
+#php func iconv_strrpos(str String, search String, offset Int = 0) Int  // would return false on not found
 
-#php mb_strwidth(str String, encoding String = #default)
-#php mb_strtoupper(str String) String
-#php mb_strtolower(str String) String
+#php func mb_strwidth(str String, encoding String = #default)
+#php func mb_strtoupper(str String) String
+#php func mb_strtolower(str String) String
 
 // bytes mode functions
-#php strlen(str) UInt
-#php substr(str, start Int, length Int = #default) String
+#php func strlen(str) UInt
+#php func substr(str, start Int, length Int = #default) String
 
-#php str_contains(master, search) Bool
-#php strpos(master, search, offset Int = 0) Int  // would return false on not found
-#php strrpos(master, search, offset Int = 0) Int  // would return false on not found
-#php strtoupper(str) String
-#php strtolower(str) String
+#php func str_contains(master, search) Bool
+#php func strpos(master, search, offset Int = 0) Int  // would return false on not found
+#php func strrpos(master, search, offset Int = 0) Int  // would return false on not found
+#php func strtoupper(str) String
+#php func strtolower(str) String
 
 // replace in binary mode
-#php strtr(master String, changes Dict) String
-#php str_replace(search, replacement, master String) String
+#php func strtr(master String, changes Dict) String
+#php func str_replace(search, replacement, master String) String
 public _str_replace(master String, search, replacement) {
 	return str_replace(search, replacement, master);
 }
 
-#php implode(glue String, pieces) String
-#php explode(delimiter String, master String) String.Array
+#php func implode(glue String, pieces) String
+#php func explode(delimiter String, master String) String.Array
 
 // array
-#php count(array) UInt
-#php in_array(needle, haystack, strict Bool = false) Bool
-#php array_reverse(array)
-#php array_map(callback Callable, items Array) Array
-#php array_filter(items Array, callback Callable, flag Int = #default) Array
-#php array_reduce(items Array, callback Callable, initial Any = #default)
+#php func count(array) UInt
+#php func in_array(needle, haystack, strict Bool = false) Bool
+#php func array_reverse(array)
+#php func array_map(callback Callable, items Array) Array
+#php func array_filter(items Array, callback Callable, flag Int = #default) Array
+#php func array_reduce(items Array, callback Callable, initial Any = #default)
 
 // index array
-#php array_slice(master Array, offset Int, length UInt = none) Array
-#php array_unshift(master Array, item Any) UInt
-#php array_shift(master Array) Any
-#php array_push(master Array, item Any) UInt
-#php array_pop(master Array) Any
-#php array_search(search, master, strict = false) UInt
+#php func array_slice(master Array, offset Int, length UInt = none) Array
+#php func array_unshift(master Array, item Any) UInt
+#php func array_shift(master Array) Any
+#php func array_push(master Array, item Any) UInt
+#php func array_pop(master Array) Any
+#php func array_search(search, master, strict = false) UInt
 
 public _array_search(master Array, search)  {
 	key = array_search(search, master, true)
@@ -207,12 +207,12 @@ public array_last_index(array Array) UInt {
 	return count(array) - 1
 }
 
-#php array_key_exists(key, arr) Bool
+#php func array_key_exists(key, arr) Bool
 
 // assoc array
-#php array_keys(dict) String.Array
-#php array_values(dict) Array
-#php array_column(recordset Any.Array, key String) Array
+#php func array_keys(dict) String.Array
+#php func array_values(dict) Array
+#php func array_column(recordset Any.Array, key String) Array
 
 public dict_get(dict Dict, key String) {
 	return dict[key] ?? none
@@ -223,14 +223,14 @@ public _dict_search(master Dict, search) {
 	return key === false ? false : key#String
 }
 
-#php JSON_UNESCAPED_UNICODE Int
-#php JSON_PRETTY_PRINT Int
-#php json_encode(data, flags Int = 0, depth UInt = 512) String
-#php json_decode(data, assoc Bool = false, depth UInt = 512, flags Int = 0) Any
+#php const JSON_UNESCAPED_UNICODE Int
+#php const JSON_PRETTY_PRINT Int
+#php func json_encode(data, flags Int = 0, depth UInt = 512) String
+#php func json_decode(data, assoc Bool = false, depth UInt = 512, flags Int = 0) Any
 
-#php ENT_QUOTES Int
-#php htmlspecialchars(string String, flags Int = #default, encoding String = #default, double_encode = #default) String
-#php htmlspecialchars_decode(string String, flags Int = #default) String
+#php const ENT_QUOTES Int
+#php func htmlspecialchars(string String, flags Int = #default, encoding String = #default, double_encode = #default) String
+#php func htmlspecialchars_decode(string String, flags Int = #default) String
 
 public html_encode(string String?, flags = ENT_QUOTES) {
 	return empty(string) ? string : htmlspecialchars(string, flags)
@@ -241,10 +241,10 @@ public html_decode(string String?, flags = ENT_QUOTES) {
 }
 
 // regex
-#php PREG_SPLIT_DELIM_CAPTURE Int
-#php preg_match(regex Regex, subject String, matches mut Array? = #default, flags Int = #default, offset Int = #default) Bool
-#php preg_match_all(regex Regex, subject String, matches mut Array? = #default, flags Int = #default, offset Int = #default) Bool
-#php preg_split(regex Regex , subject String, limit Int = #default, flags Int = #default) Array
+#php const PREG_SPLIT_DELIM_CAPTURE Int
+#php func preg_match(regex Regex, subject String, matches mut Array? = #default, flags Int = #default, offset Int = #default) Bool
+#php func preg_match_all(regex Regex, subject String, matches mut Array? = #default, flags Int = #default, offset Int = #default) Bool
+#php func preg_split(regex Regex , subject String, limit Int = #default, flags Int = #default) Array
 public regex_test(regex Regex, subject String) Bool {
 	return preg_match(regex, subject) ? true : false
 }
@@ -399,11 +399,11 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array? {
 
 #tea Callable {}
 
-#tea Iterable {} // accept IIterator
+#tea Iterable {} // accept Iterator
 
 public IView {}
 
-#php Iterator as IIterator {
+#php interface Iterator {
 	current() Any
 	key() String
 	next()

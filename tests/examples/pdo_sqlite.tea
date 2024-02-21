@@ -1,12 +1,12 @@
 
 #main
 
-#php PDOStatement {
+#php class PDOStatement {
 	fetch(fetch_style Int = #default) String.Dict
 	fetchAll(fetch_style Int = #default) String.Dict.Array
 }
 
-#php PDO {
+#php class PDO {
 	FETCH_ASSOC Int
 	FETCH_COLUMN Int
 	construct(dsn String, username String = #default, passwd String = #default, options Dict = #default)

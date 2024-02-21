@@ -3,6 +3,7 @@ namespace tests\examples;
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 
+#internal
 function draw_text($image, string $text, int $size, int $color, string $fontfile, int $h_offset = 0, bool $is_handstand = false) {
 	$w = imagesx($image);
 	$h = imagesy($image);

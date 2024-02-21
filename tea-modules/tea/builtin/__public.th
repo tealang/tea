@@ -2,237 +2,237 @@
 
 #unit tea\builtin
 
-public LF String = "\n"
-public __DIR__ String
-public __FILE__ String
-public __LINE__ UInt
-public __CLASS__ UInt
-public __FUNCTION__ UInt
-public INPUT_GET Int
-public INPUT_POST Int
-public INPUT_COOKIE Int
-public INPUT_ENV Int
-public INPUT_SERVER Int
-public FILTER_INT Int
-public FILTER_EMAIL Int
-public FILE_APPEND Int
-public LOCK_EX Int
-public JSON_UNESCAPED_UNICODE Int
-public JSON_PRETTY_PRINT Int
-public ENT_QUOTES Int
-public PREG_SPLIT_DELIM_CAPTURE Int
+public const LF String
+#php const __DIR__ String
+#php const __FILE__ String
+#php const __LINE__ UInt
+#php const __CLASS__ UInt
+#php const __FUNCTION__ UInt
+#php const INPUT_GET Int
+#php const INPUT_POST Int
+#php const INPUT_COOKIE Int
+#php const INPUT_ENV Int
+#php const INPUT_SERVER Int
+#php const FILTER_INT Int
+#php const FILTER_EMAIL Int
+#php const FILE_APPEND Int
+#php const LOCK_EX Int
+#php const JSON_UNESCAPED_UNICODE Int
+#php const JSON_PRETTY_PRINT Int
+#php const ENT_QUOTES Int
+#php const PREG_SPLIT_DELIM_CAPTURE Int
 
-#php isset(expr Any) Bool
+#php func isset(expr Any) Bool
 
-#php is_int(val Any) Bool
+#php func is_int(val Any) Bool
 
-#php is_array(val Any) Bool
+#php func is_array(val Any) Bool
 
-#php is_numeric(val Any) Bool
+#php func is_numeric(val Any) Bool
 
-#php empty(expr Any) Bool
+#php func empty(expr Any) Bool
 
-#php var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default)
+#php func var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default)
 
-#php print(expr Any) Int
+#php func print(expr Any) Int
 
-#php print_r(expr Any, is_return Bool = #default)
+#php func print_r(expr Any, is_return Bool = #default)
 
-#php header(info String, replace Bool = true, http_response_code Int = #default)
+#php func header(info String, replace Bool = true, http_response_code Int = #default)
 
-#php time() Int
+#php func time() Int
 
-#php date(format String, timestamp Int = #default) String
+#php func date(format String, timestamp Int = #default) String
 
-#php strtotime(datetime Any, now Int = #default) Int
+#php func strtotime(datetime Any, now Int = #default) Int
 
-#php str_repeat(input Any, multiplier Int) String
+#php func str_repeat(input Any, multiplier Int) String
 
-#php filter_input(type Int, key String, filter Int = #default, options Dict = #default) Any
+#php func filter_input(type Int, key String, filter Int = #default, options Dict = #default) Any
 
-#php Exception {
+#php class Exception {
 	public construct(message String, code Int = 0)
 	public getCode() Int
 	public getMessage() String
 }
 
-#php ErrorException: Exception {
+#php class ErrorException: Exception {
 	// no any
 }
 
-#php LogicException: Exception {
+#php class LogicException: Exception {
 	// no any
 }
 
-public is_uint(val Any) Bool
+public func is_uint(val Any) Bool
 
-public uint_ensure(num Int) Int
+public func uint_ensure(num Int) Int
 
-public is_strict_array(it Any) Bool
+public func is_strict_array(it Any) Bool
 
-public is_strict_dict(it Any) Bool
+public func is_strict_dict(it Any) Bool
 
-public xrange(start Int, end Int, step Int = 1) IIterator
+public func xrange(start Int, end Int, step Int = 1) Iterator
 
-#php file_exists(filename Any) Bool
+#php func file_exists(filename Any) Bool
 
-#php dirname(path Any, levels UInt = #default) String
+#php func dirname(path Any, levels UInt = #default) String
 
-#php basename(path Any, suffix String = #default) String
+#php func basename(path Any, suffix String = #default) String
 
-#php realpath(path Any) String
+#php func realpath(path Any) String
 
-#php chdir(dir Any) Bool
+#php func chdir(dir Any) Bool
 
-#php unlink(file Any) Bool
+#php func unlink(file Any) Bool
 
-#php file_get_contents(file Any) String
+#php func file_get_contents(file Any) String
 
-#php file_put_contents(file Any, data String, flags Int = #default) UInt
+#php func file_put_contents(file Any, data String, flags Int = #default) UInt
 
-#php pow(num Any, exponent Any) UInt
+#php func pow(num Any, exponent Any) UInt
 
-#php max(n1 Any, n2 Any, n3 Any = #default) Any
+#php func max(n1 Any, n2 Any, n3 Any = #default) Any
 
-#php min(n1 Any, n2 Any, n3 Any = #default) Any
+#php func min(n1 Any, n2 Any, n3 Any = #default) Any
 
-#php abs(val Any) Float
+#php func abs(val Any) Float
 
-#php round(val Any, precision Int = 0) Float
+#php func round(val Any, precision Int = 0) Float
 
-#php ceil(val Any) Int
+#php func ceil(val Any) Int
 
-#php floor(val Any) Int
+#php func floor(val Any) Int
 
-#php trim(str Any, char_mask String = #default) String
+#php func trim(str Any, char_mask String = #default) String
 
-#php rtrim(str Any, char_mask String = #default) String
+#php func rtrim(str Any, char_mask String = #default) String
 
-#php ltrim(str Any, char_mask String = #default) String
+#php func ltrim(str Any, char_mask String = #default) String
 
-#php iconv_strlen(str String) UInt
+#php func iconv_strlen(str String) UInt
 
-#php iconv_substr(str String, start Int, length Int = #default) String
+#php func iconv_substr(str String, start Int, length Int = #default) String
 
-#php iconv_strpos(str String, search String, offset Int = 0) Int
+#php func iconv_strpos(str String, search String, offset Int = 0) Int
 
-#php iconv_strrpos(str String, search String, offset Int = 0) Int
+#php func iconv_strrpos(str String, search String, offset Int = 0) Int
 
-#php mb_strwidth(str String, encoding String = #default)
+#php func mb_strwidth(str String, encoding String = #default)
 
-#php mb_strtoupper(str String) String
+#php func mb_strtoupper(str String) String
 
-#php mb_strtolower(str String) String
+#php func mb_strtolower(str String) String
 
-#php strlen(str Any) UInt
+#php func strlen(str Any) UInt
 
-#php substr(str Any, start Int, length Int = #default) String
+#php func substr(str Any, start Int, length Int = #default) String
 
-#php str_contains(master Any, search Any) Bool
+#php func str_contains(master Any, search Any) Bool
 
-#php strpos(master Any, search Any, offset Int = 0) Int
+#php func strpos(master Any, search Any, offset Int = 0) Int
 
-#php strrpos(master Any, search Any, offset Int = 0) Int
+#php func strrpos(master Any, search Any, offset Int = 0) Int
 
-#php strtoupper(str Any) String
+#php func strtoupper(str Any) String
 
-#php strtolower(str Any) String
+#php func strtolower(str Any) String
 
-#php strtr(master String, changes Dict) String
+#php func strtr(master String, changes Dict) String
 
-#php str_replace(search Any, replacement Any, master String) String
+#php func str_replace(search Any, replacement Any, master String) String
 
-public _str_replace(master String, search Any, replacement Any) String
+public func _str_replace(master String, search Any, replacement Any) String
 
-#php implode(glue String, pieces Any) String
+#php func implode(glue String, pieces Any) String
 
-#php explode(delimiter String, master String) String.Array
+#php func explode(delimiter String, master String) String.Array
 
-#php count(array Any) UInt
+#php func count(array Any) UInt
 
-#php in_array(needle Any, haystack Any, strict Bool = false) Bool
+#php func in_array(needle Any, haystack Any, strict Bool = false) Bool
 
-#php array_reverse(array Any)
+#php func array_reverse(array Any)
 
-#php array_map(callback Callable, items Array) Array
+#php func array_map(callback Callable, items Array) Array
 
-#php array_filter(items Array, callback Callable, flag Int = #default) Array
+#php func array_filter(items Array, callback Callable, flag Int = #default) Array
 
-#php array_reduce(items Array, callback Callable, initial Any = #default)
+#php func array_reduce(items Array, callback Callable, initial Any = #default)
 
-#php array_slice(master Array, offset Int, length UInt = none) Array
+#php func array_slice(master Array, offset Int, length UInt = none) Array
 
-#php array_unshift(master Array, item Any) UInt
+#php func array_unshift(master Array, item Any) UInt
 
-#php array_shift(master Array) Any
+#php func array_shift(master Array) Any
 
-#php array_push(master Array, item Any) UInt
+#php func array_push(master Array, item Any) UInt
 
-#php array_pop(master Array) Any
+#php func array_pop(master Array) Any
 
-#php array_search(search Any, master Any, strict Bool = false) UInt
+#php func array_search(search Any, master Any, strict Bool = false) UInt
 
-public _array_search(master Array, search Any) Bool|UInt
+public func _array_search(master Array, search Any) Bool|UInt
 
-public array_last_index(array Array) UInt
+public func array_last_index(array Array) UInt
 
-#php array_key_exists(key Any, arr Any) Bool
+#php func array_key_exists(key Any, arr Any) Bool
 
-#php array_keys(dict Any) String.Array
+#php func array_keys(dict Any) String.Array
 
-#php array_values(dict Any) Array
+#php func array_values(dict Any) Array
 
-#php array_column(recordset Any.Array, key String) Array
+#php func array_column(recordset Any.Array, key String) Array
 
-public dict_get(dict Dict, key String) Any
+public func dict_get(dict Dict, key String) Any
 
-public _dict_search(master Dict, search Any) Bool|String
+public func _dict_search(master Dict, search Any) Bool|String
 
-#php json_encode(data Any, flags Int = 0, depth UInt = 512) String
+#php func json_encode(data Any, flags Int = 0, depth UInt = 512) String
 
-#php json_decode(data Any, assoc Bool = false, depth UInt = 512, flags Int = 0) Any
+#php func json_decode(data Any, assoc Bool = false, depth UInt = 512, flags Int = 0) Any
 
-#php htmlspecialchars(string String, flags Int = #default, encoding String = #default, double_encode Any = #default) String
+#php func htmlspecialchars(string String, flags Int = #default, encoding String = #default, double_encode Any = #default) String
 
-#php htmlspecialchars_decode(string String, flags Int = #default) String
+#php func htmlspecialchars_decode(string String, flags Int = #default) String
 
-public html_encode(string String, flags Int = ENT_QUOTES) String
+public func html_encode(string String, flags Int = ENT_QUOTES) String
 
-public html_decode(string String, flags Int = ENT_QUOTES) String
+public func html_decode(string String, flags Int = ENT_QUOTES) String
 
-#php preg_match(regex Regex, subject String, matches mut Array = #default, flags Int = #default, offset Int = #default) Bool
+#php func preg_match(regex Regex, subject String, matches mut Array = #default, flags Int = #default, offset Int = #default) Bool
 
-#php preg_match_all(regex Regex, subject String, matches mut Array = #default, flags Int = #default, offset Int = #default) Bool
+#php func preg_match_all(regex Regex, subject String, matches mut Array = #default, flags Int = #default, offset Int = #default) Bool
 
-#php preg_split(regex Regex, subject String, limit Int = #default, flags Int = #default) Array
+#php func preg_split(regex Regex, subject String, limit Int = #default, flags Int = #default) Array
 
-public regex_test(regex Regex, subject String) Bool
+public func regex_test(regex Regex, subject String) Bool
 
-public regex_capture(regex Regex, subject String) String.Array
+public func regex_capture(regex Regex, subject String) String.Array
 
-public regex_capture_all(regex Regex, subject String) String.Array.Array
+public func regex_capture_all(regex Regex, subject String) String.Array.Array
 
-#tea MetaType {
+#tea class MetaType {
 	// no any
 }
 
-#tea UnionType {
+#tea class UnionType {
 	// no any
 }
 
-#tea Void {
+#tea class Void {
 	// no any
 }
 
-#tea None {
+#tea class None {
 	// no any
 }
 
-#tea Any: String {
+#tea class Any: String {
 	// no any
 }
 
-#tea String {
+#tea class String {
 	masked length UInt
 
 	masked contains(val Any) Bool
@@ -278,15 +278,15 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	masked replace(search Any, replacement Any) String
 }
 
-#tea Int: String {
+#tea class Int: String {
 	masked abs() UInt
 }
 
-#tea UInt: Int {
+#tea class UInt: Int {
 	// no any
 }
 
-#tea Float {
+#tea class Float {
 	masked abs() Float
 
 	masked ceil() Int
@@ -296,11 +296,11 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	masked round(precision Int = 0) Float
 }
 
-#tea Bool {
+#tea class Bool {
 	// no any
 }
 
-#tea Array {
+#tea class Array {
 	masked length UInt
 
 	masked end UInt
@@ -332,7 +332,7 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	masked join(glue String = LF) String
 }
 
-#tea Dict {
+#tea class Dict {
 	masked length UInt
 
 	masked keys() String.Array
@@ -350,11 +350,11 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	masked join(glue String = LF) String
 }
 
-#tea Object {
+#tea class Object {
 	// no any
 }
 
-#tea Regex {
+#tea class Regex {
 	masked test(string String) Bool
 
 	masked separate(string String) String.Array
@@ -364,23 +364,23 @@ public regex_capture_all(regex Regex, subject String) String.Array.Array
 	masked capture_all(string String) String.Array.Array
 }
 
-#tea XView: String {
+#tea class XView: String {
 	// no any
 }
 
-#tea Callable {
+#tea class Callable {
 	// no any
 }
 
-#tea Iterable {
+#tea class Iterable {
 	// no any
 }
 
-public IView {
+public interface IView {
 	// no any
 }
 
-#php Iterator as IIterator {
+#php interface Iterator {
 	current() Any
 	key() String
 	next()

@@ -3,14 +3,17 @@ namespace tests\examples;
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 
+#internal
 function say_hello(string $name = 'World') {
 	echo 'Hello, ' . $name . '!', LF;
 }
 
+#internal
 function set_field(string $key, string $value, array &$dict) {
 	$dict[$key] = $value;
 }
 
+#internal
 function show_file_path(string $filename = null) {
 	if ($filename === null) {
 		$filename = __FILE__;

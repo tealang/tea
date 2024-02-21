@@ -1,15 +1,15 @@
 #main
 
-#php imagecreatetruecolor(width Int, height Int) Any
-#php imagecolorallocatealpha(image, r Int, g Int, b Int, a Int) Int
-#php imagefill(image, x Int, y Int, color Int) Bool
-#php imagerotate(image, angle Float, background_color Int) Any
-#php imagesx(image) Int
-#php imagesy(image) Int
-#php imagettfbbox(size Float, angle Float, fontfile String, text String) Int.Array
-#php imagettftext(image, size Float, angle Float, x Int, y Int, color Int, fontfile String, text String) Int.Array
-#php imagepng(image, to String = none, quality = -1, filters Int = #default) Bool
-#php imagedestroy(image)
+#php func imagecreatetruecolor(width Int, height Int) Any
+#php func imagecolorallocatealpha(image, r Int, g Int, b Int, a Int) Int
+#php func imagefill(image, x Int, y Int, color Int) Bool
+#php func imagerotate(image, angle Float, background_color Int) Any
+#php func imagesx(image) Int
+#php func imagesy(image) Int
+#php func imagettfbbox(size Float, angle Float, fontfile String, text String) Int.Array
+#php func imagettftext(image, size Float, angle Float, x Int, y Int, color Int, fontfile String, text String) Int.Array
+#php func imagepng(image, to String = none, quality = -1, filters Int = #default) Bool
+#php func imagedestroy(image)
 
 internal draw_text(image, text String, size UInt, color Int, fontfile String, h_offset Int = 0, is_handstand Bool = false) {
 	w = imagesx(image)

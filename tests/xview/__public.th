@@ -2,7 +2,7 @@
 
 #unit tests\xview
 
-public BaseView: IView {
+public class BaseView: IView {
 	name String
 
 	protected props Dict
@@ -21,7 +21,7 @@ public BaseView: IView {
 	to_string() String
 }
 
-public IViewDemo: IView {
+public interface IViewDemo: IView {
 	name String
 	css_class String
 

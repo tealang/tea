@@ -66,56 +66,89 @@ trait TeaSharpTrait
 
 	protected function read_php_declaration()
 	{
-		$name = $this->scan_token_ignore_space();
+		$modifier = _PUBLIC;
+		$token = $this->scan_token_ignore_space();
+		$root_namespace = $this->factory->root_namespace;
 
-		$this->assert_not_reserveds_word($name);
-
-		if (TeaHelper::is_constant_name($name)) {
-			$next = $this->get_token_ignore_space();
-			if ($next !== _BLOCK_BEGIN && $next !== _COLON && $next !== _AS) {
-				return $this->read_constant_declaration_without_value($name, _PUBLIC, $this->factory->root_namespace, true);
-			}
+		switch ($token) {
+			case _CLASS:
+				[$origin_name, $name] = $this->read_header_declaration_names();
+				$declaration = $this->read_class_declaration($name, $modifier, $root_namespace, true);
+				break;
+			case _ABSTRACT:
+				[$origin_name, $name] = $this->read_header_declaration_names();
+				$declaration = $this->read_class_declaration($name, $modifier, $root_namespace, true);
+				$declaration->is_abstract = true;
+				break;
+			case _INTERFACE:
+				[$origin_name, $name] = $this->read_header_declaration_names();
+				$declaration = $this->read_interface_declaration($name, $modifier, $root_namespace, true);
+				break;
+			case _TRAIT:
+				[$origin_name, $name] = $this->read_header_declaration_names();
+				break;
+			case _FUNC:
+				[$origin_name, $name] = $this->read_header_declaration_names();
+				$declaration = $this->read_function_declaration($name, $modifier, $root_namespace, true);
+				break;
+			case _CONST:
+				[$origin_name, $name] = $this->read_header_declaration_names();
+				$declaration = $this->read_constant_declaration_without_value($name, $modifier, $root_namespace, true);
+				break;
+			// case _VAR:
+			//	$origin_name = null;
+			// 	$name = $this->expect_identifier_token();
+			// 	$declaration = $this->read_php_super_var_declaration($name);
+			// 	break;
+			default:
+				throw $this->new_parse_error("Unknow declaration type '$token'");
 		}
 
-		if (TeaHelper::is_classkindred_name($name)) {
-			// the alias feature
-			if ($this->skip_token_ignore_space(_AS)) {
-				$origin_name = $name;
-				$name = $this->scan_token_ignore_space();
-				if (!TeaHelper::is_classkindred_name($name)) {
-					throw $this->new_parse_error("Invalid class/interface name.");
-				}
-			}
-
-			if (TeaHelper::is_interface_marked_name($name)) {
-				$declaration = $this->read_interface_declaration($name, _PUBLIC, $this->factory->root_namespace, true);
-			}
-			else {
-				$declaration = $this->read_class_declaration($name, _PUBLIC, $this->factory->root_namespace, true);
-			}
-
-			if (isset($origin_name)) {
-				$declaration->origin_name = $origin_name;
-			}
-		}
-		elseif (TeaHelper::is_strict_less_function_name($name)) {
-			$declaration = $this->read_function_declaration($name, _PUBLIC, $this->factory->root_namespace, true);
-		}
-		// elseif ($name === _DOLLAR) {
-		// 	$name = $this->expect_identifier_token();
-		// 	$type = $this->try_read_type_expression();
-		// 	if (!$type) {
-		// 		throw $this->new_parse_error("Expected type for declared super variable '$name'.");
-		// 	}
-
-		// 	$declaration = $this->factory->create_super_variable_declaration($name, $type, null);
-		// }
-		else {
-			throw $this->new_unexpected_error();
-		}
+		$declaration->origin_name = $origin_name;
 
 		return $declaration;
 	}
+
+	protected function read_header_declaration_names()
+	{
+		$name = $this->expect_identifier_token_ignore_space();
+
+		$origin_name = null;
+		if ($this->get_token() === _DOT) {
+			// the name path feature, just for class by now
+			// e.g. Name0.Name1.KeyName
+
+			$namepath = [$name];
+			while ($this->skip_token(_DOT)) {
+				$namepath[] = $this->expect_identifier_token();
+			}
+
+			if (!$this->expect_token_ignore_space(_AS)) {
+				throw $this->new_parse_error("Required keyword 'as' to alias");
+			}
+
+			$origin_name = $namepath;
+			$name = $this->expect_identifier_token_ignore_space();
+		}
+		elseif ($this->skip_token_ignore_space(_AS)) {
+			$origin_name = $name;
+			$name = $this->expect_identifier_token_ignore_space();
+		}
+
+		return [$origin_name, $name];
+	}
+
+	// private function read_php_super_var_declaration(string $name)
+	// {
+	// 	$type = $this->try_read_type_expression();
+	// 	if (!$type) {
+	// 		throw $this->new_parse_error("Expected type for declared super variable '$name'.");
+	// 	}
+
+	// 	$declaration = $this->factory->create_super_variable_declaration($name, $type, null);
+
+	// 	return $declaration;
+	// }
 
 	private function read_custom_label_statement_with(string $label)
 	{

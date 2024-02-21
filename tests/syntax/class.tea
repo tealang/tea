@@ -1,6 +1,6 @@
 #main
 
-internal IDemo: BaseInterface {
+internal interface IDemo: BaseInterface {
 	CONST1 = 'const value'
 
 	prop String
@@ -14,7 +14,7 @@ internal IDemo: BaseInterface {
 	}
 }
 
-internal IterableObject: IIterator<K UInt, V String> {
+internal IterableObject: Iterator<K UInt, V String> {
 	public pos UInt
 	public items = ['item1', 'item2', 'item3']
 

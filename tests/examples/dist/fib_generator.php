@@ -3,6 +3,7 @@ namespace tests\examples;
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 
+#internal
 function fib_generator(int $num = 9): \Iterator {
 	$a = 0;
 	$b = 1;

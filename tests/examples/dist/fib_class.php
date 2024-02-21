@@ -5,7 +5,7 @@ require_once dirname(__DIR__, 1) . '/__public.php';
 
 #internal
 interface IFib {
-	const TITLE = 'Fibonacci sequence';
+	public const TITLE = 'Fibonacci sequence';
 	public function __construct(int $max);
 	public function has_next(): bool;
 	public function get_next(): int;

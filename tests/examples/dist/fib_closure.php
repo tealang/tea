@@ -3,6 +3,7 @@ namespace tests\examples;
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 
+#internal
 function fib_closure() {
 	$a = 0;
 	$b = 1;

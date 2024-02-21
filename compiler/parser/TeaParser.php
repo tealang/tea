@@ -179,25 +179,54 @@ class TeaParser extends BaseParser
 	{
 		$token = $this->scan_token_ignore_space();
 
-		$this->assert_not_reserveds_word($token);
-
-		if (TeaHelper::is_function_name($token)) {
-			return $this->read_function_declaration($token, $modifier);
+		switch ($token) {
+			case _CLASS:
+				$name = $this->scan_token_ignore_space();
+				$declaration = $this->read_class_declaration($name, $modifier);
+				$declaration->define_mode = true; // for check
+				break;
+			case _ABSTRACT:
+				$name = $this->scan_token_ignore_space();
+				$declaration = $this->read_class_declaration($name, $modifier);
+				$declaration->define_mode = true; // for check
+				$declaration->is_abstract = true;
+				break;
+			case _INTERFACE:
+				$name = $this->scan_token_ignore_space();
+				$declaration = $this->read_interface_declaration($name, $modifier);
+				break;
+			case _TRAIT:
+				$name = $this->scan_token_ignore_space();
+				break;
+			case _CONST:
+				$name = $this->scan_token_ignore_space();
+				$declaration = $this->read_constant_declaration($name, $modifier);
+				break;
+			default:
+				$declaration = $this->check_and_read_definition($token, $modifier);
+				break;
 		}
 
-		if (TeaHelper::is_classkindred_name($token)) {
-			// maybe is a constant in some times, so need to try read class
-			if ($class = $this->try_read_classkindred_declaration($token, $modifier)) {
-				$class->define_mode = true; // for check
-				return $class;
-			}
+		return $declaration;
+	}
+
+	protected function check_and_read_definition(string $name, string $modifier) {
+		$this->assert_not_reserveds_word($name);
+		$next = $this->get_token_ignore_empty();
+		if ($next === _BLOCK_BEGIN || $next === _COLON) {
+			$declaration = $this->try_read_classkindred_declaration($name, $modifier, true);
+		}
+		elseif ($next === _PAREN_OPEN) {
+			$declaration = $this->read_function_declaration($name, $modifier);
+		}
+		elseif (TeaHelper::is_constant_name($name)) {
+			$declaration = $this->read_constant_declaration($name, $modifier);
+		}
+		else {
+			throw $this->new_unexpected_error();
 		}
 
-		if (TeaHelper::is_constant_name($token)) {
-			return $this->read_constant_declaration($token, $modifier);
-		}
-
-		throw $this->new_unexpected_error();
+		return $declaration;
 	}
 
 	protected function read_function_declaration(string $name, ?string $modifier, NamespaceIdentifier $ns = null, bool $is_declare_mode = false)
@@ -1810,18 +1839,14 @@ class TeaParser extends BaseParser
 		return $items;
 	}
 
-	protected function try_read_classkindred_declaration(string $name, string $modifier = null)
+	protected function try_read_classkindred_declaration(string $name, string $modifier = null, bool $define_mode = false)
 	{
-		$next = $this->get_token_ignore_empty();
-		if ($next !== _BLOCK_BEGIN && $next !== _COLON) {
-			return null;
-		}
-
 		if (TeaHelper::is_interface_marked_name($name)) {
 			$declaration = $this->read_interface_declaration($name, $modifier);
 		}
 		else {
 			$declaration = $this->read_class_declaration($name, $modifier);
+			$declaration->define_mode = $define_mode; // for check
 		}
 
 		return $declaration;
@@ -2145,32 +2170,43 @@ class TeaParser extends BaseParser
 			$token = $this->scan_token_ignore_space();
 		}
 
-		if ($token === _VAR) {
-			$token = $this->scan_token_ignore_space();
-			$declaration = $this->read_property_declaration($token, $modifier, $static, $is_declare_mode);
-		}
-		elseif (TeaHelper::is_constant_name($token)) {
-			$declaration = $this->read_class_constant_declaration($token, $modifier, $is_declare_mode);
-		}
-		elseif (TeaHelper::is_strict_less_function_name($token)) {
-			if ($this->get_token() === _PAREN_OPEN) {
-				$declaration = $this->read_method_declaration($token, $modifier, $static, $is_declare_mode);
-			}
-			else {
+		switch ($token) {
+			case _VAR:
+				$token = $this->scan_token_ignore_space();
 				$declaration = $this->read_property_declaration($token, $modifier, $static, $is_declare_mode);
-			}
-		}
-		elseif ($token === _DOCS_MARK) {
-			$docs = $this->read_docs();
-			$declaration = $this->read_class_member_declaration($is_declare_mode);
-			$declaration and $declaration->docs = $docs;
-		}
-		elseif ($token === _INLINE_COMMENT_MARK) {
-			$this->skip_current_line();
-			$declaration = $this->read_class_member_declaration($is_declare_mode);
-		}
-		else {
-			throw $this->new_unexpected_error();
+				break;
+			case _CONST:
+				$token = $this->scan_token_ignore_space();
+				$declaration = $this->read_class_constant_declaration($token, $modifier, $is_declare_mode);
+				break;
+			case _FUNC:
+				$token = $this->scan_token_ignore_space();
+				$declaration = $this->read_method_declaration($token, $modifier, $static, $is_declare_mode);
+				break;
+			case _DOCS_MARK:
+				$docs = $this->read_docs();
+				$declaration = $this->read_class_member_declaration($is_declare_mode);
+				$declaration and $declaration->docs = $docs;
+				break;
+			case _INLINE_COMMENT_MARK:
+				$this->skip_current_line();
+				$declaration = $this->read_class_member_declaration($is_declare_mode);
+				break;
+			default:
+				if (TeaHelper::is_constant_name($token)) {
+					$declaration = $this->read_class_constant_declaration($token, $modifier, $is_declare_mode);
+				}
+				elseif (TeaHelper::is_strict_less_function_name($token)) {
+					if ($this->get_token() === _PAREN_OPEN) {
+						$declaration = $this->read_method_declaration($token, $modifier, $static, $is_declare_mode);
+					}
+					else {
+						$declaration = $this->read_property_declaration($token, $modifier, $static, $is_declare_mode);
+					}
+				}
+				else {
+					throw $this->new_unexpected_error();
+				}
 		}
 
 		return $declaration;

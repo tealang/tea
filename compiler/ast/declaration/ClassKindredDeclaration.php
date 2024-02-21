@@ -11,8 +11,6 @@ namespace Tea;
 
 abstract class ClassKindredDeclaration extends RootDeclaration
 {
-	public $is_abstract;
-
 	/**
 	 * the implements interfaces or inherits class
 	 * @var ClassKindredIdentifier[]
@@ -100,6 +98,12 @@ class ClassDeclaration extends ClassKindredDeclaration implements ICallableDecla
 
 	// if not declare mode, set true
 	public $define_mode = false;
+
+	public $is_abstract;
+
+	public $is_readonly;
+
+	public $is_final;
 
 	public function find_based_with_symbol(Symbol $symbol)
 	{

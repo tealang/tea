@@ -55,70 +55,38 @@ class HeaderParser extends TeaParser
 
 	protected function read_declaration_with_modifier(string $modifier)
 	{
-		$name = $this->scan_token_ignore_space();
+		$token = $this->scan_token_ignore_space();
 
-		$next = $this->get_token_ignore_space();
-		if ($next === _DOT) {
-			// the name path feature, just for class
-			// e.g. Name0.Name1.KeyName
-
-			$namepath = $this->read_dot_name_components($name);
-			$name = array_pop($namepath);
-			$next = $this->get_token_ignore_space();
-		}
-		elseif ($next === _COLON) {
-			//
-		}
-		elseif ($next === _PAREN_OPEN) {
-			if (!TeaHelper::is_strict_less_function_name($name)) {
-				throw $this->new_parse_error("Invalid function name.");
-			}
-
-			// function
-			$this->assert_not_reserveds_word($name);
-			return $this->read_function_declaration($name, $modifier, null, true);
-		}
-		elseif (TeaHelper::is_constant_name($name)) {
-			if ($next !== _BLOCK_BEGIN && $next !== _AS) {
-				return $this->read_constant_declaration_without_value($name, $modifier);
-			}
-		}
-
-		// the alias feature
-		// just for class?
-		if ($next === _AS) {
-			// e.g. NS1.NS2.OriginName as DestinationName
-
-			if (isset($namepath)) {
-				$namepath[] = $name;
-				$origin_name = $namepath;
-			}
-			else {
-				$origin_name = $name;
-			}
-
-			$this->scan_token_ignore_space(); // skip _AS
-			$name = $this->scan_token_ignore_space();
-
-			$this->assert_not_reserveds_word($name);
-		}
-		elseif (isset($namepath)) {
-			throw $this->new_parse_error("Required the 'as' keyword to alias to a new name without dots.");
+		switch ($token) {
+			case _CLASS:
+				[$origin_name, $name] = $this->read_header_declaration_names();
+				$declaration = $this->read_class_declaration($name, $modifier);
+				break;
+			case _ABSTRACT:
+				[$origin_name, $name] = $this->read_header_declaration_names();
+				$declaration = $this->read_class_declaration($name, $modifier);
+				$declaration->is_abstract = true;
+				break;
+			case _INTERFACE:
+				[$origin_name, $name] = $this->read_header_declaration_names();
+				$declaration = $this->read_interface_declaration($name, $modifier);
+				break;
+			case _TRAIT:
+				[$origin_name, $name] = $this->read_header_declaration_names();
+				break;
+			case _FUNC:
+				[$origin_name, $name] = $this->read_header_declaration_names();
+				$declaration = $this->read_function_declaration($name, $modifier, null, true);
+				break;
+			case _CONST:
+				[$origin_name, $name] = $this->read_header_declaration_names();
+				$declaration = $this->read_constant_declaration_without_value($name, $modifier);
+				break;
+			default:
+				throw $this->new_parse_error("Unknow declaration type '$token'");
 		}
 
-		// if (!TeaHelper::is_classkindred_name($name)) {
-		// 	throw $this->new_parse_error("Invalid class/interface name.");
-		// }
-
-		// class or interface
-		$declaration = $this->try_read_classkindred_declaration($name, $modifier);
-		if (!$declaration) {
-			throw $this->new_unexpected_error();
-		}
-
-		if (isset($origin_name)) {
-			$declaration->origin_name = $origin_name;
-		}
+		$declaration->origin_name = $origin_name;
 
 		return $declaration;
 	}

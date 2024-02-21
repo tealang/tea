@@ -29,8 +29,8 @@ class LambdaExpression extends BaseExpression implements IScopeBlock
 	}
 }
 
-class CoroutineBlock extends LambdaExpression implements IStatement
-{
-	const KIND = 'coroutine_block';
-}
+// class CoroutineBlock extends LambdaExpression implements IStatement
+// {
+// 	const KIND = 'coroutine_block';
+// }
 

@@ -419,7 +419,7 @@ class IterableType extends SingleGenericType {
 
 	/**
 	 * the key type
-	 * UInt for Array, and String/Int for Dict or classes based on IIterable
+	 * UInt for Array, and String/Int for Dict or classes based on Iterable
 	 * @var UIntType/IntType/StringType
 	 */
 	// public $key_type;

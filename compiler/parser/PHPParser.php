@@ -676,7 +676,7 @@ class PHPParser extends BaseParser
 	private function read_class_constant_declaration(?string $modifier, ?string $doc)
 	{
 		$name = $this->expect_member_identifier_name();
-		$declaration = $this->factory->create_class_constant_declaration($modifier, $name);
+		$declaration = $this->factory->create_class_constant_declaration($modifier ?? _PUBLIC, $name);
 
 		$this->expect_char_token(_ASSIGN);
 		$declaration->type = $this->read_value_type_skip($doc, 'const', $name);

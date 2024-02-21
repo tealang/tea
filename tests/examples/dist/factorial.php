@@ -3,6 +3,7 @@ namespace tests\examples;
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 
+#internal
 function factorial(int $n): int {
 	if ($n > 1) {
 		return $n * factorial($n - 1);

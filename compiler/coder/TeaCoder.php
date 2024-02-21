@@ -121,13 +121,10 @@ class TeaCoder
 
 // -----------
 
-	protected function generate_class_header(ClassKindredDeclaration $node, string $kind = null)
+	protected function generate_classkindred_header(ClassKindredDeclaration $node, string $kind)
 	{
-		if ($node instanceof BuiltinTypeClassDeclaration) {
-			$prefix = _SHARP . 'tea';
-		}
-		elseif ($node->label === _PHP) {
-			$prefix = _SHARP . _PHP;
+		if ($node->label) {
+			$prefix = _SHARP . $node->label;
 			if ($node->origin_name) {
 				$prefix .= " $node->origin_name as";
 			}
@@ -136,7 +133,7 @@ class TeaCoder
 			$prefix = $node->modifier ?? _INTERNAL;
 		}
 
-		return "$prefix $node->name";
+		return "$prefix $kind $node->name";
 	}
 
 	protected function generate_class_baseds(ClassKindredDeclaration $node)
@@ -155,24 +152,29 @@ class TeaCoder
 
 	protected function generate_function_header(IFunctionDeclaration $node)
 	{
-		if ($node->label) {
-			$items[] = _SHARP . $node->label;
-		}
-		elseif ($node->modifier) {
-			$items[] = $node->modifier;
-		}
+		$items = [];
+		if ($node instanceof MethodDeclaration) {
+			if ($node->modifier) {
+				$items[] = $node->modifier;
+			}
 
-		if ($node->is_static) $items[] = _STATIC;
+			if ($node->is_static) {
+				$items[] = _STATIC;
+			}
+		}
+		else {
+			$items[] = $node->label ? (_SHARP . $node->label) : ($node->modifier ?? _INTERNAL);
+			$items[] = _FUNC;
+		}
 
 		$items[] = $node->name;
-
-		$code = join(' ', $items);
+		$prefix = join(' ', $items);
 
 		$parameters = $this->render_parameters($node->parameters);
 		// $callbacks = $node->callbacks ? $this->render_callback_protocols($node->callbacks) : '';
 		$type = $this->generate_declaration_type($node);
 
-		return "{$code}($parameters){$type}";
+		return "{$prefix}($parameters){$type}";
 	}
 
 	protected function generate_property_header(PropertyDeclaration $node)
@@ -188,26 +190,22 @@ class TeaCoder
 
 	protected function generate_class_constant_header(ClassConstantDeclaration $node)
 	{
-		$code = $node->modifier ? "$node->modifier " : '';
-		$code = "{$code}{$node->name}";
-
-		if ($node->type) {
-			$code .= ' ' . $node->type->render($this);
-		}
-
-		return $code;
+		return $this->generate_constant_header($node);
 	}
 
-	protected function generate_constant_header(ConstantDeclaration $node)
+	protected function generate_constant_header(IConstantDeclaration $node)
 	{
-		$code = $node->modifier ? "$node->modifier " : '';
-		$code = "{$code}{$node->name}";
+		$items = [
+			$node->label ? (_SHARP . $node->label) : ($node->modifier ?? _INTERNAL),
+			_CONST,
+			$node->name
+		];
 
 		if ($node->type) {
-			$code .= ' ' . $node->type->render($this);
+			$items[] = $node->type->render($this);
 		}
 
-		return $code;
+		return join(' ', $items);
 	}
 
 	protected function generate_declaration_type(IDeclaration $node)
@@ -269,14 +267,9 @@ class TeaCoder
 		}
 	}
 
-	protected function render_function_protocol(IFunctionDeclaration $node)
-	{
-		return $this->generate_function_header($node);
-	}
-
 	public function render_method_declaration(MethodDeclaration $node)
 	{
-		$code = $this->render_function_protocol($node);
+		$code = $this->generate_function_header($node);
 
 		if ($node->body !== null) {
 			$body = $this->render_function_body($node);
@@ -288,7 +281,7 @@ class TeaCoder
 
 	public function render_function_declaration(FunctionDeclaration $node)
 	{
-		$code = $this->render_function_protocol($node);
+		$code = $this->generate_function_header($node);
 
 		if ($node->body !== null) {
 			$body = $this->render_function_body($node);
@@ -300,7 +293,7 @@ class TeaCoder
 
 	// public function render_function_block(FunctionBlock $node)
 	// {
-	// 	$declaration = $this->render_function_protocol($node);
+	// 	$declaration = $this->generate_function_header($node);
 	// 	$body = $this->render_function_body($node);
 
 	// 	return "{$declaration} $body";
@@ -319,7 +312,7 @@ class TeaCoder
 		$body = $this->render_block_nodes($node->members);
 
 		$code = sprintf("%s%s %s",
-			$this->generate_class_header($node, 'class'),
+			$this->generate_classkindred_header($node, _CLASS),
 			$this->generate_class_baseds($node),
 			$this->wrap_block_code($body)
 		);
@@ -332,7 +325,7 @@ class TeaCoder
 		$body = $this->render_block_nodes($node->members);
 
 		$code = sprintf("%s%s %s",
-			$this->generate_class_header($node, 'interface'),
+			$this->generate_classkindred_header($node, _INTERFACE),
 			$this->generate_class_baseds($node),
 			$this->wrap_block_code($body)
 		);
@@ -361,7 +354,7 @@ class TeaCoder
 		return $code . static::CLASS_MEMBER_TERMINATOR;
 	}
 
-	public function render_constant_declaration(ConstantDeclaration $node)
+	public function render_constant_declaration(IConstantDeclaration $node)
 	{
 		$code = $this->generate_constant_header($node);
 		if ($node->value) {

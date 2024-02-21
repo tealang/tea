@@ -3,10 +3,12 @@ namespace tests\syntax;
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 
+#internal
 function fn1(callable $callee) {
 	$unknow_type_value = $callee('hei');
 }
 
+#internal
 function fn2(array &$dict) {
 	$dict['num'] += 1;
 }
@@ -17,6 +19,7 @@ class Data {
 	public static $num = 3000;
 }
 
+#internal
 function fn3($some, callable $done, callable $error = null): string {
 	return $done('A cool man') . ' with ' . $some;
 }

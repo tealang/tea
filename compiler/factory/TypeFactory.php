@@ -49,7 +49,7 @@ class TypeFactory
 	static $_iview_symbol;
 
 	// for check Iterable type accepts
-	static $_iiterator_symbol;
+	static $_iterator_symbol;
 	static $_yield_generator_symbol;
 
 	private static $type_map = [];
@@ -88,18 +88,18 @@ class TypeFactory
 
 		// self::$_dict_key_type = self::create_union_type([self::$_string, self::$_int]);
 
-		self::$_iiterator = new ClassKindredIdentifier('IIterator');
+		self::$_iiterator = new ClassKindredIdentifier('Iterator');
 		self::$_yield_generator = self::$_iiterator;
 		// self::$_yield_generator = new ClassKindredIdentifier('YieldGenerator');
 	}
 
 	static function find_iterator_identifier(IType $type)
 	{
-		if ($type->symbol === self::$_iiterator_symbol) {
+		if ($type->symbol === self::$_iterator_symbol) {
 			$result = $type;
 		}
 		else {
-			$result = $type->symbol->declaration->find_based_with_symbol(self::$_iiterator_symbol);
+			$result = $type->symbol->declaration->find_based_with_symbol(self::$_iterator_symbol);
 		}
 
 		return $result;
@@ -111,7 +111,7 @@ class TypeFactory
 	// 		$result = true;
 	// 	}
 	// 	elseif ($type instanceof PlainIdentifier) {
-	// 		$result = $type->symbol->declaration->is_same_or_based_with_symbol(self::$_iiterator_symbol);
+	// 		$result = $type->symbol->declaration->is_same_or_based_with_symbol(self::$_iterator_symbol);
 	// 	}
 	// 	elseif ($type instanceof UnionType) {
 	// 		$result = true;
@@ -187,9 +187,9 @@ class TypeFactory
 		}
 
 		self::$_iview_symbol = $unit->symbols['IView'] ?? null;
-		self::$_iiterator_symbol = $unit->symbols['IIterator'] ?? null;
+		self::$_iterator_symbol = $unit->symbols['Iterator'] ?? null;
 		// self::$_yield_generator_symbol = $unit->symbols['YieldGenerator'] ?? null;
-		self::$_yield_generator_symbol = self::$_iiterator_symbol;
+		self::$_yield_generator_symbol = self::$_iterator_symbol;
 	}
 
 	static function exists_type(string $name): bool

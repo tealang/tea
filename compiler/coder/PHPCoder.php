@@ -275,13 +275,22 @@ class PHPCoder extends TeaCoder
 		return sprintf('\{ %s }', join(', ', $items));
 	}
 
-	protected function generate_class_header(ClassKindredDeclaration $node, string $kind = null)
+	protected function generate_classkindred_header(ClassKindredDeclaration $node, string $kind)
 	{
 		$modifier = $node->modifier ?? _INTERNAL;
 		$name = $this->get_normalized_name($node->name);
-		$type = $node instanceof InterfaceDeclaration ? 'interface' : 'class';
 
-		return "#$modifier\n{$type} {$name}";
+		if ($node instanceof ClassDeclaration) {
+			if ($node->is_readonly) {
+				$kind = 'readonly ' . $kind;
+			}
+
+			if ($node->is_abstract) {
+				$kind = 'abstract ' . $kind;
+			}
+		}
+
+		return "#$modifier\n$kind $name";
 	}
 
 	protected function generate_class_baseds(ClassKindredDeclaration $node)
@@ -306,35 +315,29 @@ class PHPCoder extends TeaCoder
 
 	protected function generate_function_header(IFunctionDeclaration $node)
 	{
-		$modifier = '';
 		if ($node->belong_block) {
-			if ($node->modifier === _INTERNAL) {
-				// $modifier = "#internal\n";
+			$modifier = $node->modifier ?? _PUBLIC;;
+			if ($modifier === _INTERNAL) {
+				$prefix = "#$modifier\n";
 			}
 			else {
-				$modifier = ($node->modifier ?? _PUBLIC) . ' ';
+				$prefix = $modifier . ' ';
 			}
 
 			if ($node->is_static) {
-				$modifier .= 'static ';
+				$prefix .= 'static ';
 			}
-		}
-		// else {
-			// $modifier = $node->modifier ?? _INTERNAL;
-			// $modifier = "#$modifier\n";
-		// }
 
-		// thats method
-		if ($node->belong_block) {
 			$name = $this->get_normalized_method_name($node->name);
 		}
 		else {
+			$modifier = $node->modifier ?? _INTERNAL;
+			$prefix = $modifier === _INTERNAL ? "#$modifier\n" : '';
 			$name = $this->get_normalized_name($node->name);
 		}
 
 		$parameters = $this->render_function_parameters($node);
-
-		$code = "{$modifier}function {$name}({$parameters})";
+		$code = "{$prefix}function {$name}({$parameters})";
 
 		// just render return type on hinted
 		// because on unhinted, it's not necessary, and sometimes it makes mistakes
@@ -364,35 +367,36 @@ class PHPCoder extends TeaCoder
 
 	protected function generate_class_constant_header(ClassConstantDeclaration $node)
 	{
-		$code = "const {$node->name}";
+		$prefix = 'const';
 
-		if ($node->modifier === _INTERNAL) {
-			$code = "#internal\n$code";
+		$modifier = $node->modifier ?? null;
+		if ($modifier === _INTERNAL) {
+			$prefix = "#internal\n" . $prefix;
 		}
-		elseif ($node->modifier && $node->modifier !== _PUBLIC) {
-			$code = "{$node->modifier} $code";
+		elseif ($modifier) {
+			$prefix = $modifier . ' ' . $prefix;
 		}
 
-		return $code;
+		return $prefix . ' ' . $node->name;
 	}
 
-	protected function generate_constant_header(ConstantDeclaration $node)
+	protected function generate_constant_header(IConstantDeclaration $node)
 	{
-		if (!$node->modifier || $node->modifier === _INTERNAL) {
-			$modifier = 'internal';
-		}
-		else {
-			$modifier = $node->modifier;
+		$prefix = 'const';
+		$modifier = $node->modifier ?? _INTERNAL;
+
+		if ($modifier === _INTERNAL) {
+			$prefix = "#{$modifier}\n" . $prefix;
 		}
 
 		$name = $this->get_normalized_name($node->name);
 
-		return "#{$modifier}\nconst $name";
+		return $prefix . ' ' . $name;
 	}
 
 // ---
 
-	public function render_constant_declaration(ConstantDeclaration $node)
+	public function render_constant_declaration(IConstantDeclaration $node)
 	{
 		if ($node->label === _PHP) {
 			return null;
@@ -430,11 +434,11 @@ class PHPCoder extends TeaCoder
 		return $header . ' ' . $body;
 	}
 
-	public function render_coroutine_block(CoroutineBlock $node)
-	{
-		$lambda = $this->render_lambda_expression($node);
-		return sprintf('\Swoole\Coroutine::create(%s);', $lambda);
-	}
+	// public function render_coroutine_block(CoroutineBlock $node)
+	// {
+	// 	$lambda = $this->render_lambda_expression($node);
+	// 	return sprintf('\Swoole\Coroutine::create(%s);', $lambda);
+	// }
 
 	public function render_lambda_expression(LambdaExpression $node)
 	{
@@ -552,7 +556,7 @@ class PHPCoder extends TeaCoder
 		}
 
 		$code = sprintf("%s%s %s",
-			$this->generate_class_header($node),
+			$this->generate_classkindred_header($node, 'class'),
 			$this->generate_class_baseds($node),
 			$this->wrap_block_code($items)
 		);
@@ -579,7 +583,7 @@ class PHPCoder extends TeaCoder
 
 		// interface declare
 		$code = sprintf("%s%s %s",
-			$this->generate_class_header($node),
+			$this->generate_classkindred_header($node, 'interface'),
 			$this->generate_class_baseds($node),
 			$this->wrap_block_code($this->render_interface_members($node))
 		);

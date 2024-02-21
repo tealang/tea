@@ -64,7 +64,20 @@ class TeaHeaderCoder extends TeaCoder
 			return null;
 		}
 
-		return parent::render_class_constant_declaration($node);
+		$code = $this->generate_class_constant_header($node);
+
+		return $code . static::CLASS_MEMBER_TERMINATOR;
+	}
+
+	public function render_constant_declaration(IConstantDeclaration $node)
+	{
+		if ($node->modifier === _INTERNAL) {
+			return null;
+		}
+
+		$code = $this->generate_constant_header($node);
+
+		return $code . static::STATEMENT_TERMINATOR;
 	}
 
 	public function render_property_declaration(PropertyDeclaration $node)
@@ -83,7 +96,7 @@ class TeaHeaderCoder extends TeaCoder
 			return null;
 		}
 
-		return $this->render_function_protocol($node);
+		return $this->generate_function_header($node);
 	}
 
 	public function render_function_declaration(FunctionDeclaration $node)
@@ -92,7 +105,7 @@ class TeaHeaderCoder extends TeaCoder
 			return null;
 		}
 
-		return $this->render_function_protocol($node);
+		return $this->generate_function_header($node);
 	}
 
 	public function render_masked_declaration(MaskedDeclaration $node)

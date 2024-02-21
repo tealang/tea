@@ -580,18 +580,18 @@ class ASTFactory
 		return $block;
 	}
 
-	public function create_coroutine_block(array $parameters = [])
-	{
-		$this->program->is_using_coroutine = true;
+	// public function create_coroutine_block(array $parameters = [])
+	// {
+	// 	$this->program->is_using_coroutine = true;
 
-		$block = new CoroutineBlock(null, $parameters);
+	// 	$block = new CoroutineBlock(null, $parameters);
 
-		$this->scope = $block;
-		$this->begin_block($block);
-		$this->set_scope_parameters($parameters);
+	// 	$this->scope = $block;
+	// 	$this->begin_block($block);
+	// 	$this->set_scope_parameters($parameters);
 
-		return $block;
-	}
+	// 	return $block;
+	// }
 
 	public function create_if_block(BaseExpression $test)
 	{
