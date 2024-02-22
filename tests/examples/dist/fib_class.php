@@ -11,7 +11,7 @@ interface IFib {
 	public function get_next(): int;
 }
 
-trait IFibTrait {
+trait IFib_T {
 	protected $previous = 0;
 	protected $current = 1;
 
@@ -29,7 +29,7 @@ trait IFibTrait {
 
 #internal
 class Fib implements IFib {
-	use IFibTrait;
+	use IFib_T;
 
 	public function get_next(): int {
 		if ($this->current_index > $this->max) {

@@ -15,6 +15,8 @@ abstract class BaseParser
 
 	public $is_declare_mode = false;
 
+	public $is_interface_mode = false;
+
 	public $origin_declare_mode;
 
 	protected $file;
@@ -69,12 +71,7 @@ abstract class BaseParser
 		$this->is_declare_mode = $this->origin_declare_mode;
 	}
 
-	// public function get_program_ast()
-	// {
-	// 	return $this->program;
-	// }
-
-	abstract public function read_program(): Program;
+	public abstract function read_program(): Program;
 
 	protected function read_file(string $file)
 	{
@@ -86,7 +83,7 @@ abstract class BaseParser
 		return $source;
 	}
 
-	abstract protected function tokenize(string $source);
+	protected abstract function tokenize(string $source);
 
 	public function new_parse_error(string $message, int $trace_start = 0)
 	{
@@ -138,11 +135,13 @@ abstract class BaseParser
 		return str_replace("\t", '    ', $str);
 	}
 
-	abstract protected function get_to_line_end(int $from = null);
+	protected abstract function get_to_line_end(int $from = null);
 
-	abstract protected function get_current_token_string();
+	protected abstract function get_current_token_string();
 
-	abstract protected function get_line_number(int $pos): int;
+	protected abstract function get_line_number(int $pos): int;
 
-	abstract protected function get_previous_code_inline(int $pos): string;
+	protected abstract function get_previous_code_inline(int $pos): string;
 }
+
+// end

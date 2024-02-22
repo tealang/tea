@@ -440,6 +440,20 @@ class ASTFactory
 		return $declaration;
 	}
 
+	public function create_intertrait_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null)
+	{
+		$this->check_global_modifier($modifier, 'intertrait');
+
+		$declaration = new IntertraitDeclaration($modifier, $name);
+
+		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns);
+		$this->bind_class_symbol($declaration, $symbol);
+
+		$this->begin_class($declaration);
+
+		return $declaration;
+	}
+
 	public function create_trait_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'trait');

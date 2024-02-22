@@ -584,9 +584,9 @@ class Compiler
 				$name = $name_prefix . $node->name;
 				$this->autoloads_map[$name] = $dist_file_path;
 
-				// traits
-				if ($node instanceof InterfaceDeclaration && $node->has_default_implementations) {
-					$trait_name = $name . 'Trait';
+				// intertraits
+				if ($node instanceof IntertraitDeclaration) {
+					$trait_name = PHPCoder::get_intertrait_trait_name($name);
 					$this->autoloads_map[$trait_name] = $dist_file_path;
 				}
 			}

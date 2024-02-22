@@ -165,6 +165,7 @@ class ASTChecker
 
 			case BuiltinTypeClassDeclaration::KIND:
 			case ClassDeclaration::KIND:
+			case IntertraitDeclaration::KIND:
 			case TraitDeclaration::KIND:
 			case InterfaceDeclaration::KIND:
 				$this->check_local_classkindred_declaration($node);
@@ -642,14 +643,14 @@ class ASTChecker
 			$this->check_class_member_declaration($member);
 		}
 
-		// check is has default implementations for Interface
-		if ($node instanceof InterfaceDeclaration) {
-			foreach ($node->members as $member) {
-				if ($member instanceof PropertyDeclaration || ($member instanceof MethodDeclaration && $member->body !== null)) {
-					$node->has_default_implementations = true;
-				}
-			}
-		}
+		// check is has default implementations for Intertrait
+		// if ($node instanceof IntertraitDeclaration) {
+		// 	foreach ($node->members as $member) {
+		// 		if ($member instanceof PropertyDeclaration || ($member instanceof MethodDeclaration && $member->body !== null)) {
+		// 			$node->has_default_implementations = true;
+		// 		}
+		// 	}
+		// }
 
 		// 检查本类与继承类的成员是否匹配
 		if ($node->inherits) {

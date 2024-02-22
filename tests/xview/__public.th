@@ -21,7 +21,7 @@ public class BaseView: IView {
 	to_string() String
 }
 
-public interface IViewDemo: IView {
+public intertrait IViewDemo: IView {
 	name String
 	css_class String
 

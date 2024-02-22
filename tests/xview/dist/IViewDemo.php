@@ -6,7 +6,7 @@ interface IViewDemo extends \IView {
 	public function set_css_class(string $names);
 }
 
-trait IViewDemoTrait {
+trait IViewDemo_T {
 	public $name = '';
 	public $css_class = '';
 

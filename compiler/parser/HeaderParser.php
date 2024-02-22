@@ -71,6 +71,10 @@ class HeaderParser extends TeaParser
 				$declaration = $this->read_class_declaration($name, $modifier);
 				$declaration->is_abstract = true;
 				break;
+			case _INTERTRAIT:
+				[$origin_name, $name] = $this->read_header_declaration_names();
+				$declaration = $this->read_intertrait_declaration($name, $modifier);
+				break;
 			case _INTERFACE:
 				[$origin_name, $name] = $this->read_header_declaration_names();
 				$declaration = $this->read_interface_declaration($name, $modifier);

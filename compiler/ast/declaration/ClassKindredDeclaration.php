@@ -140,17 +140,18 @@ class BuiltinTypeClassDeclaration extends ClassDeclaration
 class InterfaceDeclaration extends ClassKindredDeclaration
 {
 	const KIND = 'interface_declaration';
-
-	/**
-	 * 是否有默认实现的成员
-	 * @var bool
-	 */
-	public $has_default_implementations = false;
 }
 
 class TraitDeclaration extends ClassKindredDeclaration
 {
 	const KIND = 'trait_declaration';
+}
+
+class IntertraitDeclaration extends InterfaceDeclaration
+{
+	const KIND = 'intertrait_declaration';
+
+	// public $has_default_implementations = false;
 }
 
 // end

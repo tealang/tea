@@ -379,6 +379,19 @@ class TeaCoder
 		return $code;
 	}
 
+	public function render_intertrait_declaration(IntertraitDeclaration $node)
+	{
+		$body = $this->render_block_nodes($node->members);
+
+		$code = sprintf("%s%s %s",
+			$this->generate_classkindred_header($node, _INTERTRAIT),
+			$this->generate_class_baseds($node),
+			$this->wrap_block_code($body)
+		);
+
+		return $code;
+	}
+
 	public function render_property_declaration(PropertyDeclaration $node)
 	{
 		$code = $this->generate_property_header($node);

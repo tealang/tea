@@ -11,7 +11,7 @@ interface IBaseView {
 	public function __toString(): string;
 }
 
-trait IBaseViewTrait {
+trait IBaseView_T {
 	protected $attributes = [];
 	protected $subitems = [];
 
@@ -55,7 +55,7 @@ trait IBaseViewTrait {
 
 #public
 class ListView implements IBaseView {
-	use IBaseViewTrait;
+	use IBaseView_T;
 
 	public function get_subviews() {
 		return array_map(function ($item) {

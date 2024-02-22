@@ -117,8 +117,15 @@ const
 	_STATIC = 'static', _FINAL = 'final', _MASKED = 'masked',
 	_RUNTIME = 'runtime',
 	_PUBLIC = 'public', _INTERNAL = 'internal', _PROTECTED = 'protected', _PRIVATE = 'private',
-	_TYPE = 'type', _CLASS = 'class', _INTERFACE = 'interface', _TRAIT = 'trait', _ENUM = 'enum', _FUNC = 'func', _CONST = 'const',
+	_TYPE = 'type',
+	_CLASS = 'class',
 	_ABSTRACT = 'abstract',
+	_INTERFACE = 'interface',
+	_TRAIT = 'trait',
+	_INTERTRAIT = 'intertrait',
+	_ENUM = 'enum',
+	_FUNC = 'func',
+	_CONST = 'const',
 	_THIS = 'this', _SUPER = 'super', _CONSTRUCT = 'construct', _DESTRUCT = 'destruct';
 
 

@@ -555,7 +555,7 @@ class PHPCoder extends TeaCoder
 
 		$items = $this->render_block_nodes($node->members);
 
-		$traits = $this->get_traits_by_interface_identifiers($node->baseds);
+		$traits = $this->get_using_trait_name_in_baseds($node->baseds);
 		if ($traits) {
 			array_unshift($items, 'use ' . join(', ', $traits) . ";\n\n");
 		}
@@ -569,17 +569,18 @@ class PHPCoder extends TeaCoder
 		return $code;
 	}
 
-	private function get_traits_by_interface_identifiers(array $identifiers)
+	private function get_using_trait_name_in_baseds(array $identifiers)
 	{
-		$traits = [];
+		$items = [];
 		foreach ($identifiers as $identifier) {
-			if ($identifier->symbol->declaration->has_default_implementations) {
-				$interface_name = $identifier->render($this);
-				$traits[] = $this->get_interface_trait_name($interface_name);
+			$target_declaration = $identifier->symbol->declaration;
+			if ($target_declaration instanceof IntertraitDeclaration) {
+				$name = $identifier->render($this);
+				$items[] = $this->get_intertrait_trait_name($name);
 			}
 		}
 
-		return $traits;
+		return $items;
 	}
 
 	public function render_interface_declaration(InterfaceDeclaration $node)
@@ -588,6 +589,17 @@ class PHPCoder extends TeaCoder
 			return null;
 		}
 
+		$code = sprintf("%s%s %s",
+			$this->generate_classkindred_header($node, 'interface'),
+			$this->generate_class_baseds($node),
+			$this->wrap_block_code($this->render_interface_members($node))
+		);
+
+		return $code;
+	}
+
+	public function render_intertrait_declaration(IntertraitDeclaration $node)
+	{
 		// interface declare
 		$code = sprintf("%s%s %s",
 			$this->generate_classkindred_header($node, 'interface'),
@@ -595,28 +607,25 @@ class PHPCoder extends TeaCoder
 			$this->wrap_block_code($this->render_interface_members($node))
 		);
 
-		// use trait to code the implements
-		if ($node->has_default_implementations) {
-			$trait_members = [];
-			foreach ($node->members as $member) {
-				if ($member instanceof PropertyDeclaration || ($member instanceof MethodDeclaration && $member->body !== null)) {
-					$trait_members[] = $member;
-				}
+		$trait_members = [];
+		foreach ($node->members as $member) {
+			if ($member instanceof PropertyDeclaration || ($member instanceof MethodDeclaration && $member->body !== null)) {
+				$trait_members[] = $member;
 			}
-
-			$name = $this->get_normalized_name($node->name);
-			$code .= sprintf("\n\ntrait %s %s",
-				$this->get_interface_trait_name($name),
-				$this->wrap_block_code($this->render_block_nodes($trait_members))
-			);
 		}
+
+		$name = $this->get_normalized_name($node->name);
+		$code .= sprintf("\n\ntrait %s %s",
+			$this->get_intertrait_trait_name($name),
+			$this->wrap_block_code($this->render_block_nodes($trait_members))
+		);
 
 		return $code;
 	}
 
-	protected static function get_interface_trait_name(string $interface_name)
+	public static function get_intertrait_trait_name(string $origin_name)
 	{
-		return $interface_name . 'Trait';
+		return $origin_name . '_T';
 	}
 
 	protected function render_interface_members(InterfaceDeclaration $declaration)

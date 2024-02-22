@@ -201,8 +201,9 @@ class TeaParser extends BaseParser
 				$name = $this->expect_identifier_token_ignore_space();
 				$declaration = $this->read_interface_declaration($name, $modifier);
 				break;
-			case _TRAIT:
+			case _INTERTRAIT:
 				$name = $this->expect_identifier_token_ignore_space();
+				$declaration = $this->read_intertrait_declaration($name, $modifier);
 				break;
 			case _CONST:
 				$name = $this->expect_identifier_token_ignore_space();
@@ -1882,8 +1883,24 @@ class TeaParser extends BaseParser
 		$declaration->pos = $this->pos;
 
 		$this->set_declare_mode(true);
+		$this->is_interface_mode = true;
 
-		$this->read_rest_for_classkindred_declaration($declaration, true);
+		$this->read_rest_for_classkindred_declaration($declaration);
+
+		$this->is_interface_mode = false;
+		$this->fallback_declare_mode();
+
+		return $declaration;
+	}
+
+	protected function read_intertrait_declaration(string $name, ?string $modifier, NamespaceIdentifier $ns = null)
+	{
+		$declaration = $this->factory->create_intertrait_declaration($name, $modifier, $ns);
+		$declaration->pos = $this->pos;
+
+		$this->set_declare_mode(true);
+
+		$this->read_rest_for_classkindred_declaration($declaration);
 
 		$this->fallback_declare_mode();
 
@@ -2307,13 +2324,18 @@ class TeaParser extends BaseParser
 
 		$next = $this->get_token_ignore_empty();
 		if ($next === _BLOCK_BEGIN) {
+			if ($this->is_interface_mode) {
+				$this->scan_token_ignore_space();
+				throw $this->new_parse_error('Member of interface only supported declaration mode');
+			}
+
 			$this->read_body_statements($declaration);
 		}
 		elseif ($this->is_declare_mode) {
 			// no any
 		}
 		else {
-			throw $this->new_parse_error('Method body required.');
+			throw $this->new_parse_error('Method body required');
 		}
 
 		$this->factory->end_class_member();
