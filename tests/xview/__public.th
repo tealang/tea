@@ -21,11 +21,21 @@ public class BaseView: IView {
 	to_string() String
 }
 
+public interface PureInterface {
+	public const ABC String
+
+	set_css_class(names String)
+}
+
 public intertrait IViewDemo: IView {
+	protected const ABC String
+
 	name String
 	css_class String
 
 	set_css_class(names String) IViewDemo
+
+	protected set_some(some String)
 }
 
 // program end

@@ -1,5 +1,15 @@
 
+public interface PureInterface {
+
+	public ABC = 'abc'
+
+	set_css_class(names String)
+}
+
 public intertrait IViewDemo: IView {
+
+	protected ABC = 'abc'
+
 	name = ''
 	css_class = ''
 
@@ -7,4 +17,6 @@ public intertrait IViewDemo: IView {
 		this.css_class = names
 		return this
 	}
+
+	protected set_some(some String)
 }

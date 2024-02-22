@@ -14,7 +14,6 @@ interface IFib {
 trait IFib_T {
 	protected $previous = 0;
 	protected $current = 1;
-
 	protected $current_index = 0;
 	protected $max;
 

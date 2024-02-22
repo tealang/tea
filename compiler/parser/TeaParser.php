@@ -825,12 +825,12 @@ class TeaParser extends BaseParser
 		if ($this->skip_token_ignore_space(_STEP)) {
 			$step = $this->scan_token_ignore_space();
 			if (!TeaHelper::is_uint_number($step)) {
-				throw $this->new_parse_error('Required unsigned int literal value for "step" in for-to/for-downto statement.');
+				throw $this->new_parse_error('Required unsigned int literal value for "step" in for-to/for-downto statement');
 			}
 
 			$step = intval($step);
 			if ($step === 0) {
-				throw $this->new_parse_error('"step" cannot set to 0.');
+				throw $this->new_parse_error('"step" cannot set to 0');
 			}
 		}
 
@@ -2199,6 +2199,11 @@ class TeaParser extends BaseParser
 			$token = $this->scan_token_ignore_space();
 		}
 
+		// interface required public member
+		if ($this->is_interface_mode and $modifier !== null and $modifier !== _PUBLIC) {
+			throw $this->new_parse_error('Access modifier for interface member must be public');
+		}
+
 		$static = false;
 		if ($token === _STATIC) {
 			$static = true;
@@ -2263,10 +2268,10 @@ class TeaParser extends BaseParser
 			$declaration->value = $this->read_compile_time_value();
 		}
 		elseif (!$this->is_declare_mode) {
-			throw $this->new_parse_error('Expected value assign expression.');
+			throw $this->new_parse_error('Expected value assign expression');
 		}
 		elseif (!$declaration->type) {
-			throw $this->new_parse_error('Expected type expression.');
+			throw $this->new_parse_error('Expected type expression');
 		}
 
 		$this->factory->end_class_member();
@@ -2278,6 +2283,10 @@ class TeaParser extends BaseParser
 
 	protected function read_property_declaration(string $name, ?string $modifier, bool $static)
 	{
+		if ($this->is_interface_mode) {
+			throw $this->new_parse_error('Interfaces could not include properties');
+		}
+
 		// prop1 String
 		// prop1 = 'abcdef'
 		// prop1 String = 'abcdef'

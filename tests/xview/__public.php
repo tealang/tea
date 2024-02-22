@@ -8,6 +8,7 @@ const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 // autoloads
 const __AUTOLOADS = [
 	'tests\xview\BaseView' => 'dist/BaseView.php',
+	'tests\xview\PureInterface' => 'dist/IViewDemo.php',
 	'tests\xview\IViewDemo' => 'dist/IViewDemo.php',
 	'tests\xview\IViewDemo_T' => 'dist/IViewDemo.php'
 ];

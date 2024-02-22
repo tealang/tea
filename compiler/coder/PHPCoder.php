@@ -313,7 +313,7 @@ class PHPCoder extends TeaCoder
 		return $code;
 	}
 
-	protected function generate_function_header(IFunctionDeclaration $node)
+	protected function generate_function_header(IFunctionDeclaration $node, bool $is_abstract = false)
 	{
 		if ($node->belong_block) {
 			$modifier = $node->modifier ?? _PUBLIC;;
@@ -322,6 +322,10 @@ class PHPCoder extends TeaCoder
 			}
 			else {
 				$prefix = $modifier . ' ';
+			}
+
+			if ($is_abstract) {
+				$prefix .= 'abstract ';
 			}
 
 			if ($node->is_static) {
@@ -600,27 +604,23 @@ class PHPCoder extends TeaCoder
 
 	public function render_intertrait_declaration(IntertraitDeclaration $node)
 	{
-		// interface declare
-		$code = sprintf("%s%s %s",
+		// interface
+		$members = $this->render_interface_members($node);
+		$interface_code = sprintf("%s%s %s",
 			$this->generate_classkindred_header($node, 'interface'),
 			$this->generate_class_baseds($node),
-			$this->wrap_block_code($this->render_interface_members($node))
+			$this->wrap_block_code($members)
 		);
 
-		$trait_members = [];
-		foreach ($node->members as $member) {
-			if ($member instanceof PropertyDeclaration || ($member instanceof MethodDeclaration && $member->body !== null)) {
-				$trait_members[] = $member;
-			}
-		}
-
+		// trait
+		$members = $this->render_trait_members_for_intertrait($node);
 		$name = $this->get_normalized_name($node->name);
-		$code .= sprintf("\n\ntrait %s %s",
+		$trait_code = sprintf("trait %s %s",
 			$this->get_intertrait_trait_name($name),
-			$this->wrap_block_code($this->render_block_nodes($trait_members))
+			$this->wrap_block_code($members)
 		);
 
-		return $code;
+		return $interface_code . "\n\n" . $trait_code;
 	}
 
 	public static function get_intertrait_trait_name(string $origin_name)
@@ -628,10 +628,10 @@ class PHPCoder extends TeaCoder
 		return $origin_name . '_T';
 	}
 
-	protected function render_interface_members(InterfaceDeclaration $declaration)
+	protected function render_interface_members(InterfaceDeclaration $node)
 	{
-		$members = [];
-		foreach ($declaration->members as $member) {
+		$items = [];
+		foreach ($node->members as $member) {
 			// PHP disallowed private/protected in Interface
 			if ($member->modifier === _PRIVATE or $member->modifier === _PROTECTED) {
 				continue;
@@ -647,16 +647,57 @@ class PHPCoder extends TeaCoder
 				continue;
 			}
 
-			$members[] = $item === LF ? $item : $item . LF;
+			$items[] = $item . LF;
 		}
 
-		return $members;
+		return $items;
 	}
 
 	protected function render_interface_method(MethodDeclaration $node)
 	{
 		$header = $this->generate_function_header($node);
 		return $header . static::CLASS_MEMBER_TERMINATOR;
+	}
+
+	protected function render_trait_members_for_intertrait(InterfaceDeclaration $node)
+	{
+		$items = [];
+		foreach ($node->members as $member) {
+			$modifier = $member->modifier ?? null;
+			$is_not_public = $modifier === _PROTECTED || $modifier === _PRIVATE;
+			if ($member instanceof PropertyDeclaration) {
+				$item = $this->render_property_declaration($member);
+			}
+			elseif ($member instanceof MethodDeclaration && ($is_not_public || $member->body !== null)) {
+				$item = $this->render_trait_method_declaration($member);
+				$item = LF . $item;
+			}
+			elseif ($member instanceof ClassConstantDeclaration && $is_not_public) {
+				$item = $this->render_class_constant_declaration($member);
+			}
+			else {
+				continue;
+			}
+
+			$items[] = $item . LF;
+		}
+
+		return $items;
+	}
+
+	private function render_trait_method_declaration(MethodDeclaration $node)
+	{
+		$is_abstract = $node->body === null;
+		$code = $this->generate_function_header($node, $is_abstract);
+
+		if ($is_abstract) {
+			$code .= static::CLASS_MEMBER_TERMINATOR;
+		}
+		else {
+			$code .= ' ' . $this->render_function_body($node);
+		}
+
+		return $code;
 	}
 
 // ---
