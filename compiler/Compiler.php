@@ -462,13 +462,6 @@ class Compiler
 	{
 		self::echo_start('Rendering programs...', LF);
 
-		// prepare for include expression
-		$this->unit->include_prefix = DIST_DIR_NAME . DS;
-
-		// prepare for faster processing the operations
-		// OperatorFactory::set_prefix_resultant_maps(PHPCoder::PREFIX_OPERATOR_MAP, PHPCoder::PREFIX_OPERATOR_PRECEDENCES);
-		// OperatorFactory::set_normal_resultant_maps(PHPCoder::NORMAL_OPERATOR_MAP, PHPCoder::NORMAL_OPERATOR_PRECEDENCES);
-
 		$header_coder = new PHPLoaderCoder();
 
 		// prepare dist namespace

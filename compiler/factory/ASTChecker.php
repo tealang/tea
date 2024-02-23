@@ -1687,7 +1687,7 @@ class ASTChecker
 		elseif ($operator->is(OPID::CONCAT)) {
 			// String or Array
 			if ($left_type instanceof ArrayType) {
-				$this->assert_type_compatible($left_type, $right_type, $node->right, _CONCAT);
+				$this->assert_type_compatible($left_type, $right_type, $node->right, 'concat');
 				$node->operator = OperatorFactory::$array_concat; // replace to array concat
 				$node->infered_type = $left_type;
 			}
@@ -1705,7 +1705,7 @@ class ASTChecker
 				throw $this->new_syntax_error("'union' operation just support Array/Dict type targets", $node);
 			}
 
-			$this->assert_type_compatible($left_type, $right_type, $node->right, _ARRAY_UNION);
+			$this->assert_type_compatible($left_type, $right_type, $node->right, 'union');
 			$node->infered_type = $left_type;
 		}
 		elseif (OperatorFactory::is_bitwise_operator($operator)) {

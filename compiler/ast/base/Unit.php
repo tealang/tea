@@ -49,17 +49,6 @@ class Unit implements IRootDeclaration
 	 */
 	public $use_units = []; // units that used in programs
 
-	/**
-	 * The prefix for render dist inlucde expression
-	 * @var string
-	 */
-	public $include_prefix;
-
-	// /**
-	//  * @var bool
-	//  */
-	// public $is_mixed_mode;
-
 	public function __construct(string $path)
 	{
 		$this->path = $path;

@@ -48,13 +48,17 @@ class PHPUnitScanner
 			preg_match('/namespace\s+([a-z0-9_\\\\]+)/i', $code, $match);
 			$namespace = $match[1] ?? null;
 
-			preg_match_all('/\n\s?(?:(?:abstract\s+|final\s+)?class|interface|trait)\s+([a-z0-9_]+)/i', $code, $matches, PREG_PATTERN_ORDER);
-			$classes = $matches[1];
+			preg_match_all('/\n\s?(?:(?:abstract\s+|final\s+)?class|interface|trait)\s+([a-z0-9_]+)/i',
+				$code,
+				$matches,
+				PREG_PATTERN_ORDER
+			);
 
+			$classes = $matches[1];
 			if ($classes) {
 				foreach ($classes as $class) {
 					if ($namespace) {
-						$class = $namespace . '\\' . $class;
+						$class = $namespace . _BACK_SLASH . $class;
 					}
 
 					if (isset($this->class_map[$class])) {
@@ -70,3 +74,5 @@ class PHPUnitScanner
 		}
 	}
 }
+
+// end

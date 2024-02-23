@@ -30,7 +30,7 @@ class PHPParser extends BaseParser
 
 	const VAL_NONE = _VAL_NULL;
 
-	const TYPE_MAP = [
+	private const TYPE_MAP = [
 		'void' => _VOID,
 		'mixed' => _ANY,
 		'string' => _STRING,
@@ -43,7 +43,7 @@ class PHPParser extends BaseParser
 		'object' => _OBJECT,
 	];
 
-	const TYPING_TOKEN_TYPES = [
+	private const TYPING_TOKEN_TYPES = [
 		T_STRING,
 		T_ARRAY,
 		T_CALLABLE,
@@ -51,24 +51,13 @@ class PHPParser extends BaseParser
 		T_NAME_FULLY_QUALIFIED
 	];
 
-	const METHOD_MAP = [
+	private const METHOD_MAP = [
 		'__construct' => _CONSTRUCT,
 		'__destruct' => _DESTRUCT,
 		'__toString' => 'to_string',
 	];
 
-	const PREFIX_OPERATOR_MAP = [
-		'!' => _NOT,
-	];
-
-	const NORMAL_OPERATOR_MAP = [
-		'instanceof' => _IS,
-		'.' => _CONCAT,
-		'&&' => _AND,
-		'||' => _OR,
-	];
-
-	const PREFIX_OPERATORS = ['!', '-', '+', '~'];
+	private const PREFIX_OPERATORS = [_EXCLAMATION, _NEGATION, _IDENTITY, _BITWISE_NOT];
 
 	private const EXPRESSION_ENDINGS = [null, _PAREN_CLOSE, _BRACKET_CLOSE, _BLOCK_END, _COMMA, _SEMICOLON];
 
@@ -216,7 +205,7 @@ class PHPParser extends BaseParser
 		}
 
 		if ($token[0] === T_NAME_QUALIFIED || $token[0] === T_NAME_FULLY_QUALIFIED) {
-			$names = explode('\\', $token[1]);
+			$names = explode(_BACK_SLASH, $token[1]);
 		}
 		else {
 			$names[] = $token[1];
@@ -326,11 +315,9 @@ class PHPParser extends BaseParser
 
 					default:
 						if ($expr === null) {
-							// $op_token = static::PREFIX_OPERATOR_MAP[$token] ?? $token;
 							$operator = OperatorFactory::get_php_prefix_operator($token);
 						}
 						else {
-							// $op_token = static::NORMAL_OPERATOR_MAP[$token] ?? $token;
 							$operator = OperatorFactory::get_php_normal_operator($token);
 						}
 
@@ -730,7 +717,7 @@ class PHPParser extends BaseParser
 				}
 			}
 			elseif (in_array($token, self::PREFIX_OPERATORS, true)) {
-				if ($token === '!') {
+				if ($token === _EXCLAMATION) {
 					$this->read_expression(); // skip the expression when is bool
 					return TypeFactory::$_bool;
 				}
@@ -1255,7 +1242,7 @@ class PHPParser extends BaseParser
 
 			case T_NAME_QUALIFIED:
 			case T_NAME_FULLY_QUALIFIED:
-				$names = explode('\\', $token[1]);
+				$names = explode(_BACK_SLASH, $token[1]);
 				break;
 
 			default:

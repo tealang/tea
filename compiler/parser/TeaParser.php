@@ -1171,7 +1171,7 @@ class TeaParser extends BaseParser
 
 		// '+' or '-'
 		$modifier = $this->get_token();
-		if ($modifier === _NEGATION || $modifier === _ADDITION) {
+		if ($modifier === _NEGATION || $modifier === _IDENTITY) {
 			$this->scan_token();
 			$prefix .= $modifier;
 		}
@@ -1974,10 +1974,6 @@ class TeaParser extends BaseParser
 
 	protected function read_classkindred_identifier_with(string $name, bool $is_based_root_ns = false)
 	{
-		// if ($name === null) {
-		// 	$name = $this->expect_identifier_token();
-		// }
-
 		$ns_components = $is_based_root_ns ? [''] : [];
 
 		while ($this->skip_token(static::NS_SEPARATOR)) {

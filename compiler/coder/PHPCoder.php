@@ -82,46 +82,6 @@ class PHPCoder extends TeaCoder
 		'to_string' => '__toString',
 	];
 
-	const PREFIX_OPERATOR_MAP = [
-		_NOT => '!',
-	];
-
-	const NORMAL_OPERATOR_MAP = [
-		_IS => 'instanceof',
-		_CONCAT => '.',
-		_AND => '&&',
-		_OR => '||',
-	];
-
-	// precedences for PrefixOperation
-	const PREFIX_OPERATOR_PRECEDENCES = [
-		'!' => 5, '-' => 5, '+' => 5, '~' => 5,
-	];
-
-	// precedences for MultiOperation
-	const NORMAL_OPERATOR_PRECEDENCES = [
-		_ARRAY_CONCAT => 0, 	// array concat, use function
-		_EXPONENTIATION => 2, 	// arithmetic
-		_DOUBLE_COLON => 3, 	// cast
-		'instanceof' => 4, 		// type
-
-		'*' => 6, '/' => 6, '%' => 6, 	// arithmetic
-		'+' => 7, 	// arithmetic, array
-		'-' => 7, 	// arithmetic
-		// '.' => 7,			// string (prior to PHP 8.0.0)
-		'<<' => 8, '>>' => 8, 	// bitwise
-		'.' => 9,				// string PHP8.0
-		'<' => 10, '<=' => 10, '>' => 10, '>=' => 10, 	// comparison
-		'==' => 11, '!=' => 11, '===' => 11, '!==' => 11, '<=>' => 11, 	// comparison
-		'&' => 12, 		// bitwise and references
-		'^' => 13, 		// bitwise
-		'|' => 14, 		// bitwise
-		'&&' => 15, 	// logical
-		'||' => 16, 	// logical
-		'??' => 17, 	// null coalescing
-		'?' => 18,		// ternary
-	];
-
 	const PROGRAM_HEADER = '<?php';
 
 	protected $uses = [];
