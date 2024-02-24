@@ -338,7 +338,7 @@ class VoidType extends BaseType {
 
 class NoneType extends BaseType {
 
-	public $name = _TYPE_NONE;
+	public $name = _NONE;
 
 	public function get_nullable_instance(): IType {
 		return $this;
@@ -517,8 +517,8 @@ class XViewType extends BaseType {
 	}
 }
 
-class NamespaceType extends BaseType {
-	public $name = _NAMESPACE;
-}
+// class NamespaceType extends BaseType {
+// 	public $name = _NAMESPACETYPE;
+// }
 
 // document end

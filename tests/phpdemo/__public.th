@@ -1,5 +1,5 @@
 
-#unit tests\phpdemo
+namespace tests\phpdemo
 
 // a php const
 public const PHP_CONST_DEMO String

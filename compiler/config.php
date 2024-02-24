@@ -15,7 +15,7 @@ const
 	SRC_DIR_NAME = 'src',
 	DIST_DIR_NAME = 'dist',
 
-	UNIT_HEADER_FILE_NAME = '__unit.th',
+	UNIT_HEADER_FILE_NAME = '__package.th',
 
 	PUBLIC_HEADER_NAME = '__public',
 	PUBLIC_HEADER_FILE_NAME = '__public.th',

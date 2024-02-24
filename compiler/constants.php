@@ -32,8 +32,7 @@ const
 
 	// system labels
 	// _PHP  = 'php',
-	_UNIT = 'unit',
-	_USE = 'use',
+	// _UNIT = 'unit',
 	_MAIN = 'main',
 	_TEXT = 'text',
 	_DEFAULT = 'default',
@@ -42,13 +41,22 @@ const
 	_INVALIDABLE_SIGN = '?',
 	_UNIONTYPE = 'UnionType',
 	_METATYPE = 'MetaType',
-	_VOID = 'Void', _TYPE_NONE = 'None', _ANY = 'Any',
+	_VOID = 'Void',
+	_NONE = 'None',
+	_ANY = 'Any',
 	// _SCALAR = 'Scalar', _BYTES = 'Bytes', _RUNES = 'Runes',
 	_STRING = 'String',
-	_INT = 'Int', _UINT = 'UInt', _FLOAT = 'Float', _BOOL = 'Bool',
-	_ITERABLE = 'Iterable', _DICT = 'Dict', _ARRAY = 'Array', // 'Pair', 'Matrix', 'Tensor'
-	_OBJECT = 'Object', _XVIEW = 'XView', _REGEX = 'Regex',
-	_CALLABLE = 'Callable', _NAMESPACE = 'Namespace', // _CLASS = 'Class',
+	_INT = 'Int',
+	_UINT = 'UInt',
+	_FLOAT = 'Float',
+	_BOOL = 'Bool',
+	_ITERABLE = 'Iterable',
+	_DICT = 'Dict',
+	_ARRAY = 'Array', // 'Pair', 'Matrix', 'Tensor'
+	_OBJECT = 'Object',
+	_XVIEW = 'XView',
+	_REGEX = 'Regex',
+	_CALLABLE = 'Callable',
 
 	// dot signs of compound types
 	_DOT_SIGN_ARRAY = 'Array', _DOT_SIGN_DICT = 'Dict', _DOT_SIGN_METATYPE = 'Type',
@@ -62,9 +70,17 @@ const
 	_NOTHING = '', _SPACE = ' ', _TAB = "\t", _CR = "\r",
 
 	// syntax chars, operators
-	_SLASH = '/', _BACK_SLASH = '\\',
-	_SHARP = '#', _DOLLAR = '$', _AT = '@', _EXCLAMATION = '!', _UNDERSCORE = '_', _STRIKETHROUGH = '-',
-	_COLON = ':', _COMMA = ',', _SEMICOLON = ';',
+	_SLASH = '/',
+	_BACK_SLASH = '\\',
+	_SHARP = '#',
+	_DOLLAR = '$',
+	_AT = '@',
+	_EXCLAMATION = '!',
+	_UNDERSCORE = '_',
+	_STRIKETHROUGH = '-',
+	_COLON = ':',
+	_COMMA = ',',
+	_SEMICOLON = ';',
 	_AS = 'as', // for make alias name
 	_IS = 'is', // for check Type
 	_IN = 'in', _TO = 'to', _DOWNTO = 'downto', _STEP = 'step', // just use in the 'for' block
@@ -110,6 +126,8 @@ const
 	_VAL_NONE = 'none',
 	_VAL_TRUE = 'true', _VAL_FALSE = 'false',
 
+	_NAMESPACE = 'namespace',
+	_USE = 'use',
 	// _NEW = 'new', _CLONE = 'clone',
 	_VAR = 'var',
 	_MUT = 'mut',
@@ -134,6 +152,7 @@ const
 	_MASKED = 'masked',
 	_RUNTIME = 'runtime',
 	_PUBLIC = 'public', _INTERNAL = 'internal', _PROTECTED = 'protected', _PRIVATE = 'private',
+
 	_TYPE = 'type',
 	_CLASS = 'class',
 	_ABSTRACT = 'abstract',

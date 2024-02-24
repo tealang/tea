@@ -83,7 +83,7 @@ class ASTFactory
 	public function set_namespace(NamespaceIdentifier $ns)
 	{
 		if ($this->unit->ns) {
-			throw $this->parser->new_parse_error("Cannot redeclare the unit namespace");
+			throw $this->parser->new_parse_error("Cannot redeclare module namespace");
 		}
 
 		$this->ns = $ns;
@@ -103,7 +103,7 @@ class ASTFactory
 
 	public function create_use_statement(NamespaceIdentifier $ns, array $targets)
 	{
-		// add to unit uses
+		// add to module uses
 		$this->unit->use_units[$ns->uri] = $ns;
 
 		$statement = new UseStatement($ns, $targets);
@@ -1003,7 +1003,7 @@ class ASTFactory
 
 		$ns_decl = $this->find_or_create_namespace_declaration($declaration->ns->names);
 		if (isset($ns_decl->symbols[$symbol->name])) {
-			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in namespace '{$ns_decl->uri}' of unit '{$this->unit->name}'");
+			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in namespace '{$ns_decl->uri}' of module '{$this->unit->name}'");
 		}
 
 		$ns_decl->symbols[$symbol->name] = $symbol;
@@ -1059,7 +1059,7 @@ class ASTFactory
 	private function add_unit_symbol(Symbol $symbol)
 	{
 		if (isset($this->unit->symbols[$symbol->name])) {
-			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in unit '{$this->unit->name}'");
+			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in module '{$this->unit->name}'");
 		}
 
 		$this->unit->symbols[$symbol->name] = $symbol;

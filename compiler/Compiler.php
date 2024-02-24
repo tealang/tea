@@ -133,19 +133,18 @@ class Compiler
 
 	private function load_builtin_unit(string $unit_path = BUILTIN_PATH)
 	{
-		$unit_public_file = $unit_path . PUBLIC_HEADER_FILE_NAME;
-
 		$this->builtin_unit = new Unit($unit_path);
 
 		$ast_factory = new ASTFactory($this->builtin_unit);
 
-		$parser = new TeaParser($ast_factory, BUILTIN_PROGRAM);
-		$program = $parser->read_program();
-
+		$unit_header_file = $unit_path . UNIT_HEADER_FILE_NAME;
+		$program = $this->parse_tea_header($unit_header_file, $ast_factory);
 		// lets render namespace as root
 		$program->unit = null;
 
-		// $this->parse_tea_header($unit_public_file, $ast_factory);
+		$program = $this->parse_tea_program(BUILTIN_PROGRAM, $ast_factory);
+		// lets render namespace as root
+		$program->unit = null;
 	}
 
 	// private function load_builtins()
@@ -227,7 +226,7 @@ class Compiler
 
 		// parse tea programs
 		foreach ($this->normal_program_files as $file) {
-			$this->normal_programs[] = $this->parse_tea_program($file);
+			$this->normal_programs[] = $this->parse_tea_program($file, $this->ast_factory);
 		}
 
 		self::echo_success(count($this->normal_programs) . ' Tea programs parsed.' . LF);
@@ -238,9 +237,9 @@ class Compiler
 		// parse header file
 		$this->header_program = $this->parse_tea_header($this->header_file_path, $this->ast_factory);
 
-		// check #unit is defined
+		// check the package is defined
 		if (!$this->unit->ns) {
-			throw new Exception("#unit declaration not found in Unit header file: {$this->header_file_path}");
+			throw new Exception("'namespace' declaration not found in the header file: {$this->header_file_path}");
 		}
 
 		$this->prepare_unit_paths();
@@ -355,7 +354,7 @@ class Compiler
 		// check public file
 		$unit_public_file = $unit_path . PUBLIC_HEADER_FILE_NAME;
 		// if (!file_exists($unit_public_file)) {
-		// 	throw new Exception("The public file of unit '{$ns->uri}' not found at: $unit_public_file");
+		// 	throw new Exception("The public file of module '{$ns->uri}' not found at: $unit_public_file");
 		// }
 
 		$unit = new Unit($unit_path);
@@ -394,7 +393,7 @@ class Compiler
 
 		if ($relative_path === false) {
 			$dirs = $this->work_path . join("', '{$this->work_path}", $this->search_dirs);
-			throw new Exception("The depends unit '{$ns->uri}' not found in ('{$dirs}')");
+			throw new Exception("The depends module '{$ns->uri}' not found in ('{$dirs}')");
 		}
 
 		return [$path_based_type, $relative_path];
@@ -592,7 +591,7 @@ class Compiler
 
 		// check is a sub-unit
 		if ($levels > 0 && (in_array(UNIT_HEADER_FILE_NAME, $items) || in_array(PUBLIC_HEADER_FILE_NAME, $items)) ) {
-			echo "\nWarring: The sub-diretory '$path' is ignored, because of it has '__unit.th' or '__public.th'.\n\n";
+			echo "\nWarring: The sub-diretory '$path' is ignored, because of it has '__package.th' or '__public.th'.\n\n";
 			return; // ignore these sub-unit
 		}
 
@@ -636,9 +635,9 @@ class Compiler
 		return $parser->read_program();
 	}
 
-	private function parse_tea_program(string $file)
+	private function parse_tea_program(string $file, ASTFactory $ast_factory)
 	{
-		$parser = new TeaParser($this->ast_factory, $file);
+		$parser = new TeaParser($ast_factory, $file);
 		return $parser->read_program();
 	}
 

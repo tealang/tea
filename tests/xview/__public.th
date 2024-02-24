@@ -1,6 +1,6 @@
 // the public declarations
 
-#unit tests\xview
+namespace tests\xview
 
 public class BaseView: IView {
 	name String

@@ -2512,7 +2512,7 @@ class ASTChecker
 
 		$symbol and $this->check_declaration_for_symbol($symbol);
 
-		// find in unit level symbols
+		// find in module level symbols
 		return $symbol;
 	}
 
@@ -2526,7 +2526,7 @@ class ASTChecker
 
 		$symbol and $this->check_declaration_for_symbol($symbol);
 
-		// find in unit level symbols
+		// find in module level symbols
 		return $symbol;
 	}
 
@@ -2583,7 +2583,7 @@ class ASTChecker
 					?? $this->find_symbol_in_namespace($based_ns, $name, $this->builtin_unit);
 			}
 			else {
-				// unit mode
+				// module mode
 				$symbol = $this->get_symbol_in_unit($based_unit, $name);
 			}
 		}
@@ -3008,7 +3008,7 @@ class ASTChecker
 	// 	$ns_decl = $this->find_namespace_declaration_in_unit($this->unit, $identifier)
 	// 		?? $this->find_namespace_declaration_in_unit($this->builtin_unit, $identifier);
 	// 	if ($ns_decl === null) {
-	// 		throw $this->new_syntax_error("Namespace '{$identifier->uri}' not found in unit '{$this->unit->uri}'", $identifier);
+	// 		throw $this->new_syntax_error("Namespace '{$identifier->uri}' not found in module '{$this->unit->uri}'", $identifier);
 	// 	}
 
 	// 	return $ns_decl;
@@ -3036,7 +3036,7 @@ class ASTChecker
 			// find from the Unit symbols
 			$symbol = $unit->symbols[$name] ?? null;
 			if ($symbol === null) {
-				throw $this->new_syntax_error("Target '{$name}' for use not found in unit '{$unit->name}'", $use);
+				throw $this->new_syntax_error("Target '{$name}' for use not found in module '{$unit->name}'", $use);
 			}
 
 			$target_declaration = $symbol->declaration;

@@ -1,12 +1,14 @@
 // the public declarations
 
-#unit tests\syntax
+namespace tests\syntax
 
-#use tests\xview
-#use tests\phpdemo { PHP_CONST_DEMO }
-#use tests\xview { BaseView }
+use tests\xview
+use tests\phpdemo { PHP_CONST_DEMO }
+use tests\xview { BaseView }
 
 public const MY_CONST Dict
+
+runtime func range(start Int, end Int, step Int = 1) Array
 
 public class PHPClassInMixed1 {
 	protected const CONST1 String
@@ -18,8 +20,6 @@ public class PHPClassInMixed1 {
 }
 
 public func php_get_num() Int
-
-runtime func range(start Int, end Int, step Int = 1) Array
 
 public func fn0(str Any) String
 

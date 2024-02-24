@@ -20,7 +20,7 @@ class Unit implements IRootDeclaration
 	// cache for render
 	public $dist_ns_uri;
 
-	// current unit path, include ends with DS
+	// current module path, include ends with DS
 	public $path;
 
 	public $type; // tea or php

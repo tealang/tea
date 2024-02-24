@@ -98,7 +98,7 @@ class PHPCoder extends TeaCoder
 	protected function collect_use_statements(IDeclaration $declaration)
 	{
 		foreach ($declaration->uses as $use) {
-			// it should be a use statement in __unit
+			// it should be a use statement in __package
 
 			$uri = $use->ns->uri;
 			if ($use->target_name) {

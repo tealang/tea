@@ -1,0 +1,36 @@
+
+namespace tests\examples
+
+// math
+runtime const M_PI Float
+runtime func pi() Float
+
+// GD
+runtime func imagecreatetruecolor(width Int, height Int) Any
+runtime func imagecolorallocatealpha(image, r Int, g Int, b Int, a Int) Int
+runtime func imagefill(image, x Int, y Int, color Int) Bool
+runtime func imagerotate(image, angle Float, background_color Int) Any
+runtime func imagesx(image) Int
+runtime func imagesy(image) Int
+runtime func imagettfbbox(size Float, angle Float, fontfile String, text String) Int.Array
+runtime func imagettftext(image, size Float, angle Float, x Int, y Int, color Int, fontfile String, text String) Int.Array
+runtime func imagepng(image, to String = none, quality = -1, filters Int = #default) Bool
+runtime func imagedestroy(image)
+
+// PDO
+runtime class PDOStatement {
+	fetch(fetch_style Int = #default) String.Dict
+	fetchAll(fetch_style Int = #default) String.Dict.Array
+}
+
+runtime class PDO {
+	FETCH_ASSOC Int
+	FETCH_COLUMN Int
+	construct(dsn String, username String = #default, passwd String = #default, options Dict = #default)
+	exec(statement String) Int
+	query(statement String) PDOStatement
+	quote(string String, parameter_type Int = #default) String
+	lastInsertId(name String = #default) String
+	errorCode() String
+	errorInfo() Array
+}

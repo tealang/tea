@@ -7,60 +7,6 @@ The builtin libs for Tea
 
 public LF = "\n"
 
-runtime func isset(expr Any) Bool
-runtime func is_int(val) Bool
-runtime func is_array(val) Bool
-runtime func is_numeric(val) Bool
-
-runtime func empty(expr Any) Bool
-runtime func var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default)
-runtime func print(expr) Int
-runtime func print_r(expr, is_return Bool = #default)
-runtime func header(info String, replace = true, http_response_code Int = #default)
-
-// dates & times
-runtime func time() Int
-runtime func date(format String, timestamp Int = #default) String
-runtime func strtotime(datetime, now Int = #default) Int
-
-runtime func str_repeat(input, multiplier Int) String
-
-// php builtin constants
-runtime const __DIR__ String
-runtime const __FILE__ String
-runtime const __LINE__ UInt
-runtime const __CLASS__ UInt
-runtime const __FUNCTION__ UInt
-
-// php super variables, unsupported, use filter_input function instead
-// runtime $_GET Dict
-// runtime $_POST Dict
-// runtime $_COOKIE Dict
-// runtime $_SERVER Dict
-
-// the function to get value of $_GET/$_POST/$_COOKIE/$_ENV/$_SERVER
-// input methods
-runtime const INPUT_GET Int
-runtime const INPUT_POST Int
-runtime const INPUT_COOKIE Int
-runtime const INPUT_ENV Int
-runtime const INPUT_SERVER Int
-// filter types
-runtime const FILTER_INT Int
-runtime const FILTER_EMAIL Int
-
-runtime func filter_input(type Int, key String, filter Int = #default, options Dict = #default) Any
-
-// exceptions
-runtime class Exception {
-	public construct(message String, code Int = 0)
-	public getCode() Int
-	public getMessage() String
-}
-
-runtime class ErrorException: Exception {}
-runtime class LogicException: Exception {}
-
 // helper functions
 
 public is_uint(val) Bool {
@@ -122,81 +68,10 @@ public xrange(start Int, end Int, step = 1) {
 	}
 }
 
-// file
-runtime func file_exists(filename) Bool
-runtime func dirname(path, levels UInt = #default) String
-runtime func basename(path, suffix String = #default) String
-runtime func realpath(path) String
-runtime func chdir(dir) Bool
-runtime func unlink(file) Bool
-runtime func file_get_contents(file) String
-runtime func file_put_contents(file, data String, flags Int = #default) UInt
-runtime const FILE_APPEND Int
-runtime const LOCK_EX Int
 
-// math
-runtime func pow(num, exponent) UInt|Int|Float
-runtime func max(n1, n2, n3 = #default) Any
-runtime func min(n1, n2, n3 = #default) Any
-runtime func abs(val) Float
-runtime func round(val, precision = 0) Float
-runtime func ceil(val) Int
-runtime func floor(val) Int
-
-// string
-runtime func trim(str, char_mask String = #default) String
-runtime func rtrim(str, char_mask String = #default) String
-runtime func ltrim(str, char_mask String = #default) String
-
-// with default charset
-runtime func iconv_strlen(str String) UInt
-runtime func iconv_substr(str String, start Int, length Int = #default) String
-
-// first pos in default charset
-runtime func iconv_strpos(str String, search String, offset Int = 0) Int  // would return false on not found
-
-// last pos in default charset
-runtime func iconv_strrpos(str String, search String, offset Int = 0) Int  // would return false on not found
-
-runtime func mb_strwidth(str String, encoding String = #default)
-runtime func mb_strtoupper(str String) String
-runtime func mb_strtolower(str String) String
-
-// bytes mode functions
-runtime func strlen(str) UInt
-runtime func substr(str, start Int, length Int = #default) String
-
-runtime func str_contains(master, search) Bool
-runtime func strpos(master, search, offset Int = 0) Int  // would return false on not found
-runtime func strrpos(master, search, offset Int = 0) Int  // would return false on not found
-runtime func strtoupper(str) String
-runtime func strtolower(str) String
-
-// replace in binary mode
-runtime func strtr(master String, changes Dict) String
-runtime func str_replace(search, replacement, master String) String
 public _str_replace(master String, search, replacement) {
 	return str_replace(search, replacement, master);
 }
-
-runtime func implode(glue String, pieces) String
-runtime func explode(delimiter String, master String) String.Array
-
-// array
-runtime func count(array) UInt
-runtime func in_array(needle, haystack, strict Bool = false) Bool
-runtime func array_reverse(array)
-runtime func array_map(callback Callable, items Array) Array
-runtime func array_filter(items Array, callback Callable, flag Int = #default) Array
-runtime func array_reduce(items Array, callback Callable, initial Any = #default)
-
-// index array
-runtime func array_slice(master Array, offset Int, length UInt = none) Array
-runtime func array_unshift(master Array, item Any) UInt
-runtime func array_shift(master Array) Any
-runtime func array_push(master Array, item Any) UInt
-runtime func array_pop(master Array) Any
-runtime func array_search(search, master, strict = false) UInt
 
 public _array_search(master Array, search)  {
 	key = array_search(search, master, true)
@@ -207,13 +82,6 @@ public array_last_index(array Array) UInt {
 	return count(array) - 1
 }
 
-runtime func array_key_exists(key, arr) Bool
-
-// assoc array
-runtime func array_keys(dict) String.Array
-runtime func array_values(dict) Array
-runtime func array_column(recordset Any.Array, key String) Array
-
 public dict_get(dict Dict, key String) {
 	return dict[key] ?? none
 }
@@ -223,15 +91,6 @@ public _dict_search(master Dict, search) {
 	return key === false ? false : key#String
 }
 
-runtime const JSON_UNESCAPED_UNICODE Int
-runtime const JSON_PRETTY_PRINT Int
-runtime func json_encode(data, flags Int = 0, depth UInt = 512) String
-runtime func json_decode(data, assoc Bool = false, depth UInt = 512, flags Int = 0) Any
-
-runtime const ENT_QUOTES Int
-runtime func htmlspecialchars(string String, flags Int = #default, encoding String = #default, double_encode = #default) String
-runtime func htmlspecialchars_decode(string String, flags Int = #default) String
-
 public html_encode(string String?, flags = ENT_QUOTES) {
 	return empty(string) ? string : htmlspecialchars(string, flags)
 }
@@ -240,19 +99,16 @@ public html_decode(string String?, flags = ENT_QUOTES) {
 	return empty(string) ? string : htmlspecialchars_decode(string, flags)
 }
 
-// regex
-runtime const PREG_SPLIT_DELIM_CAPTURE Int
-runtime func preg_match(regex Regex, subject String, matches mut Array? = #default, flags Int = #default, offset Int = #default) Bool
-runtime func preg_match_all(regex Regex, subject String, matches mut Array? = #default, flags Int = #default, offset Int = #default) Bool
-runtime func preg_split(regex Regex , subject String, limit Int = #default, flags Int = #default) Array
 public regex_test(regex Regex, subject String) Bool {
 	return preg_match(regex, subject) ? true : false
 }
+
 public regex_capture(regex Regex, subject String) String.Array? {
 	var result String.Array
 	count = preg_match(regex, subject, result)
 	return count === 0 ? none : result
 }
+
 public regex_capture_all(regex Regex, subject String) String.Array.Array? {
 	var results String.Array.Array
 	count = preg_match_all(regex, subject, results)
@@ -402,14 +258,6 @@ public type Callable {}
 public type Iterable {} // accept Iterator
 
 public interface IView {}
-
-runtime interface Iterator {
-	current() Any
-	key() String
-	next()
-	rewind()
-	valid() Bool
-}
 
 // the full Generator haven't supported by yet
 

@@ -21,7 +21,7 @@ class TeaCoder
 
 	const VAR_DECLARE_PREFIX = 'var ';
 
-	const USE_DECLARE_PREFIX = '#use ';
+	const USE_DECLARE_PREFIX = 'use ';
 
 	const NS_SEPARATOR = TeaParser::NS_SEPARATOR;
 
@@ -1306,10 +1306,10 @@ class TeaCoder
 		return $statement->expression->render($this) . static::STATEMENT_TERMINATOR;
 	}
 
-	public function render_class_members(array $members)
-	{
-		return $this->render_block_nodes($members);
-	}
+	// public function render_class_members(array $members)
+	// {
+	// 	return $this->render_block_nodes($members);
+	// }
 
 	public function render_function_body(IScopeBlock $node)
 	{

@@ -16,12 +16,12 @@ class TeaInitializer
 	{
 		$unit_dir = $this->uri;
 
-		// create the unit dir
+		// create the module dir
 		is_dir($unit_dir) or FileHelper::mkdir($unit_dir);
 
-		// the __unit.th
-		$header_file = $unit_dir . '/__unit.th';
-		file_exists($header_file) or file_put_contents($header_file, "\n#unit {$this->uri}\n\n");
+		// the header file
+		$header_file = $unit_dir . '/__package.th';
+		file_exists($header_file) or file_put_contents($header_file, "\n" . _NAMESPACE . " {$this->uri}\n\n");
 
 		// the main.tea
 		$main_file = $unit_dir . '/main.tea';

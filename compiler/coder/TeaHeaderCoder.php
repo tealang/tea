@@ -24,7 +24,7 @@ class TeaHeaderCoder extends TeaCoder
 
 	protected function collect_use_statements(Program $program, IDeclaration $declaration)
 	{
-		$unit_header_program = $program->unit->programs['__unit'] ?? null;
+		$unit_header_program = $program->unit->programs['__package'] ?? null;
 		if ($unit_header_program) {
 			// the non targets use statements used for namespace search
 			foreach ($unit_header_program->uses as $use_statement) {
@@ -36,7 +36,6 @@ class TeaHeaderCoder extends TeaCoder
 
 		foreach ($declaration->uses as $use) {
 			$uri = $use->ns->uri;
-
 			if (!isset($program->uses[$uri])) {
 				$program->uses[$uri] = new UseStatement($use->ns);
 			}
@@ -52,7 +51,7 @@ class TeaHeaderCoder extends TeaCoder
 		$items = parent::render_program_statements($program);
 
 		$uri = ltrim($program->unit->ns->uri, static::NS_SEPARATOR);
-		$unit_declaration = "#unit {$uri}\n";
+		$unit_declaration = _NAMESPACE . " {$uri}\n";
 		array_unshift($items, $unit_declaration);
 
 		return $items;

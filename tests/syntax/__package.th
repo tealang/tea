@@ -1,0 +1,20 @@
+---
+The syntax tests for Tea
+---
+
+namespace tests\syntax
+
+// namespace tests\syntax {
+// 	swoole: {
+// 		hooks: []
+// 	}
+// }
+
+use tests\xview
+use tests\xview { BaseView, IViewDemo }
+use tests\phpdemo { BaseInterface, PHPClassDemo, PHP_CONST_DEMO, php_function_demo }
+
+
+runtime func range(start Int, end Int, step = 1) Array
+
+

@@ -1,8 +1,10 @@
 // the public declarations
 
-#unit tests\examples
+namespace tests\examples
 
 runtime const M_PI Float
+
+runtime func pi() Float
 
 runtime func imagecreatetruecolor(width Int, height Int) Any
 
@@ -44,8 +46,6 @@ runtime class PDO {
 public class SQLitePDO: PDO {
 	construct(filename String)
 }
-
-runtime func pi() Float
 
 public class ListView: IBaseView {
 	get_subviews() Array

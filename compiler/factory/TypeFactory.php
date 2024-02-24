@@ -84,7 +84,7 @@ class TypeFactory
 		self::$_regex = self::create_type(RegexType::class);
 
 		self::$_callable = self::create_type(CallableType::class);
-		self::$_namespace = self::create_type(NamespaceType::class);
+		// self::$_namespace = self::create_type(NamespaceType::class);
 
 		// self::$_dict_key_type = self::create_union_type([self::$_string, self::$_int]);
 

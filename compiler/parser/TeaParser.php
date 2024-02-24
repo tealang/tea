@@ -50,7 +50,7 @@ class TeaParser extends BaseParser
 	{
 		$token = $this->scan_token_ignore_space();
 		if ($token === LF) {
-			return $this->read_root_statement(LF);
+			return $this->read_root_statement($token);
 		}
 		elseif ($token === _SEMICOLON || $token === null) {
 			// empty statement, or at the end of program
@@ -73,9 +73,9 @@ class TeaParser extends BaseParser
 		elseif (TeaHelper::is_modifier($token)) {
 			$node = $this->read_root_declaration_with_modifier($token);
 		}
-		elseif ($token === _RUNTIME) {
-			$node = $this->read_runtime_declaration();
-		}
+		// elseif ($token === _RUNTIME) {
+		// 	$node = $this->read_runtime_declaration();
+		// }
 		elseif (TeaHelper::is_structure_key($token)) {
 			$node = $this->read_structure($token);
 		}
