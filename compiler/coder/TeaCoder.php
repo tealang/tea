@@ -463,8 +463,8 @@ class TeaCoder
 	public function render_parameter_declaration(ParameterDeclaration $node)
 	{
 		$expr = static::VAR_PREFIX . $node->name;
-		if ($node->is_value_mutable) {
-			$expr = $expr . ' ' . _MUT;
+		if ($node->is_inout_mode) {
+			$expr = $expr . ' ' . _INOUT;
 		}
 
 		if ($node->type) {

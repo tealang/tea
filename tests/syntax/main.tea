@@ -5,8 +5,8 @@ public TeaDemoClass {
 
 	prop1 String|Int = 'prop1 value'
 
-	static static_method(some Dict) {
-		// some['k'] = 123   // error, cannot change a immutable item
+	static static_method(some inout Dict) {
+		some['k'] = 123
 		return this.static_prop1
 	}
 
@@ -18,6 +18,10 @@ public TeaDemoClass {
 		return 'some'
 	}
 }
+
+// immutable argument
+// internal const SOME = ['abc': 123]
+// TeaDemoClass.static_method(SOME)  // error
 
 var caller = 'The caller in main.tea'
 

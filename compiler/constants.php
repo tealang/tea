@@ -130,7 +130,7 @@ const
 	_USE = 'use',
 	// _NEW = 'new', _CLONE = 'clone',
 	_VAR = 'var',
-	_MUT = 'mut',
+	_INOUT = 'inout',
 	_YIELD = 'yield',
 	_UNSET = 'unset',
 	_IF = 'if', _ELSE = 'else', _ELSEIF = 'elseif',

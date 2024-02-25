@@ -28,7 +28,7 @@ public class TeaDemoClass {
 
 	prop1 String|Int
 
-	static static_method(some Dict) String
+	static static_method(some inout Dict) String
 
 	method1(param1 String|Int) String|Int
 

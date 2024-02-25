@@ -2424,19 +2424,14 @@ class TeaParser extends BaseParser
 
 		$type = null;
 		$value = null;
-		$is_value_mutable = false;
-
-		// if ($name === _REFERENCE) {
-		// 	$is_value_mutable = true;
-		// 	$name = $this->scan_token_ignore_space();
-		// }
+		$inout_mode = false;
 
 		if (!TeaHelper::is_normal_variable_name($name)) {
 			throw $this->new_unexpected_error();
 		}
 
-		if ($this->skip_token_ignore_space(_MUT)) {
-			$is_value_mutable = true;
+		if ($this->skip_token_ignore_space(_INOUT)) {
+			$inout_mode = true;
 		}
 
 		$next = $this->get_token_ignore_space();
@@ -2449,7 +2444,7 @@ class TeaParser extends BaseParser
 			$next = $this->get_token_ignore_space();
 		}
 
-		// if ($is_value_mutable && !($type instanceof ArrayType || $type instanceof DictType)) {
+		// if ($is_mutable && !($type instanceof ArrayType || $type instanceof DictType)) {
 		// 	throw $this->new_parse_error("Cannot use the value-mutable for '$type->name' type parameter.");
 		// }
 
@@ -2460,13 +2455,12 @@ class TeaParser extends BaseParser
 
 		$parameter = $this->create_parameter($name, $type, $value);
 
-		if ($is_value_mutable) {
+		if ($inout_mode) {
 			if ($value && $value !== ASTFactory::$default_value_marker) {
 				throw $this->new_parse_error("Cannot set a default value for the value-mutable parameter.");
 			}
 
-			$parameter->is_reassignable = false;
-			$parameter->is_value_mutable = $is_value_mutable;
+			$parameter->is_inout_mode = $inout_mode;
 		}
 
 		return $parameter;

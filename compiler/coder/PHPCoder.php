@@ -481,7 +481,7 @@ class PHPCoder extends TeaCoder
 	public function render_parameter_declaration(ParameterDeclaration $node)
 	{
 		$expr = $this->add_variable_prefix($node->name);
-		if ($node->is_value_mutable) {
+		if ($node->is_inout_mode) {
 			$expr = '&' . $expr;
 		}
 

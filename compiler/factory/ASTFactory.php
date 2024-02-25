@@ -637,7 +637,7 @@ class ASTFactory
 
 	public function create_catch_block(string $var_name, ?ClassKindredIdentifier $type)
 	{
-		$var_declaration = new InvariantDeclaration($var_name, $type ?? $this->base_exception_identifier);
+		$var_declaration = new VariableDeclaration($var_name, $type ?? $this->base_exception_identifier);
 
 		$block = new CatchBlock($var_declaration);
 		$block->symbols[$var_name] = new Symbol($var_declaration);
@@ -737,11 +737,11 @@ class ASTFactory
 
 		if ($key_var) {
 			// use String as the default type, because String can be compatible with Int/UInt
-			$key_declaration = new InvariantDeclaration($key_var->name, TypeFactory::$_string);
+			$key_declaration = new VariableDeclaration($key_var->name, TypeFactory::$_string);
 			$block->symbols[$key_var->name] = $key_var->symbol = new Symbol($key_declaration);
 		}
 
-		$value_declaration = new FinalVariableDeclaration($value_var->name, TypeFactory::$_any);
+		$value_declaration = new VariableDeclaration($value_var->name, TypeFactory::$_any);
 		$block->symbols[$value_var->name] = $value_var->symbol = new Symbol($value_declaration);
 
 		return $block;
@@ -752,7 +752,7 @@ class ASTFactory
 		$block = new ForToBlock($value_var, $start, $end, $step);
 		$this->begin_block($block);
 
-		$value_declaration = new FinalVariableDeclaration($value_var->name, TypeFactory::$_any);
+		$value_declaration = new VariableDeclaration($value_var->name, TypeFactory::$_any);
 		$block->symbols[$value_var->name] = $value_var->symbol = new Symbol($value_declaration);
 
 		return $block;

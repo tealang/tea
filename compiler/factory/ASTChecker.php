@@ -1388,7 +1388,7 @@ class ASTChecker
 			// }
 		}
 
-		if (!ASTHelper::is_reassignable_expression($master)) {
+		if (!ASTHelper::is_assignable_expr($master)) {
 			if ($master instanceof KeyAccessing) {
 				throw $this->new_syntax_error("Cannot change a immutable item", $master->left);
 			}
@@ -2224,15 +2224,13 @@ class ASTChecker
 				throw $this->new_syntax_error("Type of argument $key does not matched the parameter, expected {$expected_type_name}, supplied {$infered_type_name}", $argument);
 			}
 
-			// if ($parameter->is_referenced) {
-			// 	if (!ASTHelper::is_reassignable_expression($argument)) {
-			// 		throw $this->new_syntax_error("Argument $key is invalid for the referenced parameter defined in '{$src_callee_declar->name}'", $argument);
-			// 	}
-			// }
+			if ($parameter->is_inout_mode) {
+				if (!ASTHelper::is_assignable_expr($argument)) {
+					throw $this->new_syntax_error("Argument $key is un-assignable, cannot use for inout parameter", $argument);
+				}
 
-			if ($parameter->is_value_mutable) {
-				if (!ASTHelper::is_value_mutable($argument)) {
-					throw $this->new_syntax_error("Argument $key is invalid for the value-mutable parameter defined in '{$src_callee_declar->name}'", $argument);
+				if (!ASTHelper::is_mutable_expr($argument)) {
+					throw $this->new_syntax_error("Argument $key is immutable, cannot use for inout parameter", $argument);
 				}
 			}
 

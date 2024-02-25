@@ -32,16 +32,16 @@ abstract class Identifiable extends BaseExpression implements IAssignable
 		return $this->symbol->declaration->unit;
 	}
 
-	public function is_reassignable()
+	public function is_assignable()
 	{
-		$declaration = $this->symbol->declaration;
-		return $declaration instanceof IVariableDeclaration && $declaration->is_reassignable;
+		$decl = $this->symbol->declaration;
+		return $decl instanceof IVariableDeclaration && !$decl->is_final;
 	}
 
-	public function is_value_mutable()
+	public function is_mutable()
 	{
-		$declaration = $this->symbol->declaration;
-		return $declaration instanceof IVariableDeclaration && $declaration->is_value_mutable;
+		$decl = $this->symbol->declaration;
+		return $decl instanceof IVariableDeclaration && $decl->is_mutable;
 	}
 }
 

@@ -15,7 +15,7 @@ internal say_hello(name = 'World') {
 
 say_hello()
 
-internal set_field(key String, value String, dict mut Dict) {
+internal set_field(key String, value String, dict inout Dict) {
 	dict[key] = value
 }
 

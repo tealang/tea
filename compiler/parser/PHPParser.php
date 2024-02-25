@@ -918,9 +918,9 @@ class PHPParser extends BaseParser
 		}
 
 		// &
-		$is_reference = $token === _REFERENCE
+		$inout_mode = $token === _REFERENCE
 			|| $token[0] === T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG;
-		if ($is_reference) {
+		if ($inout_mode) {
 			$token = $this->expect_typed_token_ignore_empty();
 		}
 
@@ -942,7 +942,7 @@ class PHPParser extends BaseParser
 		}
 
 		$declar = new ParameterDeclaration($name, $type, $value);
-		$declar->is_value_mutable = $is_reference;
+		$declar->is_inout_mode = $inout_mode;
 		$declar->is_variadic = $is_variadic;
 
 		return $declar;

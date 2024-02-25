@@ -17,10 +17,10 @@ abstract class BaseVariableDeclaration extends Node implements IVariableDeclarat
 
 	public $value;
 
-	public $is_reassignable = true;
+	public $is_final = false;
 
-	// just for Array / Dict
-	public $is_value_mutable = true;
+	// just for Array|Dict|Object value
+	public $is_mutable = true;
 
 	public function __construct(string $name, IType $type = null, BaseExpression $value = null)
 	{
@@ -38,19 +38,19 @@ class VariableDeclaration extends BaseVariableDeclaration implements IStatement
 
 class FinalVariableDeclaration extends VariableDeclaration
 {
-	public $is_reassignable = false;
+	public $is_final = true;
 }
 
 class InvariantDeclaration extends VariableDeclaration
 {
-	public $is_reassignable = false;
-	public $is_value_mutable = false;
+	public $is_final = true;
+	public $is_mutable = false;
 }
 
 // class SuperVariableDeclaration extends VariableDeclaration implements IRootDeclaration
 // {
 // 	const KIND = 'super_variable_declaration';
-// 	public $is_reassignable = false;
+// 	public $is_final = false;
 // }
 
 // The rules to supports the declarative programming
@@ -91,9 +91,11 @@ class ParameterDeclaration extends BaseVariableDeclaration
 {
 	const KIND = 'parameter_declaration';
 
-	public $is_value_mutable = false;
+	public $is_inout_mode = false;
 
-	public $is_variadic = false; // is a variadic parameter
+	// is a variadic parameter
+	// to receive multiple arguments in a parameter
+	public $is_variadic = false;
 
 	/**
 	 * @var RuleOptions

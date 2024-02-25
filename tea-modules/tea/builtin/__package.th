@@ -155,8 +155,8 @@ runtime func htmlspecialchars_decode(string String, flags Int = #default) String
 
 // regex
 runtime const PREG_SPLIT_DELIM_CAPTURE Int
-runtime func preg_match(regex Regex, subject String, matches mut Array? = #default, flags Int = #default, offset Int = #default) Bool
-runtime func preg_match_all(regex Regex, subject String, matches mut Array? = #default, flags Int = #default, offset Int = #default) Bool
+runtime func preg_match(regex Regex, subject String, matches inout Array? = #default, flags Int = #default, offset Int = #default) Bool
+runtime func preg_match_all(regex Regex, subject String, matches inout Array? = #default, flags Int = #default, offset Int = #default) Bool
 runtime func preg_split(regex Regex , subject String, limit Int = #default, flags Int = #default) Array
 
 // interfaces

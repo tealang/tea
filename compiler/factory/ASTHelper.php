@@ -13,14 +13,14 @@ class ASTHelper
 {
 	static function create_symbol_this(ClassKindredIdentifier $class)
 	{
-		$declaration = new InvariantDeclaration(_THIS, $class);
+		$declaration = new FinalVariableDeclaration(_THIS, $class);
 		$declaration->is_checked = true; // do not need to check
 		return new Symbol($declaration);
 	}
 
 	static function create_symbol_super(ClassKindredIdentifier $class)
 	{
-		$declaration = new InvariantDeclaration(_SUPER, $class);
+		$declaration = new FinalVariableDeclaration(_SUPER, $class);
 		$declaration->is_checked = true; // do not need to check
 		return new Symbol($declaration);
 	}
@@ -33,30 +33,30 @@ class ASTHelper
 		return $identifier;
 	}
 
-	static function is_reassignable_expression(BaseExpression $expr)
+	static function is_assignable_expr(BaseExpression $expr)
 	{
-		if ($expr instanceof Identifiable && $expr->is_reassignable()) {
+		if ($expr instanceof Identifiable && $expr->is_assignable()) {
 			return true;
 		}
 
-		if ($expr instanceof KeyAccessing && self::is_value_mutable($expr->left)) {
+		if ($expr instanceof KeyAccessing && self::is_mutable_expr($expr->left)) {
 			return true;
 		}
 
-		if ($expr instanceof SquareAccessing && self::is_value_mutable($expr->expression)) {
+		if ($expr instanceof SquareAccessing && self::is_mutable_expr($expr->expression)) {
 			return true;
 		}
 
 		return false;
 	}
 
-	static function is_value_mutable(BaseExpression $expr)
+	static function is_mutable_expr(BaseExpression $expr)
 	{
-		if ($expr instanceof Identifiable && $expr->is_value_mutable()) {
+		if ($expr instanceof Identifiable && $expr->is_mutable()) {
 			return true;
 		}
 
-		if ($expr instanceof KeyAccessing && self::is_value_mutable($expr->left)) {
+		if ($expr instanceof KeyAccessing && self::is_mutable_expr($expr->left)) {
 			return true;
 		}
 
@@ -64,3 +64,4 @@ class ASTHelper
 	}
 }
 
+// end
