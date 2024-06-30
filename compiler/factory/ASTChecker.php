@@ -1760,12 +1760,13 @@ class ASTChecker
 	private function infer_prefix_operation(PrefixOperation $node): IType
 	{
 		$expr_type = $this->infer_expression($node->expression);
+		$operator = $node->operator;
 
-		if ($node->operator->is(OPID::BOOL_NOT)) {
+		if ($operator->is(OPID::BOOL_NOT)) {
 			$this->assert_bool_operable($expr_type, $node->expression);
 			$infered = TypeFactory::$_bool;
 		}
-		elseif ($node->operator->is(OPID::NEGATION)) {
+		elseif ($operator->is(OPID::NEGATION)) {
 			$this->assert_math_operable($expr_type, $node->expression);
 
 			// if is UInt or contais UInt, it must be became to Int after negation
@@ -1781,17 +1782,20 @@ class ASTChecker
 				$infered = $expr_type;
 			}
 		}
-		elseif ($node->operator->is(OPID::REFERENCE)) {
+		elseif ($operator->is(OPID::REFERENCE)) {
 			$infered = $expr_type;
 		}
-		elseif ($node->operator->is(OPID::BITWISE_NOT)) {
+		elseif ($operator->is(OPID::BITWISE_NOT)) {
 			$this->assert_bitwise_operable($expr_type, $node->expression);
 			$infered = $expr_type === TypeFactory::$_uint || $expr_type === TypeFactory::$_int || $expr_type === TypeFactory::$_float
 				? TypeFactory::$_int
 				: $expr_type;
 		}
+		elseif ($operator->is(OPID::CLONE)) {
+			$infered = $expr_type;
+		}
 		else {
-			$sign = $node->operator->get_debug_sign();
+			$sign = $operator->get_debug_sign();
 			throw $this->new_syntax_error("Unknow operator: {$sign}", $node);
 		}
 

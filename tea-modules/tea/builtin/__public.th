@@ -80,7 +80,7 @@ runtime func file_get_contents(file Any) String
 
 runtime func file_put_contents(file Any, data String, flags Int = #default) UInt
 
-runtime func pow(num Any, exponent Any) UInt
+runtime func pow(num Any, exponent Any) UInt|Int|Float
 
 runtime func max(n1 Any, n2 Any, n3 Any = #default) Any
 
@@ -166,7 +166,7 @@ runtime func array_keys(dict Any) String.Array
 
 runtime func array_values(dict Any) Array
 
-runtime func array_column(recordset Any.Array, key String) Array
+runtime func array_column(recordset Array|Dict, key String) Array
 
 runtime func json_encode(data Any, flags Int = 0, depth UInt = 512) String
 

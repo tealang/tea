@@ -59,12 +59,12 @@ class Test1 extends IterableObject implements IDemo {
 	}
 
 	public static function static_method() {
-		echo Test1::CONST1, LF;
+		echo static::CONST1, LF;
 	}
 
 	public static function get_closure() {
 		return function () {
-			return Test1::CONST1;
+			return static::CONST1;
 		};
 	}
 }
@@ -248,7 +248,8 @@ var_dump(Test1::get_closure()());
 echo "# finished run closure", LF;
 
 $t1 = new Test1('some');
-echo $t1->get_class_name('Unknow'), LF;
+$t1_1 = clone $t1;
+echo $t1_1->get_class_name('Unknow'), LF;
 
 $t2 = new Test2();
 $t2->set_t1($t1);

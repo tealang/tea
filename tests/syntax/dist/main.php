@@ -15,7 +15,7 @@ class TeaDemoClass {
 
 	public static function static_method(array &$some) {
 		$some['k'] = 123;
-		return TeaDemoClass::$static_prop1;
+		return static::$static_prop1;
 	}
 
 	public function method1(string|int $param1) {

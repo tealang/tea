@@ -140,7 +140,7 @@ runtime func array_key_exists(key, arr) Bool
 // assoc array
 runtime func array_keys(dict) String.Array
 runtime func array_values(dict) Array
-runtime func array_column(recordset Any.Array, key String) Array
+runtime func array_column(recordset Array|Dict, key String) Array
 
 // json
 runtime const JSON_UNESCAPED_UNICODE Int

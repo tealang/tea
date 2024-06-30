@@ -71,7 +71,7 @@ trait ITypeTrait
 	}
 
 	public function is_same_with(IType $target) {
-		return $this->symbol === $target->symbol;
+		return $this->symbol !== null and $this->symbol === $target->symbol;
 	}
 
 	public function is_same_or_based_with(IType $target) {
@@ -162,7 +162,7 @@ abstract class SingleGenericType extends BaseType
 	}
 
 	public function is_same_with(IType $target) {
-		if ($this->symbol === $target->symbol) {
+		if ($this->symbol !== null and $this->symbol === $target->symbol) {
 			if ($this->generic_type === null || $this->generic_type->is_same_with($target->generic_type ?? TypeFactory::$_any)) {
 				return true;
 			}

@@ -17,6 +17,8 @@ class TeaCoder
 
 	const BLOCK_END = '}';
 
+	const NOSPACE_PREFIX_OPERATORS = ['-', '~', '+', '&', '!'];
+
 	const VAR_PREFIX = '';
 
 	const VAR_DECLARE_PREFIX = 'var ';
@@ -243,7 +245,9 @@ class TeaCoder
 
 	protected function generate_declaration_type(IDeclaration $node)
 	{
-		return $node->type && $node->type !== TypeFactory::$_void ? ' ' . $node->type->render($this) : '';
+		return $node->type && $node->type !== TypeFactory::$_void
+			? ' ' . $node->type->render($this)
+			: '';
 	}
 
 	protected function render_parameters(array $nodes)
@@ -1014,8 +1018,14 @@ class TeaCoder
 
 	public function render_prefix_operation(BaseExpression $node)
 	{
-		$expression = $node->expression->render($this);
-		return $this->get_operator_sign($node->operator) . $expression;
+		$expr_code = $node->expression->render($this);
+
+		$oper = $this->get_operator_sign($node->operator);
+		if (!in_array($oper, self::NOSPACE_PREFIX_OPERATORS, true)) {
+			$oper .= ' ';
+		}
+
+		return $oper . $expr_code;
 	}
 
 	// public function render_postfix_operation(BaseExpression $node)

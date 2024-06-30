@@ -63,7 +63,8 @@ Test1.get_closure()()::var_dump
 echo "# finished run closure"
 
 var t1 = Test1('some')
-echo t1.get_class_name('Unknow')
+var t1_1 = clone t1
+echo t1_1.get_class_name('Unknow')
 
 internal Test2 {
 	// 自定义类作为属性

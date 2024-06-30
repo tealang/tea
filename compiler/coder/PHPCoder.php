@@ -1033,23 +1033,24 @@ class PHPCoder extends TeaCoder
 		if ($declaration->is_static) {
 			// static accessing
 
-			if ($master === _THIS) {
-				$master_declaration = $node->master->symbol->declaration;
-				if ($master_declaration->is_root_namespace()) {
-					$master = $this->get_identifier_name_for_root_namespace_declaration($master_declaration);
-				}
-				else {
-					$master = $this->get_normalized_name($master_declaration->name);
-				}
+			// cannot use '$this' or 'static' for private member, it will be cause syntax error
+			if ($declaration->modifier === _PRIVATE) {
+				$master = 'self';
+			}
+			elseif ($master === _THIS) {
+				// $master_declaration = $node->master->symbol->declaration;
+				// if ($master_declaration->is_root_namespace()) {
+				// 	$master = $this->get_identifier_name_for_root_namespace_declaration($master_declaration);
+				// }
+				// else {
+				// 	$master = $this->get_normalized_name($master_declaration->name);
+				// }
+
+				$master = 'static';
 			}
 
 			if ($is_property) {
 				$name = $this->add_variable_prefix($name);
-			}
-
-			// cannot use '$this' for private member, it will be cause syntax error
-			if ($declaration->modifier === _PRIVATE) {
-				$master = 'self';
 			}
 
 			$operator = static::CLASS_MEMBER_OPERATOR;
@@ -1664,7 +1665,12 @@ class PHPCoder extends TeaCoder
 			$expr_code = "($expr_code)";
 		}
 
-		return $this->get_operator_sign($operator) . $expr_code;
+		$oper = $this->get_operator_sign($operator);
+		if (!in_array($oper, self::NOSPACE_PREFIX_OPERATORS, true)) {
+			$oper .= ' ';
+		}
+
+		return $oper . $expr_code;
 	}
 
 	public function render_binary_operation(BinaryOperation $node)
