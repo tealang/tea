@@ -13,7 +13,7 @@ interface ILiteral {}
 
 trait LiteralTrait
 {
-	public $is_call_mode;
+	// public $is_calling;
 }
 
 trait LiteralTraitWithValue

@@ -467,7 +467,7 @@ class TeaCoder
 	public function render_parameter_declaration(ParameterDeclaration $node)
 	{
 		$expr = static::VAR_PREFIX . $node->name;
-		if ($node->is_inout_mode) {
+		if ($node->is_inout) {
 			$expr = $expr . ' ' . _INOUT;
 		}
 

@@ -37,7 +37,7 @@ class CastOperation extends BinaryOperation
 {
 	const KIND = 'cast_operation';
 
-	public $is_call_mode;
+	// public $is_calling;
 
 	public function __construct(BaseExpression $left, IType $right)
 	{

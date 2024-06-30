@@ -15,13 +15,6 @@ abstract class Identifiable extends BaseExpression implements IAssignable
 
 	public $symbol;
 
-	/**
-	 * is has any operation like accessing or call
-	 * use for render the dist code
-	 * @var bool
-	 */
-	public $is_call_mode;
-
 	public function __construct(string $name)
 	{
 		$this->name = $name;
@@ -55,7 +48,9 @@ class AccessingIdentifier extends Identifiable implements IType
 
 	public function __construct(BaseExpression $master, string $name)
 	{
-		$master->is_call_mode = true;
+		if ($master instanceof PlainIdentifier) {
+			$master->is_calling = true;
+		}
 
 		$this->master = $master;
 		$this->name = $name;
@@ -73,6 +68,13 @@ class PlainIdentifier extends Identifiable implements IType
 	public $generic_types;
 
 	public $lambda;
+
+	/**
+	 * is has any operation like accessing or call
+	 * use for render the dist code
+	 * @var bool
+	 */
+	public $is_calling;
 
 	public static function create_with_symbol(Symbol $symbol)
 	{

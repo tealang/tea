@@ -1396,7 +1396,7 @@ class ASTChecker
 				throw $this->new_syntax_error("Cannot change a immutable item", $master);
 			}
 			else {
-				throw $this->new_syntax_error("Cannot assign to a final/non-assignable item", $master);
+				throw $this->new_syntax_error("Cannot assign to a final(un-reassignable) item", $master);
 			}
 		}
 
@@ -2228,13 +2228,15 @@ class ASTChecker
 				throw $this->new_syntax_error("Type of argument $key does not matched the parameter, expected {$expected_type_name}, supplied {$infered_type_name}", $argument);
 			}
 
-			if ($parameter->is_inout_mode) {
+			if ($parameter->is_inout) {
 				if (!ASTHelper::is_assignable_expr($argument)) {
-					throw $this->new_syntax_error("Argument $key is un-assignable, cannot use for inout parameter", $argument);
+					throw $this->new_syntax_error("Argument $key is final(un-reassignable), cannot use for inout parameter", $argument);
 				}
+			}
 
+			if ($parameter->is_mutable) {
 				if (!ASTHelper::is_mutable_expr($argument)) {
-					throw $this->new_syntax_error("Argument $key is immutable, cannot use for inout parameter", $argument);
+					throw $this->new_syntax_error("Argument $key is immutable, cannot use for value mutable parameter", $argument);
 				}
 			}
 

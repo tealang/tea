@@ -2421,10 +2421,12 @@ class TeaParser extends BaseParser
 	{
 		// param Int = 1
 		// param mut Array  // for mutable parameters
+		// param inout Int  // for inout parameters
 
 		$type = null;
 		$value = null;
 		$inout_mode = false;
+		$mutable_mode = false;
 
 		if (!TeaHelper::is_normal_variable_name($name)) {
 			throw $this->new_unexpected_error();
@@ -2432,6 +2434,10 @@ class TeaParser extends BaseParser
 
 		if ($this->skip_token_ignore_space(_INOUT)) {
 			$inout_mode = true;
+		}
+
+		if ($this->skip_token_ignore_space(_MUT)) {
+			$mutable_mode = true;
 		}
 
 		$next = $this->get_token_ignore_space();
@@ -2457,10 +2463,14 @@ class TeaParser extends BaseParser
 
 		if ($inout_mode) {
 			if ($value && $value !== ASTFactory::$default_value_marker) {
-				throw $this->new_parse_error("Cannot set a default value for the value-mutable parameter.");
+				throw $this->new_parse_error("Cannot set a default value for inout mode parameter.");
 			}
 
-			$parameter->is_inout_mode = $inout_mode;
+			$parameter->is_inout = true;
+		}
+
+		if ($mutable_mode) {
+			$parameter->is_mutable = true;
 		}
 
 		return $parameter;

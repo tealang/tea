@@ -26,7 +26,11 @@ trait IScopeBlockTrait
 
 	// public $auto_declarations = [];
 
-	public $is_checking; // set true when on checking by ASTChecker
+	// the function/method is mutating global variables, object properties, resources
+	public $is_mutating = false;
+
+	// set true when checking AST
+	public $is_checking;
 
 	public function __construct(?string $modifier, string $name, IType $type = null, array $parameters = null)
 	{

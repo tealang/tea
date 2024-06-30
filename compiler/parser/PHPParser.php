@@ -942,7 +942,11 @@ class PHPParser extends BaseParser
 		}
 
 		$declar = new ParameterDeclaration($name, $type, $value);
-		$declar->is_inout_mode = $inout_mode;
+		if ($inout_mode) {
+			$declar->is_inout = true;
+			$declar->is_mutable = true;
+		}
+
 		$declar->is_variadic = $is_variadic;
 
 		return $declar;

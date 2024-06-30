@@ -130,6 +130,7 @@ const
 	_USE = 'use',
 	// _NEW = 'new', _CLONE = 'clone',
 	_VAR = 'var',
+	_MUT = 'mut',
 	_INOUT = 'inout',
 	_YIELD = 'yield',
 	_UNSET = 'unset',
@@ -162,7 +163,9 @@ const
 	_ENUM = 'enum',
 	_FUNC = 'func',
 	_CONST = 'const',
-	_THIS = 'this', _SUPER = 'super', _CONSTRUCT = 'construct', _DESTRUCT = 'destruct';
-
+	_THIS = 'this', _SUPER = 'super',
+	_CONSTRUCT = 'construct', _DESTRUCT = 'destruct',
+	_EXTENDS = 'extends',
+	_IMPLEMENTS = 'implements';
 
 // program end

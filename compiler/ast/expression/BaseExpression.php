@@ -13,5 +13,5 @@ abstract class BaseExpression extends Node
 {
 	public $infered_type;
 	public $is_pure;
-	public $is_call_mode;
+	// public $is_calling;
 }

@@ -481,7 +481,7 @@ class PHPCoder extends TeaCoder
 	public function render_parameter_declaration(ParameterDeclaration $node)
 	{
 		$expr = $this->add_variable_prefix($node->name);
-		if ($node->is_inout_mode) {
+		if ($node->is_inout) {
 			$expr = '&' . $expr;
 		}
 
@@ -1262,7 +1262,7 @@ class PHPCoder extends TeaCoder
 			$name = $this->get_normalized_name_with_declaration($declaration);
 		}
 
-		if (!$node->is_call_mode) {
+		if (!$node->is_calling) {
 			if ($declaration instanceof FunctionDeclaration) {
 				$uri = ltrim($declaration->program->unit->dist_ns_uri, static::NS_SEPARATOR);
 				$name = sprintf("'%s%s%s'", $uri, static::NS_SEPARATOR, $name);

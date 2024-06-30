@@ -19,7 +19,8 @@ abstract class BaseVariableDeclaration extends Node implements IVariableDeclarat
 
 	public $is_final = false;
 
-	// just for Array|Dict|Object value
+	// to mark the value is mutable
+	// just for Array|Dict|Object values
 	public $is_mutable = true;
 
 	public function __construct(string $name, IType $type = null, BaseExpression $value = null)
@@ -91,7 +92,7 @@ class ParameterDeclaration extends BaseVariableDeclaration
 {
 	const KIND = 'parameter_declaration';
 
-	public $is_inout_mode = false;
+	public $is_inout = false;
 
 	// is a variadic parameter
 	// to receive multiple arguments in a parameter
