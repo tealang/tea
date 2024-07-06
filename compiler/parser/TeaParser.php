@@ -783,21 +783,21 @@ class TeaParser extends BaseParser
 	protected function read_for_block(string $label = null)
 	{
 		// for k, v in items {} else {}
-		// for i = 0 to 9 {}  // the default step is 1
-		// for i = 0 to 9 step 2 {}  // with step option
-		// for i = 9 downto 0 {}  // the default step is 1
-		// for i = 9 downto 0 step 2 {}
+		// for i in 0 to 9 {}  // the default step is 1
+		// for i in 0 to 9 step 2 {}  // with step 2
+		// for i in 9 downto 0 {}
+		// for i in 9 downto 0 step 2 {}
 
 		$value_var = $this->read_variable_identifier();
 
-		if ($this->skip_token_ignore_space(_ASSIGN)) {
-			// the for-to mode
-			$master_block = $this->read_forto_block_with($value_var);
-		}
-		else {
-			// the for-in mode
+		// if ($this->skip_token_ignore_space(_ASSIGN)) {
+		// 	// the for-to mode
+		// 	$master_block = $this->read_forto_block_with($value_var);
+		// }
+		// else {
+		// 	// the for-in mode
 			$master_block = $this->read_forin_block_with($value_var);
-		}
+		// }
 
 		$master_block->label = $label;
 		$this->read_block_body($master_block);
@@ -811,17 +811,57 @@ class TeaParser extends BaseParser
 		return $master_block;
 	}
 
-	protected function read_forto_block_with(VariableIdentifier $value_var)
-	{
-		$start = $this->read_expression();
+	// private function read_forto_block_with(VariableIdentifier $value_var)
+	// {
+	// 	$start = $this->read_expression();
 
-		$mode = $this->scan_token_ignore_space();
-		if ($mode !== _TO && $mode !== _DOWNTO) {
-			throw $this->new_unexpected_error();
+	// 	$mode = $this->scan_token_ignore_space();
+	// 	if ($mode !== _TO && $mode !== _DOWNTO) {
+	// 		throw $this->new_unexpected_error();
+	// 	}
+
+	// 	$end = $this->read_expression();
+	// 	$step = $this->try_read_step();
+	// 	$block = $this->factory->create_forto_block($value_var, $start, $end, $step);
+	// 	if ($mode === _DOWNTO) {
+	// 		$block->is_downto_mode = true;
+	// 	}
+
+	// 	return $block;
+	// }
+
+	private function read_forin_block_with(VariableIdentifier $value_var)
+	{
+		$key_var = null;
+		if ($this->skip_comma()) {
+			$key_var = $value_var;
+			$value_var = $this->read_variable_identifier();
 		}
 
-		$end = $this->read_expression();
+		$this->expect_token_ignore_empty(_IN);
 
+		$iterable_or_start = $this->read_expression();
+
+		$mode = $this->get_token_ignore_space();
+		if ($mode === _TO || $mode === _DOWNTO) {
+			$this->scan_token_ignore_space();
+			$end = $this->read_expression();
+			$step = $this->try_read_step();
+			$block = $this->factory->create_forto_block($value_var, $iterable_or_start, $end, $step);
+			if ($mode === _DOWNTO) {
+				$block->is_downto_mode = true;
+			}
+		}
+		else {
+			$block = $this->factory->create_forin_block($iterable_or_start, $key_var, $value_var);
+		}
+
+		return $block;
+	}
+
+	private function try_read_step()
+	{
+		$step = null;
 		if ($this->skip_token_ignore_space(_STEP)) {
 			$step = $this->scan_token_ignore_space();
 			if (!TeaHelper::is_uint_number($step)) {
@@ -834,29 +874,7 @@ class TeaParser extends BaseParser
 			}
 		}
 
-		$block = $this->factory->create_forto_block($value_var, $start, $end, $step ?? null);
-
-		if ($mode === _DOWNTO) {
-			$block->is_downto_mode = true;
-		}
-
-		return $block;
-	}
-
-	protected function read_forin_block_with(VariableIdentifier $value_var)
-	{
-		$key_var = null;
-		if ($this->skip_comma()) {
-			$key_var = $value_var;
-			$value_var = $this->read_variable_identifier();
-		}
-
-		$this->expect_token_ignore_empty(_IN);
-
-		$iterable = $this->read_expression();
-		$block = $this->factory->create_forin_block($iterable, $key_var, $value_var);
-
-		return $block;
+		return $step;
 	}
 
 	protected function read_while_block(string $label = null)

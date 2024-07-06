@@ -4,7 +4,7 @@
 internal fib_generator(num = 9) {
 	a = 0
 	b = 1
-	for i = 0 to num {
+	for i in 0 to num {
 		c = b
 		b = a + b
 		a = c
@@ -12,6 +12,6 @@ internal fib_generator(num = 9) {
 	}
 }
 
-for k,v in fib_generator() {
+for k, v in fib_generator() {
 	echo "$k ==> $v"
 }
