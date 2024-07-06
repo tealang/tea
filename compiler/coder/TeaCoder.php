@@ -152,14 +152,14 @@ class TeaCoder
 		return $name;
 	}
 
-	protected function generate_class_baseds(ClassKindredDeclaration $node)
+	protected function generate_class_bases(ClassKindredDeclaration $node)
 	{
 		$items = [];
 		if ($node->inherits) {
 			$items[] = $this->render_classkindred_identifier($node->inherits);
 		}
 
-		foreach ($node->baseds as $item) {
+		foreach ($node->bases as $item) {
 			$items[] = $this->render_classkindred_identifier($item);
 		}
 
@@ -350,7 +350,7 @@ class TeaCoder
 
 		$code = sprintf("%s%s %s",
 			$this->generate_classkindred_header($node, _TYPE),
-			$this->generate_class_baseds($node),
+			$this->generate_class_bases($node),
 			$this->wrap_block_code($body)
 		);
 
@@ -363,7 +363,7 @@ class TeaCoder
 
 		$code = sprintf("%s%s %s",
 			$this->generate_classkindred_header($node, _CLASS),
-			$this->generate_class_baseds($node),
+			$this->generate_class_bases($node),
 			$this->wrap_block_code($body)
 		);
 
@@ -376,7 +376,7 @@ class TeaCoder
 
 		$code = sprintf("%s%s %s",
 			$this->generate_classkindred_header($node, _INTERFACE),
-			$this->generate_class_baseds($node),
+			$this->generate_class_bases($node),
 			$this->wrap_block_code($body)
 		);
 
@@ -389,7 +389,7 @@ class TeaCoder
 
 		$code = sprintf("%s%s %s",
 			$this->generate_classkindred_header($node, _INTERTRAIT),
-			$this->generate_class_baseds($node),
+			$this->generate_class_bases($node),
 			$this->wrap_block_code($body)
 		);
 

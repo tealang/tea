@@ -532,17 +532,17 @@ class ASTChecker
 			$infered_type = $this->infer_single_expression_block($node);
 		}
 
-		$declared_type = $node->type;
-		if ($declared_type) {
+		$hinted_type = $node->type;
+		if ($hinted_type) {
 			if ($infered_type !== null) {
-				if (!$declared_type->is_accept_type($infered_type)) {
-					$infered_type_name = self::get_type_name($infered_type);
-					$declared_type_name = self::get_type_name($declared_type);
-					throw $this->new_syntax_error("The infered returns type is '{$infered_type_name}', do not compatibled with the declared '{$declared_type_name}'", $node);
+				if (!$hinted_type->is_accept_type($infered_type)) {
+					$infered_name = self::get_type_name($infered_type);
+					$hint_name = self::get_type_name($hinted_type);
+					throw $this->new_syntax_error("The infered return type is '{$infered_name}', do not compatibled with the hint '{$hint_name}'", $node);
 				}
 			}
-			elseif ($declared_type !== TypeFactory::$_void && $declared_type !== TypeFactory::$_yield_generator) {
-				throw $this->new_syntax_error("Function required return type '{$declared_type->name}'", $node);
+			elseif ($hinted_type !== TypeFactory::$_void && $hinted_type !== TypeFactory::$_yield_generator) {
+				throw $this->new_syntax_error("Function required return type '{$hinted_type->name}'", $node);
 			}
 		}
 		else {
@@ -634,8 +634,8 @@ class ASTChecker
 
 		// 当前是类时，包括继承的类，或实现的接口
 		// 当前是接口时，包括继承的接口
-		if ($node->baseds) {
-			$this->attach_baseds_for_classkindred_declaration($node);
+		if ($node->bases) {
+			$this->attach_bases_for_classkindred_declaration($node);
 		}
 
 		// 先检查本类中成员，推断出的类型会被后面用到
@@ -658,8 +658,8 @@ class ASTChecker
 		}
 
 		// 检查本类与实现或继承的接口中的成员是否匹配
-		if ($node->baseds) {
-			$this->check_baseds_for_classkindred_declaration($node);
+		if ($node->bases) {
+			$this->check_bases_for_classkindred_declaration($node);
 		}
 
 		// 本类中的成员优先级最高
@@ -668,13 +668,13 @@ class ASTChecker
 		}
 	}
 
-	private function attach_baseds_for_classkindred_declaration(ClassKindredDeclaration $node)
+	private function attach_bases_for_classkindred_declaration(ClassKindredDeclaration $node)
 	{
 		// 类可以实现多个接口，但只能继承一个父类
 		// 接口可以继承多个父接口
 
 		$interfaces = [];
-		foreach ($node->baseds as $identifier) {
+		foreach ($node->bases as $identifier) {
 			$declaration = $this->get_classkindred_declaration($identifier);
 
 			if ($identifier->generic_types) {
@@ -698,7 +698,7 @@ class ASTChecker
 		}
 
 		if ($node->inherits) {
-			$node->baseds = $interfaces;
+			$node->bases = $interfaces;
 		}
 	}
 
@@ -727,10 +727,10 @@ class ASTChecker
 		}
 	}
 
-	private function check_baseds_for_classkindred_declaration(ClassKindredDeclaration $node)
+	private function check_bases_for_classkindred_declaration(ClassKindredDeclaration $node)
 	{
 		// 接口中的成员默认实现属于this，优先级较高，后面接口的默认实现将覆盖前面的
-		foreach ($node->baseds as $identifier) {
+		foreach ($node->bases as $identifier) {
 			$interface = $identifier->symbol->declaration;
 			foreach ($interface->aggregated_members as $name => $member) {
 				if (isset($node->members[$name])) {
@@ -738,7 +738,7 @@ class ASTChecker
 					$this->assert_member_declarations($node->members[$name], $member, true);
 				}
 				elseif (isset($node->aggregated_members[$name])) {
-					// check member declared in baseds class/interfaces
+					// check member declared in bases class/interfaces
 					$this->assert_member_declarations($node->aggregated_members[$name], $member, true);
 
 					// replace to the default method implementation in interface
@@ -2234,11 +2234,11 @@ class ASTChecker
 				}
 			}
 
-			if ($parameter->is_mutable) {
-				if (!ASTHelper::is_mutable_expr($argument)) {
-					throw $this->new_syntax_error("Argument $key is immutable, cannot use for value mutable parameter", $argument);
-				}
-			}
+			// if ($parameter->is_mutable) {
+			// 	if (!ASTHelper::is_mutable_expr($argument)) {
+			// 		throw $this->new_syntax_error("Argument $key is immutable, cannot use for value mutable parameter", $argument);
+			// 	}
+			// }
 
 			$normalizeds[$idx] = $argument;
 		}
@@ -2898,8 +2898,8 @@ class ASTChecker
 		}
 
 		// find in implements interfaces
-		if ($classkindred->baseds) {
-			foreach ($classkindred->baseds as $interface) {
+		if ($classkindred->bases) {
+			foreach ($classkindred->bases as $interface) {
 				$member_symbol = $this->find_member_symbol_in_interface_identifier($interface, $member_name);
 				if ($member_symbol) {
 					return $member_symbol;

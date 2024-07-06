@@ -1909,8 +1909,8 @@ class TeaParser extends BaseParser
 
 	protected function read_rest_for_classkindred_declaration(ClassKindredDeclaration $declaration)
 	{
-		if ($baseds = $this->read_class_baseds()) {
-			$declaration->set_baseds(...$baseds);
+		if ($bases = $this->read_class_bases()) {
+			$declaration->set_bases(...$bases);
 		}
 
 		$this->expect_block_begin_inline();
@@ -1921,25 +1921,25 @@ class TeaParser extends BaseParser
 		$this->factory->end_class();
 	}
 
-	protected function read_class_baseds()
+	protected function read_class_bases()
 	{
 		if (!$this->skip_colon()) {
 			return null;
 		}
 
-		$baseds = [];
+		$bases = [];
 		while ($identifier = $this->try_read_classkindred_identifier()) {
-			$baseds[] = $identifier;
+			$bases[] = $identifier;
 			if (!$this->skip_comma()) {
 				break;
 			}
 		}
 
-		if (!$baseds) {
+		if (!$bases) {
 			throw $this->new_parse_error("Based class or interfaces expected.");
 		}
 
-		return $baseds;
+		return $bases;
 	}
 
 	protected function try_read_classkindred_identifier()

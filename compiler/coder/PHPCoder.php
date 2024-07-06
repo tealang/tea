@@ -253,16 +253,16 @@ class PHPCoder extends TeaCoder
 		return "#$modifier\n$kind $name";
 	}
 
-	protected function generate_class_baseds(ClassKindredDeclaration $node)
+	protected function generate_class_bases(ClassKindredDeclaration $node)
 	{
 		$code = '';
 		if ($node->inherits) {
 			$code = ' extends ' . $this->render_classkindred_identifier($node->inherits);
 		}
 
-		if ($node->baseds) {
+		if ($node->bases) {
 			$items = [];
-			foreach ($node->baseds as $item) {
+			foreach ($node->bases as $item) {
 				$items[] = $this->render_classkindred_identifier($item);
 			}
 
@@ -440,8 +440,7 @@ class PHPCoder extends TeaCoder
 
 	public function render_function_body(IScopeBlock $node)
 	{
-		$body = $node->fixed_body ?? $node->body;
-
+		$body = $node->body;
 		$items = [];
 
 		// if ($node->auto_declarations) {
@@ -519,21 +518,21 @@ class PHPCoder extends TeaCoder
 
 		$items = $this->render_block_nodes($node->members);
 
-		$traits = $this->get_using_trait_name_in_baseds($node->baseds);
+		$traits = $this->get_using_trait_name_in_bases($node->bases);
 		if ($traits) {
 			array_unshift($items, 'use ' . join(', ', $traits) . ";\n\n");
 		}
 
 		$code = sprintf("%s%s %s",
 			$this->generate_classkindred_header($node, 'class'),
-			$this->generate_class_baseds($node),
+			$this->generate_class_bases($node),
 			$this->wrap_block_code($items)
 		);
 
 		return $code;
 	}
 
-	private function get_using_trait_name_in_baseds(array $identifiers)
+	private function get_using_trait_name_in_bases(array $identifiers)
 	{
 		$items = [];
 		foreach ($identifiers as $identifier) {
@@ -555,7 +554,7 @@ class PHPCoder extends TeaCoder
 
 		$code = sprintf("%s%s %s",
 			$this->generate_classkindred_header($node, 'interface'),
-			$this->generate_class_baseds($node),
+			$this->generate_class_bases($node),
 			$this->wrap_block_code($this->render_interface_members($node))
 		);
 
@@ -568,7 +567,7 @@ class PHPCoder extends TeaCoder
 		$members = $this->render_interface_members($node);
 		$interface_code = sprintf("%s%s %s",
 			$this->generate_classkindred_header($node, 'interface'),
-			$this->generate_class_baseds($node),
+			$this->generate_class_bases($node),
 			$this->wrap_block_code($members)
 		);
 

@@ -15,10 +15,10 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 	 * the implements interfaces or inherits class
 	 * @var ClassKindredIdentifier[]
 	 */
-	public $baseds = [];
+	public $bases = [];
 
 	/**
-	 * the inherits class for ClassDeclaration
+	 * the inherits class for classes
 	 * @var ClassDeclaration
 	 */
 	public $inherits;
@@ -54,9 +54,9 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 		$this->name = $name;
 	}
 
-	public function set_baseds(ClassKindredIdentifier ...$baseds)
+	public function set_bases(ClassKindredIdentifier ...$bases)
 	{
-		$this->baseds = $baseds;
+		$this->bases = $bases;
 	}
 
 	public function append_member(IClassMemberDeclaration $member)
@@ -81,7 +81,7 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 		$result = null;
 
 		// check the implements interfaces
-		foreach ($this->baseds as $interface) {
+		foreach ($this->bases as $interface) {
 			if ($interface->symbol === $symbol || $interface->symbol->declaration->find_based_with_symbol($symbol) ) {
 				$result = $interface;
 				break;

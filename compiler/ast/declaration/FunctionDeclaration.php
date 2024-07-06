@@ -18,16 +18,14 @@ trait IScopeBlockTrait
 
 	public $callbacks;
 
-	public $is_hinted_return_type = false;
+	public $is_hinted_return_type;
 
 	public $parameters;
-
-	public $fixed_body;
 
 	// public $auto_declarations = [];
 
 	// the function/method is mutating global variables, object properties, resources
-	public $is_mutating = false;
+	public $is_mutating;
 
 	// set true when checking AST
 	public $is_checking;

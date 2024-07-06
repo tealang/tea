@@ -17,7 +17,7 @@ abstract class BaseVariableDeclaration extends Node implements IVariableDeclarat
 
 	public $value;
 
-	public $is_final = false;
+	public $is_final;
 
 	// to mark the value is mutable
 	// just for Array|Dict|Object values
@@ -45,13 +45,13 @@ class FinalVariableDeclaration extends VariableDeclaration
 class InvariantDeclaration extends VariableDeclaration
 {
 	public $is_final = true;
-	public $is_mutable = false;
+	public $is_mutable;
 }
 
 // class SuperVariableDeclaration extends VariableDeclaration implements IRootDeclaration
 // {
 // 	const KIND = 'super_variable_declaration';
-// 	public $is_final = false;
+// 	public $is_final;
 // }
 
 // The rules to supports the declarative programming
@@ -92,11 +92,11 @@ class ParameterDeclaration extends BaseVariableDeclaration
 {
 	const KIND = 'parameter_declaration';
 
-	public $is_inout = false;
+	public $is_inout;
 
 	// is a variadic parameter
 	// to receive multiple arguments in a parameter
-	public $is_variadic = false;
+	public $is_variadic;
 
 	/**
 	 * @var RuleOptions

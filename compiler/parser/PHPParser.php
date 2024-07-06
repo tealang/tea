@@ -435,7 +435,7 @@ class PHPParser extends BaseParser
 		$declaration->pos = $this->pos;
 
 		if ($this->skip_typed_token(T_EXTENDS)) {
-			$declaration->baseds = $this->expect_identifier_name();
+			$declaration->bases = $this->expect_identifier_name();
 		}
 
 		$this->expect_block_begin();
@@ -483,7 +483,7 @@ class PHPParser extends BaseParser
 			}
 			while ($this->skip_char_token(_COMMA));
 
-			$declaration->baseds = $implements;
+			$declaration->bases = $implements;
 		}
 
 		$this->expect_block_begin();
