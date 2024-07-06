@@ -517,7 +517,7 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_function_declaration(string $modifier, string $name, NamespaceIdentifier $ns = null)
+	public function create_function_declaration(?string $modifier, string $name, NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'function');
 
@@ -550,7 +550,7 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_constant_declaration(string $modifier, string $name, NamespaceIdentifier $ns = null)
+	public function create_constant_declaration(?string $modifier, string $name, NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'constant');
 

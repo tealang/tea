@@ -1,6 +1,7 @@
 #main
 
-public fn0(str) {
+// define a function use public modifier
+public func fn0(str) {
 	echo str
 	return PHP_CONST_DEMO
 }
@@ -10,6 +11,7 @@ var a_string = "string"
 a_function('call with callable type')  	// okay
 // a_string('call with string type')  		// error
 
+// omit the 'func' keyword
 internal fn1(callee Callable) {
 	var unknow_type_value Any = callee('hei')
 }
@@ -18,7 +20,8 @@ fn1(fn0)
 fn1((str) => fn0(str))
 
 // parameter reference
-internal fn2(dict inout Int.Dict) {
+// omit modifier, and the default modifier is internal
+func fn2(dict inout Int.Dict) {
 	dict['num'] += 1
 }
 

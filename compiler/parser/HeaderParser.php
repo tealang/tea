@@ -72,11 +72,11 @@ class HeaderParser extends TeaParser
 		switch ($token) {
 			case _CLASS:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_class_declaration($name, $modifier);
+				$declaration = $this->read_class_declaration_with($name, $modifier);
 				break;
 			case _ABSTRACT:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_class_declaration($name, $modifier);
+				$declaration = $this->read_class_declaration_with($name, $modifier);
 				$declaration->is_abstract = true;
 				break;
 			case _INTERTRAIT:
@@ -92,7 +92,7 @@ class HeaderParser extends TeaParser
 				break;
 			case _FUNC:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_function_declaration($name, $modifier);
+				$declaration = $this->read_function_declaration_with($name, $modifier);
 				break;
 			case _CONST:
 				[$origin_name, $name] = $this->read_header_declaration_names();
@@ -165,11 +165,11 @@ class HeaderParser extends TeaParser
 		switch ($token) {
 			case _CLASS:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_class_declaration($name, $modifier, $root_namespace);
+				$declaration = $this->read_class_declaration_with($name, $modifier, $root_namespace);
 				break;
 			case _ABSTRACT:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_class_declaration($name, $modifier, $root_namespace);
+				$declaration = $this->read_class_declaration_with($name, $modifier, $root_namespace);
 				$declaration->is_abstract = true;
 				break;
 			case _INTERFACE:
@@ -181,7 +181,7 @@ class HeaderParser extends TeaParser
 				break;
 			case _FUNC:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_function_declaration($name, $modifier, $root_namespace);
+				$declaration = $this->read_function_declaration_with($name, $modifier, $root_namespace);
 				break;
 			case _CONST:
 				[$origin_name, $name] = $this->read_header_declaration_names();
