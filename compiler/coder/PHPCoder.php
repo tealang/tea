@@ -152,12 +152,7 @@ class PHPCoder extends TeaCoder
 
 		$items = $this->render_heading_statements($program);
 
-		if ($program->as_main_program) {
-			if ($program->is_using_coroutine) {
-				$items[] = '\Swoole\Runtime::enableCoroutine();';
-				$items[] = '';
-			}
-
+		if ($program->as_main) {
 			$levels = $program->count_subdirectory_levels();
 			if ($levels) {
 				$path_token = "dirname(__DIR__, {$levels})";
@@ -180,7 +175,6 @@ class PHPCoder extends TeaCoder
 			$item === null || $items[] = $item . LF;
 		}
 
-		// 生成游离语句
 		if ($program->main_function) {
 			$body_items = $this->render_block_nodes($program->main_function->body);
 			$items[] = '// ---------';
@@ -188,11 +182,6 @@ class PHPCoder extends TeaCoder
 
 			$items[] = '// ---------';
 			$items[] = '';
-
-			if ($program->as_main_program && $program->is_using_coroutine) {
-				$items[] = '\Swoole\Event::wait();';
-				$items[] = '';
-			}
 		}
 
 		return $items;
@@ -397,12 +386,6 @@ class PHPCoder extends TeaCoder
 
 		return $header . ' ' . $body;
 	}
-
-	// public function render_coroutine_block(CoroutineBlock $node)
-	// {
-	// 	$lambda = $this->render_lambda_expression($node);
-	// 	return sprintf('\Swoole\Coroutine::create(%s);', $lambda);
-	// }
 
 	public function render_lambda_expression(LambdaExpression $node)
 	{

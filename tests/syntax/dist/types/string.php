@@ -44,9 +44,6 @@ $var1 = '<div>' . '<script>' . '</div>';
 "string{$abc}";
 'string' . \html_encode($abc);
 
-'string${abc}';
-"string\${abc}";
-
 html_encode("string{$abc}\n");
 html_encode('string');
 html_encode('string<br>' . $abc);

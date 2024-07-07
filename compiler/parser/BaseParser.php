@@ -56,7 +56,7 @@ abstract class BaseParser
 
 		// set to main program when file name is main.tea
 		if ($this->program->name === _MAIN) {
-			$this->factory->set_as_main_program();
+			$this->factory->set_as_main();
 		}
 	}
 

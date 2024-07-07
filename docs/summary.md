@@ -426,9 +426,9 @@ DemoPublicClass.say_hello_with_static()
 
 ---
 
-## 12. Setting Program Files as Entry Points
+## 12. Setting Program Files as Executable
 
-- Add the `#main` tag at the beginning of the target Tea language program file to declare it as the "entry program".
+- Write code to start execution of the program file using the #main block(function).
 - The dependency loading statements will be automatically added to the compilation result of the current program file.
 - The built-in library loading statements will be automatically added to the compilation result of the current module.
 ---

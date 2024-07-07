@@ -31,9 +31,8 @@ const
 	_UNIT_OPTIONAL_KEYS = ['type', 'loader'],
 
 	// system labels
-	// _PHP  = 'php',
-	// _UNIT = 'unit',
 	_MAIN = 'main',
+	_TEST = 'test',
 	_TEXT = 'text',
 	_DEFAULT = 'default',
 

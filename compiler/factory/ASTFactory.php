@@ -74,10 +74,10 @@ class ASTFactory
 		$this->base_exception_identifier = new ClassKindredIdentifier('Exception');
 	}
 
-	public function set_as_main_program()
+	public function set_as_main()
 	{
-		$this->program->as_main_program = true;
-		$this->unit->as_main_unit = true;
+		$this->program->as_main = true;
+		$this->unit->as_main = true;
 	}
 
 	public function set_namespace(NamespaceIdentifier $ns)

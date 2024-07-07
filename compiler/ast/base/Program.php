@@ -20,7 +20,7 @@ class Program extends Node
 	 */
 	public $parser;
 
-	public $as_main_program = false;
+	public $as_main = false;
 
 	public $is_using_coroutine = false;
 

@@ -11,13 +11,15 @@ namespace Tea;
 
 class TeaParser extends BaseParser
 {
-	use TeaTokenTrait, TeaStringTrait, TeaXBlockTrait, TeaSharpTrait, TeaDocsTrait;
+	use TeaTokenTrait, TeaStringTrait, TeaXBlockTrait, TeaDocsTrait;
 
 	const NS_SEPARATOR = _BACK_SLASH;
 
 	const VAL_NONE = _VAL_NONE;
 
 	protected $root_statements = [];
+
+	protected $is_in_tea_declaration = false;
 
 	public function read_program(): Program
 	{
@@ -60,7 +62,7 @@ class TeaParser extends BaseParser
 		$this->trace_statement($token);
 
 		if ($token === _SHARP) {
-			$node = $this->read_label_statement();
+			$node = $this->read_root_label_statement();
 		}
 		elseif ($token === _DOCS_MARK) {
 			$docs = $this->read_docs();
@@ -70,9 +72,6 @@ class TeaParser extends BaseParser
 			$this->skip_current_line();
 			return $this->read_root_statement($leading, $docs);
 		}
-		elseif (TeaHelper::is_modifier($token)) {
-			$node = $this->read_root_declaration_with_modifier($token);
-		}
 		elseif ($token === _FUNC) {
 			$name = $this->expect_identifier_token_ignore_space();
 			$node = $this->read_function_declaration_with($name);
@@ -80,6 +79,9 @@ class TeaParser extends BaseParser
 		elseif ($token === _CONST) {
 			$name = $this->expect_identifier_token_ignore_space();
 			$node = $this->read_constant_declaration_with($name);
+		}
+		elseif (TeaHelper::is_modifier($token)) {
+			$node = $this->read_root_declaration_with_modifier($token);
 		}
 		elseif (TeaHelper::is_structure_key($token)) {
 			$node = $this->read_structure($token);
@@ -109,6 +111,21 @@ class TeaParser extends BaseParser
 		return $node;
 	}
 
+	protected function read_root_label_statement()
+	{
+		$token = $this->scan_token();
+		switch ($token) {
+			case _MAIN:
+				$this->factory->set_as_main();
+				return;
+
+			default:
+				throw $this->new_parse_error("Unknow sharp labeled statement");
+		}
+
+		return $node;
+	}
+
 	protected function read_normal_statement($leading = null, Docs $docs = null)
 	{
 		if ($this->get_token_ignore_space() === _BLOCK_END) {
@@ -126,7 +143,7 @@ class TeaParser extends BaseParser
 		$this->trace_statement($token);
 
 		if ($token === _SHARP) {
-			$node = $this->read_label_statement();
+			$node = $this->read_normal_label_statement();
 		}
 		elseif ($token === _DOCS_MARK) {
 			$docs = $this->read_docs();
@@ -158,6 +175,53 @@ class TeaParser extends BaseParser
 
 		$node->leading = $leading;
 		$node->docs = $docs;
+
+		return $node;
+	}
+
+	protected function read_normal_label_statement()
+	{
+		$token = $this->scan_token();
+		switch ($token) {
+			case _DEFAULT:
+				$expression = ASTFactory::$default_value_marker;
+				$node = new NormalStatement($expression);
+				break;
+
+			case _TEXT:
+				$expression = $this->read_string_literal();
+				$expression = $this->read_expression_combination($expression);
+				$node = new NormalStatement($expression);
+				break;
+
+			default:
+				throw $this->new_parse_error("Unknow sharp labeled statement");
+		}
+
+		return $node;
+	}
+
+	private function read_custom_label_statement_with(string $name)
+	{
+		$this->assert_not_reserved_word($name);
+
+		// labeled block
+		$next = $this->scan_token_ignore_space();
+		if ($next === _FOR) {
+			$node = $this->read_for_block($name);
+		}
+		elseif ($next === _WHILE) {
+			$node = $this->read_while_block($name);
+		}
+		// elseif ($next === _LOOP) {
+		// 	$node = $this->read_loop_block($name);
+		// }
+		elseif ($next === _SWITCH) {
+			$node = $this->read_switch_block($name);
+		}
+		else {
+			throw $this->new_parse_error("Expected a inline statement after label #{$name}.");
+		}
 
 		return $node;
 	}
@@ -979,10 +1043,8 @@ class TeaParser extends BaseParser
 				return $expression; // that should be the end of current expression
 
 			case _SHARP:
-				$expression = $this->read_sharp_expression_with($this->scan_token());
-				if ($expression === null) {
-					throw $this->new_unexpected_error();
-				}
+				$token = $this->scan_token();
+				$expression = $this->read_sharp_expression_with($token);
 				break;
 
 			case _YIELD:
@@ -1042,6 +1104,46 @@ class TeaParser extends BaseParser
 		if ($this->get_token_ignore_space() === _INLINE_COMMENT_MARK) {
 			$expression->tailing = $this->skip_inline_comment();
 		}
+
+		return $expression;
+	}
+
+	private function read_sharp_expression_with(string $token)
+	{
+		switch ($token) {
+			case _DEFAULT:
+				$expression = ASTFactory::$default_value_marker;
+				break;
+
+			case _TEXT:
+				$expression = $this->read_string_literal();
+				break;
+
+			default:
+				throw $this->new_unexpected_error();
+		}
+
+		return $expression;
+	}
+
+	protected function read_string_literal()
+	{
+		$token = $this->scan_token_ignore_space();
+
+		switch ($token) {
+			case _SINGLE_QUOTE:
+				$expression = $this->read_unescaped_string_literal();
+				break;
+
+			case _DOUBLE_QUOTE:
+				$expression = $this->read_escaped_string_literal();
+				break;
+
+			default:
+				throw $this->new_unexpected_error();
+		}
+
+		$expression->label = $label;
 
 		return $expression;
 	}

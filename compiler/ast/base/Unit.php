@@ -27,7 +27,7 @@ class Unit implements IRootDeclaration
 
 	public $loader; // the program to load PHP classes/functions/consts
 
-	public $as_main_unit = false;
+	public $as_main = false;
 
 	/**
 	 * @var array <string: NamespaceDeclaration>
