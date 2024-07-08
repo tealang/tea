@@ -567,7 +567,7 @@ class PHPCoder extends TeaCoder
 
 	public static function get_intertrait_trait_name(string $origin_name)
 	{
-		return $origin_name . '_T';
+		return $origin_name . 'Trait';
 	}
 
 	protected function render_interface_members(InterfaceDeclaration $node)
