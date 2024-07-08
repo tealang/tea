@@ -86,13 +86,62 @@ class PHPCoder extends TeaCoder
 
 	protected $uses = [];
 
+	protected function render_program_statements(Program $program)
+	{
+		$declarations = [];
+		foreach ($program->declarations as $node) {
+			// the common consts and functions would be render to the loader file
+			if (!$node->is_unit_level || $node instanceof ClassKindredDeclaration) {
+				$declarations[] = $node;
+			}
+		}
+
+		$this->process_use_statments($declarations);
+
+		$items = $this->render_heading_statements($program);
+
+		if ($program->as_main) {
+			$levels = $program->count_subdirectory_levels();
+			if ($levels) {
+				$path_token = "dirname(__DIR__, {$levels})";
+			}
+			else {
+				$path_token = "__DIR__";
+			}
+
+			$items[] = "require_once $path_token . '/" . PUBLIC_LOADER_FILE_NAME . "';\n";
+		}
+
+		// include dependencies
+		foreach ($program->depends_native_programs as $depends_program) {
+			$items[] = "require_once UNIT_PATH . '{$depends_program->name}.php';\n";
+		}
+
+		// 生成定义，使用了trait的类，必须放在文件的前面，否则运行时提示找不到
+		foreach ($declarations as $node) {
+			$item = $node->render($this);
+			$item === null || $items[] = $item . LF;
+		}
+
+		if ($program->initializer) {
+			$body_items = $this->render_block_nodes($program->initializer->body);
+			$items[] = '// ---------';
+			$items[] = trim(join($body_items));
+
+			$items[] = '// ---------';
+			$items[] = '';
+		}
+
+		return $items;
+	}
+
 	protected function process_use_statments(array $declarations)
 	{
 		foreach ($declarations as $node) {
 			$this->collect_use_statements($node);
 		}
 
-		$this->program->main_function && $this->collect_use_statements($this->program->main_function);
+		$this->program->initializer and $this->collect_use_statements($this->program->initializer);
 	}
 
 	protected function collect_use_statements(IDeclaration $declaration)
@@ -133,55 +182,6 @@ class PHPCoder extends TeaCoder
 
 		if ($this->uses) {
 			$items[] = $this->render_uses($this->uses) . LF;
-		}
-
-		return $items;
-	}
-
-	protected function render_program_statements(Program $program)
-	{
-		$declarations = [];
-		foreach ($program->declarations as $node) {
-			// the common consts and functions would be render to the loader file
-			if (!$node->is_unit_level || $node instanceof ClassKindredDeclaration) {
-				$declarations[] = $node;
-			}
-		}
-
-		$this->process_use_statments($declarations);
-
-		$items = $this->render_heading_statements($program);
-
-		if ($program->as_main) {
-			$levels = $program->count_subdirectory_levels();
-			if ($levels) {
-				$path_token = "dirname(__DIR__, {$levels})";
-			}
-			else {
-				$path_token = "__DIR__";
-			}
-
-			$items[] = "require_once $path_token . '/" . PUBLIC_LOADER_FILE_NAME . "';\n";
-		}
-
-		// include dependencies
-		foreach ($program->depends_native_programs as $depends_program) {
-			$items[] = "require_once UNIT_PATH . '{$depends_program->name}.php';\n";
-		}
-
-		// 生成定义，使用了trait的类，必须放在文件的前面，否则执行时提示找不到
-		foreach ($declarations as $node) {
-			$item = $node->render($this);
-			$item === null || $items[] = $item . LF;
-		}
-
-		if ($program->main_function) {
-			$body_items = $this->render_block_nodes($program->main_function->body);
-			$items[] = '// ---------';
-			$items[] = trim(join($body_items));
-
-			$items[] = '// ---------';
-			$items[] = '';
 		}
 
 		return $items;

@@ -93,7 +93,7 @@ class PHPParser extends BaseParser
 
 		$this->factory->end_program();
 
-		$this->program->main_function = null;
+		$this->program->initializer = null;
 
 		return $this->program;
 	}

@@ -39,10 +39,10 @@ class TeaParser extends BaseParser
 
 		// set statements to main function when has any onload executings
 		if ($this->root_statements) {
-			$program->main_function->set_body_with_statements(...$this->root_statements);
+			$program->initializer->set_body_with_statements(...$this->root_statements);
 		}
 		else {
-			$program->main_function = null;
+			$program->initializer = null;
 		}
 
 		return $program;
@@ -1143,7 +1143,7 @@ class TeaParser extends BaseParser
 				throw $this->new_unexpected_error();
 		}
 
-		$expression->label = $label;
+		$expression->label = $token;
 
 		return $expression;
 	}

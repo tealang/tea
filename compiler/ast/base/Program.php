@@ -20,9 +20,7 @@ class Program extends Node
 	 */
 	public $parser;
 
-	public $as_main = false;
-
-	public $is_using_coroutine = false;
+	public $as_main;
 
 	public $docs;
 
@@ -44,7 +42,7 @@ class Program extends Node
 
 	public $declarations = [];
 
-	public $main_function;
+	public $initializer;
 
 	public $symbols = [];
 

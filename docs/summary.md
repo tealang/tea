@@ -7,7 +7,7 @@ echo "Hello, 世界"
 
 ---
 
-## 01. Brief Introduction
+## 01. Introduction
 
 "Tea" is a programming language with a concise and powerful feature set.
 It has a minimalist strong typing system and module system.

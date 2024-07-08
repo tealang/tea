@@ -489,7 +489,9 @@ class Compiler
 		// tea programs, render and collect autoloads
 		foreach ($this->normal_programs as $program) {
 			$dist_file_path = $this->render_program($program);
-			$this->collect_autoloads($program, $dist_file_path, $this->unit_dist_ns_prefix);
+			if ($dist_file_path) {
+				$this->collect_autoloads($program, $dist_file_path, $this->unit_dist_ns_prefix);
+			}
 		}
 
 		// the loader file for supply to other units
@@ -516,10 +518,16 @@ class Compiler
 	{
 		$dist_file = $this->get_dist_file_path($program->name);
 
-		$coder = new PHPCoder();
-		$dist_code = $coder->render_program($program);
+		if ($program->declarations or $program->initializer) {
+			$coder = new PHPCoder();
+			$decl_dist_code = $coder->render_program($program);
+			file_put_contents($dist_file, $decl_dist_code);
+		}
+		else {
+			file_exists($dist_file) and unlink($dist_file);
+			$dist_file = null;
+		}
 
-		file_put_contents($dist_file, $dist_code);
 		return $dist_file;
 	}
 

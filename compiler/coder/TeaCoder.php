@@ -92,8 +92,8 @@ class TeaCoder
 			$items[] = ''; // empty line
 		}
 
-		if ($program->main_function) {
-			$body_items = $this->render_block_nodes($program->main_function->body);
+		if ($program->initializer) {
+			$body_items = $this->render_block_nodes($program->initializer->body);
 
 			$items[] = '// ---------';
 			$items[] = trim(join($body_items));

@@ -106,7 +106,7 @@ class ASTChecker
 			$this->collect_declaration_uses($node);
 		}
 
-		$program->main_function && $this->collect_declaration_uses($program->main_function);
+		$program->initializer && $this->collect_declaration_uses($program->initializer);
 	}
 
 	private function collect_declaration_uses(IDeclaration $declaration)
@@ -139,8 +139,8 @@ class ASTChecker
 			$this->check_declaration($node);
 		}
 
-		if ($program->main_function) {
-			$this->check_declaration($program->main_function);
+		if ($program->initializer) {
+			$this->check_declaration($program->initializer);
 		}
 	}
 
@@ -2061,7 +2061,7 @@ class ASTChecker
 	// 	$including = $this->program;
 	// 	$program = $this->require_program_declaration($node->target, $node);
 
-	// 	$target_main = $program->main_function;
+	// 	$target_main = $program->initializer;
 	// 	if ($target_main) {
 	// 		// check all expect variables is decalared in current including place
 	// 		foreach ($target_main->parameters as $parameter) {

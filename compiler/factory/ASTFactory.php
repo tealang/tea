@@ -334,21 +334,21 @@ class ASTFactory
 			throw new Exception("Error: Program name '{$program->name}' has been used, please rename the file '{$program->file}'");
 		}
 
-		$program->main_function = new FunctionDeclaration(_INTERNAL, '__main', null, []);
-		$program->main_function->program = $program;
+		$program->initializer = new FunctionDeclaration(_INTERNAL, '__main', null, []);
+		$program->initializer->program = $program;
 
 		$this->program = $program;
 		$this->unit->programs[$program->name] = $program;
 
-		$this->set_main_function();
+		$this->set_initializer();
 
 		return $program;
 	}
 
 	// public function create_program_expection(ParameterDeclaration ...$parameters)
 	// {
-	// 	$main_function = $this->program->main_function;
-	// 	if ($main_function->parameters) {
+	// 	$initializer = $this->program->initializer;
+	// 	if ($initializer->parameters) {
 	// 		throw $this->parser->new_parse_error("'#expect' statement has duplicated");
 	// 	}
 	// 	elseif (!$parameters) {
@@ -357,10 +357,10 @@ class ASTFactory
 
 	// 	foreach ($parameters as $parameter) {
 	// 		$symbol = new Symbol($parameter);
-	// 		$main_function->symbols[$parameter->name] = $symbol;
+	// 		$initializer->symbols[$parameter->name] = $symbol;
 	// 	}
 
-	// 	$main_function->parameters = $parameters;
+	// 	$initializer->parameters = $parameters;
 	// 	$declaration = new ExpectDeclaration(...$parameters);
 	// 	$declaration->program = $this->program;
 
@@ -792,7 +792,7 @@ class ASTFactory
 	public function end_class()
 	{
 		$this->class = null;
-		$this->set_main_function();
+		$this->set_initializer();
 	}
 
 	public function begin_class_member(IClassMemberDeclaration $declaration)
@@ -832,7 +832,7 @@ class ASTFactory
 
 	public function end_root_declaration()
 	{
-		$this->set_main_function();
+		$this->set_initializer();
 	}
 
 	public function begin_block(IBlock $block)
@@ -852,15 +852,15 @@ class ASTFactory
 			}
 		}
 		else {
-			$this->set_main_function();
+			$this->set_initializer();
 		}
 
 		return $block;
 	}
 
-	private function set_main_function()
+	private function set_initializer()
 	{
-		$this->declaration = $this->function = $this->scope = $this->block = $this->program->main_function;
+		$this->declaration = $this->function = $this->scope = $this->block = $this->program->initializer;
 	}
 
 	private static function find_super_scope(IBlock $block)
