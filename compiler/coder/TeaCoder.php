@@ -690,7 +690,7 @@ class TeaCoder
 		$items = [];
 		foreach ($node->get_members() as $member) {
 			$item = $this->render_type_identifier($member);
-			$items[] = $item;
+			in_array($item, $items) or ($items[] = $item);
 		}
 
 		return join(_TYPE_UNION, $items);

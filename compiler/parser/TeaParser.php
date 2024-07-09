@@ -319,7 +319,7 @@ class TeaParser extends BaseParser
 
 		$declaration = $this->factory->create_builtin_type_class_declaration($name);
 		if ($declaration === null) {
-			throw $this->new_parse_error("'$name' not a builtin type, cannot use the #tea label.");
+			throw $this->new_parse_error("'$name' not a builtin type.");
 		}
 
 		$this->read_rest_for_classkindred_declaration($declaration);

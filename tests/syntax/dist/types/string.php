@@ -8,14 +8,14 @@ $num = 123;
 $str = "hello ";
 $key = "f3";
 
-echo strlen("some string"), LF;
+echo mb_strlen("some string"), LF;
 
 $str = trim($str);
 
 echo $str, LF;
 
 substr($str, 2);
-substr($str, 0, 3);
+mb_substr($str, 0, 3);
 
 $arr = [
 	'f1' => 123,

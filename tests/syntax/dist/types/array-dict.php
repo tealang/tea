@@ -65,9 +65,9 @@ foreach ($users as $user) {
 	$id2name[(string)$user['id']] = $user['name'];
 }
 
-$mapped = array_map(function ($item) {
+$mapped = _std_array_map($users, function ($item) {
 	return $item['id'] . ' - ' . $item['name'];
-}, $users);
+});
 var_dump($mapped);
 
 $reduced = array_reduce([1, 2, 3], function ($carry, $item) {

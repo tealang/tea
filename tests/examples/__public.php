@@ -11,11 +11,11 @@ require_once $super_path . 'tea-modules/tea/builtin/__public.php';
 // autoloads
 const __AUTOLOADS = [
 	'tests\examples\IFib' => 'dist/fib_class.php',
-	'tests\examples\IFib_T' => 'dist/fib_class.php',
+	'tests\examples\IFibTrait' => 'dist/fib_class.php',
 	'tests\examples\Fib' => 'dist/fib_class.php',
 	'tests\examples\SQLitePDO' => 'dist/pdo_sqlite.php',
 	'tests\examples\IBaseView' => 'dist/view.php',
-	'tests\examples\IBaseView_T' => 'dist/view.php',
+	'tests\examples\IBaseViewTrait' => 'dist/view.php',
 	'tests\examples\ListView' => 'dist/view.php'
 ];
 

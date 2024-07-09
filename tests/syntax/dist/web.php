@@ -16,7 +16,7 @@ foreach ($test_items as $k => $v) {
 }
 
 echo '<ul>
-	' . implode(LF, $items) . '
+	' . _std_join($items, LF) . '
 </ul>', LF;
 // ---------
 

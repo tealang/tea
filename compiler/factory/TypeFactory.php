@@ -25,6 +25,7 @@ class TypeFactory
 	static $_object;
 
 	// static $_scalar;
+	static $_bytes;
 	static $_string;
 	static $_float;
 	static $_int;
@@ -69,6 +70,7 @@ class TypeFactory
 		self::$_object = self::create_type(ObjectType::class);
 
 		// self::$_scalar = self::create_type(ScalarType::class);
+		self::$_bytes = self::create_type(BytesType::class);
 		self::$_string = self::create_type(StringType::class);
 		self::$_float = self::create_type(FloatType::class);
 		self::$_int = self::create_type(IntType::class);

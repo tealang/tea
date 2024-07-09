@@ -11,7 +11,7 @@ interface IBaseView {
 	public function __toString(): string;
 }
 
-trait IBaseView_T {
+trait IBaseViewTrait {
 	protected $attributes = [];
 	protected $subitems = [];
 
@@ -26,7 +26,7 @@ trait IBaseView_T {
 	}
 
 	public function set_attribute(string $key, string $value) {
-		if (!regex_test('/^[a-z][a-z0-9]*$/i', $key)) {
+		if (!_regex_test('/^[a-z][a-z0-9]*$/i', $key)) {
 			throw new \Exception("Invalid key '{$key}'");
 		}
 
@@ -39,12 +39,12 @@ trait IBaseView_T {
 			$items[] = $key . '="' . \html_encode($value) . '"';
 		}
 
-		return implode("\n", $items);
+		return _std_join($items, "\n");
 	}
 
 	public function render(): string {
 		return '<view ' . $this->build_attributes() . '>
-	' . implode("\n", $this->subitems) . '
+	' . _std_join($this->subitems, "\n") . '
 </view>';
 	}
 
@@ -55,17 +55,17 @@ trait IBaseView_T {
 
 #public
 class ListView implements IBaseView {
-	use IBaseView_T;
+	use IBaseViewTrait;
 
 	public function get_subviews() {
-		return array_map(function ($item) {
+		return _std_array_map($this->subitems, function ($item) {
 			return '<li>' . \html_encode($item) . '</li>';
-		}, $this->subitems);
+		});
 	}
 
 	public function render(): string {
 		return '<ul ' . $this->build_attributes() . '>
-	' . implode("\n\t", $this->get_subviews()) . '
+	' . _std_join($this->get_subviews(), "\n\t") . '
 </ul>';
 	}
 }

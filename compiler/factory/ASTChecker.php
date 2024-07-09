@@ -2568,7 +2568,7 @@ class ASTChecker
 
 		$symbol = $this->program->symbols[$name]
 			?? $this->get_symbol_in_unit($this->unit, $name)
-			?? $this->get_symbol_in_unit($this->builtin_unit, $name);
+			?? ($this->builtin_unit ? $this->get_symbol_in_unit($this->builtin_unit, $name) : null);
 
 		return $symbol;
 	}
@@ -2594,7 +2594,7 @@ class ASTChecker
 		else {
 			$symbol = $this->program->symbols[$name]
 				?? $this->get_symbol_in_unit($this->unit, $name)
-				?? $this->get_symbol_in_unit($this->builtin_unit, $name);
+				?? ($this->builtin_unit ? $this->get_symbol_in_unit($this->builtin_unit, $name) : null);
 		}
 
 		return $symbol;

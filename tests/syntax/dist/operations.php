@@ -31,14 +31,14 @@ if (!is_string($uint_num)) {
 }
 
 $str_for_find = 'abc123';
-$found = strpos($str_for_find, 'abc');
+$found = mb_strpos($str_for_find, 'abc');
 if ($found === false) {
 	echo '"abc" has not be found in ' . $str_for_find, LF;
 }
 
 $str = 'abc';
 $num = 3;
-$result = -strlen($str) + -$num * pow(PI, 2) - 12;
+$result = -mb_strlen($str) + -$num * pow(PI, 2) - 12;
 
 $is_greater = 3 > $num;
 

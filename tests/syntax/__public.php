@@ -22,7 +22,7 @@ function fn0($str) {
 const __AUTOLOADS = [
 	'tests\syntax\PHPClassInMixed1' => '_mixed1.php',
 	'tests\syntax\IDemo' => 'dist/class.php',
-	'tests\syntax\IDemo_T' => 'dist/class.php',
+	'tests\syntax\IDemoTrait' => 'dist/class.php',
 	'tests\syntax\IterableObject' => 'dist/class.php',
 	'tests\syntax\Test1' => 'dist/class.php',
 	'tests\syntax\Test2' => 'dist/class.php',

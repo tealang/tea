@@ -88,16 +88,15 @@ runtime func rtrim(str, char_mask String = #default) String
 runtime func ltrim(str, char_mask String = #default) String
 
 // with default charset
-runtime func iconv_strlen(str String) UInt
-runtime func iconv_substr(str String, start Int, length Int = #default) String
+runtime func mb_strlen(str String) UInt
+runtime func mb_substr(str String, start Int, length Int = #default) String
 
 // first pos in default charset
-runtime func iconv_strpos(str String, search String, offset Int = 0) Int  // would return false on not found
+runtime func mb_strpos(str String, search String, offset Int = 0) UInt  // would return false on not found
 
 // last pos in default charset
-runtime func iconv_strrpos(str String, search String, offset Int = 0) Int  // would return false on not found
+runtime func mb_strrpos(str String, search String, offset Int = 0) UInt  // would return false on not found
 
-runtime func mb_strwidth(str String, encoding String = #default)
 runtime func mb_strtoupper(str String) String
 runtime func mb_strtolower(str String) String
 
@@ -106,8 +105,8 @@ runtime func strlen(str) UInt
 runtime func substr(str, start Int, length Int = #default) String
 
 runtime func str_contains(master, search) Bool
-runtime func strpos(master, search, offset Int = 0) Int  // would return false on not found
-runtime func strrpos(master, search, offset Int = 0) Int  // would return false on not found
+runtime func strpos(master, search, offset Int = 0) UInt  // would return false on not found
+runtime func strrpos(master, search, offset Int = 0) UInt  // would return false on not found
 runtime func strtoupper(str) String
 runtime func strtolower(str) String
 

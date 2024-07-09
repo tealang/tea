@@ -21,31 +21,31 @@ public uint_ensure(num Int) {
 	return num
 }
 
-public is_strict_array(it) Bool {
-	if not is_array(it) {
-		return false
-	}
+// public is_strict_array(it) Bool {
+// 	if not is_array(it) {
+// 		return false
+// 	}
 
-	if empty(it) {
-		return true
-	}
+// 	if empty(it) {
+// 		return true
+// 	}
 
-	keys = array_keys(it)
-	return keys === array_keys(keys)
-}
+// 	keys = array_keys(it)
+// 	return keys === array_keys(keys)
+// }
 
-public is_strict_dict(it) Bool {
-	if not is_array(it) or empty(it) {
-		return false
-	}
+// public is_strict_dict(it) Bool {
+// 	if not is_array(it) or empty(it) {
+// 		return false
+// 	}
 
-	if not isset(it[0]) {
-		return true
-	}
+// 	if not isset(it[0]) {
+// 		return true
+// 	}
 
-	keys = array_keys(it)
-	return keys !== array_keys(keys)
-}
+// 	keys = array_keys(it)
+// 	return keys !== array_keys(keys)
+// }
 
 public xrange(start Int, end Int, step = 1) {
 	i = start
@@ -68,29 +68,6 @@ public xrange(start Int, end Int, step = 1) {
 	}
 }
 
-
-public _str_replace(master String, search, replacement) {
-	return str_replace(search, replacement, master);
-}
-
-public _array_search(master Array, search)  {
-	key = array_search(search, master, true)
-	return key === false ? false : key
-}
-
-public array_last_index(array Array) UInt {
-	return count(array) - 1
-}
-
-public dict_get(dict Dict, key String) {
-	return dict[key] ?? none
-}
-
-public _dict_search(master Dict, search) {
-	key = array_search(search, master, true)
-	return key === false ? false : key#String
-}
-
 public html_encode(string String?, flags = ENT_QUOTES) {
 	return empty(string) ? string : htmlspecialchars(string, flags)
 }
@@ -99,32 +76,12 @@ public html_decode(string String?, flags = ENT_QUOTES) {
 	return empty(string) ? string : htmlspecialchars_decode(string, flags)
 }
 
-public regex_test(regex Regex, subject String) Bool {
-	return preg_match(regex, subject) ? true : false
-}
-
-public regex_capture(regex Regex, subject String) String.Array? {
-	var result String.Array
-	count = preg_match(regex, subject, result)
-	return count === 0 ? none : result
-}
-
-public regex_capture_all(regex Regex, subject String) String.Array.Array? {
-	var results String.Array.Array
-	count = preg_match_all(regex, subject, results)
-	return results
-}
-
-// 所有 masked function 在定义时都需要考虑参数的顺序，参数的运行时序不一致可能会导致问题
-// 考虑禁止在调用函数的参数中改变数据（需要推断出可能改变数据的函数，或直接禁止参数带函数调用），纯表达式?
-// 部分实现中，参数编译后顺序有变化，使用时应避免当前字符串被delimiter表达式所改变
-
-// public interface IShareAble {
-// 	vshare() Object
+// public interface Sharable {
+// 	share() Object
 // }
 
-// public interface ICloneAble {
-// 	vclone() Object
+// public interface Clonable {
+// 	clone() Object
 // }
 
 public type MetaType {}
@@ -139,37 +96,33 @@ public type None {}
 // extends String to use the String properties/methods
 public type Any: String {}
 
-public type String {
-	// process in dist native mode
-	masked length UInt => strlen(this)
+public _std_split(it String, separator String) {
+	return explode(separator, it)
+}
 
-	masked contains(val) => str_contains(this, val)
+public _std_replace(it String, search, replacement) {
+	return str_replace(search, replacement, it);
+}
+
+// processing using byte mode
+public type Bytes {
+	masked length UInt => strlen(this)
 	masked find(str String, offset Int = #default) => strpos(this, str, offset)
 	masked find_last(str String, offset Int = #default) => strrpos(this, str, offset)
-	masked copy(start Int, length Int = #default) => substr(this, start, length)
-	masked lower_case() => strtolower(this)
-	masked upper_case() => strtoupper(this)
+	masked copy(start Int, length UInt = #default) => substr(this, start, length)
+}
 
-	// process in byte mode
-	masked byte_length UInt => strlen(this)
-	masked byte_find(str String, offset Int = #default) => strpos(this, str, offset)
-	masked byte_find_last(str String, offset Int = #default) => strrpos(this, str, offset)
-	masked byte_copy(start Int, length Int = #default) => substr(this, start, length)
-	masked byte_lower() => strtolower(this)
-	masked byte_upper() => strtoupper(this)
-
-	// process in rune mode
-	masked rune_length UInt => iconv_strlen(this)
-	masked rune_find(str String, offset Int = #default) => iconv_strpos(this, str, offset)
-	masked rune_find_last(str String, offset Int = #default) => iconv_strrpos(this, str, offset)
-	masked rune_copy(start Int, length Int = #default) => iconv_substr(this, start, length)
-	masked rune_lower() => mb_strtolower(this)
-	masked rune_upper() => mb_strtoupper(this)
-
-	// other
-	masked count_width() UInt => mb_strwidth(this)
-	masked split(delimiter String) => explode(delimiter, this)
-	masked replace(search, replacement) => _str_replace(this, search, replacement)
+// processing through default charset using char/rune mode
+public type String {
+	masked length UInt => mb_strlen(this)
+	masked find(str String, offset Int = #default) => mb_strpos(this, str, offset)
+	masked find_last(str String, offset Int = #default) => mb_strrpos(this, str, offset)
+	masked copy(start Int, length UInt = #default) => mb_substr(this, start, length)
+	masked contains(val) => str_contains(this, val)
+	masked lowercase() => mb_strtolower(this)
+	masked uppercase() => mb_strtoupper(this)
+	masked split(separator String) => _std_split(this, separator)
+	masked replace(search, replacement) => _std_replace(this, search, replacement)
 }
 
 public type Int: String {
@@ -187,14 +140,40 @@ public type Float {
 
 public type Bool {}
 
+// public _last_index(array Array) UInt {
+// 	return count(array) - 1
+// }
+
+public _has(it Array|Dict, key String|Int) {
+	return array_key_exists(key, it)
+}
+
+public _vals_contains(it Array|Dict, val, strict Bool = false) {
+	return in_array(val, it, strict)
+}
+
+public _array_find(it Array, val)  {
+	key = array_search(val, it, true)
+	return key === false ? false : key
+}
+
+public _std_array_map(it Array, callback Callable) {
+	return array_map(callback, it)
+}
+
+public _std_join(it Array|Dict, separator String) {
+	return implode(separator, it)
+}
+
 public type Array {
 	masked length UInt => count(this)
-	masked end UInt => array_last_index(this)
+	// masked end UInt => _last_index(this)
 
-	masked has(key Int) => array_key_exists(key, this)
-	masked contains(val) => in_array(val, this)
+	masked has(key Int) => _has(this, key)
+	masked contains(val) => _vals_contains(this, val)
+	masked find(val) => _array_find(this, val) // find the index for supported value
 
-	masked find(val) => _array_search(this, val) // find the index for supported value
+	masked join(separator String = LF) => _std_join(this, separator)
 
 	masked copy(start Int, length UInt = #default) Array => array_slice(this, start, length)
 	masked reversed() Array => array_reverse(this)
@@ -205,30 +184,37 @@ public type Array {
 	masked pop() => array_pop(this)
 
 	// callback(item)
-	masked map(callback Callable) => array_map(callback, this)
+	masked map(callback Callable) => _std_array_map(this, callback)
 
 	// callback(carry, item)
 	masked reduce(callback Callable, initial Any = #default) => array_reduce(this, callback, initial)
 
 	// callback(item) Bool
 	masked filter(callback Callable) => array_filter(this, callback)
+}
 
-	masked join(glue String = LF) => implode(glue, this)
+// key maybe Int，cast to String
+public _dict_find(it Dict, val) {
+	key = array_search(val, it, true)
+	return key === false ? false : key#String
+}
+
+public _dict_get(it Dict, key String|Int) {
+	return it[key] ?? none
 }
 
 public type Dict {
 	masked length => count(this)
 
+	masked has(key String) => _has(this, key)
+	masked contains(val) => _vals_contains(this, val)
+	masked find(val) => _dict_find(this, val) // find the key with supported value
+
+	masked join(separator String = LF) => _std_join(this, separator)
+
+	masked get(key String|Int) => _dict_get(this, key)
 	masked keys() => array_keys(this)
 	masked values() => array_values(this)
-
-	masked has(key String) => array_key_exists(key, this)
-	masked contains(val) => in_array(val, this)
-
-	masked get(key String) => dict_get(this, key)
-	masked find(val) => _dict_search(this, val) // find the key with supported value
-
-	masked join(glue String = LF) => implode(glue, this)
 }
 
 public type Object {
@@ -237,18 +223,33 @@ public type Object {
 
 // primitive types end
 
+public _regex_test(regex Regex, subject String) Bool {
+	return preg_match(regex, subject) ? true : false
+}
+
+public _regex_capture(regex Regex, subject String) String.Array? {
+	var result String.Array
+	count = preg_match(regex, subject, result)
+	return count === 0 ? none : result
+}
+
+public _regex_capture_all(regex Regex, subject String) String.Array.Array? {
+	var results String.Array.Array
+	count = preg_match_all(regex, subject, results)
+	return results
+}
 public type Regex {
 	// match in target string, returns is matched
-	masked test(string String) Bool => regex_test(this, string)
+	masked test(string String) Bool => _regex_test(this, string)
 
 	// use this pattern to separate a string, returns the separated items
 	masked separate(string String) String.Array => preg_split(this, string)
 
 	// match in target string, returns the first captured item
-	masked capture(string String) String.Array => regex_capture(this, string)
+	masked capture(string String) String.Array => _regex_capture(this, string)
 
 	// match in target string, returns the all captured items
-	masked capture_all(string String) String.Array.Array => regex_capture_all(this, string)
+	masked capture_all(string String) String.Array.Array => _regex_capture_all(this, string)
 }
 
 public type XView: String {}   // accept IView

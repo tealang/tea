@@ -377,21 +377,18 @@ class ObjectType extends BaseType {
 // 	public $name = _SCALAR;
 // }
 
-// class BytesType {
-// 	const ACCEPT_TYPES = [_STRING, _INT, _UINT, _XVIEW];
-// }
+class BytesType extends BaseType {
+	const ACCEPT_TYPES = [_STRING, _INT, _UINT, _XVIEW];
+	public $name = _BYTES;
+}
 
 class StringType extends BaseType {
-	// PHP中Array下标可为Int和String，并且会将数字内容的String自动转为Int
-	// 故在使用PHP Array的下标时，实际上可能有Int和String两种数据类型，这给严格的类型系统实现带来困难
-	// 由于此处规则为可接受Int值，导致在生成PHP代码时，不能用strict_types模式
-	// Float/Bool在作为PHP Array下标时，会自动转为Int，故为避免问题，不支持直接作为String使用，因为可能发生赋值到String/Any变量后，再作为Array下标的情况
-	const ACCEPT_TYPES = [_INT, _UINT, _XVIEW];
+	const ACCEPT_TYPES = [_BYTES, _INT, _UINT, _XVIEW];
 	public $name = _STRING;
 }
 
 class FloatType extends BaseType {
-	const ACCEPT_TYPES = [_INT, _UINT];  // Int/UInt 实际转换为 Float 时可能会丢失精度
+	const ACCEPT_TYPES = [_INT, _UINT];
 	public $name = _FLOAT;
 }
 
@@ -434,7 +431,10 @@ class ArrayType extends IterableType {
 	public $name = _ARRAY;
 }
 
-// 当Float作为PHP Array下标时, 将会自动转为Int, 容易出问题, 需转换成String
+// In PHP, the subscripts for Array can be Int and String, and the String of numerical content will be automatically converted to Int
+// Therefore, when using the index of PHP Array, there may actually be two data types: Int and String, which poses difficulties for strict type system implementation
+// Due to the rule being an acceptable Int value, strict types mode cannot be used when generating PHP code
+// When using Float/Bool as a PHP Array index, it will automatically convert to Int. Therefore, to avoid issues, it is not supported to use it directly as a String, as it may be assigned to the String/Any variable and then used as an Array index
 class DictType extends IterableType {
 	public $name = _DICT;
 	// public $key_type; // just support String for Dict keys now

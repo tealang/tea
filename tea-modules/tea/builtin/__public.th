@@ -100,15 +100,13 @@ runtime func rtrim(str Any, char_mask String = #default) String
 
 runtime func ltrim(str Any, char_mask String = #default) String
 
-runtime func iconv_strlen(str String) UInt
+runtime func mb_strlen(str String) UInt
 
-runtime func iconv_substr(str String, start Int, length Int = #default) String
+runtime func mb_substr(str String, start Int, length Int = #default) String
 
-runtime func iconv_strpos(str String, search String, offset Int = 0) Int
+runtime func mb_strpos(str String, search String, offset Int = 0) UInt
 
-runtime func iconv_strrpos(str String, search String, offset Int = 0) Int
-
-runtime func mb_strwidth(str String, encoding String = #default)
+runtime func mb_strrpos(str String, search String, offset Int = 0) UInt
 
 runtime func mb_strtoupper(str String) String
 
@@ -120,9 +118,9 @@ runtime func substr(str Any, start Int, length Int = #default) String
 
 runtime func str_contains(master Any, search Any) Bool
 
-runtime func strpos(master Any, search Any, offset Int = 0) Int
+runtime func strpos(master Any, search Any, offset Int = 0) UInt
 
-runtime func strrpos(master Any, search Any, offset Int = 0) Int
+runtime func strrpos(master Any, search Any, offset Int = 0) UInt
 
 runtime func strtoupper(str Any) String
 
@@ -194,31 +192,11 @@ public func is_uint(val Any) Bool
 
 public func uint_ensure(num Int) Int
 
-public func is_strict_array(it Any) Bool
-
-public func is_strict_dict(it Any) Bool
-
 public func xrange(start Int, end Int, step Int = 1) Iterator
-
-public func _str_replace(master String, search Any, replacement Any) String
-
-public func _array_search(master Array, search Any) Bool|UInt
-
-public func array_last_index(array Array) UInt
-
-public func dict_get(dict Dict, key String) Any
-
-public func _dict_search(master Dict, search Any) Bool|String
 
 public func html_encode(string String, flags Int = ENT_QUOTES) String
 
 public func html_decode(string String, flags Int = ENT_QUOTES) String
-
-public func regex_test(regex Regex, subject String) Bool
-
-public func regex_capture(regex Regex, subject String) String.Array
-
-public func regex_capture_all(regex Regex, subject String) String.Array.Array
 
 public type MetaType {
 	// no any
@@ -240,48 +218,36 @@ public type Any: String {
 	// no any
 }
 
+public func _std_split(it String, separator String) String.Array
+
+public func _std_replace(it String, search Any, replacement Any) String
+
+public type Bytes {
+	masked length UInt
+
+	masked find(str String, offset Int = #default) UInt
+
+	masked find_last(str String, offset Int = #default) UInt
+
+	masked copy(start Int, length UInt = #default) String
+}
+
 public type String {
 	masked length UInt
 
+	masked find(str String, offset Int = #default) UInt
+
+	masked find_last(str String, offset Int = #default) UInt
+
+	masked copy(start Int, length UInt = #default) String
+
 	masked contains(val Any) Bool
 
-	masked find(str String, offset Int = #default) Int
+	masked lowercase() String
 
-	masked find_last(str String, offset Int = #default) Int
+	masked uppercase() String
 
-	masked copy(start Int, length Int = #default) String
-
-	masked lower_case() String
-
-	masked upper_case() String
-
-	masked byte_length UInt
-
-	masked byte_find(str String, offset Int = #default) Int
-
-	masked byte_find_last(str String, offset Int = #default) Int
-
-	masked byte_copy(start Int, length Int = #default) String
-
-	masked byte_lower() String
-
-	masked byte_upper() String
-
-	masked rune_length UInt
-
-	masked rune_find(str String, offset Int = #default) Int
-
-	masked rune_find_last(str String, offset Int = #default) Int
-
-	masked rune_copy(start Int, length Int = #default) String
-
-	masked rune_lower() String
-
-	masked rune_upper() String
-
-	masked count_width() UInt
-
-	masked split(delimiter String) String.Array
+	masked split(separator String) String.Array
 
 	masked replace(search Any, replacement Any) String
 }
@@ -308,16 +274,26 @@ public type Bool {
 	// no any
 }
 
+public func _has(it Array|Dict, key String|Int) Bool
+
+public func _vals_contains(it Array|Dict, val Any, strict Bool = false) Bool
+
+public func _array_find(it Array, val Any) Bool|UInt
+
+public func _std_array_map(it Array, callback Callable) Array
+
+public func _std_join(it Array|Dict, separator String) String
+
 public type Array {
 	masked length UInt
-
-	masked end UInt
 
 	masked has(key Int) Bool
 
 	masked contains(val Any) Bool
 
 	masked find(val Any) Bool|UInt
+
+	masked join(separator String = LF) String
 
 	masked copy(start Int, length UInt = #default) Array
 
@@ -336,31 +312,39 @@ public type Array {
 	masked reduce(callback Callable, initial Any = #default)
 
 	masked filter(callback Callable) Array
-
-	masked join(glue String = LF) String
 }
+
+public func _dict_find(it Dict, val Any) Bool|String
+
+public func _dict_get(it Dict, key String|Int) Any
 
 public type Dict {
 	masked length UInt
-
-	masked keys() String.Array
-
-	masked values() Array
 
 	masked has(key String) Bool
 
 	masked contains(val Any) Bool
 
-	masked get(key String) Any
-
 	masked find(val Any) Bool|String
 
-	masked join(glue String = LF) String
+	masked join(separator String = LF) String
+
+	masked get(key String|Int) Any
+
+	masked keys() String.Array
+
+	masked values() Array
 }
 
 public type Object {
 	// no any
 }
+
+public func _regex_test(regex Regex, subject String) Bool
+
+public func _regex_capture(regex Regex, subject String) String.Array
+
+public func _regex_capture_all(regex Regex, subject String) String.Array.Array
 
 public type Regex {
 	masked test(string String) Bool

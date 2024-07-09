@@ -12,7 +12,7 @@ interface IDemo extends BaseInterface {
 	public function get_class_name(string $caller = 'caller1'): string;
 }
 
-trait IDemo_T {
+trait IDemoTrait {
 	public $prop;
 
 	public function __construct(string $some) {
@@ -52,7 +52,7 @@ class IterableObject implements \Iterator {
 
 #internal
 class Test1 extends IterableObject implements IDemo {
-	use IDemo_T;
+	use IDemoTrait;
 
 	public function __construct(string $some) {
 		// no any

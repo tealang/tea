@@ -12,7 +12,7 @@ interface IViewDemo extends \IView {
 	public function set_css_class(string $names);
 }
 
-trait IViewDemo_T {
+trait IViewDemoTrait {
 	protected const ABC = 'abc';
 	public $name = '';
 	public $css_class = '';

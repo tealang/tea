@@ -32,7 +32,7 @@ foreach ($days as $i => $day) {
 	$items[] = ($i + 1) . ": {$day}";
 }
 
-echo implode(', ', $items), LF;
+echo _std_join($items, ', '), LF;
 
 echo LF;
 

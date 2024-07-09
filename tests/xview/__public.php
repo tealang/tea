@@ -10,7 +10,7 @@ const __AUTOLOADS = [
 	'tests\xview\BaseView' => 'dist/BaseView.php',
 	'tests\xview\PureInterface' => 'dist/IViewDemo.php',
 	'tests\xview\IViewDemo' => 'dist/IViewDemo.php',
-	'tests\xview\IViewDemo_T' => 'dist/IViewDemo.php'
+	'tests\xview\IViewDemoTrait' => 'dist/IViewDemo.php'
 ];
 
 spl_autoload_register(function ($class) {

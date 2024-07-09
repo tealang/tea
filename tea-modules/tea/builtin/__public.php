@@ -15,32 +15,6 @@ function uint_ensure(int $num) {
 	return $num;
 }
 
-function is_strict_array($it): bool {
-	if (!is_array($it)) {
-		return false;
-	}
-
-	if (empty($it)) {
-		return true;
-	}
-
-	$keys = array_keys($it);
-	return $keys === array_keys($keys);
-}
-
-function is_strict_dict($it): bool {
-	if (!is_array($it) || empty($it)) {
-		return false;
-	}
-
-	if (!isset($it[0])) {
-		return true;
-	}
-
-	$keys = array_keys($it);
-	return $keys !== array_keys($keys);
-}
-
 function xrange(int $start, int $end, int $step = 1): \Iterator {
 	$i = $start;
 	if ($step > 0) {
@@ -60,28 +34,6 @@ function xrange(int $start, int $end, int $step = 1): \Iterator {
 	}
 }
 
-function _str_replace(string $master, $search, $replacement) {
-	return str_replace($search, $replacement, $master);
-}
-
-function _array_search(array $master, $search) {
-	$key = array_search($search, $master, true);
-	return $key === false ? false : $key;
-}
-
-function array_last_index(array $array): int {
-	return count($array) - 1;
-}
-
-function dict_get(array $dict, string $key) {
-	return $dict[$key] ?? null;
-}
-
-function _dict_search(array $master, $search) {
-	$key = array_search($search, $master, true);
-	return $key === false ? false : (string)$key;
-}
-
 function html_encode(?string $string, int $flags = ENT_QUOTES) {
 	return empty($string) ? $string : htmlspecialchars($string, $flags);
 }
@@ -90,17 +42,55 @@ function html_decode(?string $string, int $flags = ENT_QUOTES) {
 	return empty($string) ? $string : htmlspecialchars_decode($string, $flags);
 }
 
-function regex_test(string $regex, string $subject): bool {
+function _std_split(string $it, string $separator) {
+	return explode($separator, $it);
+}
+
+function _std_replace(string $it, $search, $replacement) {
+	return str_replace($search, $replacement, $it);
+}
+
+function _has(array $it, string|int $key) {
+	return array_key_exists($key, $it);
+}
+
+function _vals_contains(array $it, $val, bool $strict = false) {
+	return in_array($val, $it, $strict);
+}
+
+function _array_find(array $it, $val) {
+	$key = array_search($val, $it, true);
+	return $key === false ? false : $key;
+}
+
+function _std_array_map(array $it, callable $callback) {
+	return array_map($callback, $it);
+}
+
+function _std_join(array $it, string $separator) {
+	return implode($separator, $it);
+}
+
+function _dict_find(array $it, $val) {
+	$key = array_search($val, $it, true);
+	return $key === false ? false : (string)$key;
+}
+
+function _dict_get(array $it, string|int $key) {
+	return $it[$key] ?? null;
+}
+
+function _regex_test(string $regex, string $subject): bool {
 	return preg_match($regex, $subject) ? true : false;
 }
 
-function regex_capture(string $regex, string $subject): ?array {
+function _regex_capture(string $regex, string $subject): ?array {
 	$result = null;
 	$count = preg_match($regex, $subject, $result);
 	return $count === 0 ? null : $result;
 }
 
-function regex_capture_all(string $regex, string $subject): ?array {
+function _regex_capture_all(string $regex, string $subject): ?array {
 	$results = null;
 	$count = preg_match_all($regex, $subject, $results);
 	return $results;
