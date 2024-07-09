@@ -123,6 +123,10 @@ public type String {
 	masked uppercase() => mb_strtoupper(this)
 	masked split(separator String) => _std_split(this, separator)
 	masked replace(search, replacement) => _std_replace(this, search, replacement)
+
+	masked trim(characters String = #default) => trim(this, characters)
+	masked ltrim(characters String = #default) => ltrim(this, characters)
+	masked rtrim(characters String = #default) => rtrim(this, characters)
 }
 
 public type Int: String {

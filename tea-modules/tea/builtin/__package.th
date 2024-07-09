@@ -83,40 +83,40 @@ runtime func ceil(val) Int
 runtime func floor(val) Int
 
 // string
-runtime func trim(str, char_mask String = #default) String
-runtime func rtrim(str, char_mask String = #default) String
-runtime func ltrim(str, char_mask String = #default) String
+runtime func trim(it String, characters String = #default) String
+runtime func rtrim(it String, characters String = #default) String
+runtime func ltrim(it String, characters String = #default) String
 
 // with default charset
-runtime func mb_strlen(str String) UInt
-runtime func mb_substr(str String, start Int, length Int = #default) String
+runtime func mb_strlen(it String) UInt
+runtime func mb_substr(it String, start Int, length Int = #default) String
 
 // first pos in default charset
-runtime func mb_strpos(str String, search String, offset Int = 0) UInt  // would return false on not found
+runtime func mb_strpos(it String, search String, offset Int = 0) UInt  // would return false on not found
 
 // last pos in default charset
-runtime func mb_strrpos(str String, search String, offset Int = 0) UInt  // would return false on not found
+runtime func mb_strrpos(it String, search String, offset Int = 0) UInt  // would return false on not found
 
-runtime func mb_strtoupper(str String) String
-runtime func mb_strtolower(str String) String
+runtime func mb_strtoupper(it String) String
+runtime func mb_strtolower(it String) String
 
 // bytes mode functions
-runtime func strlen(str) UInt
-runtime func substr(str, start Int, length Int = #default) String
+runtime func strlen(it) UInt
+runtime func substr(it, start Int, length Int = #default) String
 
-runtime func str_contains(master, search) Bool
-runtime func strpos(master, search, offset Int = 0) UInt  // would return false on not found
-runtime func strrpos(master, search, offset Int = 0) UInt  // would return false on not found
-runtime func strtoupper(str) String
-runtime func strtolower(str) String
+runtime func str_contains(it, search) Bool
+runtime func strpos(it, search, offset Int = 0) UInt  // would return false on not found
+runtime func strrpos(it, search, offset Int = 0) UInt  // would return false on not found
+runtime func strtoupper(it) String
+runtime func strtolower(it) String
 
 // replace in binary mode
-runtime func strtr(master String, changes Dict) String
-runtime func str_replace(search, replacement, master String) String
+runtime func strtr(it String, changes Dict) String
+runtime func str_replace(search, replacement, it String) String
 
 //
 runtime func implode(glue String, pieces) String
-runtime func explode(delimiter String, master String) String.Array
+runtime func explode(delimiter String, it String) String.Array
 
 // array
 runtime func count(array) UInt
@@ -127,12 +127,12 @@ runtime func array_filter(items Array, callback Callable, flag Int = #default) A
 runtime func array_reduce(items Array, callback Callable, initial Any = #default)
 
 // index array
-runtime func array_slice(master Array, offset Int, length UInt = none) Array
-runtime func array_unshift(master Array, item Any) UInt
-runtime func array_shift(master Array) Any
-runtime func array_push(master Array, item Any) UInt
-runtime func array_pop(master Array) Any
-runtime func array_search(search, master, strict = false) UInt
+runtime func array_slice(it Array, offset Int, length UInt = none) Array
+runtime func array_unshift(it Array, item Any) UInt
+runtime func array_shift(it Array) Any
+runtime func array_push(it Array, item Any) UInt
+runtime func array_pop(it Array) Any
+runtime func array_search(search, it, strict = false) UInt
 
 runtime func array_key_exists(key, arr) Bool
 
