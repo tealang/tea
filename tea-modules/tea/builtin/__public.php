@@ -15,31 +15,12 @@ function uint_ensure(int $num) {
 	return $num;
 }
 
-function xrange(int $start, int $end, int $step = 1): \Iterator {
-	$i = $start;
-	if ($step > 0) {
-		while ($i <= $end) {
-			yield $i;
-			$i += $step;
-		}
-	}
-	elseif ($step < 0) {
-		while ($i >= $end) {
-			yield $i;
-			$i += $step;
-		}
-	}
-	else {
-		throw new \LogicException('Parameter "step" should not be 0');
-	}
+function html_escape(?string $str): string {
+	return $str === null ? '' : htmlspecialchars($str);
 }
 
-function html_encode(?string $string, int $flags = ENT_QUOTES) {
-	return empty($string) ? $string : htmlspecialchars($string, $flags);
-}
-
-function html_decode(?string $string, int $flags = ENT_QUOTES) {
-	return empty($string) ? $string : htmlspecialchars_decode($string, $flags);
+function html_unescape(?string $str): string {
+	return $str === null ? '' : htmlspecialchars_decode($str);
 }
 
 function _std_split(string $it, string $separator) {

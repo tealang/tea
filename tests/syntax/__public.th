@@ -13,7 +13,7 @@ runtime func range(start Int, end Int, step Int = 1) Array
 public class PHPClassInMixed1 {
 	protected const CONST1 String
 	public const CONST2
-	public object Object
+	public object Object?
 	public some \Exception
 	public construct(caller String, items Array, some Bool = #default)
 	public get_message() String
@@ -43,7 +43,7 @@ public class DemoList: BaseView {
 
 	cells Array
 
-	construct(name String, title String = '', items Array = [], each () Cell = none, error (message Any) Void = none)
+	construct(name String, title String = '', items Array = [], each () Cell? = none, error (message Any) Void? = none)
 
 	render() String
 }

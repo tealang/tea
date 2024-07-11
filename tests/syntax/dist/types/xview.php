@@ -53,7 +53,7 @@ class DemoList extends BaseView {
 		}
 
 		return '<view id="' . $this->name . '">
-	' . ($this->title == "abc" ? '<h1>' . \html_encode($this->title . 123) . '</h1>' : null) . '
+	' . ($this->title == "abc" ? '<h1>' . \html_escape($this->title . 123) . '</h1>' : null) . '
 	<i></i>
 	<cells>
 		' . _std_join($cells, LF) . '

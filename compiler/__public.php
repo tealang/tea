@@ -148,6 +148,7 @@ const __AUTOLOADS = [
 	'Tea\NoneType' => 'ast/base/Types.php',
 	'Tea\AnyType' => 'ast/base/Types.php',
 	'Tea\ObjectType' => 'ast/base/Types.php',
+	'Tea\BytesType' => 'ast/base/Types.php',
 	'Tea\StringType' => 'ast/base/Types.php',
 	'Tea\FloatType' => 'ast/base/Types.php',
 	'Tea\IntType' => 'ast/base/Types.php',

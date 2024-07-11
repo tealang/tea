@@ -901,7 +901,7 @@ class PHPCoder extends TeaCoder
 		// }
 
 		// use the tea lib function instead, avoiding target is a function call
-		$code = "\html_encode($expr)";
+		$code = "\html_escape($expr)";
 
 		return $code;
 	}
@@ -1403,7 +1403,7 @@ class PHPCoder extends TeaCoder
 
 		// the auto-cast type to String
 		$infered_type = $node->right->infered_type;
-		if (!TypeFactory::is_dict_key_directly_supported_type($infered_type)) {
+		if (!TypeFactory::is_dict_key_type($infered_type)) {
 			// Cast others to string, and bool to ''
 			// Avoid of float/bool being cast to integers
 			$key = '(string)' . $key;

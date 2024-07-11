@@ -2191,16 +2191,7 @@ class TeaParser extends BaseParser
 			$type = $type->unite_type($member_type);
 		}
 
-		if ($this->skip_token(_INVALIDABLE_SIGN)) {
-			if ($type instanceof BaseType) {
-				$type = $type->get_nullable_instance();
-			}
-			else {
-				$type->let_nullable();
-			}
-
-			$type->pos = $this->pos;
-		}
+		$this->try_read_nullable($type);
 
 		return $type;
 	}
@@ -2220,6 +2211,8 @@ class TeaParser extends BaseParser
 			return null;
 		}
 
+		$this->try_read_nullable($type);
+
 		// try read Dict/Array
 		$next = $this->get_token();
 		if ($next === _BRACKET_OPEN) {
@@ -2232,6 +2225,20 @@ class TeaParser extends BaseParser
 		}
 
 		return $type;
+	}
+
+	private function try_read_nullable(IType &$type)
+	{
+		if ($this->skip_token(_INVALIDABLE_SIGN)) {
+			if ($type instanceof BaseType) {
+				$type = $type->get_nullable_instance();
+			}
+			else {
+				$type->let_nullable();
+			}
+
+			$type->pos = $this->pos;
+		}
 	}
 
 	protected function read_dots_style_compound_type(IType $generic_type): IType

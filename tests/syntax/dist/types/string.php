@@ -10,9 +10,7 @@ $key = "f3";
 
 echo mb_strlen("some string"), LF;
 
-$str = trim($str);
-
-echo $str, LF;
+echo trim($str), LF;
 
 substr($str, 2);
 mb_substr($str, 0, 3);
@@ -24,7 +22,7 @@ $arr = [
 	"sub" => [1, 2, 3]
 ];
 
-echo ($str . 'abc') . " world", LF;
+echo "{$str}world", LF;
 echo $str . '\n
 	- ' . $arr['f1'] . '
 	- ' . $arr[$key] . '
@@ -38,17 +36,13 @@ echo '
 
 $abc = 'hhh';
 
-$var1 = '<div>' . '<script>' . '</div>';
-
 'string' . $abc;
 "string{$abc}";
-'string' . \html_encode($abc);
+'string' . \html_escape($abc);
 
-html_encode("string{$abc}\n");
-html_encode('string');
-html_encode('string<br>' . $abc);
-
-'A' . $abc . 'BC\n';
+html_escape("string{$abc}\n");
+html_escape('string');
+html_escape('string<br>' . $abc);
 
 $v_10 = "sth.";
 $v_11 = 123;

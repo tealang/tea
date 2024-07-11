@@ -1594,7 +1594,7 @@ class ASTChecker
 				throw $this->new_syntax_error("Invalid accessing for Dict", $node);
 			}
 
-			if (TypeFactory::is_dict_key_directly_supported_type($right_type)) {
+			if (TypeFactory::is_dict_key_type($right_type)) {
 				// okay
 			}
 			else {
@@ -1606,7 +1606,7 @@ class ASTChecker
 		}
 		elseif ($left_type instanceof AnyType) {
 			// if non key, that's Array access, else just allow Dict as the actual type
-			if ($node->right and !TypeFactory::is_dict_key_directly_supported_type($right_type)) {
+			if ($node->right and !TypeFactory::is_dict_key_type($right_type)) {
 				$type_name = $this->get_type_name($right_type);
 				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$type_name}' supplied", $node->right);
 			}
@@ -1626,7 +1626,7 @@ class ASTChecker
 				}
 			}
 			elseif ($left_type->is_all_dict_types()) {
-				if (!TypeFactory::is_dict_key_directly_supported_type($right_type)) {
+				if (!TypeFactory::is_dict_key_type($right_type)) {
 					throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$right_type->name}' supplied", $node->right);
 				}
 			}
@@ -1945,7 +1945,7 @@ class ASTChecker
 		$infered_value_types = [];
 		foreach ($node->items as $item) {
 			$key_type = $this->infer_expression($item->key);
-			if (TypeFactory::is_dict_key_directly_supported_type($key_type)) {
+			if (TypeFactory::is_dict_key_type($key_type)) {
 				// okay
 			}
 			else {

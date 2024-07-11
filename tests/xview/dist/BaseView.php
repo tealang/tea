@@ -27,7 +27,7 @@ abstract class BaseView implements \IView {
 	protected function build_props() {
 		$props = '';
 		foreach ($this->props as $key => $value) {
-			$props .= ' ' . \html_encode($key) . '="' . \html_encode($value) . '"';
+			$props .= ' ' . \html_escape($key) . '="' . \html_escape($value) . '"';
 		}
 
 		return $props;

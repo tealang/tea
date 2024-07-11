@@ -6,12 +6,10 @@ key = "f3"
 
 echo "some string".length
 
-str = trim(str)
+echo str.trim() // hello
 
-echo str // Hello
-
-str#Bytes.copy(2)
-str.copy(0, 3)
+str#Bytes.copy(2) // "llo "
+str.copy(0, 3) // "hel"
 
 arr = [
 	'f1': 123,
@@ -20,39 +18,31 @@ arr = [
 	"sub": [1, 2, 3]
 ]
 
-// 字符串（执行表达式）
-echo "${str concat 'abc'} world" // hello world
+echo "${str}world" // hello world
 echo '$str\n
 	- ${arr['f1']}
 	- ${arr[key]}
 '
 
-// 纯字符串（不执行表达式）
+// raw text
 echo #text "$str world" // $str world
 echo #text '
 	- ${arr[\'f1\']}
 	- ${arr[key]}
 '
 
-// 声明变量并赋值
-abc = 'hhh'
-
-var1 = <div>${'<script>'}</div>
+var abc = 'hhh'
 
 'string${abc}';
 "string${abc}"
 'string#{abc}';
 
-html_encode("string${abc}\n")
-html_encode('string')
-html_encode('string<br>' concat abc)
+html_escape("string${abc}\n")
+html_escape('string')
+html_escape('string<br>' concat abc)
 
-'A${abc}BC\n'
-
-// 声明变量及其类型并赋值
 var v_10 String = "sth."
 var v_11 = 123
 
-// 声明变量及其类型，然后赋值
 var v_20 String
 v_21 = "sth."

@@ -43,7 +43,7 @@ class TypeFactory
 	static $_callable;
 	static $_namespace;
 
-	static $_iiterator;
+	static $_iterator;
 	static $_yield_generator;
 
 	// for check accepts
@@ -90,9 +90,9 @@ class TypeFactory
 
 		// self::$_dict_key_type = self::create_union_type([self::$_string, self::$_int]);
 
-		self::$_iiterator = new ClassKindredIdentifier('Iterator');
-		self::$_yield_generator = self::$_iiterator;
+		self::$_iterator = new ClassKindredIdentifier('Iterator');
 		// self::$_yield_generator = new ClassKindredIdentifier('YieldGenerator');
+		self::$_yield_generator = self::$_iterator;
 	}
 
 	static function find_iterator_identifier(IType $type)
@@ -131,29 +131,27 @@ class TypeFactory
 	// 	return $result;
 	// }
 
-	static function is_dict_key_directly_supported_type(?IType $type)
+	static function is_dict_key_type(?IType $type)
 	{
-		// 一些类型值作为下标调用时，PHP中有一些隐式的转换规则，这些规则往往不那么清晰，故不能把这些用于key
-		// 如false用作下标时将转换为0，但直接转成string时是''
-		// 而0.1用作下标时将转换为0，但实际情况可能需要的是'0.1'
-
-		if ($type === self::$_string || $type === self::$_uint || $type === self::$_int) {
-			return true;
-		}
-		elseif ($type instanceof StringType || $type instanceof IntType) {
-			return true;
+		$is = false;
+		if ($type === self::$_string
+			|| $type === self::$_uint
+			|| $type === self::$_int
+			|| $type instanceof StringType
+			|| $type instanceof IntType) {
+			$is = true;
 		}
 		elseif ($type instanceof UnionType) {
 			foreach ($type->get_members() as $member_type) {
-				if (!TypeFactory::is_dict_key_directly_supported_type($member_type)) {
-					return false;
+				if (!TypeFactory::is_dict_key_type($member_type)) {
+					break;
 				}
 			}
 
-			return true;
+			$is = true;
 		}
 
-		return false;
+		return $is;
 	}
 
 	static function is_case_testable_type(?IType $type)

@@ -664,25 +664,31 @@ class TeaCoder
 		if ($node === TypeFactory::$_none) {
 			return null;
 		}
-		elseif ($node instanceof IterableType) {
-			if ($node->generic_type) {
-				$gtype = $node->generic_type;
-				if ($gtype instanceof UnionType) {
-					$item = $this->render_union_type_expression($gtype);
-					$item = "($item)";
-				}
-				else {
-					$item = $gtype->render($this);
-				}
 
-				return $item . '.' . $node->name;
+		if ($node instanceof CallableType) {
+			$code = $this->render_callable_type($node);
+		}
+		elseif ($node instanceof IterableType and $node->generic_type) {
+			$gtype = $node->generic_type;
+			if ($gtype instanceof UnionType) {
+				$item = $this->render_union_type_expression($gtype);
+				$item = "($item)";
 			}
+			else {
+				$item = $gtype->render($this);
+			}
+
+			$code = $item . '.' . $node->name;
 		}
-		elseif ($node instanceof CallableType) {
-			return $this->render_callable_type($node);
+		else {
+			$code = $node->name;
 		}
 
-		return $node->name;
+		if ($node->nullable) {
+			$code .= '?';
+		}
+
+		return $code;
 	}
 
 	public function render_union_type_expression(UnionType $node)

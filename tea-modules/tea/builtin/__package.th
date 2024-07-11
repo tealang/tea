@@ -49,7 +49,7 @@ runtime const INPUT_SERVER Int
 runtime const FILTER_INT Int
 runtime const FILTER_EMAIL Int
 
-runtime func filter_input(type Int, key String, filter Int = #default, options Dict = #default) Any
+runtime func filter_input(type Int, key String, filter Int = #default, options Dict = #default) String|Int|UInt|Float|Bool?
 
 // exceptions
 runtime class Exception {
@@ -75,8 +75,8 @@ runtime const LOCK_EX Int
 
 // math
 runtime func pow(num, exponent) UInt|Int|Float
-runtime func max(n1, n2, n3 = #default) Any
-runtime func min(n1, n2, n3 = #default) Any
+runtime func max(n1, n2 = #default, n3 = #default) Int|UInt|Float
+runtime func min(n1, n2 = #default, n3 = #default) Int|UInt|Float
 runtime func abs(val) Float
 runtime func round(val, precision = 0) Float
 runtime func ceil(val) Int
