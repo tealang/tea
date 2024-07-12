@@ -10,7 +10,7 @@ public class BaseView: IView {
 
 	construct(props Dict? = none)
 
-	prop(key String, value Any?) BaseView
+	prop(key String, value Any) BaseView
 
 	subview(view XView) BaseView
 

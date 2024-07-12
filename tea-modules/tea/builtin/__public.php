@@ -40,8 +40,7 @@ function _vals_contains(array $it, $val, bool $strict = false) {
 }
 
 function _array_find(array $it, $val) {
-	$key = array_search($val, $it, true);
-	return $key === false ? false : $key;
+	return array_search($val, $it, true);
 }
 
 function _std_array_map(array $it, callable $callback) {
@@ -53,8 +52,7 @@ function _std_join(array $it, string $separator) {
 }
 
 function _dict_find(array $it, $val) {
-	$key = array_search($val, $it, true);
-	return $key === false ? false : (string)$key;
+	return array_search($val, $it, true);
 }
 
 function _dict_get(array $it, string|int $key) {

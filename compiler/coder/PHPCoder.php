@@ -565,9 +565,9 @@ class PHPCoder extends TeaCoder
 		return $interface_code . "\n\n" . $trait_code;
 	}
 
-	public static function get_intertrait_trait_name(string $origin_name)
+	public static function get_intertrait_trait_name(string $name)
 	{
-		return $origin_name . 'Trait';
+		return $name . 'Trait';
 	}
 
 	protected function render_interface_members(InterfaceDeclaration $node)
@@ -973,7 +973,7 @@ class PHPCoder extends TeaCoder
 
 	private function get_normalized_name_with_declaration(IDeclaration $node)
 	{
-		$name = $node->name;
+		$name = $node->origin_name ?? $node->name;
 		return $node->is_runtime ? $name : $this->get_normalized_name($name);
 	}
 

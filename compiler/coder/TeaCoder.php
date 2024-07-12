@@ -146,7 +146,7 @@ class TeaCoder
 	{
 		$name = $node->name;
 		if ($node->origin_name) {
-			$name .= "{$node->origin_name} as $name";
+			$name = "{$node->origin_name} as $name";
 		}
 
 		return $name;

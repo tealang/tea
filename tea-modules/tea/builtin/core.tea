@@ -45,8 +45,7 @@ public type Void {}
 
 public type None {}
 
-// extends String to use the String properties/methods
-public type Any: String {}
+public type Any {}
 
 public _std_split(it String, separator String) {
 	return explode(separator, it)
@@ -81,7 +80,7 @@ public type String {
 	masked rtrim(characters String = #default) => rtrim(this, characters)
 }
 
-public type Int: String {
+public type Int {
 	masked abs() UInt => abs(this)
 }
 
@@ -109,11 +108,11 @@ public _vals_contains(it Array|Dict, val, strict Bool = false) {
 }
 
 public _array_find(it Array, val)  {
-	key = array_search(val, it, true)
-	return key === false ? false : key
+	return list_search(val, it, true)
+	// return key === false ? false : key
 }
 
-public _std_array_map(it Array, callback Callable) {
+public _std_array_map(it Array, callback (item Any) Any) {
 	return array_map(callback, it)
 }
 
@@ -140,19 +139,19 @@ public type Array {
 	masked pop() => array_pop(this)
 
 	// callback(item)
-	masked map(callback Callable) => _std_array_map(this, callback)
-
-	// callback(carry, item)
-	masked reduce(callback Callable, initial Any = #default) => array_reduce(this, callback, initial)
+	masked map(callback (item Any) Any) => _std_array_map(this, callback)
 
 	// callback(item) Bool
-	masked filter(callback Callable) => array_filter(this, callback)
+	masked filter(callback (item Any) Any) => array_filter(this, callback)
+
+	// callback(carry, item)
+	masked reduce(callback (item Any) Any, initial Any = #default) => array_reduce(this, callback, initial)
 }
 
 // key maybe Int，cast to String
 public _dict_find(it Dict, val) {
-	key = array_search(val, it, true)
-	return key === false ? false : key#String
+	return dict_search(val, it, true)
+	// return key === false ? false : key#String
 }
 
 public _dict_get(it Dict, key String|Int) {
@@ -207,7 +206,7 @@ public type Regex {
 	masked capture_all(string String) String.Array.Array => _regex_capture_all(this, string)
 }
 
-public type XView: String {}   // accept IView
+public type XView {}   // accept IView
 
 public type Callable {}
 

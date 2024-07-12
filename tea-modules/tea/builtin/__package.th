@@ -122,9 +122,9 @@ runtime func explode(delimiter String, it String) String.Array
 runtime func count(array) UInt
 runtime func in_array(needle, haystack, strict Bool = false) Bool
 runtime func array_reverse(array)
-runtime func array_map(callback Callable, items Array) Array
-runtime func array_filter(items Array, callback Callable, flag Int = #default) Array
-runtime func array_reduce(items Array, callback Callable, initial Any = #default)
+runtime func array_map(callback (item Any) Any, items Array) Array
+runtime func array_filter(items Array, callback (item Any) Any, flag Int = #default) Array
+runtime func array_reduce(items Array, callback (item Any) Any, initial Any = #default) Any
 
 // index array
 runtime func array_slice(it Array, offset Int, length UInt = none) Array
@@ -132,7 +132,8 @@ runtime func array_unshift(it Array, item Any) UInt
 runtime func array_shift(it Array) Any
 runtime func array_push(it Array, item Any) UInt
 runtime func array_pop(it Array) Any
-runtime func array_search(search, it, strict = false) UInt
+runtime func array_search as list_search(search, it, strict = false) UInt|Bool
+runtime func array_search as dict_search(search, it, strict = false) String|Int|Bool
 
 runtime func array_key_exists(key, arr) Bool
 

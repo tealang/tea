@@ -140,11 +140,11 @@ runtime func in_array(needle Any, haystack Any, strict Bool = false) Bool
 
 runtime func array_reverse(array Any)
 
-runtime func array_map(callback Callable, items Array) Array
+runtime func array_map(callback (item Any) Any, items Array) Array
 
-runtime func array_filter(items Array, callback Callable, flag Int = #default) Array
+runtime func array_filter(items Array, callback (item Any) Any, flag Int = #default) Array
 
-runtime func array_reduce(items Array, callback Callable, initial Any = #default)
+runtime func array_reduce(items Array, callback (item Any) Any, initial Any = #default) Any
 
 runtime func array_slice(it Array, offset Int, length UInt? = none) Array
 
@@ -156,7 +156,9 @@ runtime func array_push(it Array, item Any) UInt
 
 runtime func array_pop(it Array) Any
 
-runtime func array_search(search Any, it Any, strict Bool = false) UInt
+runtime func array_search as list_search(search Any, it Any, strict Bool = false) UInt|Bool
+
+runtime func array_search as dict_search(search Any, it Any, strict Bool = false) String|Int|Bool
 
 runtime func array_key_exists(key Any, arr Any) Bool
 
@@ -212,7 +214,7 @@ public type None {
 	// no any
 }
 
-public type Any: String {
+public type Any {
 	// no any
 }
 
@@ -256,7 +258,7 @@ public type String {
 	masked rtrim(characters String = #default) String
 }
 
-public type Int: String {
+public type Int {
 	masked abs() UInt
 }
 
@@ -282,9 +284,9 @@ public func _has(it Array|Dict, key String|Int) Bool
 
 public func _vals_contains(it Array|Dict, val Any, strict Bool = false) Bool
 
-public func _array_find(it Array, val Any) Bool|UInt
+public func _array_find(it Array, val Any) UInt|Bool
 
-public func _std_array_map(it Array, callback Callable) Array
+public func _std_array_map(it Array, callback (item Any) Any) Array
 
 public func _std_join(it Array|Dict, separator String) String
 
@@ -295,7 +297,7 @@ public type Array {
 
 	masked contains(val Any) Bool
 
-	masked find(val Any) Bool|UInt
+	masked find(val Any) UInt|Bool
 
 	masked join(separator String = LF) String
 
@@ -311,14 +313,14 @@ public type Array {
 
 	masked pop() Any
 
-	masked map(callback Callable) Array
+	masked map(callback (item Any) Any) Array
 
-	masked reduce(callback Callable, initial Any = #default)
+	masked filter(callback (item Any) Any) Array
 
-	masked filter(callback Callable) Array
+	masked reduce(callback (item Any) Any, initial Any = #default) Any
 }
 
-public func _dict_find(it Dict, val Any) Bool|String
+public func _dict_find(it Dict, val Any) String|Int|Bool
 
 public func _dict_get(it Dict, key String|Int) Any
 
@@ -329,7 +331,7 @@ public type Dict {
 
 	masked contains(val Any) Bool
 
-	masked find(val Any) Bool|String
+	masked find(val Any) String|Int|Bool
 
 	masked join(separator String = LF) String
 
@@ -360,7 +362,7 @@ public type Regex {
 	masked capture_all(string String) String.Array.Array
 }
 
-public type XView: String {
+public type XView {
 	// no any
 }
 
