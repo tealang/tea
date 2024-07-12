@@ -4,7 +4,7 @@ namespace tests\examples;
 require_once dirname(__DIR__, 1) . '/__public.php';
 
 #internal
-function say_hello(string $name = 'World') {
+function say_hello($name = 'World') {
 	echo 'Hello, ' . $name . '!', LF;
 }
 

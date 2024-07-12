@@ -77,8 +77,8 @@ var mapped = users.map((item) => {
 var_dump(mapped)
 
 // array reduce
-var reduced = [1, 2, 3].reduce((carry, item) => {
-	return carry#Int + item#Int
+var reduced = [1, 2, 3].reduce((carry Int, item Int) => {
+	return carry + item
 }, 10)
 var_dump(reduced)
 

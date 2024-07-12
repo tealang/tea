@@ -236,7 +236,7 @@ class TypeFactory
 		return $type;
 	}
 
-	static function create_callable_type(?IType $return_type, array $parameters = null)
+	static function create_callable_type(?IType $return_type, array $parameters)
 	{
 		$type = new CallableType($return_type, $parameters);
 		$type->symbol = self::$_callable->symbol;

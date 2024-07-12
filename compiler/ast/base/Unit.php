@@ -23,8 +23,6 @@ class Unit implements IRootDeclaration
 	// current module path, include ends with DS
 	public $path;
 
-	public $type; // tea or php
-
 	public $loader; // the program to load PHP classes/functions/consts
 
 	public $as_main = false;

@@ -122,9 +122,9 @@ runtime func explode(delimiter String, it String) String.Array
 runtime func count(array) UInt
 runtime func in_array(needle, haystack, strict Bool = false) Bool
 runtime func array_reverse(array)
-runtime func array_map(callback (item Any) Any, items Array) Array
-runtime func array_filter(items Array, callback (item Any) Any, flag Int = #default) Array
-runtime func array_reduce(items Array, callback (item Any) Any, initial Any = #default) Any
+runtime func array_map(callback (item) Any, items Array) Array
+runtime func array_filter(items Array, callback (item) Any, flag Int = #default) Array
+runtime func array_reduce(items Array, callback (carry, item) Any, initial Any = #default) Any
 
 // index array
 runtime func array_slice(it Array, offset Int, length UInt = none) Array

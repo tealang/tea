@@ -47,7 +47,7 @@ public DemoList: BaseView {
 
 	cells Array = []
 
-	construct(name String, title = '', items Array = [], each () Cell = none, error (message) Void = none) {
+	construct(name String, title = '', items Array = [], each (() Cell)? = none, error (message) Void = none) {
 		this.items = items
 
 		if each {

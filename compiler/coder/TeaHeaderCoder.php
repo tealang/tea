@@ -68,6 +68,11 @@ class TeaHeaderCoder extends TeaCoder
 		return $code . static::CLASS_MEMBER_TERMINATOR;
 	}
 
+	protected function get_decl_type(IDeclaration $node)
+	{
+		return $node->get_type();
+	}
+
 	public function render_constant_declaration(IConstantDeclaration $node)
 	{
 		if ($node->modifier === _INTERNAL) {

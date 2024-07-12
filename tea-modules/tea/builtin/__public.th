@@ -144,9 +144,9 @@ runtime func array_map(callback (item Any) Any, items Array) Array
 
 runtime func array_filter(items Array, callback (item Any) Any, flag Int = #default) Array
 
-runtime func array_reduce(items Array, callback (item Any) Any, initial Any = #default) Any
+runtime func array_reduce(items Array, callback (carry Any, item Any) Any, initial Any = #default) Any
 
-runtime func array_slice(it Array, offset Int, length UInt? = none) Array
+runtime func array_slice(it Array, offset Int, length UInt = none) Array
 
 runtime func array_unshift(it Array, item Any) UInt
 
@@ -317,7 +317,7 @@ public type Array {
 
 	masked filter(callback (item Any) Any) Array
 
-	masked reduce(callback (item Any) Any, initial Any = #default) Any
+	masked reduce(callback (carry Any, item Any) Any, initial Any = #default) Any
 }
 
 public func _dict_find(it Dict, val Any) String|Int|Bool

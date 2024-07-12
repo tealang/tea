@@ -215,7 +215,7 @@ class TeaCoder
 		if ($node->is_static) $items[] = _STATIC;
 
 		$items[] = $node->name;
-		$node->type and $items[] = $node->type->render($this);
+		$this->push_type($items, $node);
 
 		return join(' ', $items);
 	}
@@ -223,6 +223,19 @@ class TeaCoder
 	protected function generate_class_constant_header(ClassConstantDeclaration $node)
 	{
 		return $this->generate_constant_header($node);
+	}
+
+	protected function get_decl_type(IDeclaration $node)
+	{
+		return $node->hinted_type;
+	}
+
+	protected function push_type(array &$items, IDeclaration $node)
+	{
+		$type = $this->get_decl_type($node);
+		if ($type) {
+			$items[] = $type->render($this);
+		}
 	}
 
 	protected function generate_constant_header(IConstantDeclaration $node)
@@ -236,17 +249,16 @@ class TeaCoder
 			$name
 		];
 
-		if ($node->type) {
-			$items[] = $node->type->render($this);
-		}
+		$this->push_type($items, $node);
 
 		return join(' ', $items);
 	}
 
 	protected function generate_declaration_type(IDeclaration $node)
 	{
-		return $node->type && $node->type !== TypeFactory::$_void
-			? ' ' . $node->type->render($this)
+		$type = $this->get_decl_type($node);
+		return $type && $type !== TypeFactory::$_void
+			? ' ' . $type->render($this)
 			: '';
 	}
 
@@ -471,10 +483,11 @@ class TeaCoder
 			$expr = $expr . ' ' . _INOUT;
 		}
 
-		if ($node->type) {
-			$type = $node->type->render($this);
-			if ($type) {
-				$expr = "{$expr} {$type}";
+		$type = $this->get_decl_type($node);
+		if ($type) {
+			$type_str = $type->render($this);
+			if ($type_str) {
+				$expr = "{$expr} {$type_str}";
 			}
 		}
 
@@ -709,7 +722,7 @@ class TeaCoder
 		}
 
 		$parameters = $this->render_parameters($node->parameters);
-		$type = $node->type->render($this);
+		$type = $node->hinted_type->render($this);
 
 		return sprintf('(%s) %s', $parameters, $type);
 	}
@@ -1223,7 +1236,7 @@ class TeaCoder
 	public function render_catch_block(CatchBlock $node)
 	{
 		$var = static::VAR_DECLARE_PREFIX . $node->var->name;
-		$type = $node->var->type->render($this);
+		$type = $node->var->hinted_type->render($this);
 
 		$items = [];
 		$items[] = "\ncatch ($type $var) " . $this->render_control_structure_body($node);

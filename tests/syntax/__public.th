@@ -43,7 +43,7 @@ public class DemoList: BaseView {
 
 	cells Array
 
-	construct(name String, title String = '', items Array = [], each () Cell? = none, error (message Any) Void? = none)
+	construct(name String, title String = '', items Array = [], each () Cell? = none, error (message Any) Void = none)
 
 	render() String
 }

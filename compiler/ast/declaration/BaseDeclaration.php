@@ -34,7 +34,12 @@ trait DeclarationTrait {
 	/**
 	 * @var IType
 	 */
-	public $type;
+	public $hinted_type;
+
+	/**
+	 * @var IType
+	 */
+	public $infered_type;
 
 	/**
 	 * @var Symbol
@@ -49,6 +54,11 @@ trait DeclarationTrait {
 	public $uses = [];
 
 	public $defer_check_identifiers = [];
+
+	public function get_type()
+	{
+		return $this->hinted_type ?? $this->infered_type;
+	}
 
 	public function set_depends_to_unit_level()
 	{

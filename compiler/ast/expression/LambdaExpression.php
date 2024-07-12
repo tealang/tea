@@ -22,9 +22,9 @@ class LambdaExpression extends BaseExpression implements IScopeBlock
 
 	// public $mutating_variable_names = [];
 
-	public function __construct(IType $type = null, array $parameters = null)
+	public function __construct(IType $return_type = null, array $parameters = null)
 	{
-		$this->type = $type;
+		$this->hinted_type = $return_type;
 		$this->parameters = $parameters;
 	}
 }

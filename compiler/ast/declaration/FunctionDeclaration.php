@@ -18,8 +18,6 @@ trait IScopeBlockTrait
 
 	public $callbacks;
 
-	public $is_hinted_return_type;
-
 	public $parameters;
 
 	// public $auto_declarations = [];
@@ -30,7 +28,7 @@ trait IScopeBlockTrait
 	// set true when checking AST
 	public $is_checking;
 
-	public function __construct(?string $modifier, string $name, IType $type = null, array $parameters = null)
+	public function __construct(?string $modifier, string $name, IType $return_type = null, array $parameters = null)
 	{
 		if ($modifier === _PUBLIC) {
 			$this->is_unit_level = true;
@@ -38,7 +36,7 @@ trait IScopeBlockTrait
 
 		$this->modifier = $modifier;
 		$this->name = $name;
-		$this->type = $type;
+		$this->hinted_type = $return_type;
 		$this->parameters = $parameters;
 	}
 

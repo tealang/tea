@@ -70,8 +70,8 @@ $mapped = _std_array_map($users, function ($item) {
 });
 var_dump($mapped);
 
-$reduced = array_reduce([1, 2, 3], function ($carry, $item) {
-	return (int)$carry + (int)$item;
+$reduced = array_reduce([1, 2, 3], function (int $carry, int $item) {
+	return $carry + $item;
 }, 10);
 var_dump($reduced);
 

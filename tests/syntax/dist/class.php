@@ -143,11 +143,11 @@ class Test5 {
 		return $str;
 	}
 
-	public static function sm_33(array $arg = []): int {
+	public static function sm_33($arg = []): int {
 		return 1;
 	}
 
-	public static function sm_34(array $arg = [1, 2, 3]): float {
+	public static function sm_34($arg = [1, 2, 3]): float {
 		return 1.23;
 	}
 
@@ -155,27 +155,27 @@ class Test5 {
 		return true;
 	}
 
-	public static function sm_360(array $arg_1, string $arg_2 = "str"): array {
+	public static function sm_360(array $arg_1, $arg_2 = "str"): array {
 		return [];
 	}
 
-	public static function sm_361(array $arg_1, string $arg_2 = "str"): array {
+	public static function sm_361(array $arg_1, $arg_2 = "str"): array {
 		return [1, 2, 3];
 	}
 
-	public static function sm_362(array $arg_1, string $arg_2 = "str"): array {
+	public static function sm_362(array $arg_1, $arg_2 = "str"): array {
 		return $arg_1;
 	}
 
-	public static function sm_370(array $arg_1, string $arg_2 = "str"): array {
+	public static function sm_370(array $arg_1, $arg_2 = "str"): array {
 		return [];
 	}
 
-	public static function sm_371(array $arg_1, string $arg_2 = "str"): array {
+	public static function sm_371(array $arg_1, $arg_2 = "str"): array {
 		return $arg_1;
 	}
 
-	public static function sm_372(array $arg_1, string $arg_2 = "str"): array {
+	public static function sm_372(array $arg_1, $arg_2 = "str"): array {
 		return ["a" => 123];
 	}
 
@@ -193,11 +193,11 @@ class Test5 {
 		return $str;
 	}
 
-	public function m_33(array $arg = []): int {
+	public function m_33($arg = []): int {
 		return 1;
 	}
 
-	public function m_34(array $arg = [1, 2, 3]): float {
+	public function m_34($arg = [1, 2, 3]): float {
 		return 1.23;
 	}
 
@@ -205,35 +205,35 @@ class Test5 {
 		return true;
 	}
 
-	public function m_360(array $arg_1, string $arg_2 = "str"): array {
+	public function m_360(array $arg_1, $arg_2 = "str"): array {
 		return [];
 	}
 
-	public function m_361(array $arg_1, string $arg_2 = "str"): array {
+	public function m_361(array $arg_1, $arg_2 = "str"): array {
 		return [1, 2, 3];
 	}
 
-	public function m_362(array $arg_1, string $arg_2 = "str"): array {
+	public function m_362(array $arg_1, $arg_2 = "str"): array {
 		return $arg_1;
 	}
 
-	public function m_363(array $arg_1, string $arg_2 = "str"): array {
+	public function m_363(array $arg_1, $arg_2 = "str"): array {
 		return $this->a_53;
 	}
 
-	public function m_370(array $arg_1, string $arg_2 = "str") {
+	public function m_370(array $arg_1, $arg_2 = "str") {
 		return [];
 	}
 
-	public function m_371(array $arg_1, string $arg_2 = "str"): array {
+	public function m_371(array $arg_1, $arg_2 = "str"): array {
 		return $arg_1;
 	}
 
-	public function m_372(array $arg_1, string $arg_2 = "str"): array {
+	public function m_372(array $arg_1, $arg_2 = "str"): array {
 		return ["a" => 123];
 	}
 
-	public function m_373(array $arg_1, string $arg_2 = "str"): array {
+	public function m_373(array $arg_1, $arg_2 = "str"): array {
 		return $this->a_10;
 	}
 }

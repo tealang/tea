@@ -654,7 +654,7 @@ class PHPParser extends BaseParser
 		$declaration = $this->factory->create_constant_declaration(_PUBLIC, $name, $this->namespace);
 
 		$this->expect_char_token(_ASSIGN);
-		$declaration->type = $this->read_value_type_skip($doc);
+		$declaration->hinted_type = $this->read_value_type_skip($doc);
 		$this->expect_statement_end();
 
 		$declaration->pos = $this->pos;
@@ -668,7 +668,7 @@ class PHPParser extends BaseParser
 		$declaration = $this->factory->create_class_constant_declaration($modifier ?? _PUBLIC, $name);
 
 		$this->expect_char_token(_ASSIGN);
-		$declaration->type = $this->read_value_type_skip($doc, 'const', $name);
+		$declaration->hinted_type = $this->read_value_type_skip($doc, 'const', $name);
 		$this->expect_statement_end();
 
 		$declaration->pos = $this->pos;
@@ -807,7 +807,7 @@ class PHPParser extends BaseParser
 		// }
 
 		$this->expect_statement_end();
-		$declaration->type = $type;
+		$declaration->hinted_type = $type;
 		$declaration->pos = $this->pos;
 
 		return $declaration;
@@ -825,7 +825,7 @@ class PHPParser extends BaseParser
 		$parameters = $this->read_parameters();
 		$this->factory->set_scope_parameters($parameters);
 
-		$declaration->type = $this->try_read_function_return_type();
+		$declaration->hinted_type = $this->try_read_function_return_type();
 
 		$declaration->pos = $this->pos;
 
@@ -849,7 +849,7 @@ class PHPParser extends BaseParser
 		$return_type = $this->try_read_function_return_type();
 
 		$this->factory->set_scope_parameters($parameters);
-		$declaration->type = $return_type;
+		$declaration->hinted_type = $return_type;
 
 		$declaration->pos = $this->pos;
 

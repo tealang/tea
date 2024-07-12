@@ -294,8 +294,8 @@ class PHPCoder extends TeaCoder
 
 		// just render return type on hinted
 		// because on unhinted, it's not necessary, and sometimes it makes mistakes
-		if ($node->is_hinted_return_type && $node->type !== TypeFactory::$_any) {
-			$return_type = $this->render_type($node->type);
+		if ($node->hinted_type !== null && $node->hinted_type !== TypeFactory::$_any) {
+			$return_type = $this->render_type($node->hinted_type);
 			$return_type and $code .= ": $return_type";
 		}
 
@@ -467,8 +467,8 @@ class PHPCoder extends TeaCoder
 			$expr = '&' . $expr;
 		}
 
-		if ($node->type) {
-			$type = $this->render_type($node->type);
+		if ($node->hinted_type) {
+			$type = $this->render_type($node->hinted_type);
 			if ($type) {
 				$expr = "{$type} {$expr}";
 			}
@@ -736,15 +736,7 @@ class PHPCoder extends TeaCoder
 			}
 		}
 
-		$value_var = $node->value_var->render($this);
-		$body = $this->render_control_structure_body($node);
-
-		if ($node->key_var) {
-			$code = sprintf('foreach (%s as %s => %s) %s', $iterable, $node->key_var->render($this), $value_var, $body);
-		}
-		else {
-			$code = sprintf('foreach (%s as %s) %s', $iterable, $value_var, $body);
-		}
+		$code = $this->build_foreach_statement($node, $iterable);
 
 		if ($node->else) {
 			$code = $this->indents($code);
@@ -778,22 +770,19 @@ class PHPCoder extends TeaCoder
 			$end = $temp_name;
 		}
 
-		$var = $node->var->render($this);
 		$step = $node->step ?? 1;
 
-		$body = $this->render_control_structure_body($node);
-
 		if ($node->is_downto_mode) {
-			// $for_code = "for ($var = $start; $var >= $end; $var -= $step) $body";
-			$for_code = "foreach (\\range($start, $end, -$step) as $var) $body";
+			$iterable = "\\range($start, $end, -$step)";
 		}
 		elseif ($step === 1) {
-			$for_code = "foreach (\\range($start, $end) as $var) $body";
+			$iterable = "\\range($start, $end)";
 		}
 		else {
-			// $for_code = "for ($var = $start; $var <= $end; $var += $step) $body";
-			$for_code = "foreach (\\range($start, $end, $step) as $var) $body";
+			$iterable = "\\range($start, $end, $step)";
 		}
+
+		$for_code = $this->build_foreach_statement($node, $iterable);
 
 		if ($node->else) {
 			$for_code = $this->indents($for_code);
@@ -807,6 +796,22 @@ class PHPCoder extends TeaCoder
 
 		if ($node->except) {
 			$code = $this->wrap_with_except_block($node->except, $code);
+		}
+
+		return $code;
+	}
+
+	private function build_foreach_statement(ControlBlock $node, string $iterable)
+	{
+		$val = $node->val->render($this);
+		$body = $this->render_control_structure_body($node);
+
+		if ($node->key) {
+			$key = $node->key->render($this);
+			$code = sprintf('foreach (%s as %s => %s) %s', $iterable, $key, $val, $body);
+		}
+		else {
+			$code = sprintf('foreach (%s as %s) %s', $iterable, $val, $body);
 		}
 
 		return $code;

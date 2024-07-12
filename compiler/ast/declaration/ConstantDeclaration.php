@@ -28,7 +28,7 @@ trait ConstantDeclarationTrait
 		$this->is_static = true;
 		$this->modifier = $modifier;
 		$this->name = $name;
-		$this->type = $type;
+		$this->hinted_type = $type;
 		$this->value = $value;
 	}
 }

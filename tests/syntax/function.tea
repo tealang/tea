@@ -12,7 +12,7 @@ a_function('call with callable type')  	// okay
 // a_string('call with string type')  		// error
 
 // omit the 'func' keyword
-internal fn1(callee Callable) {
+internal fn1(callee (some) Any) {
 	var unknow_type_value Any = callee('hei')
 }
 

@@ -26,7 +26,7 @@ abstract class BaseVariableDeclaration extends Node implements IVariableDeclarat
 	public function __construct(string $name, IType $type = null, BaseExpression $value = null)
 	{
 		$this->name = $name;
-		$this->type = $type;
+		$this->hinted_type = $type;
 		$this->value = $value;
 	}
 }

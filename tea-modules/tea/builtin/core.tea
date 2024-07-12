@@ -139,13 +139,13 @@ public type Array {
 	masked pop() => array_pop(this)
 
 	// callback(item)
-	masked map(callback (item Any) Any) => _std_array_map(this, callback)
+	masked map(callback (item) Any) => _std_array_map(this, callback)
 
 	// callback(item) Bool
-	masked filter(callback (item Any) Any) => array_filter(this, callback)
+	masked filter(callback (item) Any) => array_filter(this, callback)
 
 	// callback(carry, item)
-	masked reduce(callback (item Any) Any, initial Any = #default) => array_reduce(this, callback, initial)
+	masked reduce(callback (carry, item) Any, initial Any = #default) => array_reduce(this, callback, initial)
 }
 
 // key maybe Int，cast to String

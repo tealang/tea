@@ -25,7 +25,7 @@ class CallbackProtocol extends Node implements ICallableDeclaration, IVariableDe
 	{
 		$this->async = $async;
 		$this->name = $name;
-		$this->type = $type;
+		$this->hinted_type = $type;
 		$this->parameters = $parameters;
 	}
 }

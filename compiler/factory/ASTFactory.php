@@ -253,7 +253,7 @@ class ASTFactory
 	public function create_yield_expression(BaseExpression $argument)
 	{
 		// force set type YieldGenerator to current function
-		$this->function->type = TypeFactory::$_yield_generator;
+		$this->function->hinted_type = TypeFactory::$_yield_generator;
 
 		return new YieldExpression($argument);
 	}
@@ -479,7 +479,7 @@ class ASTFactory
 		$declaration->this_object_symbol = ASTHelper::create_symbol_this($class_identifier);
 
 		// create the MetaType
-		$declaration->type = TypeFactory::create_meta_type($class_identifier);
+		$declaration->hinted_type = TypeFactory::create_meta_type($class_identifier);
 	}
 
 	public function set_scope_parameters(array $parameters)
@@ -730,32 +730,36 @@ class ASTFactory
 		return $switch_layers;
 	}
 
-	public function create_forin_block(BaseExpression $iterable, ?VariableIdentifier $key_var, VariableIdentifier $value_var)
+	public function create_forin_block(?VariableIdentifier $key, VariableIdentifier $val, BaseExpression $iterable)
 	{
-		$block = new ForInBlock($iterable, $key_var, $value_var);
+		$block = new ForInBlock($key, $val, $iterable);
 		$this->begin_block($block);
 
-		if ($key_var) {
-			// use String as the default type, because String can be compatible with Int/UInt
-			$key_declaration = new VariableDeclaration($key_var->name, TypeFactory::$_string);
-			$block->symbols[$key_var->name] = $key_var->symbol = new Symbol($key_declaration);
-		}
-
-		$value_declaration = new VariableDeclaration($value_var->name, TypeFactory::$_any);
-		$block->symbols[$value_var->name] = $value_var->symbol = new Symbol($value_declaration);
+		$this->prepare_forblock_vars($key, $val, $block);
 
 		return $block;
 	}
 
-	public function create_forto_block(VariableIdentifier $value_var, BaseExpression $start, BaseExpression $end, ?int $step)
+	public function create_forto_block(?VariableIdentifier $key, VariableIdentifier $val, BaseExpression $start, BaseExpression $end, ?int $step)
 	{
-		$block = new ForToBlock($value_var, $start, $end, $step);
+		$block = new ForToBlock($key, $val, $start, $end, $step);
 		$this->begin_block($block);
 
-		$value_declaration = new VariableDeclaration($value_var->name, TypeFactory::$_any);
-		$block->symbols[$value_var->name] = $value_var->symbol = new Symbol($value_declaration);
+		$this->prepare_forblock_vars($key, $val, $block);
 
 		return $block;
+	}
+
+	private function prepare_forblock_vars(?VariableIdentifier $key, VariableIdentifier $val, ControlBlock $block)
+	{
+		if ($key) {
+			// use String as the default type, because String can be compatible with Int/UInt
+			$key_declar = new VariableDeclaration($key->name);
+			$block->symbols[$key->name] = $key->symbol = new Symbol($key_declar);
+		}
+
+		$val_declar = new VariableDeclaration($val->name);
+		$block->symbols[$val->name] = $val->symbol = new Symbol($val_declar);
 	}
 
 	public function create_while_block($condition)

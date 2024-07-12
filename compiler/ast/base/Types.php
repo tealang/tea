@@ -444,15 +444,22 @@ class CallableType extends BaseType implements ICallableDeclaration {
 
 	public $name = _CALLABLE;
 
-	public $type;
-
 	public $parameters = [];
+
+	public $hinted_type;
+
+	public $infered_type;
 
 	public $is_checked;
 
 	public function __construct(IType $return_type = null, array $parameters = []) {
-		$this->type = $return_type;
+		$this->hinted_type = $return_type;
 		$this->parameters = $parameters;
+	}
+
+	public function get_type()
+	{
+		return $this->hinted_type ?? $this->infered_type;
 	}
 
 	public function is_accept_single_type(IType $target) {
@@ -468,15 +475,15 @@ class CallableType extends BaseType implements ICallableDeclaration {
 			return true;
 		}
 
-		if (!$target instanceof static) {
+		if (!$target instanceof CallableType) {
 			return false;
 		}
 
-		if ($this->type === null) {
+		if ($this->hinted_type === null) {
 			return true;
 		}
 
-		if (!$this->type->is_accept_type($target->type)) {
+		if (!$this->hinted_type->is_accept_type($target->hinted_type)) {
 			return false;
 		}
 
@@ -490,7 +497,7 @@ class CallableType extends BaseType implements ICallableDeclaration {
 				return false;
 			}
 
-			if (!$this->type->is_accept_type($target->type)) {
+			if (!$this->hinted_type->is_accept_type($target->hinted_type)) {
 				return false;
 			}
 		}

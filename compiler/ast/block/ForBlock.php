@@ -16,14 +16,14 @@ class ForInBlock extends ControlBlock implements IElseAble, IExceptAble, IBreakA
 	const KIND = 'forin_block';
 
 	public $iterable;
-	public $key_var;
-	public $value_var;
+	public $key;
+	public $val;
 
-	public function __construct(BaseExpression $iterable, ?VariableIdentifier $key_var, VariableIdentifier $value_var)
+	public function __construct(?VariableIdentifier $key, VariableIdentifier $val, BaseExpression $iterable)
 	{
 		$this->iterable = $iterable;
-		$this->key_var = $key_var;
-		$this->value_var = $value_var;
+		$this->key = $key;
+		$this->val = $val;
 	}
 }
 
@@ -33,16 +33,18 @@ class ForToBlock extends ControlBlock implements IElseAble, IExceptAble, IBreakA
 
 	const KIND = 'forto_block';
 
-	public $var;
+	public $key;
+	public $val;
 	public $start;
 	public $end;
 	public $step;
 
 	public $is_downto_mode;
 
-	public function __construct(VariableIdentifier $var, BaseExpression $start, BaseExpression $end, ?int $step)
+	public function __construct(?VariableIdentifier $key, VariableIdentifier $val, BaseExpression $start, BaseExpression $end, ?int $step)
 	{
-		$this->var = $var;
+		$this->key = $key;
+		$this->val = $val;
 		$this->start = $start;
 		$this->end = $end;
 		$this->step = $step;
