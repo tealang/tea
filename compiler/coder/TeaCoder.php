@@ -1112,11 +1112,6 @@ class TeaCoder
 		return "/{$node->pattern}/{$node->flags}";
 	}
 
-	// public function render_newline_statement()
-	// {
-	// 	return LF;
-	// }
-
 	public function render_use_statement(UseStatement $node)
 	{
 		$uri = $this->render_namespace_identifier($node->ns);
@@ -1335,11 +1330,6 @@ class TeaCoder
 		return $statement->expression->render($this) . static::STATEMENT_TERMINATOR;
 	}
 
-	// public function render_class_members(array $members)
-	// {
-	// 	return $this->render_block_nodes($members);
-	// }
-
 	public function render_function_body(IScopeBlock $node)
 	{
 		if (is_array($node->body)) {
@@ -1391,11 +1381,6 @@ class TeaCoder
 		return $items;
 	}
 
-	// public function render_include_expression(IncludeExpression $expr)
-	// {
-	// 	return "#include({$expr->target})";
-	// }
-
 	public function render_yield_expression(YieldExpression $node)
 	{
 		$argument = $node->argument->render($this);
@@ -1443,3 +1428,5 @@ class TeaCoder
 		return static::VAR_PREFIX . '__tmp' . $this->temp_name_index++;
 	}
 }
+
+// end

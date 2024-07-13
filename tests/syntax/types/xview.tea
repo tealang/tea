@@ -1,6 +1,12 @@
 
 #main
 
+form_name = 'form1'
+input_value = 'Hello~'
+view = <form name=form_name>
+	<input value=input_value />
+</form>
+
 internal Cell: BaseView {
 	text String
 
@@ -16,12 +22,10 @@ internal Cell: BaseView {
 
 var xview XView = Cell('string')
 
-// 仅一个回调，且无需传参数时
 DemoList('demo-list', 'title', [], () => {
 	return Cell()
 })
 
-// 有回调需要传参时
 DemoList('demo-list', 'Demo List', ['A', 'B', 'C'], none, (message String) => {
 	echo message
 })
@@ -29,10 +33,11 @@ DemoList('demo-list', 'Demo List', ['A', 'B', 'C'], none, (message String) => {
 str = 'str'
 num = 2
 
-// 有多个回调
+// multi callbacks
 abc = DemoList('name', 'title', ['A', 'B', 'C'], () => {
 		return Cell()
-	}, (message) => {
+	},
+	(message) => {
 		echo str, num
 	}
 )

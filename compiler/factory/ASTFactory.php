@@ -57,7 +57,6 @@ class ASTFactory
 		// just use None to simplify the processes
 		self::$default_value_marker = new NoneLiteral();
 		self::$default_value_marker->is_default_value_marker = true;
-		// self::$virtual_property_for_any = new PropertyDeclaration(null, '__vprop__', TypeFactory::$_any, null);
 	}
 
 	public function __construct(Unit $unit)
@@ -314,7 +313,6 @@ class ASTFactory
 
 		$declaration = new VariableDeclaration($identifier->name);
 		$declaration->block = $this->block;
-		// $this->scope->auto_declarations[$identifier->name] = $declaration;
 
 		// link to symbol
 		$identifier->symbol = $this->create_local_symbol($declaration);
@@ -344,28 +342,6 @@ class ASTFactory
 
 		return $program;
 	}
-
-	// public function create_program_expection(ParameterDeclaration ...$parameters)
-	// {
-	// 	$initializer = $this->program->initializer;
-	// 	if ($initializer->parameters) {
-	// 		throw $this->parser->new_parse_error("'#expect' statement has duplicated");
-	// 	}
-	// 	elseif (!$parameters) {
-	// 		throw $this->parser->new_parse_error("'#expect' statement required parameters");
-	// 	}
-
-	// 	foreach ($parameters as $parameter) {
-	// 		$symbol = new Symbol($parameter);
-	// 		$initializer->symbols[$parameter->name] = $symbol;
-	// 	}
-
-	// 	$initializer->parameters = $parameters;
-	// 	$declaration = new ExpectDeclaration(...$parameters);
-	// 	$declaration->program = $this->program;
-
-	// 	return $declaration;
-	// }
 
 	public function create_builtin_type_class_declaration(string $name)
 	{

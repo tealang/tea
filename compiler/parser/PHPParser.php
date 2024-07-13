@@ -76,12 +76,6 @@ class PHPParser extends BaseParser
 
 		$max_pos = $this->tokens_count - 1;
 
-		// while ($this->pos < $max_pos) {
-		// 	$this->pos++;
-		// 	$this->print_token();
-		// }
-		// exit;
-
 		$this->program->is_native = true;
 
 		while ($this->pos < $max_pos) {
@@ -255,9 +249,6 @@ class PHPParser extends BaseParser
 
 			$targets = [$target];
 		}
-
-		// 由于PHP项目中使用的库来源多，且不一定都满足编译规则，故不能将所有"use ..."的都加入解析
-		// 确实需要解析的，需要在 __package.th 中显式声明
 
 		$statement = $this->create_use_statement_when_not_exists($ns, $targets);
 
@@ -802,9 +793,6 @@ class PHPParser extends BaseParser
 				$type = $this->read_value_type_skip($doc, 'var');
 			}
 		}
-		// elseif ($type === null) {
-		// 	$type = TypeFactory::$_any;
-		// }
 
 		$this->expect_statement_end();
 		$declaration->hinted_type = $type;

@@ -20,8 +20,6 @@ trait IScopeBlockTrait
 
 	public $parameters;
 
-	// public $auto_declarations = [];
-
 	// the function/method is mutating global variables, object properties, resources
 	public $is_mutating;
 

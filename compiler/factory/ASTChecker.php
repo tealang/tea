@@ -175,14 +175,6 @@ class ASTChecker
 				$this->check_constant_declaration($node);
 				break;
 
-			// case ExpectDeclaration::KIND:
-			// 	$this->check_expect_declaration($node);
-			// 	break;
-
-			// case SuperVariableDeclaration::KIND:
-			// 	$this->check_variable_declaration($node);
-			// 	break;
-
 			default:
 				$kind = $node::KIND;
 				throw $this->new_syntax_error("Unexpect declaration kind: '{$kind}'", $node);

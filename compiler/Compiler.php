@@ -126,7 +126,6 @@ class Compiler
 
 		// when not on build the builtins unit
 		if (!self::check_is_builtin_unit($unit_path)) {
-			// $this->load_builtins();
 			$this->load_builtin_unit();
 		}
 	}
@@ -146,16 +145,6 @@ class Compiler
 		// lets render namespace as root
 		$program->unit = null;
 	}
-
-	// private function load_builtins()
-	// {
-	// 	self::echo_start('Loading builtins...', LF);
-
-	// 	$program = $this->parse_tea_program(BUILTIN_PROGRAM);
-	// 	$program->unit = null;
-
-	// 	$this->builtin_symbols = $program->symbols;
-	// }
 
 	private static function check_is_builtin_unit(string $unit_path)
 	{

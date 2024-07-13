@@ -67,6 +67,12 @@ class DemoList extends BaseView {
 }
 
 // ---------
+$form_name = 'form1';
+$input_value = 'Hello~';
+$view = '<form name=form_name>
+	<input value=input_value />
+</form>';
+
 $xview = new Cell('string');
 
 new DemoList('demo-list', 'title', [], function () {

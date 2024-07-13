@@ -1344,7 +1344,8 @@ class TeaParser extends BaseParser
 
 	protected function read_ternary_expression_with(BaseExpression $test)
 	{
-		// 由于三元条件运算符优先级最低，故可直接读取，无需与子表达式比较优先级
+		// due to the lowest priority of the ternary conditional operator
+		// it can be read directly without comparing its priority with sub expressions
 
 		if ($this->skip_token(_COLON)) {
 			$then = null;
@@ -1903,11 +1904,6 @@ class TeaParser extends BaseParser
 		$this->expect_space("Missed space char after operator '$operator'.");
 	}
 
-	protected function read_exponentiation_with(BaseExpression $first, Operator $operator)
-	{
-		//
-	}
-
 	protected function read_none_coalescing_with(BaseExpression $first, Operator $operator)
 	{
 		$items = [$first];
@@ -1919,10 +1915,6 @@ class TeaParser extends BaseParser
 			$item = $this->read_expression();
 			$items[] = $item;
 		}
-
-		// if (count($items) === 3) {
-		// 	dump($items);exit;
-		// }
 
 		$expression = new NoneCoalescingOperation(...$items);
 		$expression->pos = $item->pos;

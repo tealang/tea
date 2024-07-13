@@ -117,7 +117,8 @@ class PHPCoder extends TeaCoder
 			$items[] = "require_once UNIT_PATH . '{$depends_program->name}.php';\n";
 		}
 
-		// 生成定义，使用了trait的类，必须放在文件的前面，否则运行时提示找不到
+		// classes that use traits must be placed at the beginning of the file
+		// otherwise the runtime will prompt that they cannot be found
 		foreach ($declarations as $node) {
 			$item = $node->render($this);
 			$item === null || $items[] = $item . LF;
@@ -154,7 +155,7 @@ class PHPCoder extends TeaCoder
 				$uri .= '!'; // just to differentiate, avoid conflict with no targets use statements
 			}
 
-			// URI相同的将合并到一条
+			// same URI will be merged into one
 			if (!isset($this->uses[$uri])) {
 				$this->uses[$uri] = new UseStatement($use->ns);
 			}
@@ -411,8 +412,10 @@ class PHPCoder extends TeaCoder
 			// 	$item = '&' . $item;
 			// }
 
-			// 某些情况下不能检测出是否有被改变，如调用了外部实现的时候
-			// 统一处理成引用，因为这些变量的作用域应是属于延伸，处理成拷贝语意也不合理
+			// in some cases, it is not possible to detect whether there has been a change,
+			// such as when an external implementation is called.
+			// unified processing into references, as the scope of these variables should belong to extensions,
+			// it is also unreasonable to process them as copy semantics.
 			$item = '&' . $item;
 
 			$items[] = $item;
@@ -425,16 +428,6 @@ class PHPCoder extends TeaCoder
 	{
 		$body = $node->body;
 		$items = [];
-
-		// if ($node->auto_declarations) {
-		// 	foreach ($node->auto_declarations as $declar) {
-		// 		if (!$declar->block instanceof IScopeBlock) {
-		// 			$items[] = static::VAR_DECLARE_PREFIX . "{$declar->name} = null;\n";
-		// 		}
-		// 	}
-
-		// 	$items[] = LF;
-		// }
 
 		if (is_array($body)) {
 			$tmp_items = $this->render_block_nodes($body);
@@ -1009,8 +1002,6 @@ class PHPCoder extends TeaCoder
 		else {
 			$master = $this->render_master_expression($node->master);
 		}
-
-		// 当前已无支持带名称空间访问
 		// elseif ($node->master instanceof Identifiable && $node->master->symbol->declaration instanceof NamespaceDeclaration) {
 		// 	// namespace accessing
 		// 	// class/function/const
@@ -1750,18 +1741,6 @@ class PHPCoder extends TeaCoder
 		return $expr;
 	}
 
-	// public function render_include_expression(IncludeExpression $expr)
-	// {
-	// 	$path = $this->generate_include_string($expr->target);
-	// 	return "(include $path)";
-	// }
-
-	// private function generate_include_string(string $name)
-	// {
-	// 	$filename = $this->program->unit->include_prefix . $name . '.php';
-	// 	return "UNIT_PATH . '{$filename}'";
-	// }
-
 	protected function render_with_post_condition(PostConditionAbleStatement $node, string $code)
 	{
 		return sprintf("if (%s) {\n\t%s\n}", $node->condition->render($this), $code);
@@ -1819,3 +1798,5 @@ class PHPCoder extends TeaCoder
 		}
 	}
 }
+
+// end
