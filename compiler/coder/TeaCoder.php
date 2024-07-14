@@ -543,14 +543,11 @@ class TeaCoder
 	public function render_xblock(XBlock $node)
 	{
 		$items = [];
-		foreach ($node->items as $item) {
-			$subitems = $this->get_expressions_by_xelements($item);
-			$subitems[] = $item->post_spaces;
+		$subitems = $this->get_expressions_by_xelements($node->element);
+		$this->merge_xblock_items($items, $subitems);
+		$code = $this->render_xblock_elements($items);
 
-			$this->merge_xblock_items($items, $subitems);
-		}
-
-		return $this->render_xblock_elements($items);
+		return $code;
 	}
 
 	protected function render_xblock_elements(array $items)
@@ -591,16 +588,32 @@ class TeaCoder
 		}
 	}
 
+	protected function append_children_to_items(array &$items, array $children)
+	{
+		foreach ($children as $element) {
+			if ($element instanceof XBlockElement) {
+				$subitems = $this->get_expressions_by_xelements($element);
+				$this->merge_xblock_items($items, $subitems);
+			}
+			else {
+				$items[] = $element;
+			}
+		}
+	}
+
 	protected function get_expressions_by_xelements(XBlockElement $node)
 	{
 		if ($node instanceof XBlockComment) {
 			return null; // do not render comments
 		}
 
+		$has_name = $node->name !== '';
+
+		$items = [];
 		if (is_object($node->name)) {
 			$items = ['<', $node->name];
 		}
-		else {
+		elseif ($has_name) {
 			$items = ["<{$node->name}"];
 		}
 
@@ -619,42 +632,25 @@ class TeaCoder
 			return $items;
 		}
 
-		$this->add_string_to_xchildren($items, '>');
+		$has_name and $this->add_string_to_xchildren($items, '>');
 
-		foreach ($node->children as $element) {
-			if ($element instanceof XBlockElement) {
-				$subitems = $this->get_expressions_by_xelements($element);
-				$this->merge_xblock_items($items, $subitems);
-			}
-			elseif (is_string($element)) {
-				$this->add_string_to_xchildren($items, $element);
-			}
-			else {
-				$items[] = $element;
-			}
-		}
+		$this->append_children_to_items($items, $node->children);
 
 		if (is_object($node->name)) {
 			$this->add_string_to_xchildren($items, '</');
 			$items[] = $node->name;
 			$items[] = '>';
 		}
-		else {
+		elseif ($has_name) {
 			$this->add_string_to_xchildren($items, "</{$node->name}>");
 		}
 
 		return $items;
 	}
 
-	protected static function add_string_to_xchildren(array &$items, string $element)
+	protected static function add_string_to_xchildren(array &$items, string $text)
 	{
-		$last_idx = count($items) - 1;
-		if (is_string($items[$last_idx])) {
-			$items[$last_idx] .= $element;
-		}
-		else {
-			$items[] = $element;
-		}
+		$items[] = $text;
 	}
 
 	public function render_constant_identifier(ConstantIdentifier $node)

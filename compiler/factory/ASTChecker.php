@@ -2461,12 +2461,7 @@ class ASTChecker
 
 	private function infer_xblock(XBlock $node): IType
 	{
-		foreach ($node->items as $item) {
-			if ($item instanceof XBlockElement) {
-				$this->check_xblock_element($item);
-			}
-		}
-
+		$this->check_xblock_element($node->element);
 		return TypeFactory::$_xview;
 	}
 

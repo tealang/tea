@@ -904,6 +904,22 @@ class PHPCoder extends TeaCoder
 		return $code;
 	}
 
+	public function render_xblock(XBlock $node)
+	{
+		$code = parent::render_xblock($node);
+
+		// for virtual tag
+		if ($node->element->name === '') {
+			// strip intent spaces
+			if (str_starts_with($code, "'\n")) {
+				$code = preg_replace('/\n(\t| {4})/', "\n", $code);
+				$code = '\'' . trim(substr($code, 1, -1)) . '\'';
+			}
+		}
+
+		return $this->new_string_placeholder($code);
+	}
+
 	protected function render_xblock_elements(array $items)
 	{
 		foreach ($items as $k => $item) {
@@ -922,16 +938,11 @@ class PHPCoder extends TeaCoder
 
 		$code = join(' . ', $items);
 
-		// remove the virtual tag
-		// if (substr($code, 0, 5) === '<vtag>') {
-		// 	$code = substr($code, 5, -11);
-		// }
-
 		if (strpos($code, "\t\n")) {
 			$code = preg_replace('/\t+\n/', '', $code);
 		}
 
-		return $this->new_string_placeholder($code);
+		return $code;
 	}
 
 	// public function render_relay_expression(RelayExpression $node)

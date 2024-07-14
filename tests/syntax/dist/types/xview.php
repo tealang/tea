@@ -69,7 +69,8 @@ class DemoList extends BaseView {
 // ---------
 $form_name = 'form1';
 $input_value = 'Hello~';
-$view = '<form name=form_name>
+$view = '<h1>Form1</h1>
+<form name=form_name>
 	<input value=input_value />
 </form>';
 

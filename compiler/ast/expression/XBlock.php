@@ -13,16 +13,16 @@ class XBlock extends BaseExpression
 {
 	const KIND = 'xblock';
 
-	public $items;
+	public $element;
 
 	public $has_interpolation;
 
-	public function __construct(XBlockElement ...$items) {
-		$this->items = $items;
+	public function __construct(XBlockElement $element) {
+		$this->element = $element;
 	}
 }
 
-class XBlockElement extends Node
+class XBlockElement extends BaseExpression
 {
 	const KIND = 'xblock_element';
 
@@ -32,8 +32,6 @@ class XBlockElement extends Node
 	public $name;
 	public $attributes;
 	public $children; // text or XBlock, let null when item is self-closed
-
-	public $post_spaces; // just for root nodes
 
 	public function __construct($name, array $attributes = [], array $children = null)
 	{
@@ -65,3 +63,5 @@ class XBlockComment extends XBlockElement
 		$this->content = $content;
 	}
 }
+
+// end

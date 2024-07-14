@@ -155,7 +155,7 @@ trait TeaTokenTrait
 	/**
 	 * get token inline or next line
 	 */
-	protected function get_token_closely(string &$skiped_spaces = '')
+	protected function get_token_closely(string &$skiped_spaces)
 	{
 		$pos = $this->pos;
 		$token = $this->get_token_ignore_space($pos);

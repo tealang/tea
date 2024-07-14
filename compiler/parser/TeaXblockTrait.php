@@ -10,8 +10,9 @@
 namespace Tea;
 
 const _XTAG_SELF_END = '/>';
-
-const _LEAF_TAGS = [
+const _XTAG_COMMENT_OPEN = '!--';
+const _XTAG_COMMENT_CLOSE = '-->';
+const _SELF_CLOSING_TAGS = [
 	'meta', 'link', 'img', 'input', 'br', 'hr', '!doctype',
 	'wbr', 'col', 'embed', 'param', 'source', 'track', 'area', 'keygen'
 ];
@@ -24,29 +25,24 @@ trait TeaXBlockTrait
 	{
 		$this->has_interpolation = false;
 
-		$block_previous_spaces = $this->get_heading_spaces_inline();
+		$align_spaces = $this->get_heading_spaces_inline();
 
 		$token = $this->read_tag_name();
-		if (!TeaHelper::is_xtag_name($token)) {
+
+		$top_is_virtual = $token === '';
+		if (!$top_is_virtual and !TeaHelper::is_xtag_name($token)) {
 			throw $this->new_unexpected_error();
 		}
 
-		$items[] = $this->try_read_xtag($token, $block_previous_spaces);
+		$xtag = $this->read_xtag($token, $align_spaces);
 
 		$skiped_spaces = '';
 		while ($this->get_token_closely($skiped_spaces) === _XTAG_OPEN) {
 			$this->scan_token_ignore_empty(); // _XTAG_OPEN
-
-			$token = $this->read_tag_name(); //
-			if (!TeaHelper::is_xtag_name($token)) {
-				break;
-			}
-
-			$items[count($items) - 1]->post_spaces = $this->strip_previous_spaces($skiped_spaces, $block_previous_spaces);
-			$items[] = $this->read_xtag($token, $block_previous_spaces);
+			throw $this->new_unexpected_error();
 		}
 
-		$xblock = new XBlock(...$items);
+		$xblock = new XBlock($xtag);
 		$xblock->has_interpolation = $this->has_interpolation;
 		$xblock->pos = $this->pos;
 
@@ -56,8 +52,21 @@ trait TeaXBlockTrait
 	private function read_tag_name()
 	{
 		$token = $this->scan_token();
+		if ($token === _XTAG_CLOSE) {
+			$this->back();
+			return '';
+		}
+
+		// <!--
+		// <!DOCTYPE
+		if ($token === _EXCLAMATION) {
+			$token .= $this->scan_token();
+		}
+
 		$next = $this->get_token();
 
+		// <prefix:posfix
+		// <prefix-posfix
 		if ($next === '-' || $next === ':') {
 			$this->scan_token();
 			$after = $this->scan_token();
@@ -67,120 +76,114 @@ trait TeaXBlockTrait
 		return $token;
 	}
 
-	protected function try_read_xtag(?string $tag, string $block_previous_spaces)
+	private function read_xtag(string $tag, string $align_spaces)
 	{
-		if (!TeaHelper::is_xtag_name($tag)) {
-			throw $this->new_unexpected_error();
-		}
-
-		return $this->read_xtag($tag, $block_previous_spaces);
-	}
-
-	protected function read_xtag(string $tag, string $block_previous_spaces)
-	{
-		if ($tag === _EXCLAMATION) {
-			$tag .= $this->scan_token(); // maybe the !DOCTYPE
-			if ($tag === '!--') {
-				// <!--
-				return $this->read_xcomment_block($block_previous_spaces);
-			}
+		if ($tag === _XTAG_COMMENT_OPEN) {
+			return $this->read_xtag_comment($align_spaces);
 		}
 
 		$attributes = $this->read_xtag_attributes();
 
 		$current_token = $this->get_current_token_string();
 
-		// xtag end
+		// tag end
 		if ($current_token === _XTAG_SELF_END) {
-			return new XBlockElement($tag, $attributes);
+			$elem = new XBlockElement($tag, $attributes);
 		}
-
 		// no children
-		if (in_array(strtolower($tag), _LEAF_TAGS, true)) {
-			return new XBlockLeaf($tag, $attributes);
+		elseif (in_array(strtolower($tag), _SELF_CLOSING_TAGS, true)) {
+			$elem = new XBlockLeaf($tag, $attributes);
 		}
+		// expect tag head close
+		elseif ($current_token === _XTAG_CLOSE) {
+			$children = $this->read_xtag_children($tag, $align_spaces);
+			if ($align_spaces) {
+				$this->strip_leading_spaces_for_items($children, $align_spaces);
+			}
 
-		// expect xtag head close
-		if ($current_token !== _XTAG_CLOSE) {
+			$elem = new XBlockElement($tag, $attributes, $children);
+		}
+		else {
 			throw $this->new_unexpected_error();
 		}
 
-		$children = $this->read_xtag_children($tag, $block_previous_spaces);
-
-		return new XBlockElement($tag, $attributes, $children);
+		return $elem;
 	}
 
-	protected function read_xcomment_block(string $block_previous_spaces)
+	private function read_xtag_comment(string $align_spaces)
 	{
-		$content = $this->scan_to_token('-->');
+		$content = $this->scan_to_token(_XTAG_COMMENT_CLOSE);
 		$this->scan_token(); // skip -->
 
-		$block_previous_spaces && $content = $this->strip_previous_spaces($content, $block_previous_spaces);
+		$align_spaces && $content = $this->strip_leading_spaces($content, $align_spaces);
 
 		return new XBlockComment($content);
 	}
 
-	protected function read_xtag_attributes()
+	private function read_xtag_attributes()
 	{
-		$string = '';
-		$items = [];
+		$attributes = [];
+		$text = '';
+		$closed = false;
 		while (($token = $this->scan_token()) !== null) {
 			// the close tag
 			if ($token === _XTAG_CLOSE || $token === _XTAG_SELF_END) {
-				if ($string !== '') {
-					$items[] = $string;
-				}
-
-				return $items;
+				$closed = true;
+				break;
 			}
 
 			if ($token === _SHARP && $this->skip_token(_BLOCK_BEGIN)) {
-				$expression = $this->read_sharp_interpolation();
-				$this->reset_items_on_readed_interpolation($items, $string, $expression);
+				$expr = $this->read_sharp_interpolation();
+				$this->append_xtag_attribute($attributes, $text, $expr);
 				continue;
 			}
 			elseif ($token === _DOLLAR) {
-				$expression = $this->try_read_dollar_interpolation();
-				if ($expression === null) {
-					$string .= $token;
-					continue;
+				$expr = $this->try_read_dollar_interpolation();
+				if ($expr === null) {
+					$text .= $token;
+				}
+				else {
+					$this->append_xtag_attribute($attributes, $text, $expr);
 				}
 
-				$this->reset_items_on_readed_interpolation($items, $string, $expression);
 				continue;
 			}
 			elseif ($token === _BACK_SLASH) {
 				$token .= $this->scan_token();
 			}
 
-			// the string
-			$string .= $token;
+			$text .= $token;
 		}
 
 		// close not found
-		throw $this->new_unexpected_error($token);
+		if (!$closed) {
+			throw $this->new_unexpected_error($token);
+		}
+
+		// the ending texts
+		$this->append_xtag_attribute($attributes, $text);
+
+		return $attributes;
 	}
 
-	protected function read_xtag_children(string $tag, $block_previous_spaces)
+	private function read_xtag_children(string $tag, string $align_spaces)
 	{
-		$items = [];
-		$string = '';
+		$children = [];
+		$text = '';
+		$closed = false;
 		while (($token = $this->scan_token()) !== null) {
 			switch ($token) {
-				case _XTAG_OPEN:
-					if ($string !== '') {
-						$items[] = $string;
-						$string = ''; // reset
-					}
+				case LF:
+					$this->append_xtag_child($children, $text);
+					$children[] = LF;
+					break;
 
-					// it should be a child tag
+				case _XTAG_OPEN:
+					// maybe a tag
 					$next = $this->read_tag_name();
 					if (TeaHelper::is_xtag_name($next)) {
-						$items[] = $this->read_xtag($next, $block_previous_spaces);
-					}
-					elseif (TeaHelper::is_space_tab($next)) {
-						$string .= $token . $next; // that's just a string
-						continue 2;
+						$xtag = $this->read_xtag($next, $align_spaces);
+						$this->append_xtag_child($children, $text, $xtag);
 					}
 					elseif ($next === _SLASH) { // the </
 						if ($this->read_tag_name() !== $tag) {
@@ -190,33 +193,41 @@ trait TeaXBlockTrait
 
 						$this->expect_token_ignore_empty(_XTAG_CLOSE); // the >
 
-						// current element end
-						return $this->strip_previous_spaces_for_items($items, $block_previous_spaces);
+						// element end
+						$closed = true;
+						break 2;
 					}
-					else {
-						throw $this->new_unexpected_error();
+					elseif ($tag === '' and $next === _XTAG_SELF_END) {
+						// </>
+						$closed = true;
+						break 2;
+					}
+					else { // just text
+						$text .= $token . $next;
+						continue 2;
 					}
 
 					break;
 
 				case _SHARP:
 					if ($this->skip_token(_BLOCK_BEGIN)) {
-						$expression = $this->read_sharp_interpolation();
-						$this->reset_items_on_readed_interpolation($items, $string, $expression);
+						$expr = $this->read_sharp_interpolation();
+						$this->append_xtag_child($children, $text, $expr, true);
 					}
 					else {
-						$string .= $token;
+						$text .= $token;
 					}
 					break;
 
 				case _DOLLAR:
-					$expression = $this->try_read_dollar_interpolation();
-					if ($expression === null) {
-						$string .= $token;
-						break;
+					$expr = $this->try_read_dollar_interpolation();
+					if ($expr === null) {
+						$text .= $token;
+					}
+					else {
+						$this->append_xtag_child($children, $text, $expr, true);
 					}
 
-					$this->reset_items_on_readed_interpolation($items, $string, $expression);
 					break;
 
 				case _BACK_SLASH:
@@ -224,49 +235,76 @@ trait TeaXBlockTrait
 					// unbreak
 
 				default:
-					// the string
-					$string .= $token;
+					// the inner texts
+					$text .= $token;
 			}
 		}
 
-		// the close not found
-		throw $this->new_parse_error("Missed close tag '</$tag>'.");
-	}
-
-	protected function strip_previous_spaces_for_items(array $items, string $block_previous_spaces)
-	{
-		if (empty($block_previous_spaces)) {
-			return $items;
+		if (!$closed) {
+			throw $this->new_parse_error("Missed close tag '</$tag>'.");
 		}
 
-		foreach ($items as $key => $value) {
-			if (is_string($value)) {
-				$items[$key] = $this->strip_previous_spaces($value, $block_previous_spaces);
+		// the ending texts
+		$this->append_xtag_child($children, $text);
+
+		return $children;
+	}
+
+	private function strip_leading_spaces_for_items(array &$items, string $align_spaces)
+	{
+		if ($align_spaces === '') {
+			return;
+		}
+
+		$align_spaces_len = strlen($align_spaces);
+		foreach ($items as $idx => $item) {
+			if (is_string($item) and $item !== LF) {
+				if (str_starts_with($item, $align_spaces)) {
+					$items[$idx] = substr($item, $align_spaces_len);
+				}
 			}
 		}
-
-		return $items;
 	}
 
-	protected function strip_previous_spaces(string $string, string $block_previous_spaces)
+	private function strip_leading_spaces(string $string, string $leading_spaces)
 	{
-		if ($block_previous_spaces && strpos($string, $block_previous_spaces) !== false) {
-			return str_replace(LF . $block_previous_spaces, LF, $string);
+		if ($leading_spaces && strpos($string, $leading_spaces) !== false) {
+			return str_replace(LF . $leading_spaces, LF, $string);
 		}
 
 		return $string;
 	}
 
-	private function reset_items_on_readed_interpolation(array &$items, string &$string, BaseExpression $expression)
+	private function append_xtag_attribute(array &$attributes, string &$text, ?BaseExpression $expr = null, bool $is_interpolation = false)
 	{
-		if ($string !== '') {
-			$items[] = $string;
-			$string = ''; // reset
+		if ($text !== '') {
+			$attributes[] = $text;
 		}
 
-		$items[] = $expression;
+		if ($expr) {
+			$attributes[] = $expr;
+			if ($is_interpolation) {
+				$this->has_interpolation = true;
+			}
+		}
 
-		$this->has_interpolation = true;
+		$text = ''; // reset
+	}
+
+	private function append_xtag_child(array &$children, string &$text, ?BaseExpression $expr = null, bool $is_interpolation = false)
+	{
+		if ($text !== '') {
+			$children[] = $text;
+		}
+
+		if ($expr) {
+			$children[] = $expr;
+			if ($is_interpolation) {
+				$this->has_interpolation = true;
+			}
+		}
+
+		$text = ''; // reset
 	}
 }
 
