@@ -9,31 +9,21 @@
 
 namespace Tea;
 
-class XBlock extends BaseExpression
+class XTag extends BaseExpression
 {
-	const KIND = 'xblock';
-
-	public $element;
-
-	public $has_interpolation;
-
-	public function __construct(XBlockElement $element) {
-		$this->element = $element;
-	}
-}
-
-class XBlockElement extends BaseExpression
-{
-	const KIND = 'xblock_element';
+	const KIND = 'xtag';
 
 	/**
 	 * @var string | PlainIdentifier
 	 */
 	public $name;
 	public $attributes;
-	public $children; // text or XBlock, let null when item is self-closed
+	public $children; // text or XTag, let null when tag is self-closed
 
-	public function __construct($name, array $attributes = [], array $children = null)
+	public $is_self_closing_tag;
+	public $is_literal;
+
+	public function __construct(string $name, array $attributes = [], array $children = null)
 	{
 		$this->name = $name;
 		$this->attributes = $attributes;
@@ -41,20 +31,21 @@ class XBlockElement extends BaseExpression
 	}
 }
 
-class XBlockLeaf extends XBlockElement
+class XTagText extends XTag
 {
-	const KIND = 'xblock_leaf';
+	const KIND = 'xtag_text';
 
-	public function __construct($name, array $attributes = [])
+	public $content;
+
+	public function __construct(string $content)
 	{
-		$this->name = $name;
-		$this->attributes = $attributes;
+		$this->content = $content;
 	}
 }
 
-class XBlockComment extends XBlockElement
+class XTagComment extends XTag
 {
-	const KIND = 'xblock_comment';
+	const KIND = 'xtag_comment';
 
 	public $content;
 

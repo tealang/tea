@@ -540,17 +540,22 @@ class TeaCoder
 		return "#{$expr}";
 	}
 
-	public function render_xblock(XBlock $node)
+	public function render_xtag(XTag $node)
 	{
 		$items = [];
-		$subitems = $this->get_expressions_by_xelements($node->element);
-		$this->merge_xblock_items($items, $subitems);
-		$code = $this->render_xblock_elements($items);
+		$subitems = $this->get_xtag_components($node);
+		$this->merge_xtag_components($items, $subitems);
+		$code = $this->render_xtag_components($items);
 
 		return $code;
 	}
 
-	protected function render_xblock_elements(array $items)
+	public function render_xtag_text(XTagText $node)
+	{
+		return $node->content;
+	}
+
+	protected function render_xtag_components(array $items)
 	{
 		$code = '';
 		foreach ($items as $item) {
@@ -566,7 +571,7 @@ class TeaCoder
 		return $code;
 	}
 
-	protected function merge_xblock_items(array &$items, $new_items)
+	private function merge_xtag_components(array &$items, $new_items)
 	{
 		if (!$new_items) {
 			return;
@@ -588,24 +593,45 @@ class TeaCoder
 		}
 	}
 
-	protected function append_children_to_items(array &$items, array $children)
+	private function append_children_to_items(array &$items, array $children, int &$indents)
 	{
-		foreach ($children as $element) {
-			if ($element instanceof XBlockElement) {
-				$subitems = $this->get_expressions_by_xelements($element);
-				$this->merge_xblock_items($items, $subitems);
+		if (!$children) return;
+		$indents++;
+
+		$tabs = str_repeat("\t", $indents);
+
+		foreach ($children as $child) {
+			if ($child === LF) {
+				$items[] = $child;
+				continue;
+			}
+
+			if ($child->is_newline) {
+				$items[] = $tabs;
+			}
+
+			if ($child instanceof XTagText) {
+				$items[] = $child->content;
+			}
+			elseif ($child instanceof XTag) {
+				$subitems = $this->get_xtag_components($child, $indents);
+				$this->merge_xtag_components($items, $subitems);
 			}
 			else {
-				$items[] = $element;
+				$items[] = $child;
 			}
 		}
+
+		$indents--;
 	}
 
-	protected function get_expressions_by_xelements(XBlockElement $node)
+	private function get_xtag_components(XTag $node, int &$indents = 0)
 	{
-		if ($node instanceof XBlockComment) {
+		if ($node instanceof XTagComment) {
 			return null; // do not render comments
 		}
+
+		$tabs = $node->is_newline ? str_repeat("\t", $indents) : '';
 
 		$has_name = $node->name !== '';
 
@@ -618,39 +644,32 @@ class TeaCoder
 		}
 
 		foreach ($node->attributes as $attr) {
-			if (is_string($attr)) {
-				$this->add_string_to_xchildren($items, $attr);
-			}
-			else {
-				$items[] = $attr;
-			}
+			$items[] = $attr;
 		}
 
 		if ($node->children === null) {
-			$item = $node instanceof XBlockLeaf ? '>' : '/>';
-			$this->add_string_to_xchildren($items, $item);
-			return $items;
+			$items[] = $node->is_self_closing_tag ? '>' : '/>';
 		}
+		else {
+			$has_name and $items[] = '>';
+			$this->append_children_to_items($items, $node->children, $indents);
 
-		$has_name and $this->add_string_to_xchildren($items, '>');
+			$first_child = $node->children[0] ?? null;
+			if ($first_child !== LF) {
+				$tabs = '';
+			}
 
-		$this->append_children_to_items($items, $node->children);
-
-		if (is_object($node->name)) {
-			$this->add_string_to_xchildren($items, '</');
-			$items[] = $node->name;
-			$items[] = '>';
-		}
-		elseif ($has_name) {
-			$this->add_string_to_xchildren($items, "</{$node->name}>");
+			if (is_object($node->name)) {
+				$items[] = $tabs . '</';
+				$items[] = $node->name;
+				$items[] = '>';
+			}
+			elseif ($has_name) {
+				$items[] = $tabs . "</{$node->name}>";
+			}
 		}
 
 		return $items;
-	}
-
-	protected static function add_string_to_xchildren(array &$items, string $text)
-	{
-		$items[] = $text;
 	}
 
 	public function render_constant_identifier(ConstantIdentifier $node)

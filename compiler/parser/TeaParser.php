@@ -1038,7 +1038,7 @@ class TeaParser extends BaseParser
 				break;
 
 			case _XTAG_OPEN:
-				$expression = $this->read_xblock();
+				$expression = $this->read_xtag_expression();
 				$expression->pos || $expression->pos = $this->pos;
 				return $expression; // that should be the end of current expression
 

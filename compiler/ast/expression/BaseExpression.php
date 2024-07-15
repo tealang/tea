@@ -11,6 +11,9 @@ namespace Tea;
 
 abstract class BaseExpression extends Node
 {
+	public $is_newline;
+	public $indent_spaces;
+
 	public $infered_type;
 	// public $is_pure;
 	// public $is_calling;

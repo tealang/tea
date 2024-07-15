@@ -248,8 +248,8 @@ class ASTChecker
 	{
 		$value = $node->value;
 
-		if (!$this->check_is_constant_expression($value) and !$node instanceof ObjectMember) {
-			throw $this->new_syntax_error("Invalid value expression for constant declaration", $value);
+		if (!$this->is_literal_or_const($value) and !$node instanceof ObjectMember) {
+			throw $this->new_syntax_error("Invalid initial value expression", $value);
 		}
 
 		if ($value instanceof BinaryOperation) {
@@ -265,47 +265,47 @@ class ASTChecker
 		}
 	}
 
-	private function check_is_constant_expression(BaseExpression $node): bool
+	private function is_literal_or_const(BaseExpression $node): bool
 	{
 		if ($node instanceof ILiteral || $node instanceof ConstantIdentifier) {
-			$is_constant = true;
+			$result = true;
 		}
 		elseif ($node instanceof Identifiable) {
 			$declaration = $node->symbol->declaration;
-			$is_constant = $declaration instanceof IConstantDeclaration || $declaration instanceof ClassKindredDeclaration;
+			$result = $declaration instanceof IConstantDeclaration || $declaration instanceof ClassKindredDeclaration;
 		}
 		elseif ($node instanceof BinaryOperation) {
-			$is_constant = $this->check_is_constant_expression($node->left) && $this->check_is_constant_expression($node->right);
+			$result = $this->is_literal_or_const($node->left) && $this->is_literal_or_const($node->right);
 		}
 		elseif ($node instanceof PrefixOperation) {
-			$is_constant = $this->check_is_constant_expression($node->expression);
+			$result = $this->is_literal_or_const($node->expression);
 		}
 		elseif ($node instanceof ArrayExpression) {
-			$is_constant = true;
+			$result = true;
 			foreach ($node->items as $item) {
-				if (!$this->check_is_constant_expression($item)) {
-					$is_constant = false;
+				if (!$this->is_literal_or_const($item)) {
+					$result = false;
 					break;
 				}
 			}
 		}
 		elseif ($node instanceof DictExpression) {
-			$is_constant = true;
+			$result = true;
 			foreach ($node->items as $item) {
-				if (!$this->check_is_constant_expression($item->key) || !$this->check_is_constant_expression($item->value)) {
-					$is_constant = false;
+				if (!$this->is_literal_or_const($item->key) || !$this->is_literal_or_const($item->value)) {
+					$result = false;
 					break;
 				}
 			}
 		}
-		elseif ($node instanceof XBlock) {
-			$is_constant = !$node->has_interpolation;
+		elseif ($node instanceof XTag) {
+			$result = $node->is_literal;
 		}
 		else {
-			$is_constant = false;
+			$result = false;
 		}
 
-		return $is_constant;
+		return $result;
 	}
 
 	private function check_variable_declaration(BaseVariableDeclaration $node)
@@ -1452,8 +1452,8 @@ class ASTChecker
 			case UnescapedStringInterpolation::KIND:
 				$infered_type = $this->infer_escaped_string_interpolation($node);
 				break;
-			case XBlock::KIND:
-				$infered_type = $this->infer_xblock($node);
+			case XTag::KIND:
+				$infered_type = $this->infer_xtag($node);
 				break;
 
 			// -------
@@ -2459,13 +2459,7 @@ class ASTChecker
 		return $this->attach_symbol($node)->declaration->get_type();
 	}
 
-	private function infer_xblock(XBlock $node): IType
-	{
-		$this->check_xblock_element($node->element);
-		return TypeFactory::$_xview;
-	}
-
-	private function check_xblock_element(XBlockElement $node)
+	private function infer_xtag(XTag $node)
 	{
 		if ($node->name instanceof BaseExpression) {
 			$this->infer_expression($node->name);
@@ -2473,8 +2467,8 @@ class ASTChecker
 
 		if ($node->attributes) {
 			foreach ($node->attributes as $item) {
-				if ($item instanceof XBlockElement) {
-					$this->check_xblock_element($item);
+				if ($item instanceof XTag) {
+					$this->infer_xtag($item);
 				}
 				elseif (is_object($item)) {
 					$this->infer_expression($item);
@@ -2484,14 +2478,16 @@ class ASTChecker
 
 		if ($node->children) {
 			foreach ($node->children as $item) {
-				if ($item instanceof XBlockElement) {
-					$this->check_xblock_element($item);
+				if ($item instanceof XTag) {
+					$this->infer_xtag($item);
 				}
 				elseif (is_object($item)) {
 					$this->infer_expression($item);
 				}
 			}
 		}
+
+		return TypeFactory::$_xview;
 	}
 
 	protected function attach_symbol(PlainIdentifier $identifier)

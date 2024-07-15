@@ -904,12 +904,12 @@ class PHPCoder extends TeaCoder
 		return $code;
 	}
 
-	public function render_xblock(XBlock $node)
+	public function render_xtag(XTag $node)
 	{
-		$code = parent::render_xblock($node);
+		$code = parent::render_xtag($node);
 
 		// for virtual tag
-		if ($node->element->name === '') {
+		if ($node->name === '') {
 			// strip intent spaces
 			if (str_starts_with($code, "'\n")) {
 				$code = preg_replace('/\n(\t| {4})/', "\n", $code);
@@ -920,7 +920,7 @@ class PHPCoder extends TeaCoder
 		return $this->new_string_placeholder($code);
 	}
 
-	protected function render_xblock_elements(array $items)
+	protected function render_xtag_components(array $items)
 	{
 		foreach ($items as $k => $item) {
 			if ($item instanceof BaseExpression) {

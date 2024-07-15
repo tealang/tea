@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-const _XTAG_SELF_END = '/>';
+const _XTAG_SELF_CLOSE = '/>';
 const _XTAG_COMMENT_OPEN = '!--';
 const _XTAG_COMMENT_CLOSE = '-->';
 const _SELF_CLOSING_TAGS = [
@@ -19,37 +19,27 @@ const _SELF_CLOSING_TAGS = [
 
 trait TeaXBlockTrait
 {
-	private $has_interpolation;
-
-	protected function read_xblock()
+	protected function read_xtag_expression()
 	{
-		$this->has_interpolation = false;
-
 		$align_spaces = $this->get_heading_spaces_inline();
 
-		$token = $this->read_tag_name();
-
-		$top_is_virtual = $token === '';
-		if (!$top_is_virtual and !TeaHelper::is_xtag_name($token)) {
+		$token = $this->read_xtag_name();
+		if ($token !== '' and !TeaHelper::is_xtag_name($token)) {
 			throw $this->new_unexpected_error();
 		}
 
-		$xtag = $this->read_xtag($token, $align_spaces);
+		$xtag = $this->read_xtag_with_name($token, $align_spaces);
 
 		$skiped_spaces = '';
 		while ($this->get_token_closely($skiped_spaces) === _XTAG_OPEN) {
-			$this->scan_token_ignore_empty(); // _XTAG_OPEN
+			$this->scan_token_ignore_empty(); // skip _XTAG_OPEN
 			throw $this->new_unexpected_error();
 		}
 
-		$xblock = new XBlock($xtag);
-		$xblock->has_interpolation = $this->has_interpolation;
-		$xblock->pos = $this->pos;
-
-		return $xblock;
+		return $xtag;
 	}
 
-	private function read_tag_name()
+	private function read_xtag_name()
 	{
 		$token = $this->scan_token();
 		if ($token === _XTAG_CLOSE) {
@@ -76,38 +66,52 @@ trait TeaXBlockTrait
 		return $token;
 	}
 
-	private function read_xtag(string $tag, string $align_spaces)
+	private function read_xtag_with_name(string $tag, string $align_spaces)
 	{
 		if ($tag === _XTAG_COMMENT_OPEN) {
 			return $this->read_xtag_comment($align_spaces);
 		}
 
-		$attributes = $this->read_xtag_attributes();
-
+		$is_literal = true;
+		$attributes = $this->read_xtag_attributes($is_literal);
 		$current_token = $this->get_current_token_string();
 
-		// tag end
-		if ($current_token === _XTAG_SELF_END) {
-			$elem = new XBlockElement($tag, $attributes);
+		if ($current_token === _XTAG_SELF_CLOSE) {
+			$elem = new XTag($tag, $attributes);
 		}
-		// no children
 		elseif (in_array(strtolower($tag), _SELF_CLOSING_TAGS, true)) {
-			$elem = new XBlockLeaf($tag, $attributes);
+			$elem = new XTag($tag, $attributes);
+			$elem->is_self_closing_tag = true;
 		}
 		// expect tag head close
 		elseif ($current_token === _XTAG_CLOSE) {
-			$children = $this->read_xtag_children($tag, $align_spaces);
+			$children = $this->read_xtag_children($tag, $align_spaces, $is_literal);
 			if ($align_spaces) {
 				$this->strip_leading_spaces_for_items($children, $align_spaces);
 			}
 
-			$elem = new XBlockElement($tag, $attributes, $children);
+			$elem = new XTag($tag, $attributes, $children);
 		}
 		else {
 			throw $this->new_unexpected_error();
 		}
 
+		$elem->is_literal = $is_literal;
+		$elem->pos = $this->pos;
+
 		return $elem;
+	}
+
+	private function strip_leading_spaces_for_items(array &$items, string $indent_spaces)
+	{
+		$indent_len = strlen($indent_spaces);
+		foreach ($items as $idx => $item) {
+			if (is_object($item)
+				and $item->indent_spaces
+				and str_starts_with($item->indent_spaces, $indent_spaces)) {
+				$item->indent_spaces = substr($item->indent_spaces, $indent_len);
+			}
+		}
 	}
 
 	private function read_xtag_comment(string $align_spaces)
@@ -115,29 +119,33 @@ trait TeaXBlockTrait
 		$content = $this->scan_to_token(_XTAG_COMMENT_CLOSE);
 		$this->scan_token(); // skip -->
 
-		$align_spaces && $content = $this->strip_leading_spaces($content, $align_spaces);
+		if ($align_spaces && strpos($content, $align_spaces) !== false) {
+			$content = str_replace(LF . $align_spaces, LF, $content);
+		}
 
-		return new XBlockComment($content);
+		return new XTagComment($content);
 	}
 
-	private function read_xtag_attributes()
+	private function read_xtag_attributes(bool &$is_literal)
 	{
 		$attributes = [];
 		$text = '';
 		$closed = false;
 		while (($token = $this->scan_token()) !== null) {
 			// the close tag
-			if ($token === _XTAG_CLOSE || $token === _XTAG_SELF_END) {
+			if ($token === _XTAG_CLOSE || $token === _XTAG_SELF_CLOSE) {
 				$closed = true;
 				break;
 			}
 
 			if ($token === _SHARP && $this->skip_token(_BLOCK_BEGIN)) {
+				$is_literal = false;
 				$expr = $this->read_sharp_interpolation();
 				$this->append_xtag_attribute($attributes, $text, $expr);
 				continue;
 			}
 			elseif ($token === _DOLLAR) {
+				$is_literal = false;
 				$expr = $this->try_read_dollar_interpolation();
 				if ($expr === null) {
 					$text .= $token;
@@ -166,7 +174,7 @@ trait TeaXBlockTrait
 		return $attributes;
 	}
 
-	private function read_xtag_children(string $tag, string $align_spaces)
+	private function read_xtag_children(string $tag, string $align_spaces, bool &$is_literal)
 	{
 		$children = [];
 		$text = '';
@@ -180,13 +188,17 @@ trait TeaXBlockTrait
 
 				case _XTAG_OPEN:
 					// maybe a tag
-					$next = $this->read_tag_name();
+					$next = $this->read_xtag_name();
 					if (TeaHelper::is_xtag_name($next)) {
-						$xtag = $this->read_xtag($next, $align_spaces);
+						$xtag = $this->read_xtag_with_name($next, $align_spaces);
+						if (!$xtag->is_literal) {
+							$is_literal = false;
+						}
+
 						$this->append_xtag_child($children, $text, $xtag);
 					}
 					elseif ($next === _SLASH) { // the </
-						if ($this->read_tag_name() !== $tag) {
+						if ($this->read_xtag_name() !== $tag) {
 							// a wrong close tag
 							throw $this->new_parse_error("Unexpected close tag '</$tag>'.");
 						}
@@ -197,7 +209,7 @@ trait TeaXBlockTrait
 						$closed = true;
 						break 2;
 					}
-					elseif ($tag === '' and $next === _XTAG_SELF_END) {
+					elseif ($tag === '' and $next === _XTAG_SELF_CLOSE) {
 						// </>
 						$closed = true;
 						break 2;
@@ -211,8 +223,9 @@ trait TeaXBlockTrait
 
 				case _SHARP:
 					if ($this->skip_token(_BLOCK_BEGIN)) {
+						$is_literal = false;
 						$expr = $this->read_sharp_interpolation();
-						$this->append_xtag_child($children, $text, $expr, true);
+						$this->append_xtag_child($children, $text, $expr);
 					}
 					else {
 						$text .= $token;
@@ -225,9 +238,9 @@ trait TeaXBlockTrait
 						$text .= $token;
 					}
 					else {
-						$this->append_xtag_child($children, $text, $expr, true);
+						$is_literal = false;
+						$this->append_xtag_child($children, $text, $expr);
 					}
-
 					break;
 
 				case _BACK_SLASH:
@@ -250,32 +263,7 @@ trait TeaXBlockTrait
 		return $children;
 	}
 
-	private function strip_leading_spaces_for_items(array &$items, string $align_spaces)
-	{
-		if ($align_spaces === '') {
-			return;
-		}
-
-		$align_spaces_len = strlen($align_spaces);
-		foreach ($items as $idx => $item) {
-			if (is_string($item) and $item !== LF) {
-				if (str_starts_with($item, $align_spaces)) {
-					$items[$idx] = substr($item, $align_spaces_len);
-				}
-			}
-		}
-	}
-
-	private function strip_leading_spaces(string $string, string $leading_spaces)
-	{
-		if ($leading_spaces && strpos($string, $leading_spaces) !== false) {
-			return str_replace(LF . $leading_spaces, LF, $string);
-		}
-
-		return $string;
-	}
-
-	private function append_xtag_attribute(array &$attributes, string &$text, ?BaseExpression $expr = null, bool $is_interpolation = false)
+	private function append_xtag_attribute(array &$attributes, string &$text, ?BaseExpression $expr = null)
 	{
 		if ($text !== '') {
 			$attributes[] = $text;
@@ -283,28 +271,50 @@ trait TeaXBlockTrait
 
 		if ($expr) {
 			$attributes[] = $expr;
-			if ($is_interpolation) {
-				$this->has_interpolation = true;
-			}
 		}
 
 		$text = ''; // reset
 	}
 
-	private function append_xtag_child(array &$children, string &$text, ?BaseExpression $expr = null, bool $is_interpolation = false)
+	private function append_xtag_child(array &$children, string &$text, ?BaseExpression $expr = null)
 	{
-		if ($text !== '') {
-			$children[] = $text;
-		}
+		$count = count($children);
+		$is_newline = $count && $children[$count - 1] === LF;
+		$text_is_spaces = trim($text) === '';
 
-		if ($expr) {
-			$children[] = $expr;
-			if ($is_interpolation) {
-				$this->has_interpolation = true;
+		if ($text !== '') {
+			if ($is_newline) {
+				if (!$text_is_spaces) {
+					$elem = new XTagText(ltrim($text));
+					$elem->is_newline = true;
+					// $elem->indent_spaces = $this->get_pre_spaces($text);
+					$children[] = $elem;
+					$is_newline = false;
+				}
+			}
+			else {
+				// keep spaces when inline
+				$children[] = new XTagText($text);
+				$is_newline = false;
 			}
 		}
 
+		if ($expr) {
+			$expr->is_newline = $is_newline;
+			// if ($is_newline and $text_is_spaces) {
+			// 	$expr->indent_spaces = $text;
+			// }
+
+			$children[] = $expr;
+		}
+
 		$text = ''; // reset
+	}
+
+	private function get_pre_spaces(string $text)
+	{
+		$matched = preg_match('/^[ \t]+/', $text, $matches);
+		return $matched ? $matches[0] : null;
 	}
 }
 
