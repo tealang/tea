@@ -17,7 +17,7 @@ const _SELF_CLOSING_TAGS = [
 	'wbr', 'col', 'embed', 'param', 'source', 'track', 'area', 'keygen'
 ];
 
-trait TeaXBlockTrait
+trait TeaXTagTrait
 {
 	protected function read_xtag_expression()
 	{
@@ -34,6 +34,11 @@ trait TeaXBlockTrait
 		while ($this->get_token_closely($skiped_spaces) === _XTAG_OPEN) {
 			$this->scan_token_ignore_empty(); // skip _XTAG_OPEN
 			throw $this->new_unexpected_error();
+		}
+
+		if ($xtag->closing_indents and str_starts_with($xtag->closing_indents, $align_spaces)) {
+			$indent_len = strlen($align_spaces);
+			$xtag->closing_indents = substr($xtag->closing_indents, $indent_len);
 		}
 
 		return $xtag;
@@ -66,9 +71,9 @@ trait TeaXBlockTrait
 		return $token;
 	}
 
-	private function read_xtag_with_name(string $tag, string $align_spaces)
+	private function read_xtag_with_name(string $name, string $align_spaces)
 	{
-		if ($tag === _XTAG_COMMENT_OPEN) {
+		if ($name === _XTAG_COMMENT_OPEN) {
 			return $this->read_xtag_comment($align_spaces);
 		}
 
@@ -77,20 +82,28 @@ trait TeaXBlockTrait
 		$current_token = $this->get_current_token_string();
 
 		if ($current_token === _XTAG_SELF_CLOSE) {
-			$elem = new XTag($tag, $attributes);
+			$elem = new XTag($name, $attributes);
 		}
-		elseif (in_array(strtolower($tag), _SELF_CLOSING_TAGS, true)) {
-			$elem = new XTag($tag, $attributes);
+		elseif (in_array(strtolower($name), _SELF_CLOSING_TAGS, true)) {
+			$elem = new XTag($name, $attributes);
 			$elem->is_self_closing_tag = true;
 		}
 		// expect tag head close
 		elseif ($current_token === _XTAG_CLOSE) {
-			$children = $this->read_xtag_children($tag, $align_spaces, $is_literal);
-			if ($align_spaces) {
-				$this->strip_leading_spaces_for_items($children, $align_spaces);
+			// has inner line break?
+			$inner_br = false;
+			if ($this->get_token_ignore_space() === LF) {
+				$this->scan_token_ignore_space();
+				$inner_br = true;
 			}
 
-			$elem = new XTag($tag, $attributes, $children);
+			$elem = new XTag($name, $attributes);
+			$elem->inner_br = $inner_br;
+
+			$this->read_xtag_children($elem, $align_spaces, $is_literal, $inner_br);
+			if ($align_spaces) {
+				$this->strip_align_spaces_for_items($elem, $align_spaces);
+			}
 		}
 		else {
 			throw $this->new_unexpected_error();
@@ -102,14 +115,25 @@ trait TeaXBlockTrait
 		return $elem;
 	}
 
-	private function strip_leading_spaces_for_items(array &$items, string $indent_spaces)
+	protected function try_read_ending_for_xtag_child(XTagElement $child)
 	{
-		$indent_len = strlen($indent_spaces);
-		foreach ($items as $idx => $item) {
-			if (is_object($item)
-				and $item->indent_spaces
-				and str_starts_with($item->indent_spaces, $indent_spaces)) {
-				$item->indent_spaces = substr($item->indent_spaces, $indent_len);
+		// is ending with line break?
+		if ($this->get_token_ignore_space() === LF) {
+			$this->scan_token_ignore_space();
+			$child->tailing_br = true;
+		}
+	}
+
+	private function strip_align_spaces_for_items(XTag $tag, string $align_spaces)
+	{
+		$indent_len = strlen($align_spaces);
+		foreach ($tag->children as $idx => $item) {
+			if ($item->indents and str_starts_with($item->indents, $align_spaces)) {
+				$item->indents = substr($item->indents, $indent_len);
+			}
+
+			if ($item instanceof XTag and $item->closing_indents and str_starts_with($item->closing_indents, $align_spaces)) {
+				$item->closing_indents = substr($item->closing_indents, $indent_len);
 			}
 		}
 	}
@@ -174,33 +198,39 @@ trait TeaXBlockTrait
 		return $attributes;
 	}
 
-	private function read_xtag_children(string $tag, string $align_spaces, bool &$is_literal)
+	private function read_xtag_children(XTag $tag, string $align_spaces, bool &$is_literal, bool $is_newline)
 	{
-		$children = [];
+		$indents = $is_newline ? $this->scan_spaces() : '';
+		$name = $tag->name;
+		$tag->children = [];
 		$text = '';
 		$closed = false;
 		while (($token = $this->scan_token()) !== null) {
 			switch ($token) {
 				case LF:
-					$this->append_xtag_child($children, $text);
-					$children[] = LF;
+					$this->xtag_append_text($tag, $text, true, $is_newline, $indents);
 					break;
 
 				case _XTAG_OPEN:
 					// maybe a tag
 					$next = $this->read_xtag_name();
 					if (TeaHelper::is_xtag_name($next)) {
-						$xtag = $this->read_xtag_with_name($next, $align_spaces);
-						if (!$xtag->is_literal) {
-							$is_literal = false;
+						if ($text !== '') {
+							$this->xtag_append_text($tag, $text, false, $is_newline, $indents);
 						}
 
-						$this->append_xtag_child($children, $text, $xtag);
+						$child_tag = $this->read_xtag_with_name($next, $align_spaces);
+						$this->try_read_ending_for_xtag_child($child_tag);
+						$this->xtag_append_expr($tag, $child_tag, $is_newline, $indents);
+
+						if (!$child_tag->is_literal) {
+							$is_literal = false;
+						}
 					}
 					elseif ($next === _SLASH) { // the </
-						if ($this->read_xtag_name() !== $tag) {
+						if ($this->read_xtag_name() !== $name) {
 							// a wrong close tag
-							throw $this->new_parse_error("Unexpected close tag '</$tag>'.");
+							throw $this->new_parse_error("Unexpected close tag '</$name>'.");
 						}
 
 						$this->expect_token_ignore_empty(_XTAG_CLOSE); // the >
@@ -209,7 +239,7 @@ trait TeaXBlockTrait
 						$closed = true;
 						break 2;
 					}
-					elseif ($tag === '' and $next === _XTAG_SELF_CLOSE) {
+					elseif ($name === '' and $next === _XTAG_SELF_CLOSE) {
 						// </>
 						$closed = true;
 						break 2;
@@ -224,8 +254,13 @@ trait TeaXBlockTrait
 				case _SHARP:
 					if ($this->skip_token(_BLOCK_BEGIN)) {
 						$is_literal = false;
+
+						if ($text !== '') {
+							$this->xtag_append_text($tag, $text, false, $is_newline, $indents);
+						}
+
 						$expr = $this->read_sharp_interpolation();
-						$this->append_xtag_child($children, $text, $expr);
+						$this->xtag_append_expr($tag, $expr, $is_newline, $indents);
 					}
 					else {
 						$text .= $token;
@@ -239,7 +274,12 @@ trait TeaXBlockTrait
 					}
 					else {
 						$is_literal = false;
-						$this->append_xtag_child($children, $text, $expr);
+
+						if ($text !== '') {
+							$this->xtag_append_text($tag, $text, false, $is_newline, $indents);
+						}
+
+						$this->xtag_append_expr($tag, $expr, $is_newline, $indents);
 					}
 					break;
 
@@ -254,13 +294,15 @@ trait TeaXBlockTrait
 		}
 
 		if (!$closed) {
-			throw $this->new_parse_error("Missed close tag '</$tag>'.");
+			throw $this->new_parse_error("Missed close tag '</$name>'.");
 		}
 
-		// the ending texts
-		$this->append_xtag_child($children, $text);
+		// the last child
+		if ($text !== '') {
+			$this->xtag_append_text($tag, $text, false, $is_newline, $indents);
+		}
 
-		return $children;
+		$tag->closing_indents = $indents;
 	}
 
 	private function append_xtag_attribute(array &$attributes, string &$text, ?BaseExpression $expr = null)
@@ -276,45 +318,47 @@ trait TeaXBlockTrait
 		$text = ''; // reset
 	}
 
-	private function append_xtag_child(array &$children, string &$text, ?BaseExpression $expr = null)
+	private function xtag_append_expr(XTag $tag, XTagElement | BaseExpression $child, bool &$is_newline, string &$indents)
 	{
-		$count = count($children);
-		$is_newline = $count && $children[$count - 1] === LF;
-		$text_is_spaces = trim($text) === '';
+		$tag->children[] = $child;
 
-		if ($text !== '') {
-			if ($is_newline) {
-				if (!$text_is_spaces) {
-					$elem = new XTagText(ltrim($text));
-					$elem->is_newline = true;
-					// $elem->indent_spaces = $this->get_pre_spaces($text);
-					$children[] = $elem;
-					$is_newline = false;
-				}
-			}
-			else {
-				// keep spaces when inline
-				$children[] = new XTagText($text);
-				$is_newline = false;
-			}
+		if ($is_newline) {
+			$child->indents = $indents;
+			$indents = '';
 		}
 
-		if ($expr) {
-			$expr->is_newline = $is_newline;
-			// if ($is_newline and $text_is_spaces) {
-			// 	$expr->indent_spaces = $text;
-			// }
-
-			$children[] = $expr;
+		$tailing_br = $child->tailing_br;
+		if ($tailing_br) {
+			$child->tailing_br = true;
+			$indents = $this->scan_spaces();
 		}
 
-		$text = ''; // reset
+		// for next
+		$is_newline = $tailing_br;
 	}
 
-	private function get_pre_spaces(string $text)
+	private function xtag_append_text(XTag $tag, string &$text, bool $tailing_br, bool &$is_newline, string &$indents)
 	{
-		$matched = preg_match('/^[ \t]+/', $text, $matches);
-		return $matched ? $matches[0] : null;
+		$child = new XTagText($text);
+		$tag->children[] = $child;
+
+		if ($is_newline) {
+			$child->indents = $indents;
+			$indents = '';
+		}
+
+		if ($tailing_br) {
+			$child->tailing_br = true;
+			$indents = $this->scan_spaces();
+		}
+
+		// for next
+		$is_newline = $tailing_br;
+
+		// reset
+		$text = '';
+
+		return $child;
 	}
 }
 

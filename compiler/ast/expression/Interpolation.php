@@ -9,18 +9,23 @@
 
 namespace Tea;
 
-class HTMLEscapeExpression extends BaseExpression
+class Interpolation extends XTagElement
 {
-	const KIND = 'html_escape_expression';
+	const KIND = 'interpolation';
 
-	public $expression;
+	public $content;
 
-	public function __construct(BaseExpression $expression)
+	public $escaping;
+
+	public function __construct(BaseExpression $content, bool $escaping)
 	{
-		if ($expression instanceof Parentheses) {
-			$expression = $expression->expression;
+		if ($content instanceof Parentheses) {
+			$content = $content->expression;
 		}
 
-		$this->expression = $expression;
+		$this->content = $content;
+		$this->escaping = $escaping;
 	}
 }
+
+// end

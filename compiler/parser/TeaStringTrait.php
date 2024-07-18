@@ -49,7 +49,7 @@ trait TeaStringTrait
 			$expression = new UnescapedStringLiteral($items[0]);
 		}
 		else {
-			$expression = new UnescapedStringInterpolation($items);
+			$expression = new UnescapedInterpolatedString($items);
 		}
 
 		return $expression;
@@ -66,7 +66,7 @@ trait TeaStringTrait
 			$expression = new EscapedStringLiteral($items[0]);
 		}
 		else {
-			$expression = new EscapedStringInterpolation($items);
+			$expression = new EscapedInterpolatedString($items);
 		}
 
 		return $expression;
@@ -114,37 +114,45 @@ trait TeaStringTrait
 
 	protected function read_sharp_interpolation()
 	{
-		$expression = $this->read_expression();
-		if (!$expression) {
+		$expr = $this->read_expression();
+		if (!$expr) {
 			throw $this->new_unexpected_error();
 		}
 
 		$this->expect_block_end();
-		return new HTMLEscapeExpression($expression);
+		$expr = new Interpolation($expr, true);
+		$expr->pos = $this->pos;
+
+		return $expr;
 	}
 
 	protected function try_read_dollar_interpolation(): ?BaseExpression
 	{
 		if ($this->get_token() === _BLOCK_BEGIN) {
+			// ${ ... } style
 			$this->scan_token(); // skip {
 
-			$expression = $this->read_expression();
-			if ($expression === null) {
+			$expr = $this->read_expression();
+			if ($expr === null) {
 				throw $this->new_parse_error("Required an expression in \${}.");
 			}
 
 			$this->expect_block_end();
 		}
 		else {
-			// without {}
-			$expression = $this->try_read_dollar_identifier();
+			$expr = $this->try_read_dollar_identifier();
 		}
 
-		return $expression;
+		$expr = new Interpolation($expr, false);
+		$expr->pos = $this->pos;
+
+		return $expr;
 	}
 
 	protected function try_read_dollar_identifier(): ?Identifiable
 	{
+		// $xxx style
+
 		$token = $this->get_token();
 		if (!TeaHelper::is_identifier_name($token)) {
 			return null;

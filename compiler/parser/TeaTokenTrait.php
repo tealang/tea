@@ -254,7 +254,7 @@ trait TeaTokenTrait
 		return $token;
 	}
 
-	protected function skip_inline_comment()
+	protected function scan_inline_comment()
 	{
 		return $this->scan_to_token(LF);
 	}
@@ -287,6 +287,23 @@ trait TeaTokenTrait
 				return $token;
 			}
 		}
+	}
+
+	protected function scan_spaces()
+	{
+		$spaces = '';
+		while (true) {
+			$token = $this->get_token();
+			if (TeaHelper::is_space_tab($token)) {
+				$this->scan_token();
+				$spaces .= $token;
+			}
+			else {
+				break;
+			}
+		}
+
+		return $spaces;
 	}
 
 	protected function scan_to_token(string $to)
@@ -500,3 +517,4 @@ trait TeaTokenTrait
 	}
 }
 
+// end

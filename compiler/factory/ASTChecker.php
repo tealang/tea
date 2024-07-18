@@ -1448,9 +1448,9 @@ class ASTChecker
 			// 	break;
 
 			//----
-			case EscapedStringInterpolation::KIND:
-			case UnescapedStringInterpolation::KIND:
-				$infered_type = $this->infer_escaped_string_interpolation($node);
+			case EscapedInterpolatedString::KIND:
+			case UnescapedInterpolatedString::KIND:
+				$infered_type = $this->infer_interpolated_string($node);
 				break;
 			case XTag::KIND:
 				$infered_type = $this->infer_xtag($node);
@@ -1496,9 +1496,9 @@ class ASTChecker
 			case IsOperation::KIND:
 				$infered_type = $this->infer_is_operation($node);
 				break;
-			case HTMLEscapeExpression::KIND:
-				$infered_type = $this->infer_expression($node->expression);
-				break;
+			// case Interpolation::KIND:
+			// 	$infered_type = $this->infer_expression($node->expression);
+			// 	break;
 			case NoneCoalescingOperation::KIND:
 				$infered_type = $this->infer_none_coalescing_expression($node);
 				break;
@@ -2443,11 +2443,11 @@ class ASTChecker
 		return TypeFactory::$_regex;
 	}
 
-	private function infer_escaped_string_interpolation(StringInterpolation $node): IType
+	private function infer_interpolated_string(InterpolatedString $node): IType
 	{
 		foreach ($node->items as $item) {
-			if (is_object($item) && !$item instanceof ILiteral) {
-				$this->infer_expression($item);
+			if ($item instanceof Interpolation) {
+				$this->infer_expression($item->content);
 			}
 		}
 
@@ -2470,8 +2470,8 @@ class ASTChecker
 				if ($item instanceof XTag) {
 					$this->infer_xtag($item);
 				}
-				elseif (is_object($item)) {
-					$this->infer_expression($item);
+				elseif ($item instanceof Interpolation) {
+					$this->infer_expression($item->content);
 				}
 			}
 		}
@@ -2481,8 +2481,12 @@ class ASTChecker
 				if ($item instanceof XTag) {
 					$this->infer_xtag($item);
 				}
-				elseif (is_object($item)) {
-					$this->infer_expression($item);
+				elseif ($item instanceof Interpolation) {
+					$this->infer_expression($item->content);
+				}
+				else {
+					// XTagText or XTagComment
+					// dont neet to check
 				}
 			}
 		}

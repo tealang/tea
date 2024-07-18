@@ -534,10 +534,13 @@ class TeaCoder
 		return '(' . $node->expression->render($this) . ')';
 	}
 
-	public function render_html_escape_expression(HTMLEscapeExpression $node)
+	public function render_interpolation(Interpolation $node)
 	{
-		$expr = $node->expression->render($this);
-		return "#{$expr}";
+		$prefix = $node->escaping ? '#' : '$';
+		$body = $node->content->render($this);
+		$code = "{$prefix}{$body}";
+
+		return $code;
 	}
 
 	public function render_xtag(XTag $node)
@@ -593,32 +596,38 @@ class TeaCoder
 		}
 	}
 
-	private function append_children_to_items(array &$items, array $children, int &$indents)
+	private function append_children_to_items(array &$items, array $children, int &$indents, bool $is_newline)
 	{
 		if (!$children) return;
 		$indents++;
 
-		$tabs = str_repeat("\t", $indents);
+		// $tabs = str_repeat("\t", $indents);
 
 		foreach ($children as $child) {
-			if ($child === LF) {
-				$items[] = $child;
-				continue;
-			}
+			// if ($is_newline) {
+			// 	// $items[] = LF;
+			// 	$items[] = $tabs;
+			// }
 
-			if ($child->is_newline) {
-				$items[] = $tabs;
-			}
+			if ($child->indents) $items[] = $child->indents;
 
-			if ($child instanceof XTagText) {
-				$items[] = $child->content;
-			}
-			elseif ($child instanceof XTag) {
+			if ($child instanceof XTag) {
 				$subitems = $this->get_xtag_components($child, $indents);
 				$this->merge_xtag_components($items, $subitems);
 			}
+			elseif ($child instanceof XTagText) {
+				$items[] = $child->content;
+			}
+			elseif ($child instanceof XTagComment) {
+				// ignore
+			}
 			else {
 				$items[] = $child;
+			}
+
+			$is_newline = $child->tailing_br;
+			if ($is_newline) {
+				$items[] = LF;
 			}
 		}
 
@@ -631,7 +640,7 @@ class TeaCoder
 			return null; // do not render comments
 		}
 
-		$tabs = $node->is_newline ? str_repeat("\t", $indents) : '';
+		// $tabs = str_repeat("\t", $indents);
 
 		$has_name = $node->name !== '';
 
@@ -652,20 +661,28 @@ class TeaCoder
 		}
 		else {
 			$has_name and $items[] = '>';
-			$this->append_children_to_items($items, $node->children, $indents);
 
-			$first_child = $node->children[0] ?? null;
-			if ($first_child !== LF) {
-				$tabs = '';
+			if ($node->inner_br) {
+				$items[] = LF;
+			}
+
+			$this->append_children_to_items($items, $node->children, $indents, $node->inner_br);
+
+			// if ($node->inner_br) {
+			// 	$items[] = $tabs;
+			// }
+
+			if ($node->closing_indents) {
+				$items[] = $node->closing_indents;
 			}
 
 			if (is_object($node->name)) {
-				$items[] = $tabs . '</';
+				$items[] = '</';
 				$items[] = $node->name;
 				$items[] = '>';
 			}
 			elseif ($has_name) {
-				$items[] = $tabs . "</{$node->name}>";
+				$items[] = "</{$node->name}>";
 			}
 		}
 
@@ -883,7 +900,7 @@ class TeaCoder
 		return $this->new_string_placeholder($code);
 	}
 
-	public function render_unescaped_string_interpolation(UnescapedStringInterpolation $node)
+	public function render_unescaped_interpolated_string(UnescapedInterpolatedString $node)
 	{
 		$tmp = '';
 		foreach ($node->items as $item) {
@@ -900,7 +917,7 @@ class TeaCoder
 		return $this->new_string_placeholder($code);
 	}
 
-	public function render_escaped_string_interpolation(EscapedStringInterpolation $node)
+	public function render_escaped_interpolated_string(EscapedInterpolatedString $node)
 	{
 		$tmp = '';
 		foreach ($node->items as $item) {

@@ -11,7 +11,7 @@ namespace Tea;
 
 class TeaParser extends BaseParser
 {
-	use TeaTokenTrait, TeaStringTrait, TeaXBlockTrait, TeaDocsTrait;
+	use TeaTokenTrait, TeaStringTrait, TeaXTagTrait, TeaDocsTrait;
 
 	const NS_SEPARATOR = _BACK_SLASH;
 
@@ -703,7 +703,7 @@ class TeaParser extends BaseParser
 			// $current_line = $this->current_line;
 
 			$this->scan_token_ignore_empty(); // skip the //
-			$this->skip_inline_comment(); //  skip the comment
+			$this->scan_inline_comment(); //  skip the comment
 			$result = $this->try_attach_else_block($master_block);
 
 			// Avoid of ignoring empty lines
@@ -1086,7 +1086,7 @@ class TeaParser extends BaseParser
 				}
 
 				if (_INLINE_COMMENT_MARK === $token) {
-					$this->skip_inline_comment(); // the // ...
+					$this->scan_inline_comment(); // the // ...
 					return $this->read_expression($prev_operator);
 				}
 				// elseif (_DOLLAR === $token) {
@@ -1102,7 +1102,7 @@ class TeaParser extends BaseParser
 
 		$expression->pos || $expression->pos = $this->pos;
 		if ($this->get_token_ignore_space() === _INLINE_COMMENT_MARK) {
-			$expression->tailing = $this->skip_inline_comment();
+			$expression->tailing_comment = $this->scan_inline_comment();
 		}
 
 		return $expression;
@@ -1358,7 +1358,7 @@ class TeaParser extends BaseParser
 			}
 
 			if ($this->get_token_ignore_empty() === _INLINE_COMMENT_MARK) {
-				$this->skip_inline_comment();
+				$this->scan_inline_comment();
 			}
 
 			$this->expect_token_ignore_empty(_COLON);
@@ -1639,7 +1639,7 @@ class TeaParser extends BaseParser
 			// $current_line = $this->current_line;
 
 			$this->scan_token_ignore_empty(); // skip the //
-			$this->skip_inline_comment(); //  skip the comment
+			$this->scan_inline_comment(); //  skip the comment
 			$continue_combination = $this->read_expression_combination($expression, $prev_operator);
 
 			// Avoid of ignoring empty lines

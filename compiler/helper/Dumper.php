@@ -26,7 +26,7 @@ class Dumper
 
 	private $stringify_objects = [];
 
-	function __construct(array $ignore_list = [], int $max_dump_depth = 4)
+	function __construct(array $ignore_list = [], int $max_dump_depth = 5)
 	{
 		$this->ignore_list = $ignore_list;
 		$this->max_dump_depth = $max_dump_depth;

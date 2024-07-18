@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-abstract class StringInterpolation extends BaseExpression
+abstract class InterpolatedString extends BaseExpression
 {
 	public $items;
 
@@ -19,14 +19,14 @@ abstract class StringInterpolation extends BaseExpression
 	}
 }
 
-class EscapedStringInterpolation extends StringInterpolation
+class EscapedInterpolatedString extends InterpolatedString
 {
-	const KIND = 'escaped_string_interpolation';
+	const KIND = 'escaped_interpolated_string';
 }
 
-class UnescapedStringInterpolation extends StringInterpolation
+class UnescapedInterpolatedString extends InterpolatedString
 {
-	const KIND = 'unescaped_string_interpolation';
+	const KIND = 'unescaped_interpolated_string';
 }
 
 // end

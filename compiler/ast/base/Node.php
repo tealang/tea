@@ -17,7 +17,13 @@ abstract class Node
 
 	public $leading; // the node leading contents
 
-	public $tailing; // the node tailing contents
+	public $indents;
+
+	// tailing inline comment
+	public $tailing_comment;
+
+	// is there a line break at the end
+	public $tailing_br = false;
 
 	public function render(TeaCoder $coder)
 	{

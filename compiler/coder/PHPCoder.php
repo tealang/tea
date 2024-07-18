@@ -887,19 +887,21 @@ class PHPCoder extends TeaCoder
 		return sprintf('%s = %s', $master, $right) . static::STATEMENT_TERMINATOR;
 	}
 
-	public function render_html_escape_expression(HTMLEscapeExpression $node)
+	public function render_interpolation(Interpolation $node)
 	{
-		$expr = $node->expression->render($this);
-		// $code = "htmlspecialchars($expr, ENT_QUOTES)";
+		$code = $node->content->render($this);
+		if ($node->escaping) {
+			// $code = "htmlspecialchars($code, ENT_QUOTES)";
 
-		// // PHP 8.1 not allowed null
-		// if ($node->expression->infered_type->nullable 
-		// 	or $node->expression->infered_type->is_same_with(TypeFactory::$_any)) {
-		// 	$code = "($expr === null ? '' : htmlspecialchars($expr, ENT_QUOTES))";
-		// }
+			// // PHP 8.1 not allowed null
+			// if ($node->expression->infered_type->nullable
+			// 	or $node->expression->infered_type->is_same_with(TypeFactory::$_any)) {
+			// 	$code = "($code === null ? '' : htmlspecialchars($code, ENT_QUOTES))";
+			// }
 
-		// use the tea lib function instead, avoiding target is a function call
-		$code = "\html_escape($expr)";
+			// use the tea lib function instead, avoiding target is a function call
+			$code = "\html_escape($code)";
+		}
 
 		return $code;
 	}
@@ -923,8 +925,14 @@ class PHPCoder extends TeaCoder
 	protected function render_xtag_components(array $items)
 	{
 		foreach ($items as $k => $item) {
-			if ($item instanceof BaseExpression) {
-				$expr = $this->render_subexpression($item, OperatorFactory::$concat);
+			if ($item instanceof Interpolation) {
+				if ($item->escaping) {
+					$expr = $this->render_interpolation($item);
+				}
+				else {
+					$expr = $this->render_subexpression($item->content, OperatorFactory::$concat);
+				}
+
 				$items[$k] = $expr;
 			}
 			else {
@@ -1483,42 +1491,46 @@ class PHPCoder extends TeaCoder
 		return join($escaping, $components);
 	}
 
-	public function render_unescaped_string_interpolation(UnescapedStringInterpolation $node)
+	public function render_unescaped_interpolated_string(UnescapedInterpolatedString $node)
 	{
 		foreach ($node->items as $item) {
-			if (is_string($item)) {
-				$pieces[] = "'$item'";
+			if ($item instanceof Interpolation) {
+				$item = $this->render_string_interpolation($item);
 			}
-			elseif ($item) {
-				$item = $this->render_instring_expression($item);
-				$pieces[] = $item;
+			else {
+				$item = "'$item'";
 			}
+
+			$pieces[] = $item;
 		}
 
 		$code = join(' . ', $pieces);
 		return $this->new_string_placeholder($code);
 	}
 
-	public function render_escaped_string_interpolation(EscapedStringInterpolation $node)
+	public function render_escaped_interpolated_string(EscapedInterpolatedString $node)
 	{
 		$items = ['"'];
 		foreach ($node->items as $item) {
-			if (is_string($item)) {
-				$items[] = $item;
-			}
-			elseif ($this->is_interpolated($item)) {
-				$item = $item->render($this);
-				$items[] = "{{$item}}";
-			}
-			else {
-				$item = $this->render_instring_expression($item);
-				if (count($items) === 1) {
-					$items = [$item . ' . "'];
+			if ($item instanceof Interpolation) {
+				$content = $item->content;
+				if (!$item->escaping and $this->is_simple_expression($content)) {
+					$content = $item->render($this);
+					$items[] = "{{$content}}";
 				}
 				else {
-					$items[] = '" . ' . $item;
-					$items[] = ' . "';
+					$content = $this->render_string_interpolation($item);
+					if (count($items) === 1) {
+						$items = [$content . ' . "'];
+					}
+					else {
+						$items[] = '" . ' . $content;
+						$items[] = ' . "';
+					}
 				}
+			}
+			else {
+				$items[] = $item;
 			}
 		}
 
@@ -1533,7 +1545,7 @@ class PHPCoder extends TeaCoder
 		return $this->new_string_placeholder($code);
 	}
 
-	private function is_interpolated(BaseExpression $item)
+	private function is_simple_expression(BaseExpression $item)
 	{
 		if ($item instanceof PlainIdentifier) {
 			if ($item->symbol->declaration instanceof IVariableDeclaration) {
@@ -1553,12 +1565,11 @@ class PHPCoder extends TeaCoder
 		return false;
 	}
 
-	protected function render_instring_expression(BaseExpression $expr)
+	protected function render_string_interpolation(Interpolation $node)
 	{
-		$code = $expr->render($this);
-
-		if ($expr instanceof MultiOperation) {
-			return '(' . $code . ')';
+		$code = $node->render($this);
+		if ($node->content instanceof MultiOperation) {
+			$code = '(' . $code . ')';
 		}
 
 		return $code;

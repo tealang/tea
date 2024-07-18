@@ -9,7 +9,12 @@
 
 namespace Tea;
 
-class XTag extends BaseExpression
+abstract class XTagElement extends BaseExpression
+{
+	public $is_literal;
+}
+
+class XTag extends XTagElement
 {
 	const KIND = 'xtag';
 
@@ -17,11 +22,20 @@ class XTag extends BaseExpression
 	 * @var string | PlainIdentifier
 	 */
 	public $name;
+
 	public $attributes;
+
+	/**
+	 * @var XTagElement[]
+	 */
 	public $children; // text or XTag, let null when tag is self-closed
 
 	public $is_self_closing_tag;
-	public $is_literal;
+
+	// is there a line break at the inner block opened
+	public $inner_br = false;
+
+	public $closing_indents;
 
 	public function __construct(string $name, array $attributes = [], array $children = null)
 	{
@@ -31,7 +45,7 @@ class XTag extends BaseExpression
 	}
 }
 
-class XTagText extends XTag
+class XTagText extends XTagElement
 {
 	const KIND = 'xtag_text';
 
@@ -43,7 +57,7 @@ class XTagText extends XTag
 	}
 }
 
-class XTagComment extends XTag
+class XTagComment extends XTagElement
 {
 	const KIND = 'xtag_comment';
 
