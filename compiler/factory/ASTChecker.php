@@ -1424,7 +1424,7 @@ class ASTChecker
 					? TypeFactory::$_default_marker
 					: TypeFactory::$_none;
 				break;
-			case UnescapedStringLiteral::KIND:
+			case PlainStringLiteral::KIND:
 			case EscapedStringLiteral::KIND:
 				$infered_type = TypeFactory::$_string;
 				break;
@@ -1449,7 +1449,7 @@ class ASTChecker
 
 			//----
 			case EscapedInterpolatedString::KIND:
-			case UnescapedInterpolatedString::KIND:
+			case PlainInterpolatedString::KIND:
 				$infered_type = $this->infer_interpolated_string($node);
 				break;
 			case XTag::KIND:

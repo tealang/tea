@@ -43,9 +43,9 @@ abstract class StringLiteral extends BaseExpression implements ILiteral
 	public $label;
 }
 
-class UnescapedStringLiteral extends StringLiteral
+class PlainStringLiteral extends StringLiteral
 {
-	const KIND = 'unescaped_string_literal';
+	const KIND = 'plain_string_literal';
 }
 
 class EscapedStringLiteral extends StringLiteral

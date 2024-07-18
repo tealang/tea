@@ -24,9 +24,9 @@ class EscapedInterpolatedString extends InterpolatedString
 	const KIND = 'escaped_interpolated_string';
 }
 
-class UnescapedInterpolatedString extends InterpolatedString
+class PlainInterpolatedString extends InterpolatedString
 {
-	const KIND = 'unescaped_interpolated_string';
+	const KIND = 'plain_interpolated_string';
 }
 
 // end

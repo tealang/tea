@@ -880,7 +880,7 @@ class TeaCoder
 		return $mark;
 	}
 
-	public function render_unescaped_string_literal(UnescapedStringLiteral $node)
+	public function render_plain_string_literal(PlainStringLiteral $node)
 	{
 		$code = '\'' . $node->value . '\'';
 		if ($node->label === _TEXT) {
@@ -900,7 +900,7 @@ class TeaCoder
 		return $this->new_string_placeholder($code);
 	}
 
-	public function render_unescaped_interpolated_string(UnescapedInterpolatedString $node)
+	public function render_plain_interpolated_string(PlainInterpolatedString $node)
 	{
 		$tmp = '';
 		foreach ($node->items as $item) {

@@ -1132,7 +1132,7 @@ class TeaParser extends BaseParser
 
 		switch ($token) {
 			case _SINGLE_QUOTE:
-				$expression = $this->read_unescaped_string_literal();
+				$expression = $this->read_plain_string_literal();
 				break;
 
 			case _DOUBLE_QUOTE:

@@ -356,7 +356,7 @@ class PHPParser extends BaseParser
 					$quote = $token_content[0];
 					$quote_content = substr($token_content, 1, -1);
 					$expr = $quote === _SINGLE_QUOTE
-						? new UnescapedStringLiteral($quote_content)
+						? new PlainStringLiteral($quote_content)
 						: new EscapedStringLiteral($quote_content);
 					break;
 				case T_LNUMBER:

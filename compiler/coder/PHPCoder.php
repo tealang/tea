@@ -1447,7 +1447,7 @@ class PHPCoder extends TeaCoder
 		return strpos($num, _UNDERSCORE) ? str_replace(_UNDERSCORE, _NOTHING, $num) : $num;
 	}
 
-	public function render_unescaped_string_literal(UnescapedStringLiteral $node)
+	public function render_plain_string_literal(PlainStringLiteral $node)
 	{
 		$code = "'$node->value'";
 		return $this->new_string_placeholder($code);
@@ -1491,7 +1491,7 @@ class PHPCoder extends TeaCoder
 		return join($escaping, $components);
 	}
 
-	public function render_unescaped_interpolated_string(UnescapedInterpolatedString $node)
+	public function render_plain_interpolated_string(PlainInterpolatedString $node)
 	{
 		foreach ($node->items as $item) {
 			if ($item instanceof Interpolation) {
