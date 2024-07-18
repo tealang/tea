@@ -15,15 +15,21 @@ abstract class Node
 
 	public $pos; 	// the first token position of current node
 
-	public $leading; // the node leading contents
+	// is there a line break at the head
+	public $leading_br = false;
 
-	public $indents;
+	// is there a line break at the end
+	public $tailing_br = false;
+
+	/**
+	 * @var Docs
+	 */
+	public $docs;
 
 	// tailing inline comment
 	public $tailing_comment;
 
-	// is there a line break at the end
-	public $tailing_br = false;
+	public $indents;
 
 	public function render(TeaCoder $coder)
 	{

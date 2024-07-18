@@ -161,6 +161,7 @@ const __AUTOLOADS = [
 	'Tea\RegexType' => 'ast/base/Types.php',
 	'Tea\XViewType' => 'ast/base/Types.php',
 	'Tea\Unit' => 'ast/base/Unit.php',
+	'Tea\WhiteSpaceNode' => 'ast/base/WhiteSpaceNode.php',
 	'Tea\IBlock' => 'ast/block/BaseBlock.php',
 	'Tea\IBlockTrait' => 'ast/block/BaseBlock.php',
 	'Tea\ControlBlock' => 'ast/block/BaseBlock.php',

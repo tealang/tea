@@ -15,10 +15,6 @@ interface IMemberDeclaration extends IDeclaration {}
 interface IValuedDeclaration extends IDeclaration {}
 
 trait DeclarationTrait {
-	/**
-	 * @var Docs
-	 */
-	public $docs;
 
 	public $label;
 

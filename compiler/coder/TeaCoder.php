@@ -1402,12 +1402,11 @@ class TeaCoder
 				continue;
 			}
 
-			if ($node->leading !== null) {
-				$items[] = $node->leading . $item . LF;
+			if ($node->leading_br) {
+				$item = LF . $item;
 			}
-			else {
-				$items[] = $item . LF;
-			}
+
+			$items[] = $item . LF;
 		}
 
 		return $items;

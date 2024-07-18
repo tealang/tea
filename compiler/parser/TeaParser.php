@@ -48,11 +48,11 @@ class TeaParser extends BaseParser
 		return $program;
 	}
 
-	protected function read_root_statement($leading = null, Docs $docs = null)
+	protected function read_root_statement(bool $leading_br = false, Docs $docs = null)
 	{
 		$token = $this->scan_token_ignore_space();
 		if ($token === LF) {
-			return $this->read_root_statement($token);
+			return $this->read_root_statement(true);
 		}
 		elseif ($token === _SEMICOLON || $token === null) {
 			// empty statement, or at the end of program
@@ -66,11 +66,11 @@ class TeaParser extends BaseParser
 		}
 		elseif ($token === _DOCS_MARK) {
 			$docs = $this->read_docs();
-			return $this->read_root_statement($leading, $docs);
+			return $this->read_root_statement($leading_br, $docs);
 		}
 		elseif ($token === _INLINE_COMMENT_MARK) {
 			$this->skip_current_line();
-			return $this->read_root_statement($leading, $docs);
+			return $this->read_root_statement($leading_br, $docs);
 		}
 		elseif ($token === _FUNC) {
 			$name = $this->expect_identifier_token_ignore_space();
@@ -104,7 +104,7 @@ class TeaParser extends BaseParser
 		$this->expect_statement_end();
 
 		if ($node !== null) {
-			$node->leading = $leading;
+			$node->leading_br = $leading_br;
 			$node->docs = $docs;
 		}
 
@@ -126,7 +126,7 @@ class TeaParser extends BaseParser
 		return $node;
 	}
 
-	protected function read_normal_statement($leading = null, Docs $docs = null)
+	protected function read_normal_statement(bool $leading_br = false, Docs $docs = null)
 	{
 		if ($this->get_token_ignore_space() === _BLOCK_END) {
 			return null;
@@ -134,7 +134,7 @@ class TeaParser extends BaseParser
 
 		$token = $this->scan_token_ignore_space();
 		if ($token === LF) {
-			return $this->read_normal_statement(LF);
+			return $this->read_normal_statement(true);
 		}
 		elseif ($token === _SEMICOLON || $token === null) {
 			return null;
@@ -147,11 +147,11 @@ class TeaParser extends BaseParser
 		}
 		elseif ($token === _DOCS_MARK) {
 			$docs = $this->read_docs();
-			return $this->read_normal_statement($leading, $docs);
+			return $this->read_normal_statement($leading_br, $docs);
 		}
 		elseif ($token === _INLINE_COMMENT_MARK) {
 			$this->skip_current_line();
-			return $this->read_normal_statement($leading, $docs);
+			return $this->read_normal_statement($leading_br, $docs);
 		}
 		elseif (TeaHelper::is_structure_key($token)) {
 			$node = $this->read_structure($token);
@@ -173,7 +173,7 @@ class TeaParser extends BaseParser
 
 		$this->expect_statement_end();
 
-		$node->leading = $leading;
+		$node->leading_br = $leading_br;
 		$node->docs = $docs;
 
 		return $node;
@@ -2314,7 +2314,7 @@ class TeaParser extends BaseParser
 			// has leading empty line
 			// will ignore docs when has empty lines
 			$declaration = $this->read_class_member_declaration();
-			$declaration and $declaration->leading = $token;
+			$declaration and $declaration->leading_br = $token;
 			return $declaration;
 		}
 

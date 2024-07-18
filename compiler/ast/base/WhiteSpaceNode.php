@@ -9,9 +9,7 @@
 
 namespace Tea;
 
-interface IStatement {}
-
-class BaseStatement extends Node implements IStatement
+class WhiteSpaceNode extends Node
 {
-	public $belong_block;
+	const KIND = 'white_space_node'
 }

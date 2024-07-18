@@ -13,7 +13,7 @@ class HeaderParser extends TeaParser
 {
 	public $is_parsing_header = true;
 
-	protected function read_root_statement($leading = null, Docs $docs = null)
+	protected function read_root_statement(bool $leading_br = false, Docs $docs = null)
 	{
 		$token = $this->scan_token_ignore_space();
 		if ($token === LF) {
@@ -31,11 +31,11 @@ class HeaderParser extends TeaParser
 		}
 		elseif ($token === _DOCS_MARK) {
 			$docs = $this->read_docs();
-			return $this->read_root_statement($leading, $docs);
+			return $this->read_root_statement($leading_br, $docs);
 		}
 		elseif ($token === _INLINE_COMMENT_MARK) {
 			$this->skip_current_line();
-			return $this->read_root_statement($leading, $docs);
+			return $this->read_root_statement($leading_br, $docs);
 		}
 		elseif ($token === _RUNTIME) {
 			$node = $this->read_runtime_declaration();
@@ -57,7 +57,7 @@ class HeaderParser extends TeaParser
 
 		$this->expect_statement_end();
 		if ($node !== null) {
-			$node->leading = $leading;
+			$node->leading_br = $leading_br;
 			$node->docs = $docs;
 		}
 
