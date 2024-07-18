@@ -11,14 +11,14 @@ namespace Tea;
 
 trait TeaStringTrait
 {
-	protected function read_plain_string_literal()
+	protected function read_plain_literal_string()
 	{
-		return new PlainStringLiteral($this->read_quoted_string(_SINGLE_QUOTE));
+		return new PlainLiteralString($this->read_quoted_string(_SINGLE_QUOTE));
 	}
 
-	protected function read_escaped_string_literal()
+	protected function read_escaped_literal_string()
 	{
-		return new EscapedStringLiteral($this->read_quoted_string(_DOUBLE_QUOTE));
+		return new EscapedLiteralString($this->read_quoted_string(_DOUBLE_QUOTE));
 	}
 
 	protected function read_quoted_string(string $quote_mark)
@@ -43,10 +43,10 @@ trait TeaStringTrait
 		$items = $this->read_quoted_items(_SINGLE_QUOTE);
 
 		if (empty($items)) {
-			$expression = new PlainStringLiteral(_NOTHING);
+			$expression = new PlainLiteralString(_NOTHING);
 		}
 		elseif (!isset($items[1]) && is_string($items[0])) {
-			$expression = new PlainStringLiteral($items[0]);
+			$expression = new PlainLiteralString($items[0]);
 		}
 		else {
 			$expression = new PlainInterpolatedString($items);
@@ -60,10 +60,10 @@ trait TeaStringTrait
 		$items = $this->read_quoted_items(_DOUBLE_QUOTE);
 
 		if (empty($items)) {
-			$expression = new PlainStringLiteral(_NOTHING);
+			$expression = new PlainLiteralString(_NOTHING);
 		}
 		elseif (!isset($items[1]) && is_string($items[0])) {
-			$expression = new EscapedStringLiteral($items[0]);
+			$expression = new EscapedLiteralString($items[0]);
 		}
 		else {
 			$expression = new EscapedInterpolatedString($items);

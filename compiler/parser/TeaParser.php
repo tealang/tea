@@ -189,7 +189,7 @@ class TeaParser extends BaseParser
 				break;
 
 			case _TEXT:
-				$expression = $this->read_string_literal();
+				$expression = $this->read_literal_string();
 				$expression = $this->read_expression_combination($expression);
 				$node = new NormalStatement($expression);
 				break;
@@ -1116,7 +1116,7 @@ class TeaParser extends BaseParser
 				break;
 
 			case _TEXT:
-				$expression = $this->read_string_literal();
+				$expression = $this->read_literal_string();
 				break;
 
 			default:
@@ -1126,17 +1126,17 @@ class TeaParser extends BaseParser
 		return $expression;
 	}
 
-	protected function read_string_literal()
+	protected function read_literal_string()
 	{
 		$token = $this->scan_token_ignore_space();
 
 		switch ($token) {
 			case _SINGLE_QUOTE:
-				$expression = $this->read_plain_string_literal();
+				$expression = $this->read_plain_literal_string();
 				break;
 
 			case _DOUBLE_QUOTE:
-				$expression = $this->read_escaped_string_literal();
+				$expression = $this->read_escaped_literal_string();
 				break;
 
 			default:
@@ -1283,7 +1283,7 @@ class TeaParser extends BaseParser
 					return $this->read_scientific_notation_number_with($token);
 				}
 
-				return new FloatLiteral($token);
+				return new LiteralFloat($token);
 			}
 			elseif ($token[-1] === _LOW_CASE_E) {
 				// e.g. 123e-6
@@ -1291,7 +1291,7 @@ class TeaParser extends BaseParser
 			}
 		}
 
-		return new IntegerLiteral($token);
+		return new LiteralInteger($token);
 	}
 
 	protected function read_scientific_notation_number_with(string $prefix)
@@ -1310,7 +1310,7 @@ class TeaParser extends BaseParser
 			throw $this->new_unexpected_error();
 		}
 
-		return new FloatLiteral($prefix . $exp);
+		return new LiteralFloat($prefix . $exp);
 	}
 
 	protected function try_read_regular_expression()
@@ -1422,7 +1422,7 @@ class TeaParser extends BaseParser
 
 		$this->expect_token_ignore_empty(_BRACE_CLOSE);
 
-		// return $has_non_literal ? new ObjectExpression($items) : new ObjectLiteral($items);
+		// return $has_non_literal ? new ObjectExpression($items) : new LiteralObject($items);
 
 		// if support literal mode, then would be need to support compile-value
 		// example as value for constants, thats a troublesome
@@ -1466,7 +1466,7 @@ class TeaParser extends BaseParser
 	{
 		$next = $this->get_token_ignore_space();
 		if ($next === _BRACKET_CLOSE and $this->skip_token(_BRACKET_CLOSE)) {
-			// SquareAccessing or empty ArrayLiteral
+			// SquareAccessing or empty LiteralArray
 			if ($next = $this->get_token() and TeaHelper::is_identifier_name($next)) {
 				$this->scan_token();
 				$identifier = $this->factory->create_identifier($next);
@@ -1474,7 +1474,7 @@ class TeaParser extends BaseParser
 				$expr = new SquareAccessing($identifier, true);
 			}
 			else {
-				$expr = new ArrayLiteral();
+				$expr = new LiteralArray();
 			}
 
 			return $expr;
@@ -1483,7 +1483,7 @@ class TeaParser extends BaseParser
 			// empty Dict
 			$this->scan_token_ignore_space(); // skip colon
 			$this->expect_token(_BRACKET_CLOSE);
-			return new DictLiteral();
+			return new LiteralDict();
 		}
 		elseif ($next === LF || $next === _INLINE_COMMENT_MARK) {
 			$is_vertical_layout = true;
@@ -1503,7 +1503,7 @@ class TeaParser extends BaseParser
 		}
 		else {
 			// that should be an empty Array
-			$expr = new ArrayLiteral();
+			$expr = new LiteralArray();
 		}
 
 		$this->expect_token_ignore_empty(_BRACKET_CLOSE);
@@ -1528,7 +1528,7 @@ class TeaParser extends BaseParser
 			}
 		} while ($item = $this->read_expression());
 
-		return $has_non_literal ? new ArrayExpression($items) : new ArrayLiteral($items);
+		return $has_non_literal ? new ArrayExpression($items) : new LiteralArray($items);
 	}
 
 	protected function read_dict_with_first_item(BaseExpression $key)
@@ -1563,7 +1563,7 @@ class TeaParser extends BaseParser
 			}
 		}
 
-		return $has_non_literal ? new DictExpression($items) : new DictLiteral($items);
+		return $has_non_literal ? new DictExpression($items) : new LiteralDict($items);
 	}
 
 	protected function read_lambda_combination(array $parameters, $arrow_is_optional = false)

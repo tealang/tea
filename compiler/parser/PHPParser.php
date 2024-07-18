@@ -356,14 +356,14 @@ class PHPParser extends BaseParser
 					$quote = $token_content[0];
 					$quote_content = substr($token_content, 1, -1);
 					$expr = $quote === _SINGLE_QUOTE
-						? new PlainStringLiteral($quote_content)
-						: new EscapedStringLiteral($quote_content);
+						? new PlainLiteralString($quote_content)
+						: new EscapedLiteralString($quote_content);
 					break;
 				case T_LNUMBER:
-					$expr = new IntegerLiteral($token_content);
+					$expr = new LiteralInteger($token_content);
 					break;
 				case T_DNUMBER:
-					$expr = new FloatLiteral($token_content);
+					$expr = new LiteralFloat($token_content);
 					break;
 				case T_DOUBLE_COLON:
 					$name = $this->expect_member_identifier_name();

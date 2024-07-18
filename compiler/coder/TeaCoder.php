@@ -842,7 +842,7 @@ class TeaCoder
 		return "{$master}[{$key}]";
 	}
 
-	public function render_none_literal(NoneLiteral $node)
+	public function render_literal_none(LiteralNone $node)
 	{
 		if ($node === ASTFactory::$default_value_marker) {
 			return '#default';
@@ -851,17 +851,17 @@ class TeaCoder
 		return static::VAL_NONE;
 	}
 
-	public function render_bool_literal(BooleanLiteral $node)
+	public function render_bool_literal(LiteralBoolean $node)
 	{
 		return $node->value ? 'true' : 'false';
 	}
 
-	public function render_integer_literal(IntegerLiteral $node)
+	public function render_literal_integer(LiteralInteger $node)
 	{
 		return $node->value;
 	}
 
-	public function render_float_literal(FloatLiteral $node)
+	public function render_literal_float(LiteralFloat $node)
 	{
 		return $node->value;
 	}
@@ -880,7 +880,7 @@ class TeaCoder
 		return $mark;
 	}
 
-	public function render_plain_string_literal(PlainStringLiteral $node)
+	public function render_plain_literal_string(PlainLiteralString $node)
 	{
 		$code = '\'' . $node->value . '\'';
 		if ($node->label === _TEXT) {
@@ -890,7 +890,7 @@ class TeaCoder
 		return $this->new_string_placeholder($code);
 	}
 
-	public function render_escaped_string_literal(EscapedStringLiteral $node)
+	public function render_escaped_literal_string(EscapedLiteralString $node)
 	{
 		$code = '"' . $node->value . '"';
 		if ($node->label === _TEXT) {
@@ -934,17 +934,17 @@ class TeaCoder
 		return $this->new_string_placeholder($code);
 	}
 
-	// public function render_object_literal(ObjectLiteral $node)
+	// public function render_literal_object(LiteralObject $node)
 	// {
 	// 	return $this->render_object_expression($node);
 	// }
 
-	public function render_array_literal(ArrayLiteral $node)
+	public function render_literal_array(LiteralArray $node)
 	{
 		return $this->render_array_expression($node);
 	}
 
-	public function render_dict_literal(DictLiteral $node)
+	public function render_literal_dict(LiteralDict $node)
 	{
 		if (!$node->items) {
 			return static::DICT_EMPTY_VALUE;

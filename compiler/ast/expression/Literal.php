@@ -30,34 +30,34 @@ trait LiteralTraitWithValue
 	}
 }
 
-class NoneLiteral extends BaseExpression implements ILiteral
+class LiteralNone extends BaseExpression implements ILiteral
 {
-	const KIND = 'none_literal';
+	const KIND = 'literal_none';
 
 	public $is_default_value_marker = false;
 }
 
-abstract class StringLiteral extends BaseExpression implements ILiteral
+abstract class LiteralString extends BaseExpression implements ILiteral
 {
 	use LiteralTraitWithValue;
 	public $label;
 }
 
-class PlainStringLiteral extends StringLiteral
+class PlainLiteralString extends LiteralString
 {
-	const KIND = 'plain_string_literal';
+	const KIND = 'plain_literal_string';
 }
 
-class EscapedStringLiteral extends StringLiteral
+class EscapedLiteralString extends LiteralString
 {
-	const KIND = 'escaped_string_literal';
+	const KIND = 'escaped_literal_string';
 }
 
-class IntegerLiteral extends BaseExpression implements ILiteral
+class LiteralInteger extends BaseExpression implements ILiteral
 {
 	use LiteralTraitWithValue;
 
-	const KIND = 'integer_literal';
+	const KIND = 'literal_integer';
 
 	/**
 	 * The string format integer data
@@ -71,32 +71,32 @@ class IntegerLiteral extends BaseExpression implements ILiteral
 	// public $value;
 }
 
-class FloatLiteral extends BaseExpression implements ILiteral
+class LiteralFloat extends BaseExpression implements ILiteral
 {
 	use LiteralTraitWithValue;
-	const KIND = 'float_literal';
+	const KIND = 'literal_float';
 }
 
-class BooleanLiteral extends BaseExpression implements ILiteral
+class LiteralBoolean extends BaseExpression implements ILiteral
 {
 	use LiteralTraitWithValue;
 	const KIND = 'bool_literal';
 }
 
-class ArrayLiteral extends ArrayExpression implements ILiteral
+class LiteralArray extends ArrayExpression implements ILiteral
 {
 	use LiteralTrait;
-	const KIND = 'array_literal';
+	const KIND = 'literal_array';
 }
 
-class DictLiteral extends DictExpression implements ILiteral
+class LiteralDict extends DictExpression implements ILiteral
 {
 	use LiteralTrait;
-	const KIND = 'dict_literal';
+	const KIND = 'literal_dict';
 }
 
-// class ObjectLiteral extends ObjectExpression implements ILiteral
+// class LiteralObject extends ObjectExpression implements ILiteral
 // {
-// 	const KIND = 'object_literal';
+// 	const KIND = 'literal_object';
 // }
 

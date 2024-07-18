@@ -446,7 +446,7 @@ class PHPCoder extends TeaCoder
 		$parameters = $node->parameters ?? [];
 		if ($node->callbacks) {
 			foreach ($node->callbacks as $cb) {
-				$parameters[] = new ParameterDeclaration($cb->name, TypeFactory::$_callable, new NoneLiteral());
+				$parameters[] = new ParameterDeclaration($cb->name, TypeFactory::$_callable, new LiteralNone());
 			}
 		}
 
@@ -1427,7 +1427,7 @@ class PHPCoder extends TeaCoder
 		return "{$master}[{$key}]";
 	}
 
-	public function render_integer_literal(IntegerLiteral $node)
+	public function render_literal_integer(LiteralInteger $node)
 	{
 		$num = $this->remove_number_underline($node->value);
 		if (strpos($num, 'o')) {
@@ -1437,7 +1437,7 @@ class PHPCoder extends TeaCoder
 		return $num;
 	}
 
-	public function render_float_literal(FloatLiteral $node)
+	public function render_literal_float(LiteralFloat $node)
 	{
 		return $this->remove_number_underline($node->value);
 	}
@@ -1447,13 +1447,13 @@ class PHPCoder extends TeaCoder
 		return strpos($num, _UNDERSCORE) ? str_replace(_UNDERSCORE, _NOTHING, $num) : $num;
 	}
 
-	public function render_plain_string_literal(PlainStringLiteral $node)
+	public function render_plain_literal_string(PlainLiteralString $node)
 	{
 		$code = "'$node->value'";
 		return $this->new_string_placeholder($code);
 	}
 
-	public function render_escaped_string_literal(EscapedStringLiteral $node)
+	public function render_escaped_literal_string(EscapedLiteralString $node)
 	{
 		if (strpos($node->value, _DOLLAR) === false) {
 			$value = $node->value;

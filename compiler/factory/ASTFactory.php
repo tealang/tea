@@ -55,7 +55,7 @@ class ASTFactory
 		OperatorFactory::init();
 
 		// just use None to simplify the processes
-		self::$default_value_marker = new NoneLiteral();
+		self::$default_value_marker = new LiteralNone();
 		self::$default_value_marker->is_default_value_marker = true;
 	}
 
@@ -215,10 +215,10 @@ class ASTFactory
 			}
 		}
 		elseif ($token === _VAL_TRUE) {
-			$identifier = new BooleanLiteral(true);
+			$identifier = new LiteralBoolean(true);
 		}
 		elseif ($token === _VAL_FALSE) {
-			$identifier = new BooleanLiteral(false);
+			$identifier = new LiteralBoolean(false);
 		}
 		elseif ($token === TeaParser::VAL_NONE) {
 			$identifier = $this->create_none_identifier();
@@ -236,7 +236,7 @@ class ASTFactory
 
 	public function create_none_identifier()
 	{
-		return new NoneLiteral();
+		return new LiteralNone();
 	}
 
 	// public function create_include_expression(string $target)

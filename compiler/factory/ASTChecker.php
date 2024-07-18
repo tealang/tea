@@ -329,7 +329,7 @@ class ASTChecker
 				$node->infered_type = $node->hinted_type;
 			}
 		}
-		elseif ($infered_type === TypeFactory::$_uint && $node->value instanceof IntegerLiteral) {
+		elseif ($infered_type === TypeFactory::$_uint && $node->value instanceof LiteralInteger) {
 			// set infered type to Int when value is Integer literal
 			$node->infered_type = TypeFactory::$_int;
 		}
@@ -1419,31 +1419,31 @@ class ASTChecker
 			// case BaseType::KIND:
 			// 	$infered_type = $node;
 			// 	break;
-			case NoneLiteral::KIND:
+			case LiteralNone::KIND:
 				$infered_type = $node->is_default_value_marker
 					? TypeFactory::$_default_marker
 					: TypeFactory::$_none;
 				break;
-			case PlainStringLiteral::KIND:
-			case EscapedStringLiteral::KIND:
+			case PlainLiteralString::KIND:
+			case EscapedLiteralString::KIND:
 				$infered_type = TypeFactory::$_string;
 				break;
-			case IntegerLiteral::KIND:
+			case LiteralInteger::KIND:
 				$infered_type = TypeFactory::$_uint;
 				break;
-			case FloatLiteral::KIND:
+			case LiteralFloat::KIND:
 				$infered_type = TypeFactory::$_float;
 				break;
-			case BooleanLiteral::KIND:
+			case LiteralBoolean::KIND:
 				$infered_type = TypeFactory::$_bool;
 				break;
-			case ArrayLiteral::KIND:
+			case LiteralArray::KIND:
 				$infered_type = $this->infer_array_expression($node);
 				break;
-			case DictLiteral::KIND:
+			case LiteralDict::KIND:
 				$infered_type = $this->infer_dict_expression($node);
 				break;
-			// case ObjectLiteral::KIND:
+			// case LiteralObject::KIND:
 			// 	$infered_type = $this->infer_object_expression($node);
 			// 	break;
 
@@ -2330,7 +2330,7 @@ class ASTChecker
 		}
 
 		// for [], [:]
-		if (($value_node instanceof ArrayLiteral || $value_node instanceof DictLiteral) && !$value_node->items) {
+		if (($value_node instanceof LiteralArray || $value_node instanceof LiteralDict) && !$value_node->items) {
 			return true;
 		}
 
