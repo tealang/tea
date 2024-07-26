@@ -27,6 +27,7 @@ class TypeFactory
 	// static $_scalar;
 	static $_bytes;
 	static $_string;
+	static $_puretext;
 	static $_float;
 	static $_int;
 	static $_uint;
@@ -72,6 +73,7 @@ class TypeFactory
 		// self::$_scalar = self::create_type(ScalarType::class);
 		self::$_bytes = self::create_type(BytesType::class);
 		self::$_string = self::create_type(StringType::class);
+		self::$_puretext = self::create_type(PuretextType::class);
 		self::$_float = self::create_type(FloatType::class);
 		self::$_int = self::create_type(IntType::class);
 		self::$_uint = self::create_type(UIntType::class);
@@ -154,14 +156,36 @@ class TypeFactory
 		return $is;
 	}
 
-	static function is_case_testable_type(?IType $type)
+	static function is_case_testable_type(IType $type)
 	{
-		return $type instanceof StringType || $type instanceof IntType || $type instanceof UIntType;
+		if ($type instanceof StringType || $type instanceof IntType) {
+			$result = true;
+		}
+		elseif ($type instanceof UnionType) {
+			$result = true;
+			foreach ($type->members as $member_type) {
+				if (!self::is_case_testable_type($member_type)) {
+					$result = false;
+					break;
+				}
+			}
+		}
+		else {
+			$result = false;
+		}
+
+		return $result;
+	}
+
+	static function is_switch_compatible(IType $matchig, IType $case)
+	{
+		return $matchig->is_accept_type($case)
+			or ($matchig instanceof PuretextType and $case instanceof StringType);
 	}
 
 	static function is_number_type(?IType $type)
 	{
-		if ($type instanceof IntType || $type instanceof UIntType || $type instanceof FloatType) {
+		if ($type instanceof IntType || $type instanceof FloatType) {
 			return true;
 		}
 
@@ -176,6 +200,62 @@ class TypeFactory
 		}
 
 		return false;
+	}
+
+	static function is_scalar_type(?IType $type)
+	{
+		if ($type instanceof IScalarType) {
+			$is = true;
+		}
+		elseif ($type instanceof UnionType) {
+			foreach ($type->members as $member_type) {
+				$is = self::is_scalar_type($member_type);
+				if (!$is) {
+					break;
+				}
+			}
+		}
+		else {
+			$is = false;
+		}
+
+		return $is;
+	}
+
+	static function is_pure_type(IType $type)
+	{
+		return $type instanceof IPureType;
+	}
+
+	static function is_stringable_type(IType $type)
+	{
+		if ($type instanceof StringType
+			or $type instanceof IntType
+			or $type instanceof XViewType
+			) {
+			$result = true;
+		}
+		elseif ($type instanceof UnionType) {
+			foreach ($type->members as $member_type) {
+				$result = self::is_stringable_type($member_type);
+				if (!$result) {
+					break;
+				}
+			}
+		}
+		else {
+			$result = false;
+		}
+
+		return $result;
+	}
+
+	static function is_nullable_type(IType $type)
+	{
+		return $type->nullable
+			or $type instanceof AnyType
+			or $type instanceof NoneType
+			;
 	}
 
 	static function set_symbols(Unit $unit)

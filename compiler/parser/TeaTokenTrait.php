@@ -76,17 +76,6 @@ trait TeaTokenTrait
 		$this->scan_token(); // skip LF
 	}
 
-	// the ':'
-	protected function skip_colon()
-	{
-		if ($this->get_token_ignore_space() === _COLON) {
-			$this->scan_token_ignore_space();
-			return true;
-		}
-
-		return false;
-	}
-
 	// the ','
 	protected function skip_comma()
 	{

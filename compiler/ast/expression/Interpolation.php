@@ -17,7 +17,7 @@ class Interpolation extends XTagElement
 
 	public $escaping;
 
-	public function __construct(BaseExpression $content, bool $escaping)
+	public function __construct(BaseExpression $content, bool $escaping = false)
 	{
 		if ($content instanceof Parentheses) {
 			$content = $content->expression;

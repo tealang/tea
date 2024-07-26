@@ -26,7 +26,7 @@ echo array_pop($arr), LF;
 
 $arr1 = [1, 2, 3];
 $arr2 = [4, 5, 6];
-$arr3 = array_merge($arr1, $arr2);
+$arr3 = \array_merge($arr1, $arr2);
 
 $dict = [];
 $dict[(string)1.1] = 1;

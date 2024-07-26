@@ -13,7 +13,7 @@ $dict = [
 echo "\nUse conditional expression:", LF;
 
 foreach ($dict as $key => $value) {
-	$result = is_int($value) ? $value + 2 : (is_string($value) ? $value . 2 : array_merge($value, [2]));
+	$result = is_int($value) ? $value + 2 : (is_string($value) ? $value . 2 : \array_merge($value, [2]));
 
 	echo "Operation result for key '{$key}' is: ", LF;
 	var_dump($result);
@@ -30,7 +30,7 @@ foreach ($dict as $key => $value) {
 		$result = $value . 2;
 	}
 	elseif (is_array($value)) {
-		$result = array_merge($value, [2]);
+		$result = \array_merge($value, [2]);
 	}
 	else {
 		// no any

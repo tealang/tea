@@ -71,6 +71,39 @@ trait TeaXTagTrait
 		return $token;
 	}
 
+	private function scan_xtag_attr_name()
+	{
+		// attr
+		// :attr
+		// attri-bu-te
+
+		$token = $this->get_token_ignore_empty();
+		if ($token === _XTAG_CLOSE or $token === _XTAG_SELF_CLOSE or $token === _BRACE_OPEN) {
+			return null;
+		}
+
+		$this->scan_token_ignore_empty();
+
+		$name = $token;
+		if ($token === ':') {
+			$token = $this->expect_identifier_token();
+			$name .= $token;
+		}
+		elseif (!TeaHelper::is_identifier_name($token)) {
+			throw $this->new_unexpected_error();
+		}
+
+		$next = $this->get_token();
+		while ($next === '-') {
+			$name .= $next;
+			$this->scan_token(); // skip -
+			$name .= $this->expect_identifier_token();
+			$next = $this->get_token();
+		}
+
+		return $name;
+	}
+
 	private function read_xtag_with_name(string $name, string $align_spaces)
 	{
 		if ($name === _XTAG_COMMENT_OPEN) {
@@ -78,41 +111,37 @@ trait TeaXTagTrait
 		}
 
 		$is_literal = true;
-		$attributes = $this->read_xtag_attributes($is_literal);
-		$current_token = $this->get_current_token_string();
+		$xtag = new XTag($name);
+		$this->read_xtag_attributes($xtag, $is_literal);
 
+		$current_token = $this->get_current_token_string();
 		if ($current_token === _XTAG_SELF_CLOSE) {
-			$elem = new XTag($name, $attributes);
+			// no any
 		}
 		elseif (in_array(strtolower($name), _SELF_CLOSING_TAGS, true)) {
-			$elem = new XTag($name, $attributes);
-			$elem->is_self_closing_tag = true;
+			$xtag->is_self_closing_tag = true;
 		}
 		// expect tag head close
 		elseif ($current_token === _XTAG_CLOSE) {
 			// has inner line break?
-			$inner_br = false;
 			if ($this->get_token_ignore_space() === LF) {
 				$this->scan_token_ignore_space();
-				$inner_br = true;
+				$xtag->inner_br = true;
 			}
 
-			$elem = new XTag($name, $attributes);
-			$elem->inner_br = $inner_br;
-
-			$this->read_xtag_children($elem, $align_spaces, $is_literal, $inner_br);
+			$this->read_xtag_children($xtag, $align_spaces, $is_literal);
 			if ($align_spaces) {
-				$this->strip_align_spaces_for_items($elem, $align_spaces);
+				$this->strip_align_spaces_for_items($xtag, $align_spaces);
 			}
 		}
 		else {
 			throw $this->new_unexpected_error();
 		}
 
-		$elem->is_literal = $is_literal;
-		$elem->pos = $this->pos;
+		$xtag->is_literal = $is_literal;
+		$xtag->pos = $this->pos;
 
-		return $elem;
+		return $xtag;
 	}
 
 	protected function try_read_ending_for_xtag_child(XTagElement $child)
@@ -150,65 +179,69 @@ trait TeaXTagTrait
 		return new XTagComment($content);
 	}
 
-	private function read_xtag_attributes(bool &$is_literal)
+	private function read_xtag_attributes(XTag $xtag, bool &$is_literal)
 	{
-		$attributes = [];
-		$text = '';
-		$closed = false;
-		while (($token = $this->scan_token()) !== null) {
-			// the close tag
-			if ($token === _XTAG_CLOSE || $token === _XTAG_SELF_CLOSE) {
-				$closed = true;
-				break;
+		while ($name = $this->scan_xtag_attr_name()) {
+			if ($this->skip_token_ignore_space(_ASSIGN)) {
+				$value = $this->read_xtag_attr_value();
+			}
+			else {
+				$value = true;
 			}
 
-			if ($token === _SHARP && $this->skip_token(_BLOCK_BEGIN)) {
-				$is_literal = false;
-				$expr = $this->read_sharp_interpolation();
-				$this->append_xtag_attribute($attributes, $text, $expr);
-				continue;
-			}
-			elseif ($token === _DOLLAR) {
-				$is_literal = false;
-				$expr = $this->try_read_dollar_interpolation();
-				if ($expr === null) {
-					$text .= $token;
-				}
-				else {
-					$this->append_xtag_attribute($attributes, $text, $expr);
-				}
-
-				continue;
-			}
-			elseif ($token === _BACK_SLASH) {
-				$token .= $this->scan_token();
-			}
-
-			$text .= $token;
+			$xtag->default_attributes[$name] = $value;
 		}
 
-		// close not found
-		if (!$closed) {
-			throw $this->new_unexpected_error($token);
+		if ($this->skip_token_ignore_empty(_BRACE_OPEN)) {
+			$xtag->activity_attributes = $this->read_expression();
+			$this->expect_token_ignore_space(_BRACE_CLOSE);
 		}
 
-		// the ending texts
-		$this->append_xtag_attribute($attributes, $text);
-
-		return $attributes;
+		$token = $this->scan_token_ignore_empty();
+		if ($token !== _XTAG_CLOSE and $token !== _XTAG_SELF_CLOSE) {
+			throw $this->new_unexpected_error();
+		}
 	}
 
-	private function read_xtag_children(XTag $tag, string $align_spaces, bool &$is_literal, bool $is_newline)
+	private function read_xtag_attr_value()
 	{
+		$token = $this->scan_token_ignore_space();
+		switch ($token) {
+			case _BRACE_OPEN:
+				$expr = $this->read_expression();
+				$this->expect_token_ignore_empty(_BRACE_CLOSE);
+				break;
+			case _SINGLE_QUOTE:
+				$expr = $this->read_single_quoted_expression();
+				if ($expr instanceof InterpolatedString) {
+					throw $this->new_parse_error("Cannot use interpolation in quoted attribute values");
+				}
+				break;
+			case _DOUBLE_QUOTE:
+				$expr = $this->read_double_quoted_expression();
+				if ($expr instanceof InterpolatedString) {
+					throw $this->new_parse_error("Cannot use interpolation in quoted attribute values");
+				}
+				break;
+			default:
+				throw $this->new_unexpected_error();
+		}
+
+		return $expr;
+	}
+
+	private function read_xtag_children(XTag $xtag, string $align_spaces, bool &$is_literal)
+	{
+		$is_newline = $xtag->inner_br;
 		$indents = $is_newline ? $this->scan_spaces() : '';
-		$name = $tag->name;
-		$tag->children = [];
+		$name = $xtag->name;
+		$xtag->children = [];
 		$text = '';
 		$closed = false;
 		while (($token = $this->scan_token()) !== null) {
 			switch ($token) {
 				case LF:
-					$this->xtag_append_text($tag, $text, true, $is_newline, $indents);
+					$this->xtag_append_text($xtag, $text, true, $is_newline, $indents);
 					break;
 
 				case _XTAG_OPEN:
@@ -216,12 +249,12 @@ trait TeaXTagTrait
 					$next = $this->read_xtag_name();
 					if (TeaHelper::is_xtag_name($next)) {
 						if ($text !== '') {
-							$this->xtag_append_text($tag, $text, false, $is_newline, $indents);
+							$this->xtag_append_text($xtag, $text, false, $is_newline, $indents);
 						}
 
 						$child_tag = $this->read_xtag_with_name($next, $align_spaces);
 						$this->try_read_ending_for_xtag_child($child_tag);
-						$this->xtag_append_expr($tag, $child_tag, $is_newline, $indents);
+						$this->xtag_append_expr($xtag, $child_tag, $is_newline, $indents);
 
 						if (!$child_tag->is_literal) {
 							$is_literal = false;
@@ -252,15 +285,15 @@ trait TeaXTagTrait
 					break;
 
 				case _SHARP:
-					if ($this->skip_token(_BLOCK_BEGIN)) {
+					if ($this->skip_token(_BRACE_OPEN)) {
 						$is_literal = false;
 
 						if ($text !== '') {
-							$this->xtag_append_text($tag, $text, false, $is_newline, $indents);
+							$this->xtag_append_text($xtag, $text, false, $is_newline, $indents);
 						}
 
 						$expr = $this->read_sharp_interpolation();
-						$this->xtag_append_expr($tag, $expr, $is_newline, $indents);
+						$this->xtag_append_expr($xtag, $expr, $is_newline, $indents);
 					}
 					else {
 						$text .= $token;
@@ -276,10 +309,10 @@ trait TeaXTagTrait
 						$is_literal = false;
 
 						if ($text !== '') {
-							$this->xtag_append_text($tag, $text, false, $is_newline, $indents);
+							$this->xtag_append_text($xtag, $text, false, $is_newline, $indents);
 						}
 
-						$this->xtag_append_expr($tag, $expr, $is_newline, $indents);
+						$this->xtag_append_expr($xtag, $expr, $is_newline, $indents);
 					}
 					break;
 
@@ -299,20 +332,20 @@ trait TeaXTagTrait
 
 		// the last child
 		if ($text !== '') {
-			$this->xtag_append_text($tag, $text, false, $is_newline, $indents);
+			$this->xtag_append_text($xtag, $text, false, $is_newline, $indents);
 		}
 
-		$tag->closing_indents = $indents;
+		$xtag->closing_indents = $indents;
 	}
 
-	private function append_xtag_attribute(array &$attributes, string &$text, ?BaseExpression $expr = null)
+	private function append_xtag_attribute(XTag $xtag, string &$text, ?BaseExpression $expr = null)
 	{
 		if ($text !== '') {
-			$attributes[] = $text;
+			$xtag->default_attributes[] = $text;
 		}
 
 		if ($expr) {
-			$attributes[] = $expr;
+			$xtag->default_attributes[] = $expr;
 		}
 
 		$text = ''; // reset

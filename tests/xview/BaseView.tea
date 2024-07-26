@@ -21,17 +21,8 @@ public abstract BaseView: IView {
 		return this
 	}
 
-	protected build_props() {
-		props = ''
-		for key, value in this.props {
-			props .= ' #{key}="#{value}"'
-		}
-
-		return props
-	}
-
 	render() String {
-		return <xview${this.build_props()}>${this.subviews.join()}</xview>
+		return <xview {this.props}>${this.subviews.join()}</xview>
 	}
 
 	to_string() String {

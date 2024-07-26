@@ -39,12 +39,13 @@ class PHPCoder extends TeaCoder
 		TeaParser::NS_SEPARATOR => PHPParser::NS_SEPARATOR
 	];
 
-	const CASTABLE_TYPES = ['string', 'int', 'float', 'bool', 'array', 'object'];
+	const CASTABLE_TYPES = [_STRING, _INT, _UINT, _FLOAT, _BOOL, _ARRAY, _DICT, _OBJECT];
 
-	const TYPE_MAP = [
+	const BUILTIN_TYPE_MAP = [
 		_VOID => 'void',
 		_ANY => '',
 		_STRING => 'string',
+		_PURETEXT => 'string',
 		_INT => 'int',
 		_UINT => 'int',
 		_FLOAT => 'float',
@@ -891,16 +892,10 @@ class PHPCoder extends TeaCoder
 	{
 		$code = $node->content->render($this);
 		if ($node->escaping) {
-			// $code = "htmlspecialchars($code, ENT_QUOTES)";
-
-			// // PHP 8.1 not allowed null
-			// if ($node->expression->infered_type->nullable
-			// 	or $node->expression->infered_type->is_same_with(TypeFactory::$_any)) {
-			// 	$code = "($code === null ? '' : htmlspecialchars($code, ENT_QUOTES))";
-			// }
-
-			// use the tea lib function instead, avoiding target is a function call
-			$code = "\html_escape($code)";
+			$fn = TypeFactory::is_nullable_type($node->content->infered_type)
+				? '\html_escape'
+				: '\htmlspecialchars';
+			$code = "{$fn}({$code})";
 		}
 
 		return $code;
@@ -908,15 +903,23 @@ class PHPCoder extends TeaCoder
 
 	public function render_xtag(XTag $node)
 	{
-		$code = parent::render_xtag($node);
+		if ($node->name) {
+			$code = parent::render_xtag($node);
+		}
+		elseif ($node->children) {
+			$items = [];
+			$subitems = $this->get_children_components($node->children);
+			$this->merge_xtag_components($items, $subitems);
+			$code = $this->render_xtag_components($items);
 
-		// for virtual tag
-		if ($node->name === '') {
 			// strip intent spaces
-			if (str_starts_with($code, "'\n")) {
+			if ($node->inner_br) {
 				$code = preg_replace('/\n(\t| {4})/', "\n", $code);
 				$code = '\'' . trim(substr($code, 1, -1)) . '\'';
 			}
+		}
+		else {
+			$code = '';
 		}
 
 		return $this->new_string_placeholder($code);
@@ -932,16 +935,19 @@ class PHPCoder extends TeaCoder
 				else {
 					$expr = $this->render_subexpression($item->content, OperatorFactory::$concat);
 				}
-
-				$items[$k] = $expr;
+			}
+			elseif ($item instanceof BaseExpression) {
+				$expr = $this->render_subexpression($item, OperatorFactory::$concat);
 			}
 			else {
 				if (strpos($item, _SINGLE_QUOTE) !== false) {
 					$item = $this->add_escape_slashs($item, _SINGLE_QUOTE);
 				}
 
-				$items[$k] = "'$item'";
+				$expr = "'$item'";
 			}
+
+			$items[$k] = $expr;
 		}
 
 		$code = join(' . ', $items);
@@ -951,6 +957,113 @@ class PHPCoder extends TeaCoder
 		}
 
 		return $code;
+	}
+
+	protected function build_xtag_attribute_components(XTag $node)
+	{
+		$defaults = $node->default_attributes;
+		$activity = $node->activity_attributes;
+
+		$items = [];
+		if ($activity) {
+			// when setted activity expression, required rendering on runtime
+			$items[] = ' ';
+			$items[] = $this->create_building_attributes_expression($defaults, $activity);
+		}
+		elseif ($defaults) {
+			$instable_map = [];
+			foreach ($defaults as $key => $val) {
+				// true value attribute
+				if ($val === true) {
+					$items[] = ' ' . $key;
+					continue;
+				}
+
+				// normal header
+				$items[] = ' ' . $key . '="';
+
+				// normal value
+				if ($val instanceof ILiteral) {
+					// static
+					$items[] = $val->value;
+				}
+				elseif ($val instanceof InterpolatedString) {
+					// not empty
+					if ($this->is_safe_xtag_interpolated($val)) {
+						// no need to escaping
+						$items = array_merge($items, $val->items);
+					}
+					else {
+						// need to escaping
+						$items[] = new Interpolation($val, true);
+					}
+				}
+				elseif ($val instanceof BaseExpression) {
+					$type = $val->infered_type;
+					if (TypeFactory::is_nullable_type($type) or $type instanceof BoolType) {
+						// the null or false value cannot be presented
+						$instable_map[$key] = $val;
+						array_pop($items);
+						continue;
+					}
+					else {
+						$items[] = TypeFactory::is_pure_type($type)
+							? $val
+							: new Interpolation($val, true);
+					}
+				}
+				else {
+					throw new Exception("Unknow xtag attribute value type");
+				}
+
+				$items[] = '"';
+			}
+
+			if ($instable_map) {
+				$items[] = ' ';
+				$items[] = $this->create_building_attributes_expression($instable_map);
+			}
+		}
+
+		return $items;
+	}
+
+	private function create_building_attributes_expression(array $defaults, BaseExpression $activity = null)
+	{
+		$args = [];
+		if ($defaults) {
+			$args[] = $this->create_dict_expression_for_map($defaults);
+		}
+
+		if ($activity) {
+			$args[] = $activity;
+		}
+
+		$callee = new RuntimeIdentifier('\_build_attributes');
+		return new CallExpression($callee, $args);
+	}
+
+	private function create_dict_expression_for_map(array $map)
+	{
+		$members = [];
+		foreach ($map as $name => $val_exp) {
+			$key_exp = new PlainLiteralString($name);
+			$members[] = new DictMember($key_exp, $val_exp);
+		}
+
+		return new DictExpression($members);
+	}
+
+	private function is_safe_xtag_interpolated(InterpolatedString $node) {
+		$safe = true;
+		foreach ($node->items as $item) {
+			if (is_object($item) and !TypeFactory::is_pure_type($item->infered_type)) {
+				$safe = false;
+				break;
+			}
+		}
+
+		return $safe;
 	}
 
 	// public function render_relay_expression(RelayExpression $node)
@@ -1274,6 +1387,11 @@ class PHPCoder extends TeaCoder
 		return $name;
 	}
 
+	public function render_runtime_identifier(RuntimeIdentifier $node)
+	{
+		return $node->name;
+	}
+
 	public function render_type(IType $node)
 	{
 		$code = $node->render($this);
@@ -1287,7 +1405,7 @@ class PHPCoder extends TeaCoder
 
 	public function render_type_identifier(BaseType $node)
 	{
-		return static::TYPE_MAP[$node->name] ?? $node->name;
+		return static::BUILTIN_TYPE_MAP[$node->name] ?? $node->name;
 	}
 
 	public function render_classkindred_identifier(ClassKindredIdentifier $node)
@@ -1510,6 +1628,10 @@ class PHPCoder extends TeaCoder
 
 	public function render_escaped_interpolated_string(EscapedInterpolatedString $node)
 	{
+		if (count($node->items) === 1 and $node->items[0] instanceof Interpolation) {
+			return $this->render_interpolation($node->items[0]);
+		}
+
 		$items = ['"'];
 		foreach ($node->items as $item) {
 			if ($item instanceof Interpolation) {
@@ -1604,18 +1726,19 @@ class PHPCoder extends TeaCoder
 
 	public function render_cast_operation(CastOperation $node, bool $add_parentheses = false)
 	{
-		$type_name = static::TYPE_MAP[$node->right->name] ?? null;
+		$tea_type_name = $node->right->name;
+		$native_type_name = static::BUILTIN_TYPE_MAP[$tea_type_name] ?? null;
 
-		if ($type_name !== null && in_array($type_name, static::CASTABLE_TYPES, true)) {
+		if (in_array($tea_type_name, static::CASTABLE_TYPES, true)) {
 			$left = $this->render_subexpression($node->left, $node->operator);
-			if ($node->right->name === _UINT) {
+			if ($tea_type_name === _UINT) {
 				$code = "uint_ensure((int)$left)";
 			}
 			elseif ($add_parentheses) {
-				$code = "(($type_name)$left)";
+				$code = "(($native_type_name)$left)";
 			}
 			else {
-				$code = "($type_name)$left";
+				$code = "($native_type_name)$left";
 			}
 		}
 		else {
@@ -1628,7 +1751,7 @@ class PHPCoder extends TeaCoder
 	public function render_is_operation(IsOperation $node)
 	{
 		$left = $this->render_subexpression($node->left, $node->operator);
-		$type_name = static::TYPE_MAP[$node->right->name] ?? null;
+		$type_name = static::BUILTIN_TYPE_MAP[$node->right->name] ?? null;
 
 		if ($type_name) {
 			if ($node->right->name === _UINT) {
@@ -1681,12 +1804,12 @@ class PHPCoder extends TeaCoder
 
 		if ($operator->is(OPID::ARRAY_CONCAT)) {
 			// concat Arrays
-			// $code = sprintf('array_merge(%s, array_values(%s))', $left, $right);
-			$code = sprintf('array_merge(%s, %s)', $left, $right);
+			// $code = sprintf('\array_merge(%s, array_values(%s))', $left, $right);
+			$code = sprintf('\array_merge(%s, %s)', $left, $right);
 		}
-		elseif ($operator->is(OPID::ARRAY_UNION)) {
-			// union Arrays / Dicts
-			$code = "$right + $left";
+		elseif ($operator->is(OPID::MERGE)) {
+			// merge Dicts
+			$code = sprintf('\array_merge(%s, %s)', $left, $right);
 		}
 		elseif ($operator->is(OPID::REMAINDER) && $node->infered_type === TypeFactory::$_float) {
 			// use the 'fmod' function for the float arguments

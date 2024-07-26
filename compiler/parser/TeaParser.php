@@ -1001,7 +1001,7 @@ class TeaParser extends BaseParser
 
 		// the named arguments feature has bugs
 		// $label = null;
-		// if ($this->skip_colon()) {
+		// if ($this->skip_token_ignore_space(_COLON)) {
 		// 	$label = $token;
 		// 	$token = $this->scan_token_ignore_space();
 		// }
@@ -1769,7 +1769,7 @@ class TeaParser extends BaseParser
 			throw $this->new_unexpected_error();
 		}
 
-		if ($this->skip_colon()) {
+		if ($this->skip_token_ignore_space(_COLON)) {
 			// assign or lambda mode
 
 			// e.g. -> done: done_callable
@@ -2044,7 +2044,7 @@ class TeaParser extends BaseParser
 
 	protected function read_class_bases()
 	{
-		if (!$this->skip_colon()) {
+		if (!$this->skip_token_ignore_space(_COLON)) {
 			return null;
 		}
 

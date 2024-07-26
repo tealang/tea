@@ -38,7 +38,8 @@ class OPID
 
 	const CONCAT = 60;
 	const ARRAY_CONCAT = 61;
-	const ARRAY_UNION = 62;
+	// const PHP_ARRAY_UNION = 62;
+	const MERGE = 63; // for dicts in tea
 
 	const IS = 70; // is_type / instanceof
 	const EQUAL = 71;

@@ -45,7 +45,7 @@ class PHPSyntax
 		[
 			OPID::ADDITION => ['+', OP_BIN, OP_L],
 			OPID::SUBTRACTION => ['-', OP_BIN, OP_L],
-			OPID::ARRAY_UNION => ['+', OP_BIN, OP_L],
+			// OPID::PHP_ARRAY_UNION => ['+', OP_BIN, OP_L],
 		],
 		[
 			OPID::SHIFT_LEFT => ['<<', OP_BIN, OP_L],

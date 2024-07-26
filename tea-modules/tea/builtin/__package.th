@@ -138,9 +138,10 @@ runtime func array_search as dict_search(search, it, strict = false) String|Int|
 runtime func array_key_exists(key, arr) Bool
 
 // assoc array
-runtime func array_keys(dict) String.Array
-runtime func array_values(dict) Array
+runtime func array_keys(it) String.Array
+runtime func array_values(it) Array
 runtime func array_column(recordset Array|Dict, key String) Array
+runtime func array_replace as dict_replace(it Dict, replacement Dict) Dict
 
 // json
 runtime const JSON_UNESCAPED_UNICODE Int

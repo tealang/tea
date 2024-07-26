@@ -20,17 +20,8 @@ internal intertrait IBaseView {
 		this.attributes[key] = value
 	}
 
-	build_attributes() {
-		items = []
-		for key, value in this.attributes {
-			items[] = '$key="#{value}"'
-		}
-
-		return items.join("\n")
-	}
-
 	render() XView {
-		return <view ${this.build_attributes()}>
+		return <view {this.attributes}>
 			${this.subitems.join("\n")}
 		</view>
 	}
@@ -48,7 +39,7 @@ public ListView: IBaseView {
 	}
 
 	render() XView {
-		return <ul ${this.build_attributes()}>
+		return <ul {this.attributes}>
 			${this.get_subviews().join("\n\t")}
 		</ul>
 	}

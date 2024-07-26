@@ -574,7 +574,7 @@ class TeaCoder
 		return $code;
 	}
 
-	private function merge_xtag_components(array &$items, $new_items)
+	protected function merge_xtag_components(array &$items, ?array $new_items)
 	{
 		if (!$new_items) {
 			return;
@@ -596,23 +596,51 @@ class TeaCoder
 		}
 	}
 
-	private function append_children_to_items(array &$items, array $children, int &$indents, bool $is_newline)
+	private function get_xtag_components(XTag $node)
 	{
-		if (!$children) return;
-		$indents++;
+		if ($node instanceof XTagComment) {
+			return null; // do not render comments
+		}
 
-		// $tabs = str_repeat("\t", $indents);
+		$items = ["<{$node->name}"];
 
+		$attr_items = $this->build_xtag_attribute_components($node);
+		if ($attr_items) {
+			$items = array_merge($items, $attr_items);
+		}
+
+		if ($node->children === null) {
+			$items[] = $node->is_self_closing_tag ? '>' : ' />';
+		}
+		else {
+			$items[] = '>';
+			if ($node->inner_br) {
+				$items[] = LF;
+			}
+
+			if ($node->children) {
+				$subcomponents = $this->get_children_components($node->children);
+				$items = array_merge($items, $subcomponents);
+			}
+
+			if ($node->closing_indents) {
+				$items[] = $node->closing_indents;
+			}
+
+			$items[] = "</{$node->name}>";
+		}
+
+		return $items;
+	}
+
+	protected function get_children_components(array $children)
+	{
+		$items = [];
 		foreach ($children as $child) {
-			// if ($is_newline) {
-			// 	// $items[] = LF;
-			// 	$items[] = $tabs;
-			// }
-
 			if ($child->indents) $items[] = $child->indents;
 
 			if ($child instanceof XTag) {
-				$subitems = $this->get_xtag_components($child, $indents);
+				$subitems = $this->get_xtag_components($child);
 				$this->merge_xtag_components($items, $subitems);
 			}
 			elseif ($child instanceof XTagText) {
@@ -625,68 +653,17 @@ class TeaCoder
 				$items[] = $child;
 			}
 
-			$is_newline = $child->tailing_br;
-			if ($is_newline) {
+			if ($child->tailing_br) {
 				$items[] = LF;
-			}
-		}
-
-		$indents--;
-	}
-
-	private function get_xtag_components(XTag $node, int &$indents = 0)
-	{
-		if ($node instanceof XTagComment) {
-			return null; // do not render comments
-		}
-
-		// $tabs = str_repeat("\t", $indents);
-
-		$has_name = $node->name !== '';
-
-		$items = [];
-		if (is_object($node->name)) {
-			$items = ['<', $node->name];
-		}
-		elseif ($has_name) {
-			$items = ["<{$node->name}"];
-		}
-
-		foreach ($node->attributes as $attr) {
-			$items[] = $attr;
-		}
-
-		if ($node->children === null) {
-			$items[] = $node->is_self_closing_tag ? '>' : '/>';
-		}
-		else {
-			$has_name and $items[] = '>';
-
-			if ($node->inner_br) {
-				$items[] = LF;
-			}
-
-			$this->append_children_to_items($items, $node->children, $indents, $node->inner_br);
-
-			// if ($node->inner_br) {
-			// 	$items[] = $tabs;
-			// }
-
-			if ($node->closing_indents) {
-				$items[] = $node->closing_indents;
-			}
-
-			if (is_object($node->name)) {
-				$items[] = '</';
-				$items[] = $node->name;
-				$items[] = '>';
-			}
-			elseif ($has_name) {
-				$items[] = "</{$node->name}>";
 			}
 		}
 
 		return $items;
+	}
+
+	protected function append_xtag_attribute_components(array &$items, XTag $node)
+	{
+		//
 	}
 
 	public function render_constant_identifier(ConstantIdentifier $node)

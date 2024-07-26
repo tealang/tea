@@ -259,8 +259,8 @@ class ASTChecker
 					throw $this->new_syntax_error("Array concat operation cannot use as a compile-time value", $value);
 				}
 			}
-			elseif ($value->operator->is(OPID::ARRAY_UNION)) {
-				throw $this->new_syntax_error("Array/Dict union operation cannot use for constant value", $value);
+			elseif ($value->operator->is(OPID::MERGE)) {
+				throw $this->new_syntax_error("Dict merge operation cannot use for constant value", $value);
 			}
 		}
 	}
@@ -969,26 +969,30 @@ class ASTChecker
 
 	private function infer_switch_block(SwitchBlock $node): ?IType
 	{
-		$testing_type = $this->infer_expression($node->test);
-		if (!TypeFactory::is_case_testable_type($testing_type)) {
-			$type_name = self::get_type_name($testing_type);
-			throw $this->new_syntax_error("The case compare expression should be String/Int/UInt, $type_name supplied", $node->test);
+		$matching_type = $this->infer_expression($node->test);
+		if (!TypeFactory::is_case_testable_type($matching_type)) {
+			$matching_type_name = self::get_type_name($matching_type);
+			throw $this->new_syntax_error("The case compare expression should be String/Int/UInt, $matching_type_name supplied", $node->test);
 		}
 
 		$infered_types = [];
 		foreach ($node->branches as $branch) {
 			if ($branch->rule instanceof ExpressionList) {
 				foreach ($branch->rule->items as $rule_sub_expr) {
-					$matching_type = $this->infer_expression($rule_sub_expr);
-					if (!$testing_type->is_accept_type($matching_type)) {
-						throw $this->new_syntax_error("The type of matching expression should be same as testing", $rule_sub_expr);
+					$case_type = $this->infer_expression($rule_sub_expr);
+					if (!TypeFactory::is_switch_compatible($matching_type, $case_type)) {
+						$matching_type_name = self::get_type_name($matching_type);
+						$case_type_name = self::get_type_name($case_type);
+						throw $this->new_syntax_error("Incompatible matching types, matching type is $matching_type_name, case type is $case_type_name", $rule_sub_expr);
 					}
 				}
 			}
 			else {
-				$matching_type = $this->infer_expression($branch->rule);
-				if (!$testing_type->is_accept_type($matching_type)) {
-					throw $this->new_syntax_error("The type of matching expression should be same as testing", $branch->rule);
+				$case_type = $this->infer_expression($branch->rule);
+				if (!TypeFactory::is_switch_compatible($matching_type, $case_type)) {
+					$matching_type_name = self::get_type_name($matching_type);
+					$case_type_name = self::get_type_name($case_type);
+					throw $this->new_syntax_error("Incompatible matching types, matching type is $matching_type_name, case type is $case_type_name", $branch->rule);
 				}
 			}
 
@@ -1014,7 +1018,7 @@ class ASTChecker
 		$element_types = $this->infer_iter_element_types($expr_type);
 		if ($element_types === null) {
 			$type_name = self::get_type_name($expr_type);
-			throw $this->new_syntax_error("Expect a Iterable type, '{$type_name}' supplied", $node->iterable);
+			throw $this->new_syntax_error("Expect scalar type value, {$type_name} supplied", $node->iterable);
 		}
 
 		[$key_type, $val_type] = $element_types;
@@ -1425,6 +1429,10 @@ class ASTChecker
 					: TypeFactory::$_none;
 				break;
 			case PlainLiteralString::KIND:
+				$infered_type = TeaHelper::is_puretext($node->value)
+					? TypeFactory::$_puretext
+					: TypeFactory::$_string;
+				break;
 			case EscapedLiteralString::KIND:
 				$infered_type = TypeFactory::$_string;
 				break;
@@ -1448,9 +1456,11 @@ class ASTChecker
 			// 	break;
 
 			//----
-			case EscapedInterpolatedString::KIND:
 			case PlainInterpolatedString::KIND:
-				$infered_type = $this->infer_interpolated_string($node);
+				$infered_type = $this->infer_plain_interpolated_string($node);
+				break;
+			case EscapedInterpolatedString::KIND:
+				$infered_type = $this->infer_escaped_interpolated_string($node);
 				break;
 			case XTag::KIND:
 				$infered_type = $this->infer_xtag($node);
@@ -1557,7 +1567,7 @@ class ASTChecker
 		elseif ($master_type instanceof UnionType) {
 			if (!$master_type->is_all_array_types()) {
 				$type_name = $this->get_type_name($master_type);
-				throw $this->new_syntax_error("Cannot use square accessing for type '{$type_name}'", $node);
+				throw $this->new_syntax_error("Cannot use square accessing for type {$type_name}", $node);
 			}
 
 			$member_value_types = [];
@@ -1569,7 +1579,7 @@ class ASTChecker
 		}
 		else {
 			$type_name = $this->get_type_name($master_type);
-			throw $this->new_syntax_error("Cannot use square accessing for type '{$type_name}'", $node);
+			throw $this->new_syntax_error("Cannot use square accessing for type {$type_name}", $node);
 		}
 
 		return $infered_type ?? TypeFactory::$_any;
@@ -1583,7 +1593,7 @@ class ASTChecker
 		if ($left_type instanceof ArrayType) {
 			if ($node->right and $right_type !== TypeFactory::$_uint) {
 				$type_name = self::get_type_name($right_type);
-				throw $this->new_syntax_error("Index type for Array accessing should be UInt, '{$type_name}' supplied", $node->right);
+				throw $this->new_syntax_error("Index type for Array accessing should be UInt, {$type_name} supplied", $node->right);
 			}
 
 			$infered_type = $left_type->generic_type;
@@ -1607,7 +1617,7 @@ class ASTChecker
 			// if non key, that's Array access, else just allow Dict as the actual type
 			if ($node->right and !TypeFactory::is_dict_key_type($right_type)) {
 				$type_name = $this->get_type_name($right_type);
-				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$type_name}' supplied", $node->right);
+				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, {$type_name} supplied", $node->right);
 			}
 		}
 		elseif ($left_type instanceof StringType) {
@@ -1621,7 +1631,7 @@ class ASTChecker
 			if ($left_type->is_all_array_types()) {
 				if ($right_type !== TypeFactory::$_uint) {
 					$type_name = self::get_type_name($right_type);
-					throw $this->new_syntax_error("Index type for Array accessing should be UInt, '{$type_name}' supplied", $node->right);
+					throw $this->new_syntax_error("Index type for Array accessing should be UInt, {$type_name} supplied", $node->right);
 				}
 			}
 			elseif ($left_type->is_all_dict_types()) {
@@ -1631,7 +1641,7 @@ class ASTChecker
 			}
 			else {
 				$type_name = $this->get_type_name($left_type);
-				throw $this->new_syntax_error("Cannot use key accessing for type '{$type_name}'", $node);
+				throw $this->new_syntax_error("Cannot use key accessing for type {$type_name}", $node);
 			}
 
 			$member_value_types = [];
@@ -1643,7 +1653,7 @@ class ASTChecker
 		}
 		else {
 			$type_name = $this->get_type_name($left_type);
-			throw $this->new_syntax_error("Cannot use key accessing for type '{$type_name}'", $node);
+			throw $this->new_syntax_error("Cannot use key accessing for type {$type_name}", $node);
 		}
 
 		return $infered_type ?? TypeFactory::$_any;
@@ -1690,21 +1700,23 @@ class ASTChecker
 				$node->operator = OperatorFactory::$array_concat; // replace to array concat
 				$node->infered_type = $left_type;
 			}
-			elseif ($left_type === TypeFactory::$_any || $left_type instanceof DictType) {
+			elseif (!TypeFactory::is_stringable_type($left_type)) {
 				$type_name = $this->get_type_name($left_type);
 				throw $this->new_syntax_error("'concat' operation cannot use for '$type_name' type targets", $node->left);
 			}
 			else {
-				$node->infered_type = TypeFactory::$_string;
+				// string
+				$is_pure = $left_type instanceof IPureType and $right_type instanceof IPureType;
+				$node->infered_type = $is_pure ? TypeFactory::$_puretext : TypeFactory::$_string;
 			}
 		}
-		elseif ($operator->is(OPID::ARRAY_UNION)) {
+		elseif ($operator->is(OPID::MERGE)) {
 			// Array or Dict
-			if (!$left_type instanceof ArrayType && !$left_type instanceof DictType) {
-				throw $this->new_syntax_error("'union' operation just support Array/Dict type targets", $node);
+			if (!$left_type instanceof DictType) {
+				throw $this->new_syntax_error("'merge' operation just support Dict type targets", $node);
 			}
 
-			$this->assert_type_compatible($left_type, $right_type, $node->right, 'union');
+			$this->assert_type_compatible($left_type, $right_type, $node->right, 'merge');
 			$node->infered_type = $left_type;
 		}
 		elseif (OperatorFactory::is_bitwise_operator($operator)) {
@@ -1949,7 +1961,7 @@ class ASTChecker
 			}
 			else {
 				$type_name = $this->get_type_name($key_type);
-				throw $this->new_syntax_error("Key type for Dict should be String/Int, '{$type_name}' supplied", $item->key);
+				throw $this->new_syntax_error("Key type for Dict should be String/Int, {$type_name} supplied", $item->key);
 			}
 
 			$infered_value_types[] = $this->infer_expression($item->value);
@@ -2443,15 +2455,40 @@ class ASTChecker
 		return TypeFactory::$_regex;
 	}
 
-	private function infer_interpolated_string(InterpolatedString $node): IType
+	private function infer_plain_interpolated_string(PlainInterpolatedString $node): IType
 	{
+		$this->check_interpolated_items($node->items);
+
+		$is_pure = true;
 		foreach ($node->items as $item) {
 			if ($item instanceof Interpolation) {
-				$this->infer_expression($item->content);
+				if (!$item->infered_type instanceof IPureType) {
+					$is_pure = false;
+					break;
+				}
+			}
+			elseif (!TeaHelper::is_puretext($item)) {
+				$is_pure = false;
+				break;
 			}
 		}
 
+		return $is_pure ? TypeFactory::$_puretext : TypeFactory::$_string;
+	}
+
+	private function infer_escaped_interpolated_string(EscapedInterpolatedString $node): IType
+	{
+		$this->check_interpolated_items($node->items);
 		return TypeFactory::$_string;
+	}
+
+	private function check_interpolated_items(array $items)
+	{
+		foreach ($items as $item) {
+			if ($item instanceof Interpolation) {
+				$item->infered_type = $this->infer_expression($item->content);
+			}
+		}
 	}
 
 	private function infer_variable_identifier(VariableIdentifier $node): IType
@@ -2465,24 +2502,45 @@ class ASTChecker
 			$this->infer_expression($node->name);
 		}
 
-		if ($node->attributes) {
-			foreach ($node->attributes as $item) {
-				if ($item instanceof XTag) {
-					$this->infer_xtag($item);
+		$defaults = $node->default_attributes;
+		$activity = $node->activity_attributes;
+		$children = $node->children;
+
+		if ($defaults) {
+			foreach ($defaults as $item) {
+				if ($item instanceof BaseExpression) {
+					$infered = $this->infer_expression($item);
+					if (!TypeFactory::is_scalar_type($infered) and !$infered instanceof AnyType) {
+						$type_name = self::get_type_name($infered);
+						throw $this->new_syntax_error("Expect scalar type value, {$type_name} supplied", $item);
+					}
 				}
 				elseif ($item instanceof Interpolation) {
-					$this->infer_expression($item->content);
+					$item->infered_type = $this->infer_expression($item->content);
+				}
+				elseif ($item === true) {
+					// true value item
+				}
+				else {
+					throw $this->new_syntax_error("Type of attribute values must be scalar", $item);
 				}
 			}
 		}
 
-		if ($node->children) {
-			foreach ($node->children as $item) {
+		if ($activity) {
+			$infered = $this->infer_expression($activity);
+			if (!$infered instanceof DictType) {
+				throw $this->new_syntax_error("The type of activity attributes expression must be String.Dict", $activity);
+			}
+		}
+
+		if ($children) {
+			foreach ($children as $item) {
 				if ($item instanceof XTag) {
 					$this->infer_xtag($item);
 				}
 				elseif ($item instanceof Interpolation) {
-					$this->infer_expression($item->content);
+					$item->infered_type = $this->infer_expression($item->content);
 				}
 				else {
 					// XTagText or XTagComment

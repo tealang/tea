@@ -19,11 +19,21 @@ class XTag extends XTagElement
 	const KIND = 'xtag';
 
 	/**
-	 * @var string | PlainIdentifier
+	 * @var string
 	 */
 	public $name;
 
-	public $attributes;
+	/**
+	 * fixed attribute map
+	 * @array
+	 */
+	public $default_attributes = [];
+
+	/**
+	 * activity attributes expression
+	 * @BaseExpression
+	 */
+	public $activity_attributes;
 
 	/**
 	 * @var XTagElement[]
@@ -37,11 +47,9 @@ class XTag extends XTagElement
 
 	public $closing_indents;
 
-	public function __construct(string $name, array $attributes = [], array $children = null)
+	public function __construct(string $name)
 	{
 		$this->name = $name;
-		$this->attributes = $attributes;
-		$this->children = $children;
 	}
 }
 

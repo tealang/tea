@@ -14,26 +14,24 @@ public class BaseView: IView {
 
 	subview(view XView) BaseView
 
-	protected build_props() String
-
 	render() String
 
 	to_string() String
 }
 
 public interface PureInterface {
-	public const ABC String
+	public const ABC Puretext
 
-	set_css_class(names String)
+	set_css_class(names Puretext)
 }
 
 public intertrait IViewDemo: IView {
-	protected const ABC String
+	protected const ABC Puretext
 
-	name String
-	css_class String
+	name Puretext
+	css_class Puretext
 
-	set_css_class(names String) IViewDemo
+	set_css_class(names Puretext) IViewDemo
 
 	protected set_some(some String)
 }

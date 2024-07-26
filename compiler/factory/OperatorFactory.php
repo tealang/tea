@@ -14,6 +14,7 @@ class OperatorFactory
 	static $cast;
 	static $concat;
 	static $array_concat;
+	static $merge;
 	static $none_coalescing;
 	static $ternary; // exp0 ? exp1 : exp2, or exp0 ?: exp1
 
@@ -100,7 +101,7 @@ class OperatorFactory
 
 		self::$concat = self::create_operator(OPID::CONCAT);
 		self::$array_concat = self::create_operator(OPID::ARRAY_CONCAT);
-		self::create_operator(OPID::ARRAY_UNION);
+		self::$merge = self::create_operator(OPID::MERGE);
 
 		self::$shift_left = self::create_operator(OPID::SHIFT_LEFT);
 		self::$shift_right = self::create_operator(OPID::SHIFT_RIGHT);

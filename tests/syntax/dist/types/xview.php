@@ -52,8 +52,8 @@ class DemoList extends BaseView {
 			}
 		}
 
-		return '<view id="' . $this->name . '">
-	' . ($this->title == "abc" ? '<h1>' . \html_escape($this->title . 123) . '</h1>' : null) . '
+		return '<view id="' . \htmlspecialchars($this->name) . '">
+	' . ($this->title == "abc" ? '<h1>' . \htmlspecialchars($this->title . 123) . '</h1>' : null) . '
 	<i></i>
 	<cells>
 		' . _std_join($cells, LF) . '
@@ -67,11 +67,12 @@ class DemoList extends BaseView {
 }
 
 // ---------
+$classes = ['big', 'red'];
 $form_name = 'form1';
 $input_value = 'Hello~';
-$view = '<h1>Form1</h1>
-<form name=form_name>
-	<input value=input_value />
+$view = '<h1 ' . \_build_attributes(['style' => "margin: 10px 0;"], ['class' => _std_join($classes, ' ')]) . '>Form1</h1>
+<form name="' . $form_name . '">
+	<input value="' . $input_value . '" />
 </form>';
 
 $xview = new Cell('string');

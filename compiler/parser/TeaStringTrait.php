@@ -13,12 +13,16 @@ trait TeaStringTrait
 {
 	protected function read_plain_literal_string()
 	{
-		return new PlainLiteralString($this->read_quoted_string(_SINGLE_QUOTE));
+		$expression = new PlainLiteralString($this->read_quoted_string(_SINGLE_QUOTE));
+		$expression->pos = $this->pos;
+		return $expression;
 	}
 
 	protected function read_escaped_literal_string()
 	{
-		return new EscapedLiteralString($this->read_quoted_string(_DOUBLE_QUOTE));
+		$expression = new EscapedLiteralString($this->read_quoted_string(_DOUBLE_QUOTE));
+		$expression->pos = $this->pos;
+		return $expression;
 	}
 
 	protected function read_quoted_string(string $quote_mark)
@@ -68,6 +72,8 @@ trait TeaStringTrait
 		else {
 			$expression = new EscapedInterpolatedString($items);
 		}
+
+		$expression->pos = $this->pos;
 
 		return $expression;
 	}

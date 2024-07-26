@@ -162,11 +162,13 @@ runtime func array_search as dict_search(search Any, it Any, strict Bool = false
 
 runtime func array_key_exists(key Any, arr Any) Bool
 
-runtime func array_keys(dict Any) String.Array
+runtime func array_keys(it Any) String.Array
 
-runtime func array_values(dict Any) Array
+runtime func array_values(it Any) Array
 
 runtime func array_column(recordset Array|Dict, key String) Array
+
+runtime func array_replace as dict_replace(it Dict, replacement Dict) Dict
 
 runtime func json_encode(data Any, flags Int = 0, depth UInt = 512) String
 
@@ -258,6 +260,10 @@ public type String {
 	masked rtrim(characters String = #default) String
 }
 
+public type Puretext: String {
+	// no any
+}
+
 public type Int {
 	masked abs() UInt
 }
@@ -340,6 +346,8 @@ public type Dict {
 	masked keys() String.Array
 
 	masked values() Array
+
+	masked replace(replacement Dict) Dict
 }
 
 public type Object {
@@ -361,6 +369,8 @@ public type Regex {
 
 	masked capture_all(string String) String.Array.Array
 }
+
+public func _build_attributes(items Dict, additions Dict = none) String
 
 public type XView {
 	// no any

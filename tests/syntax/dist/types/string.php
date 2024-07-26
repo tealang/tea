@@ -38,7 +38,7 @@ $abc = 'hhh';
 
 'string' . $abc;
 "string{$abc}";
-'string' . \html_escape($abc);
+'string' . \htmlspecialchars($abc);
 
 html_escape("string{$abc}\n");
 html_escape('string');

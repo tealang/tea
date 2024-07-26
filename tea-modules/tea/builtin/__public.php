@@ -75,6 +75,23 @@ function _regex_capture_all(string $regex, string $subject): ?array {
 	return $results;
 }
 
+function _build_attributes(array $items, array $additions = null): string {
+	if ($additions !== null) {
+		$items = array_replace($items, $additions);
+	}
+
+	$list = [];
+	foreach ($items as $key => $val) {
+		if ($val === null || $val === false) {
+			continue;
+		}
+
+		$list[] = $val === true ? $key : $key . '="' . htmlspecialchars((string)$val) . '"';
+	}
+
+	return implode(' ', $list);
+}
+
 
 // program end
 

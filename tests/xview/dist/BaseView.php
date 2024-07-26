@@ -24,17 +24,8 @@ abstract class BaseView implements \IView {
 		return $this;
 	}
 
-	protected function build_props() {
-		$props = '';
-		foreach ($this->props as $key => $value) {
-			$props .= ' ' . \html_escape($key) . '="' . \html_escape($value) . '"';
-		}
-
-		return $props;
-	}
-
 	public function render(): string {
-		return '<xview' . $this->build_props() . '>' . _std_join($this->subviews, LF) . '</xview>';
+		return '<xview ' . \_build_attributes($this->props) . '>' . _std_join($this->subviews, LF) . '</xview>';
 	}
 
 	public function __toString(): string {

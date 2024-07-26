@@ -24,11 +24,11 @@ public func php_get_num() Int
 public func fn0(str Any) String
 
 public class TeaDemoClass {
-	static static_prop1 String
+	static static_prop1 Puretext
 
 	prop1 String|Int
 
-	static static_method(some inout Dict) String
+	static static_method(some inout Dict) Puretext
 
 	method1(param1 String|Int) String|Int
 
@@ -36,14 +36,14 @@ public class TeaDemoClass {
 }
 
 public class DemoList: BaseView {
-	internal const ABC String
+	internal const ABC Puretext
 
 	title String
 	items Array
 
 	cells Array
 
-	construct(name String, title String = '', items Array = [], each () Cell? = none, error (message Any) Void = none)
+	construct(name String, title Puretext = '', items Array = [], each () Cell? = none, error (message Any) Void = none)
 
 	render() String
 }

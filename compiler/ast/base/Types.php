@@ -59,7 +59,8 @@ trait ITypeTrait
 			$united = $target->add_single_type($this);
 		}
 		else {
-			if ($this->is_same_with($target)) {
+			if ($this->is_same_with($target)
+				|| ($this instanceof StringType and $target instanceof PuretextType)) {
 				$united = $this;
 			}
 			else {
@@ -372,33 +373,40 @@ class ObjectType extends BaseType {
 	}
 }
 
-// class ScalarType extends BaseType {
+interface IScalarType {}
+interface IPureType {}
+
+// class ScalarType extends BaseType implements IScalarType {
 // 	const ACCEPT_TYPES = [_STRING, _INT, _UINT, _BOOL, _XVIEW];
 // 	public $name = _SCALAR;
 // }
 
-class BytesType extends BaseType {
+class BytesType extends BaseType implements IScalarType {
 	const ACCEPT_TYPES = [_STRING, _INT, _UINT, _XVIEW];
 	public $name = _BYTES;
 }
 
-class StringType extends BaseType {
-	const ACCEPT_TYPES = [_BYTES, _INT, _UINT, _XVIEW];
+class StringType extends BaseType implements IScalarType {
+	const ACCEPT_TYPES = [_BYTES, _INT, _UINT, _PURETEXT, _XVIEW];
 	public $name = _STRING;
 }
 
-class FloatType extends BaseType {
+class PuretextType extends StringType implements IPureType {
 	const ACCEPT_TYPES = [_INT, _UINT];
-	public $name = _FLOAT;
+	public $name = _PURETEXT;
+
+	public function is_same_or_based_with(IType $target) {
+		return $this->symbol === $target->symbol || TypeFactory::$_string->symbol === $target->symbol;
+	}
 }
 
-class IntType extends BaseType {
+class IntType extends BaseType implements IScalarType, IPureType {
 	const ACCEPT_TYPES = [_UINT];
 	public $name = _INT;
 }
 
-class UIntType extends BaseType {
-
+class UIntType extends IntType {
+	const ACCEPT_TYPES = [];
 	public $name = _UINT;
 
 	public function is_same_or_based_with(IType $target) {
@@ -406,7 +414,12 @@ class UIntType extends BaseType {
 	}
 }
 
-class BoolType extends BaseType {
+class FloatType extends BaseType implements IScalarType, IPureType {
+	const ACCEPT_TYPES = [_INT, _UINT];
+	public $name = _FLOAT;
+}
+
+class BoolType extends BaseType implements IScalarType {
 	public $name = _BOOL;
 }
 
@@ -422,8 +435,16 @@ class IterableType extends SingleGenericType {
 	// public $key_type;
 
 	public function is_same_or_based_with(IType $target) {
-		return ($this->symbol === $target->symbol || $target->symbol === TypeFactory::$_iterable->symbol)
-			&& $this->generic_type->is_same_or_based_with($target->generic_type);
+		if ($this->symbol !== $target->symbol and $target->symbol !== TypeFactory::$_iterable->symbol) {
+			return false;
+		}
+
+		if ($this->generic_type === null or $target->generic_type === null) {
+			return $this->generic_type === $target->generic_type
+				|| ($this->generic_type ?? $target->generic_type) instanceof AnyType;
+		}
+
+		return $this->generic_type->is_same_or_based_with($target->generic_type);
 	}
 }
 

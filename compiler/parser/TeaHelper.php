@@ -16,6 +16,7 @@ const _BUILTIN_TYPE_NAMES = [
 	_VOID,
 	_NONE,
 	_STRING,
+	_PURETEXT,
 	_INT,
 	_UINT,
 	_FLOAT,
@@ -58,7 +59,14 @@ define('_CASE_INSENSITIVE_RESERVEDS', array_merge(
 
 class TeaHelper
 {
-	private const MODIFIER_PATTERN = '/^[imu]+$/';
+	private const IMPURETEXT_PATTERN = '/[&\'"`<>]/';
+
+	private const REGEX_MODIFIER_PATTERN = '/^[imu]+$/';
+
+	public static function is_puretext(string $text)
+	{
+		return preg_match(self::IMPURETEXT_PATTERN, $text) == 0;
+	}
 
 	/**
 	 * Check token is a number
@@ -176,7 +184,7 @@ class TeaHelper
 
 	static function is_regex_flags($token)
 	{
-		return preg_match(self::MODIFIER_PATTERN, $token);
+		return preg_match(self::REGEX_MODIFIER_PATTERN, $token);
 	}
 }
 

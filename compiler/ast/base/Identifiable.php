@@ -57,6 +57,12 @@ class AccessingIdentifier extends Identifiable implements IType
 	}
 }
 
+// use for rendering dist code
+class RuntimeIdentifier extends Identifiable implements IType
+{
+	const KIND = 'runtime_identifier';
+}
+
 class PlainIdentifier extends Identifiable implements IType
 {
 	use ITypeTrait;
@@ -71,7 +77,7 @@ class PlainIdentifier extends Identifiable implements IType
 
 	/**
 	 * is has any operation like accessing or call
-	 * use for render the dist code
+	 * use for rendering dist code
 	 * @var bool
 	 */
 	public $is_calling;

@@ -34,12 +34,12 @@ class TeaSyntax
 		4 => [
 			OPID::ADDITION => ['+', OP_BIN, OP_L],
 			OPID::SUBTRACTION => ['-', OP_BIN, OP_L],
-			// OPID::BITWISE_XOR => ['^', OP_BIN, OP_L],
+			OPID::BITWISE_XOR => ['^', OP_BIN, OP_L],
 			OPID::BITWISE_OR => ['|', OP_BIN, OP_L],
 		],
 		5 => [
 			OPID::CONCAT => ['concat', OP_BIN, OP_L],
-			OPID::ARRAY_UNION => ['union', OP_BIN, OP_L],
+			OPID::MERGE => ['union', OP_BIN, OP_L],
 		],
 		6 => [
 			OPID::LESSTHAN => ['<', OP_BIN, OP_NON],

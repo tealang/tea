@@ -80,6 +80,10 @@ public type String {
 	masked rtrim(characters String = #default) => rtrim(this, characters)
 }
 
+public type Puretext: String {
+	//
+}
+
 public type Int {
 	masked abs() UInt => abs(this)
 }
@@ -170,6 +174,8 @@ public type Dict {
 	masked get(key String|Int) => _dict_get(this, key)
 	masked keys() => array_keys(this)
 	masked values() => array_values(this)
+
+	masked replace(replacement Dict) => dict_replace(this, replacement)
 }
 
 public type Object {
@@ -204,6 +210,24 @@ public type Regex {
 
 	// match the target string and returns all matching items
 	masked capture_all(string String) String.Array.Array => _regex_capture_all(this, string)
+}
+
+// use for processing XView
+public _build_attributes(items Dict, additions Dict = none) String {
+	if additions !== none {
+		items = items.replace(additions)
+	}
+
+	list = []
+	for key, val in items {
+		if val is None or val === false {
+			continue
+		}
+
+		list[] = val === true ? key : '$key="${htmlspecialchars(val#String)}"'
+	}
+
+	return implode(' ', list)
 }
 
 public type XView {}   // accept IView

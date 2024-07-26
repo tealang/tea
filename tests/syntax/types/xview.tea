@@ -1,12 +1,13 @@
 
 #main
 
+classes = ['big', 'red']
 form_name = 'form1'
 input_value = 'Hello~'
 view = <>
-	<h1>Form1</h1>
-	<form name=form_name>
-		<input value=input_value />
+	<h1 style="margin: 10px 0;" {['class': classes.join(' ')]}>Form1</h1>
+	<form name={form_name}>
+		<input value={input_value} />
 		<!-- <input value="abc" /> -->
 	</form>
 </>
@@ -80,7 +81,7 @@ public DemoList: BaseView {
 			}
 		}
 
-		return <view id="${this.name}">
+		return <view id={this.name}>
 			${this.title == "abc" ? <h1>#{this.title concat 123}</h1> : none}
 			<i></i>
 			<cells>
