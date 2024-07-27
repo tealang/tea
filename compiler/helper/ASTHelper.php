@@ -11,29 +11,7 @@ namespace Tea;
 
 class ASTHelper
 {
-	static function create_symbol_this(ClassKindredIdentifier $class)
-	{
-		$declaration = new FinalVariableDeclaration(_THIS, $class);
-		$declaration->is_checked = true; // do not need to check
-		return new Symbol($declaration);
-	}
-
-	static function create_symbol_super(ClassKindredIdentifier $class)
-	{
-		$declaration = new FinalVariableDeclaration(_SUPER, $class);
-		$declaration->is_checked = true; // do not need to check
-		return new Symbol($declaration);
-	}
-
-	static function create_variable_identifier(VariableDeclaration $declaration)
-	{
-		$symbol = new Symbol($declaration);
-		$identifier = VariableIdentifier::create_with_symbol($symbol);
-
-		return $identifier;
-	}
-
-	static function is_assignable_expr(BaseExpression $expr)
+	public static function is_assignable_expr(BaseExpression $expr)
 	{
 		if ($expr instanceof Identifiable && $expr->is_assignable()) {
 			return true;
@@ -50,7 +28,7 @@ class ASTHelper
 		return false;
 	}
 
-	static function is_mutable_expr(BaseExpression $expr)
+	public static function is_mutable_expr(BaseExpression $expr)
 	{
 		if ($expr instanceof Identifiable && $expr->is_mutable()) {
 			return true;

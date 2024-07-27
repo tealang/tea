@@ -27,7 +27,7 @@ internal Cell: BaseView {
 
 var xview XView = Cell('string')
 
-DemoList('demo-list', 'title', [], () => {
+DemoList('demo-list', 'title', ['1'], () => {
 	return Cell()
 })
 
@@ -53,11 +53,11 @@ public DemoList: BaseView {
 	ABC = '12'
 
 	title String
-	items Array
+	items String.Array
 
 	cells Array = []
 
-	construct(name String, title = '', items Array = [], each (() Cell)? = none, error (message) Void = none) {
+	construct(name String, title = '', items String.Array = [], each (() Cell)? = none, error (message) Void = none) {
 		this.items = items
 
 		if each {
@@ -71,9 +71,9 @@ public DemoList: BaseView {
 	}
 
 	render() String {
-		cells = []
+		var cells XView.Array = []
 		for key, value in this.items {
-			if 1 {
+			if key == 0 {
 				cells.push(<li index="0"> $key: $value </li>)
 			}
 			else {
@@ -81,16 +81,18 @@ public DemoList: BaseView {
 			}
 		}
 
+		var js_code = 'if (a < 1 || a >= 5) {}'
+
 		return <view id={this.name}>
-			${this.title == "abc" ? <h1>#{this.title concat 123}</h1> : none}
+			{this.title == "abc" ? <h1>{this.title concat 123}</h1> : none}
 			<i></i>
 			<cells>
-				${cells.join()}
+				{cells}
 			</cells>
 			<views>
 				${this.subviews.join()}
 			</views>
-			<script> if (a < 1 || a >= 5) {} </script>
+			<script> ${js_code} </script>
 		</view>
 	}
 }

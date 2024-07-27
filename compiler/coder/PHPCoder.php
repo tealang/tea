@@ -888,19 +888,6 @@ class PHPCoder extends TeaCoder
 		return sprintf('%s = %s', $master, $right) . static::STATEMENT_TERMINATOR;
 	}
 
-	public function render_interpolation(Interpolation $node)
-	{
-		$code = $node->content->render($this);
-		if ($node->escaping) {
-			$fn = TypeFactory::is_nullable_type($node->content->infered_type)
-				? '\html_escape'
-				: '\htmlspecialchars';
-			$code = "{$fn}({$code})";
-		}
-
-		return $code;
-	}
-
 	public function render_xtag(XTag $node)
 	{
 		if ($node->name) {
@@ -928,13 +915,11 @@ class PHPCoder extends TeaCoder
 	protected function render_xtag_components(array $items)
 	{
 		foreach ($items as $k => $item) {
-			if ($item instanceof Interpolation) {
-				if ($item->escaping) {
-					$expr = $this->render_interpolation($item);
-				}
-				else {
-					$expr = $this->render_subexpression($item->content, OperatorFactory::$concat);
-				}
+			if ($item instanceof XTagAttrInterpolation) {
+				$expr = $this->render_xtag_attr_interpolation($item);
+			}
+			elseif ($item instanceof XTagChildInterpolation) {
+				$expr = $this->render_xtag_child_interpolation($item);
 			}
 			elseif ($item instanceof BaseExpression) {
 				$expr = $this->render_subexpression($item, OperatorFactory::$concat);
@@ -959,87 +944,151 @@ class PHPCoder extends TeaCoder
 		return $code;
 	}
 
+	public function render_xtag_attr_interpolation(XTagAttrInterpolation $node)
+	{
+		$expr = $node->content;
+		$code = $this->render_expression_with_html_escaping($expr);
+		return $code;
+	}
+
+	public function render_xtag_child_interpolation(XTagChildInterpolation $node)
+	{
+		$expr = $node->content;
+		$type = $expr->infered_type;
+		if ($type instanceof XViewType) {
+			$code = $this->render_subexpression($expr, OperatorFactory::$concat);
+		}
+		elseif ($type instanceof IterableType and $type->generic_type instanceof XViewType) {
+			$expr = $this->create_runtime_call('\implode', [$this->get_br_string_expr(), $expr]);
+			$code = $this->render_subexpression($expr, OperatorFactory::$concat);
+		}
+		else {
+			$code = $this->render_expression_with_html_escaping($expr);
+		}
+
+		return $code;
+	}
+
+	private function get_br_string_expr()
+	{
+		static $it;
+		if ($it === null) {
+			$it = new EscapedLiteralString('\n');
+		}
+
+		return $it;
+	}
+
+	private function render_expression_with_html_escaping(BaseExpression $expr)
+	{
+		$code = $expr->render($this);
+		$fn = TypeHelper::is_nullable_type($expr->infered_type)
+			? '\html_escape'
+			: '\htmlspecialchars';
+		return "{$fn}({$code})";
+	}
+
 	protected function build_xtag_attribute_components(XTag $node)
 	{
-		$defaults = $node->default_attributes;
-		$activity = $node->activity_attributes;
+		$fixed_map = $node->fixed_attributes;
+		$dynamic_expr = $node->dynamic_attributes;
 
 		$items = [];
-		if ($activity) {
-			// when setted activity expression, required rendering on runtime
+		if ($dynamic_expr) {
+			// when setted dynamic expression, required rendering on runtime
+			foreach ($fixed_map as $key => $item) {
+				if ($item instanceof XTagAttrInterpolation) {
+					$fixed_map[$key] = $item->content;
+				}
+			}
+
 			$items[] = ' ';
-			$items[] = $this->create_building_attributes_expression($defaults, $activity);
+			$items[] = $this->create_building_attributes_expression($fixed_map, $dynamic_expr);
 		}
-		elseif ($defaults) {
-			$instable_map = [];
-			foreach ($defaults as $key => $val) {
-				// true value attribute
-				if ($val === true) {
-					$items[] = ' ' . $key;
-					continue;
-				}
-
-				// normal header
-				$items[] = ' ' . $key . '="';
-
-				// normal value
-				if ($val instanceof ILiteral) {
-					// static
-					$items[] = $val->value;
-				}
-				elseif ($val instanceof InterpolatedString) {
-					// not empty
-					if ($this->is_safe_xtag_interpolated($val)) {
-						// no need to escaping
-						$items = array_merge($items, $val->items);
-					}
-					else {
-						// need to escaping
-						$items[] = new Interpolation($val, true);
-					}
-				}
-				elseif ($val instanceof BaseExpression) {
-					$type = $val->infered_type;
-					if (TypeFactory::is_nullable_type($type) or $type instanceof BoolType) {
-						// the null or false value cannot be presented
-						$instable_map[$key] = $val;
-						array_pop($items);
-						continue;
-					}
-					else {
-						$items[] = TypeFactory::is_pure_type($type)
-							? $val
-							: new Interpolation($val, true);
-					}
-				}
-				else {
-					throw new Exception("Unknow xtag attribute value type");
-				}
-
-				$items[] = '"';
-			}
-
-			if ($instable_map) {
-				$items[] = ' ';
-				$items[] = $this->create_building_attributes_expression($instable_map);
-			}
+		elseif ($fixed_map) {
+			$items = $this->build_xtag_attribute_components_for_fixed($fixed_map);
 		}
 
 		return $items;
 	}
 
-	private function create_building_attributes_expression(array $defaults, BaseExpression $activity = null)
+	private function build_xtag_attribute_components_for_fixed(array $fixed_map)
+	{
+		$items = [];
+		$instable_map = []; // items that maybe null/false
+		foreach ($fixed_map as $key => $val) {
+			// true value attribute
+			if ($val === true) {
+				$items[] = ' ' . $key;
+				continue;
+			}
+
+			// normal header
+			$items[] = ' ' . $key . '="';
+
+			// normal value
+			if ($val instanceof ILiteral) {
+				// static
+				$items[] = $val->value;
+			}
+			elseif ($val instanceof XTagAttrInterpolation) {
+				$content = $val->content;
+				if ($content instanceof InterpolatedString) {
+					// not empty
+					if ($this->is_safe_xtag_interpolated($content)) {
+						// no need to escaping
+						$items = array_merge($items, $content->items);
+					}
+					else {
+						// need to escaping
+						$items[] = $val;
+					}
+				}
+				else {
+					$type = $content->infered_type;
+					if (TypeHelper::is_nullable_type($type) or $type instanceof BoolType) {
+						// the null or false value cannot be presented
+						$instable_map[$key] = $content;
+						array_pop($items);
+						continue;
+					}
+					else {
+						$items[] = TypeHelper::is_pure_type($type) ? $content : $val;
+					}
+				}
+			}
+			else {
+				throw new Exception("Invalid xtag attribute value");
+			}
+
+			$items[] = '"';
+		}
+
+		if ($instable_map) {
+			$items[] = ' ';
+			$items[] = $this->create_building_attributes_expression($instable_map);
+		}
+
+		return $items;
+	}
+
+	private function create_building_attributes_expression(array $fixed_map, BaseExpression $dynamic_expr = null)
 	{
 		$args = [];
-		if ($defaults) {
-			$args[] = $this->create_dict_expression_for_map($defaults);
+		if ($fixed_map) {
+			$args[] = $this->create_dict_expression_for_map($fixed_map);
 		}
 
-		if ($activity) {
-			$args[] = $activity;
+		if ($dynamic_expr) {
+			$args[] = $dynamic_expr;
 		}
 
-		$callee = new RuntimeIdentifier('\_build_attributes');
+		return $this->create_runtime_call('\_build_attributes', $args);
+	}
+
+	private function create_runtime_call(string $fn, array $args)
+	{
+		$callee = new RuntimeIdentifier($fn);
 		return new CallExpression($callee, $args);
 	}
 
@@ -1057,7 +1106,7 @@ class PHPCoder extends TeaCoder
 	private function is_safe_xtag_interpolated(InterpolatedString $node) {
 		$safe = true;
 		foreach ($node->items as $item) {
-			if (is_object($item) and !TypeFactory::is_pure_type($item->infered_type)) {
+			if (is_object($item) and !TypeHelper::is_pure_type($item->infered_type)) {
 				$safe = false;
 				break;
 			}
@@ -1536,7 +1585,7 @@ class PHPCoder extends TeaCoder
 
 		// the auto-cast type to String
 		$infered_type = $node->right->infered_type;
-		if (!TypeFactory::is_dict_key_type($infered_type)) {
+		if (!TypeHelper::is_dict_key_type($infered_type)) {
 			// Cast others to string, and bool to ''
 			// Avoid of float/bool being cast to integers
 			$key = '(string)' . $key;
@@ -1612,7 +1661,7 @@ class PHPCoder extends TeaCoder
 	public function render_plain_interpolated_string(PlainInterpolatedString $node)
 	{
 		foreach ($node->items as $item) {
-			if ($item instanceof Interpolation) {
+			if ($item instanceof StringInterpolation) {
 				$item = $this->render_string_interpolation($item);
 			}
 			else {
@@ -1628,42 +1677,42 @@ class PHPCoder extends TeaCoder
 
 	public function render_escaped_interpolated_string(EscapedInterpolatedString $node)
 	{
-		if (count($node->items) === 1 and $node->items[0] instanceof Interpolation) {
-			return $this->render_interpolation($node->items[0]);
+		$items = $node->items;
+		if (count($items) === 1 and $items[0] instanceof StringInterpolation) {
+			return $items[0]->render($this);
 		}
 
-		$items = ['"'];
-		foreach ($node->items as $item) {
-			if ($item instanceof Interpolation) {
-				$content = $item->content;
-				if (!$item->escaping and $this->is_simple_expression($content)) {
-					$content = $item->render($this);
-					$items[] = "{{$content}}";
+		$parts = ['"'];
+		foreach ($items as $item) {
+			if ($item instanceof StringInterpolation) {
+				if ($this->is_simple_expression($item->content)) {
+					$expr = $item->content->render($this);
+					$parts[] = "{{$expr}}";
 				}
 				else {
-					$content = $this->render_string_interpolation($item);
-					if (count($items) === 1) {
-						$items = [$content . ' . "'];
+					$expr = $this->render_string_interpolation($item);
+					if (count($parts) === 1) {
+						$parts = [$expr . ' . "'];
 					}
 					else {
-						$items[] = '" . ' . $content;
-						$items[] = ' . "';
+						$parts[] = '" . ' . $expr;
+						$parts[] = ' . "';
 					}
 				}
 			}
 			else {
-				$items[] = $item;
+				$parts[] = $item;
 			}
 		}
 
-		if (end($items) === ' . "') {
-			array_pop($items);
+		if (end($parts) === ' . "') {
+			array_pop($parts);
 		}
 		else {
-			$items[] = '"';
+			$parts[] = '"';
 		}
 
-		$code = join($items);
+		$code = join($parts);
 		return $this->new_string_placeholder($code);
 	}
 
@@ -1687,13 +1736,10 @@ class PHPCoder extends TeaCoder
 		return false;
 	}
 
-	protected function render_string_interpolation(Interpolation $node)
+	public function render_string_interpolation(StringInterpolation $node)
 	{
-		$code = $node->render($this);
-		if ($node->content instanceof MultiOperation) {
-			$code = '(' . $code . ')';
-		}
-
+		$expr = $node->content;
+		$code = $this->render_subexpression($expr, OperatorFactory::$concat);
 		return $code;
 	}
 

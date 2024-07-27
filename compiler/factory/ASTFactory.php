@@ -162,6 +162,14 @@ class ASTFactory
 		return $identifier;
 	}
 
+	// public static function create_variable_identifier(VariableDeclaration $declaration)
+	// {
+	// 	$symbol = new Symbol($declaration);
+	// 	$identifier = VariableIdentifier::create_with_symbol($symbol);
+
+	// 	return $identifier;
+	// }
+
 	public function create_identifier(string $name) // PlainIdentifier or ILiteral
 	{
 		if (TeaHelper::is_builtin_identifier($name)) {
@@ -449,13 +457,20 @@ class ASTFactory
 		// create 'this' symbol
 		$class_identifier = new ClassKindredIdentifier($declaration->name); // as a Type for 'this'
 		$class_identifier->symbol = $symbol;
-		// $declaration->symbols[_THIS] = ASTHelper::create_symbol_this($class_identifier);
+		// $declaration->symbols[_THIS] = self::create_symbol_this($class_identifier);
 
 		$declaration->this_class_symbol = $symbol;
-		$declaration->this_object_symbol = ASTHelper::create_symbol_this($class_identifier);
+		$declaration->this_object_symbol = self::create_symbol_this($class_identifier);
 
 		// create the MetaType
 		$declaration->hinted_type = TypeFactory::create_meta_type($class_identifier);
+	}
+
+	private static function create_symbol_this(ClassKindredIdentifier $class)
+	{
+		$declaration = new FinalVariableDeclaration(_THIS, $class);
+		$declaration->is_checked = true; // do not need to check
+		return new Symbol($declaration);
 	}
 
 	public function set_scope_parameters(array $parameters)

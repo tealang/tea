@@ -11,52 +11,52 @@ namespace Tea;
 
 class TypeFactory
 {
-	// static $_dict_key_type;
+	// public static $_dict_key_type;
 
-	static $_metatype;
+	public static $_metatype;
 
-	static $_uniontype;
+	public static $_uniontype;
 
-	static $_any;
-	static $_none;
-	static $_default_marker; // use NoneType current
+	public static $_any;
+	public static $_none;
+	public static $_default_marker; // use NoneType current
 
-	static $_void;
-	static $_object;
+	public static $_void;
+	public static $_object;
 
 	// static $_scalar;
-	static $_bytes;
-	static $_string;
-	static $_puretext;
-	static $_float;
-	static $_int;
-	static $_uint;
-	static $_bool;
+	public static $_bytes;
+	public static $_string;
+	public static $_puretext;
+	public static $_float;
+	public static $_int;
+	public static $_uint;
+	public static $_bool;
 
-	static $_iterable;
-	static $_array;
-	static $_dict;
-	static $_hashtable; // for PHP array, same as Array|Dict
+	public static $_iterable;
+	public static $_array;
+	public static $_dict;
+	public static $_hashtable; // for PHP array, same as Array|Dict
 
-	static $_xview;
-	static $_regex;
+	public static $_xview;
+	public static $_regex;
 
-	static $_callable;
-	static $_namespace;
+	public static $_callable;
+	public static $_namespace;
 
-	static $_iterator;
-	static $_yield_generator;
+	public static $_iterator;
+	public static $_yield_generator;
 
 	// for check accepts
-	static $_iview_symbol;
+	public static $_iview_symbol;
 
 	// for check Iterable type accepts
-	static $_iterator_symbol;
-	static $_yield_generator_symbol;
+	public static $_iterator_symbol;
+	public static $_yield_generator_symbol;
 
 	private static $type_map = [];
 
-	static function init()
+	public static function init()
 	{
 		// init all builtin types
 
@@ -97,7 +97,7 @@ class TypeFactory
 		self::$_yield_generator = self::$_iterator;
 	}
 
-	static function find_iterator_identifier(IType $type)
+	public static function find_iterator_identifier(IType $type)
 	{
 		if ($type->symbol === self::$_iterator_symbol) {
 			$result = $type;
@@ -109,156 +109,7 @@ class TypeFactory
 		return $result;
 	}
 
-	// static function is_iterable_type(IType $type)
-	// {
-	// 	if ($type === TypeFactory::$_any || $type instanceof IterableType) {
-	// 		$result = true;
-	// 	}
-	// 	elseif ($type instanceof PlainIdentifier) {
-	// 		$result = $type->symbol->declaration->is_same_or_based_with_symbol(self::$_iterator_symbol);
-	// 	}
-	// 	elseif ($type instanceof UnionType) {
-	// 		$result = true;
-	// 		foreach ($type->get_members() as $member_type) {
-	// 			if (!TypeFactory::is_iterable_type($member_type)) {
-	// 				$result = false;
-	// 				break;
-	// 			}
-	// 		}
-	// 	}
-	// 	else {
-	// 		$result = false;
-	// 	}
-
-	// 	return $result;
-	// }
-
-	static function is_dict_key_type(?IType $type)
-	{
-		$is = false;
-		if ($type === self::$_string
-			|| $type === self::$_uint
-			|| $type === self::$_int
-			|| $type instanceof StringType
-			|| $type instanceof IntType) {
-			$is = true;
-		}
-		elseif ($type instanceof UnionType) {
-			foreach ($type->get_members() as $member_type) {
-				if (!TypeFactory::is_dict_key_type($member_type)) {
-					break;
-				}
-			}
-
-			$is = true;
-		}
-
-		return $is;
-	}
-
-	static function is_case_testable_type(IType $type)
-	{
-		if ($type instanceof StringType || $type instanceof IntType) {
-			$result = true;
-		}
-		elseif ($type instanceof UnionType) {
-			$result = true;
-			foreach ($type->members as $member_type) {
-				if (!self::is_case_testable_type($member_type)) {
-					$result = false;
-					break;
-				}
-			}
-		}
-		else {
-			$result = false;
-		}
-
-		return $result;
-	}
-
-	static function is_switch_compatible(IType $matchig, IType $case)
-	{
-		return $matchig->is_accept_type($case)
-			or ($matchig instanceof PuretextType and $case instanceof StringType);
-	}
-
-	static function is_number_type(?IType $type)
-	{
-		if ($type instanceof IntType || $type instanceof FloatType) {
-			return true;
-		}
-
-		if ($type instanceof UnionType) {
-			foreach ($type->get_members() as $subtype) {
-				if (!static::is_number_type($subtype)) {
-					return false;
-				}
-			}
-
-			return true;
-		}
-
-		return false;
-	}
-
-	static function is_scalar_type(?IType $type)
-	{
-		if ($type instanceof IScalarType) {
-			$is = true;
-		}
-		elseif ($type instanceof UnionType) {
-			foreach ($type->members as $member_type) {
-				$is = self::is_scalar_type($member_type);
-				if (!$is) {
-					break;
-				}
-			}
-		}
-		else {
-			$is = false;
-		}
-
-		return $is;
-	}
-
-	static function is_pure_type(IType $type)
-	{
-		return $type instanceof IPureType;
-	}
-
-	static function is_stringable_type(IType $type)
-	{
-		if ($type instanceof StringType
-			or $type instanceof IntType
-			or $type instanceof XViewType
-			) {
-			$result = true;
-		}
-		elseif ($type instanceof UnionType) {
-			foreach ($type->members as $member_type) {
-				$result = self::is_stringable_type($member_type);
-				if (!$result) {
-					break;
-				}
-			}
-		}
-		else {
-			$result = false;
-		}
-
-		return $result;
-	}
-
-	static function is_nullable_type(IType $type)
-	{
-		return $type->nullable
-			or $type instanceof AnyType
-			or $type instanceof NoneType
-			;
-	}
-
-	static function set_symbols(Unit $unit)
+	public static function set_symbols(Unit $unit)
 	{
 		foreach (self::$type_map as $type_name => $object) {
 			if (isset($unit->symbols[$type_name])) {
@@ -272,17 +123,17 @@ class TypeFactory
 		self::$_yield_generator_symbol = self::$_iterator_symbol;
 	}
 
-	static function exists_type(string $name): bool
+	public static function exists_type(string $name): bool
 	{
 		return isset(self::$type_map[$name]);
 	}
 
-	static function get_type(string $name)
+	public static function get_type(string $name)
 	{
 		return self::$type_map[$name] ?? null;
 	}
 
-	static function clone_type(string $name)
+	public static function clone_type(string $name)
 	{
 		$type = self::$type_map[$name] ?? null;
 		if ($type !== null) {
@@ -300,7 +151,7 @@ class TypeFactory
 		return $type_object;
 	}
 
-	static function create_array_type(IType $generic_type)
+	public static function create_array_type(IType $generic_type)
 	{
 		$type = new ArrayType($generic_type);
 		$type->symbol = self::$_array->symbol;
@@ -308,7 +159,7 @@ class TypeFactory
 		return $type;
 	}
 
-	static function create_dict_type(IType $generic_type)
+	public static function create_dict_type(IType $generic_type)
 	{
 		$type = new DictType($generic_type);
 		$type->symbol = self::$_dict->symbol;
@@ -316,7 +167,7 @@ class TypeFactory
 		return $type;
 	}
 
-	static function create_callable_type(?IType $return_type, array $parameters)
+	public static function create_callable_type(?IType $return_type, array $parameters)
 	{
 		$type = new CallableType($return_type, $parameters);
 		$type->symbol = self::$_callable->symbol;
@@ -324,7 +175,7 @@ class TypeFactory
 		return $type;
 	}
 
-	static function create_meta_type(IType $generic_type)
+	public static function create_meta_type(IType $generic_type)
 	{
 		$type = new MetaType($generic_type);
 		$type->symbol = self::$_metatype->symbol;
@@ -332,7 +183,7 @@ class TypeFactory
 		return $type;
 	}
 
-	static function create_union_type(array $members)
+	public static function create_union_type(array $members)
 	{
 		$type = new UnionType($members);
 		$type->symbol = self::$_uniontype->symbol;
@@ -340,3 +191,5 @@ class TypeFactory
 		return $type;
 	}
 }
+
+// end

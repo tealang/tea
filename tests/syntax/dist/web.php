@@ -12,7 +12,7 @@ $test_items['header_key'] = filter_input(INPUT_SERVER, 'HTTP_HOST');
 
 $items = [];
 foreach ($test_items as $k => $v) {
-	$items[] = '<li>' . $k . ': ' . \html_escape($v) . '</li>';
+	$items[] = '<li>' . $k . ': ' . \htmlspecialchars($v) . '</li>';
 }
 
 echo '<ul>

@@ -254,11 +254,22 @@ class Compiler
 	{
 		self::echo_start('Checking...', LF);
 
-		ASTChecker::init_checkers($this->unit, $this->builtin_unit);
+		$builtin_unit = $this->builtin_unit;
 
-		// check depends units first
+		// if current it is not the builtin unit, the builtin unit needs to be checked first
+		if ($builtin_unit) {
+			ASTChecker::init_checkers($builtin_unit);
+			$program = $builtin_unit->programs['__package'];
+			$normal_checker = ASTChecker::get_checker($program);
+			$this->check_ast_for_unit($builtin_unit, $normal_checker);
+		}
+
+		ASTChecker::init_checkers($this->unit, $builtin_unit);
+
+		// check depends
 		foreach ($this->unit->use_units as $dep_unit) {
-			$normal_checker = ASTChecker::get_checker($dep_unit->programs[PUBLIC_HEADER_NAME]);
+			$program = $dep_unit->programs[PUBLIC_HEADER_NAME];
+			$normal_checker = ASTChecker::get_checker($program);
 			$this->check_ast_for_unit($dep_unit, $normal_checker);
 		}
 

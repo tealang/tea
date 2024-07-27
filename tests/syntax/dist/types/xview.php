@@ -44,7 +44,7 @@ class DemoList extends BaseView {
 	public function render(): string {
 		$cells = [];
 		foreach ($this->items as $key => $value) {
-			if (1) {
+			if ($key == 0) {
 				array_push($cells, '<li index="0"> ' . $key . ': ' . $value . ' </li>');
 			}
 			else {
@@ -52,16 +52,18 @@ class DemoList extends BaseView {
 			}
 		}
 
+		$js_code = 'if (a < 1 || a >= 5) {}';
+
 		return '<view id="' . \htmlspecialchars($this->name) . '">
 	' . ($this->title == "abc" ? '<h1>' . \htmlspecialchars($this->title . 123) . '</h1>' : null) . '
 	<i></i>
 	<cells>
-		' . _std_join($cells, LF) . '
+		' . \implode("\n", $cells) . '
 	</cells>
 	<views>
 		' . _std_join($this->subviews, LF) . '
 	</views>
-	<script> if (a < 1 || a >= 5) {} </script>
+	<script> ' . $js_code . ' </script>
 </view>';
 	}
 }
@@ -77,7 +79,7 @@ $view = '<h1 ' . \_build_attributes(['style' => "margin: 10px 0;"], ['class' => 
 
 $xview = new Cell('string');
 
-new DemoList('demo-list', 'title', [], function () {
+new DemoList('demo-list', 'title', ['1'], function () {
 	return new Cell();
 });
 

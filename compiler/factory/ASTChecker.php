@@ -339,28 +339,6 @@ class ASTChecker
 		else {
 			$node->infered_type = $infered_type;
 		}
-
-		// // infering to set has null
-		// if ($infered_type === null) {
-		// 	// $infered_has_null = ($node instanceof ParameterDeclaration or $node instanceof PropertyDeclaration) ? false : true;
-		// 	$infered_has_null = false; // let false by now
-		// }
-		// elseif ($infered_type instanceof NoneType) {
-		// 	$infered_has_null = $infered_type !== TypeFactory::$_default_marker;
-		// }
-		// else {
-		// 	$infered_has_null = $infered_type->has_null;
-		// }
-
-		// if ($infered_has_null and !$node->hinted_type instanceof AnyType and !$node->hinted_type->has_null) {
-		// 	// make copy for BaseType
-		// 	if ($node->hinted_type instanceof BaseType) {
-		// 		$node->infered_type = clone $node->hinted_type;
-		// 	}
-
-		// 	$node->hinted_type->has_null = true;
-		// 	$node->hinted_type->let_nullable();
-		// }
 	}
 
 	private function check_parameters_for_callable_declaration(ICallableDeclaration $callable)
@@ -628,13 +606,13 @@ class ASTChecker
 	{
 		$node->is_checked = true;
 
-		// 当前是类时，包括继承的类，或实现的接口
-		// 当前是接口时，包括继承的接口
+		// when it is currently a class, including inherited classes or implemented interfaces
+		// when it is currently an interface, including inherited interfaces
 		if ($node->bases) {
 			$this->attach_bases_for_classkindred_declaration($node);
 		}
 
-		// 先检查本类中成员，推断出的类型会被后面用到
+		// first check the members in this class, and the inferred types will be used later
 		foreach ($node->members as $member) {
 			$this->check_class_member_declaration($member);
 		}
@@ -648,17 +626,15 @@ class ASTChecker
 		// 	}
 		// }
 
-		// 检查本类与继承类的成员是否匹配
 		if ($node->inherits) {
 			$this->check_inherits_for_class_declaration($node);
 		}
 
-		// 检查本类与实现或继承的接口中的成员是否匹配
 		if ($node->bases) {
 			$this->check_bases_for_classkindred_declaration($node);
 		}
 
-		// 本类中的成员优先级最高
+		// the members in this class have the highest priority
 		if ($node->members) {
 			$node->aggregated_members = array_merge($node->aggregated_members, $node->members);
 		}
@@ -666,9 +642,6 @@ class ASTChecker
 
 	private function attach_bases_for_classkindred_declaration(ClassKindredDeclaration $node)
 	{
-		// 类可以实现多个接口，但只能继承一个父类
-		// 接口可以继承多个父接口
-
 		$interfaces = [];
 		foreach ($node->bases as $identifier) {
 			$declaration = $this->get_classkindred_declaration($identifier);
@@ -970,7 +943,7 @@ class ASTChecker
 	private function infer_switch_block(SwitchBlock $node): ?IType
 	{
 		$matching_type = $this->infer_expression($node->test);
-		if (!TypeFactory::is_case_testable_type($matching_type)) {
+		if (!TypeHelper::is_case_testable_type($matching_type)) {
 			$matching_type_name = self::get_type_name($matching_type);
 			throw $this->new_syntax_error("The case compare expression should be String/Int/UInt, $matching_type_name supplied", $node->test);
 		}
@@ -980,7 +953,7 @@ class ASTChecker
 			if ($branch->rule instanceof ExpressionList) {
 				foreach ($branch->rule->items as $rule_sub_expr) {
 					$case_type = $this->infer_expression($rule_sub_expr);
-					if (!TypeFactory::is_switch_compatible($matching_type, $case_type)) {
+					if (!TypeHelper::is_switch_compatible($matching_type, $case_type)) {
 						$matching_type_name = self::get_type_name($matching_type);
 						$case_type_name = self::get_type_name($case_type);
 						throw $this->new_syntax_error("Incompatible matching types, matching type is $matching_type_name, case type is $case_type_name", $rule_sub_expr);
@@ -989,7 +962,7 @@ class ASTChecker
 			}
 			else {
 				$case_type = $this->infer_expression($branch->rule);
-				if (!TypeFactory::is_switch_compatible($matching_type, $case_type)) {
+				if (!TypeHelper::is_switch_compatible($matching_type, $case_type)) {
 					$matching_type_name = self::get_type_name($matching_type);
 					$case_type_name = self::get_type_name($case_type);
 					throw $this->new_syntax_error("Incompatible matching types, matching type is $matching_type_name, case type is $case_type_name", $branch->rule);
@@ -1506,7 +1479,7 @@ class ASTChecker
 			case IsOperation::KIND:
 				$infered_type = $this->infer_is_operation($node);
 				break;
-			// case Interpolation::KIND:
+			// case StringInterpolation::KIND:
 			// 	$infered_type = $this->infer_expression($node->expression);
 			// 	break;
 			case NoneCoalescingOperation::KIND:
@@ -1603,7 +1576,7 @@ class ASTChecker
 				throw $this->new_syntax_error("Invalid accessing for Dict", $node);
 			}
 
-			if (TypeFactory::is_dict_key_type($right_type)) {
+			if (TypeHelper::is_dict_key_type($right_type)) {
 				// okay
 			}
 			else {
@@ -1615,7 +1588,7 @@ class ASTChecker
 		}
 		elseif ($left_type instanceof AnyType) {
 			// if non key, that's Array access, else just allow Dict as the actual type
-			if ($node->right and !TypeFactory::is_dict_key_type($right_type)) {
+			if ($node->right and !TypeHelper::is_dict_key_type($right_type)) {
 				$type_name = $this->get_type_name($right_type);
 				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, {$type_name} supplied", $node->right);
 			}
@@ -1635,7 +1608,7 @@ class ASTChecker
 				}
 			}
 			elseif ($left_type->is_all_dict_types()) {
-				if (!TypeFactory::is_dict_key_type($right_type)) {
+				if (!TypeHelper::is_dict_key_type($right_type)) {
 					throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$right_type->name}' supplied", $node->right);
 				}
 			}
@@ -1700,7 +1673,7 @@ class ASTChecker
 				$node->operator = OperatorFactory::$array_concat; // replace to array concat
 				$node->infered_type = $left_type;
 			}
-			elseif (!TypeFactory::is_stringable_type($left_type)) {
+			elseif (!TypeHelper::is_stringable_type($left_type)) {
 				$type_name = $this->get_type_name($left_type);
 				throw $this->new_syntax_error("'concat' operation cannot use for '$type_name' type targets", $node->left);
 			}
@@ -1823,7 +1796,7 @@ class ASTChecker
 
 	private function assert_math_operable(IType $type, BaseExpression $node)
 	{
-		if (!TypeFactory::is_number_type($type, $node)) {
+		if (!TypeHelper::is_number_type($type, $node)) {
 			$type_name = $this->get_type_name($type);
 			throw $this->new_syntax_error("Math operation cannot use for '$type_name' type expression", $node);
 		}
@@ -1956,7 +1929,7 @@ class ASTChecker
 		$infered_value_types = [];
 		foreach ($node->items as $item) {
 			$key_type = $this->infer_expression($item->key);
-			if (TypeFactory::is_dict_key_type($key_type)) {
+			if (TypeHelper::is_dict_key_type($key_type)) {
 				// okay
 			}
 			else {
@@ -2181,6 +2154,10 @@ class ASTChecker
 			// if ($infered_type instanceof MetaType and $callee_declar instanceof VariableDeclaration) {
 			// 	$infered_type = $infered_type->generic_type;
 			// }
+		}
+
+		if ($infered_type === null) {
+			throw $this->new_syntax_error("Unable to infer type, perhaps a loop call has occurred", $node->callee);
 		}
 
 		return $infered_type;
@@ -2461,7 +2438,7 @@ class ASTChecker
 
 		$is_pure = true;
 		foreach ($node->items as $item) {
-			if ($item instanceof Interpolation) {
+			if ($item instanceof StringInterpolation) {
 				if (!$item->infered_type instanceof IPureType) {
 					$is_pure = false;
 					break;
@@ -2485,7 +2462,7 @@ class ASTChecker
 	private function check_interpolated_items(array $items)
 	{
 		foreach ($items as $item) {
-			if ($item instanceof Interpolation) {
+			if ($item instanceof StringInterpolation) {
 				$item->infered_type = $this->infer_expression($item->content);
 			}
 		}
@@ -2498,53 +2475,58 @@ class ASTChecker
 
 	private function infer_xtag(XTag $node)
 	{
-		if ($node->name instanceof BaseExpression) {
-			$this->infer_expression($node->name);
-		}
+		$fixed_attr_map = $node->fixed_attributes;
+		$dyn_expr = $node->dynamic_attributes;
+		$children = $node->children ?? [];
 
-		$defaults = $node->default_attributes;
-		$activity = $node->activity_attributes;
-		$children = $node->children;
-
-		if ($defaults) {
-			foreach ($defaults as $item) {
-				if ($item instanceof BaseExpression) {
-					$infered = $this->infer_expression($item);
-					if (!TypeFactory::is_scalar_type($infered) and !$infered instanceof AnyType) {
-						$type_name = self::get_type_name($infered);
-						throw $this->new_syntax_error("Expect scalar type value, {$type_name} supplied", $item);
-					}
+		foreach ($fixed_attr_map as $item) {
+			if ($item instanceof XTagAttrInterpolation) {
+				$item->infered_type = $this->infer_expression($item->content);
+			}
+			elseif ($item instanceof BaseExpression) {
+				$infered = $this->infer_expression($item);
+				if (!TypeHelper::is_scalar_type($infered)) {
+					$type_name = self::get_type_name($infered);
+					throw $this->new_syntax_error("Expect scalar type value, {$type_name} supplied", $item);
 				}
-				elseif ($item instanceof Interpolation) {
-					$item->infered_type = $this->infer_expression($item->content);
-				}
-				elseif ($item === true) {
-					// true value item
-				}
-				else {
-					throw $this->new_syntax_error("Type of attribute values must be scalar", $item);
-				}
+			}
+			elseif ($item === true) {
+				// true value item
+			}
+			else {
+				throw $this->new_syntax_error("Invalid xtag attribute value", $item);
 			}
 		}
 
-		if ($activity) {
-			$infered = $this->infer_expression($activity);
+		if ($dyn_expr) {
+			$infered = $this->infer_expression($dyn_expr);
 			if (!$infered instanceof DictType) {
-				throw $this->new_syntax_error("The type of activity attributes expression must be String.Dict", $activity);
+				throw $this->new_syntax_error("The type of activity attributes expression must be String.Dict", $dyn_expr);
 			}
 		}
 
-		if ($children) {
-			foreach ($children as $item) {
-				if ($item instanceof XTag) {
-					$this->infer_xtag($item);
+		foreach ($children as $item) {
+			if ($item instanceof XTag) {
+				$this->infer_xtag($item);
+			}
+			elseif ($item instanceof XTagChildInterpolation) {
+				$infered = $this->infer_expression($item->content);
+				if (!TypeHelper::is_xtag_child_type($infered)) {
+					$type_name = self::get_type_name($infered);
+					throw $this->new_syntax_error("Expect String/XView/XView.Array type value, {$type_name} supplied", $item);
 				}
-				elseif ($item instanceof Interpolation) {
-					$item->infered_type = $this->infer_expression($item->content);
-				}
-				else {
-					// XTagText or XTagComment
-					// dont neet to check
+
+				$item->infered_type = $infered;
+			}
+			elseif ($item instanceof XTagElement) {
+				// text/comment
+			}
+			else {
+				// normal expression
+				$infered = $this->infer_expression($item);
+				if (!TypeHelper::is_scalar_type($infered)) {
+					$type_name = self::get_type_name($infered);
+					throw $this->new_syntax_error("Expect scalar type value, {$type_name} supplied", $item);
 				}
 			}
 		}

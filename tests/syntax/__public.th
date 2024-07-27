@@ -39,11 +39,11 @@ public class DemoList: BaseView {
 	internal const ABC Puretext
 
 	title String
-	items Array
+	items String.Array
 
 	cells Array
 
-	construct(name String, title Puretext = '', items Array = [], each () Cell? = none, error (message Any) Void = none)
+	construct(name String, title Puretext = '', items String.Array = [], each () Cell? = none, error (message Any) Void = none)
 
 	render() String
 }

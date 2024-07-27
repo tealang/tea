@@ -29,7 +29,7 @@ function show_file_path(string $filename = null) {
 $days = ['Monday', 'Tuesday', 'Wednesday'];
 $items = [];
 foreach ($days as $i => $day) {
-	$items[] = ($i + 1) . ": {$day}";
+	$items[] = $i + 1 . ": {$day}";
 }
 
 echo _std_join($items, ', '), LF;

@@ -27,13 +27,13 @@ class XTag extends XTagElement
 	 * fixed attribute map
 	 * @array
 	 */
-	public $default_attributes = [];
+	public $fixed_attributes = [];
 
 	/**
 	 * activity attributes expression
 	 * @BaseExpression
 	 */
-	public $activity_attributes;
+	public $dynamic_attributes;
 
 	/**
 	 * @var XTagElement[]
@@ -51,6 +51,18 @@ class XTag extends XTagElement
 	{
 		$this->name = $name;
 	}
+}
+
+class XTagAttrInterpolation extends BaseExpression
+{
+	use InterpolationTrait;
+	const KIND = 'xtag_attr_interpolation';
+}
+
+class XTagChildInterpolation extends XTagElement
+{
+	use InterpolationTrait;
+	const KIND = 'xtag_child_interpolation';
 }
 
 class XTagText extends XTagElement

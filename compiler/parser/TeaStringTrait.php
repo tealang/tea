@@ -91,7 +91,7 @@ trait TeaStringTrait
 				return $items;
 			}
 			elseif ($token === _DOLLAR) {
-				$expression = $this->try_read_dollar_interpolation();
+				$expression = $this->try_read_normal_interpolation();
 				if ($expression === null) {
 					$string .= $token;
 					continue;
@@ -100,13 +100,13 @@ trait TeaStringTrait
 				static::collect_and_reset_temp($items, $string, $expression);
 				continue;
 			}
-			elseif ($token === _SHARP && $this->skip_token(_BLOCK_BEGIN)) {
-				$expression = $this->read_sharp_interpolation();
-				if ($expression) {
-					static::collect_and_reset_temp($items, $string, $expression);
-				}
-				continue;
-			}
+			// elseif ($token === _SHARP && $this->skip_token(_BLOCK_BEGIN)) {
+			// 	$expression = $this->read_html_escaping_interpolation();
+			// 	if ($expression) {
+			// 		static::collect_and_reset_temp($items, $string, $expression);
+			// 	}
+			// 	continue;
+			// }
 			elseif ($token === _BACK_SLASH) {
 				$string .= $token . $this->scan_string_component(); // 略过转义字符
 				continue;
@@ -118,21 +118,7 @@ trait TeaStringTrait
 		throw $this->new_parse_error("Missed the quote close mark ($quote_mark).");
 	}
 
-	protected function read_sharp_interpolation()
-	{
-		$expr = $this->read_expression();
-		if (!$expr) {
-			throw $this->new_unexpected_error();
-		}
-
-		$this->expect_block_end();
-		$expr = new Interpolation($expr, true);
-		$expr->pos = $this->pos;
-
-		return $expr;
-	}
-
-	protected function try_read_dollar_interpolation(): ?BaseExpression
+	protected function try_read_normal_interpolation(): ?BaseExpression
 	{
 		if ($this->get_token() === _BLOCK_BEGIN) {
 			// ${ ... } style
@@ -149,7 +135,7 @@ trait TeaStringTrait
 			$expr = $this->try_read_dollar_identifier();
 		}
 
-		$expr = new Interpolation($expr, false);
+		$expr = new StringInterpolation($expr);
 		$expr->pos = $this->pos;
 
 		return $expr;

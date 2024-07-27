@@ -12,10 +12,11 @@ namespace Tea;
 const _XTAG_SELF_CLOSE = '/>';
 const _XTAG_COMMENT_OPEN = '!--';
 const _XTAG_COMMENT_CLOSE = '-->';
-const _SELF_CLOSING_TAGS = [
+const _XTAG_SELF_CLOSING_TAGS = [
 	'meta', 'link', 'img', 'input', 'br', 'hr', '!doctype',
 	'wbr', 'col', 'embed', 'param', 'source', 'track', 'area', 'keygen'
 ];
+const _XTAG_SLASH_ESCAPING_CHARS = ['{', '}', '$'];
 
 trait TeaXTagTrait
 {
@@ -118,7 +119,7 @@ trait TeaXTagTrait
 		if ($current_token === _XTAG_SELF_CLOSE) {
 			// no any
 		}
-		elseif (in_array(strtolower($name), _SELF_CLOSING_TAGS, true)) {
+		elseif (in_array(strtolower($name), _XTAG_SELF_CLOSING_TAGS, true)) {
 			$xtag->is_self_closing_tag = true;
 		}
 		// expect tag head close
@@ -189,11 +190,11 @@ trait TeaXTagTrait
 				$value = true;
 			}
 
-			$xtag->default_attributes[$name] = $value;
+			$xtag->fixed_attributes[$name] = $value;
 		}
 
 		if ($this->skip_token_ignore_empty(_BRACE_OPEN)) {
-			$xtag->activity_attributes = $this->read_expression();
+			$xtag->dynamic_attributes = $this->read_expression();
 			$this->expect_token_ignore_space(_BRACE_CLOSE);
 		}
 
@@ -209,14 +210,15 @@ trait TeaXTagTrait
 		switch ($token) {
 			case _BRACE_OPEN:
 				$expr = $this->read_expression();
+				$expr = new XTagAttrInterpolation($expr);
 				$this->expect_token_ignore_empty(_BRACE_CLOSE);
 				break;
-			case _SINGLE_QUOTE:
-				$expr = $this->read_single_quoted_expression();
-				if ($expr instanceof InterpolatedString) {
-					throw $this->new_parse_error("Cannot use interpolation in quoted attribute values");
-				}
-				break;
+			// case _SINGLE_QUOTE:
+			// 	$expr = $this->read_single_quoted_expression();
+			// 	if ($expr instanceof InterpolatedString) {
+			// 		throw $this->new_parse_error("Cannot use interpolation in quoted attribute values");
+			// 	}
+			// 	break;
 			case _DOUBLE_QUOTE:
 				$expr = $this->read_double_quoted_expression();
 				if ($expr instanceof InterpolatedString) {
@@ -284,40 +286,37 @@ trait TeaXTagTrait
 
 					break;
 
-				case _SHARP:
-					if ($this->skip_token(_BRACE_OPEN)) {
-						$is_literal = false;
-
-						if ($text !== '') {
-							$this->xtag_append_text($xtag, $text, false, $is_newline, $indents);
-						}
-
-						$expr = $this->read_sharp_interpolation();
-						$this->xtag_append_expr($xtag, $expr, $is_newline, $indents);
+				case _BRACE_OPEN:
+					$is_literal = false;
+					if ($text !== '') {
+						$this->xtag_append_text($xtag, $text, false, $is_newline, $indents);
 					}
-					else {
-						$text .= $token;
-					}
+
+					$expr = $this->read_html_escaping_interpolation();
+					$this->xtag_append_expr($xtag, $expr, $is_newline, $indents);
 					break;
 
 				case _DOLLAR:
-					$expr = $this->try_read_dollar_interpolation();
+					$expr = $this->try_read_normal_interpolation();
 					if ($expr === null) {
 						$text .= $token;
 					}
 					else {
 						$is_literal = false;
-
 						if ($text !== '') {
 							$this->xtag_append_text($xtag, $text, false, $is_newline, $indents);
 						}
 
-						$this->xtag_append_expr($xtag, $expr, $is_newline, $indents);
+						$this->xtag_append_expr($xtag, $expr->content, $is_newline, $indents);
 					}
 					break;
 
 				case _BACK_SLASH:
-					$token .= $this->scan_token();
+					$token = $this->scan_token();
+					if (!in_array($token, _XTAG_SLASH_ESCAPING_CHARS, true)) {
+						$token = '\'' . $token;
+					}
+
 					// unbreak
 
 				default:
@@ -338,14 +337,28 @@ trait TeaXTagTrait
 		$xtag->closing_indents = $indents;
 	}
 
+	private function read_html_escaping_interpolation()
+	{
+		$expr = $this->read_expression();
+		if (!$expr) {
+			throw $this->new_parse_error("Required an expression in {}.");
+		}
+
+		$this->expect_block_end();
+		$expr = new XTagChildInterpolation($expr);
+		$expr->pos = $this->pos;
+
+		return $expr;
+	}
+
 	private function append_xtag_attribute(XTag $xtag, string &$text, ?BaseExpression $expr = null)
 	{
 		if ($text !== '') {
-			$xtag->default_attributes[] = $text;
+			$xtag->fixed_attributes[] = $text;
 		}
 
 		if ($expr) {
-			$xtag->default_attributes[] = $expr;
+			$xtag->fixed_attributes[] = $expr;
 		}
 
 		$text = ''; // reset

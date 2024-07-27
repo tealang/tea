@@ -1,6 +1,6 @@
 internal intertrait IBaseView {
 	protected attributes String.Dict = [:]
-	protected subitems = []  // infered to Any.Array
+	protected subitems String.Array = []  // infered to Any.Array
 
 	construct(id String = none) {
 		if id is String {
@@ -8,7 +8,7 @@ internal intertrait IBaseView {
 		}
 	}
 
-	add_subitem(item) {
+	add_subitem(item String) {
 		this.subitems[] = item
 	}
 
@@ -33,8 +33,8 @@ internal intertrait IBaseView {
 
 public ListView: IBaseView {
 	get_subviews() {
-		return this.subitems.map((item) => {
-			return <li>#{item}</li>
+		return this.subitems.map((item String) => {
+			return <li>{item}</li>
 		})
 	}
 

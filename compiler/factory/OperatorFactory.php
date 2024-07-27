@@ -11,50 +11,50 @@ namespace Tea;
 
 class OperatorFactory
 {
-	static $cast;
-	static $concat;
-	static $array_concat;
-	static $merge;
-	static $none_coalescing;
-	static $ternary; // exp0 ? exp1 : exp2, or exp0 ?: exp1
+	public static $cast;
+	public static $concat;
+	public static $array_concat;
+	public static $merge;
+	public static $none_coalescing;
+	public static $ternary; // exp0 ? exp1 : exp2, or exp0 ?: exp1
 
-	static $exponentiation;
-	static $identity;
-	static $negation;
-	static $pre_increment;
-	static $post_increment;
-	static $pre_decrement;
-	static $post_decrement;
-	static $addition;
-	static $subtraction;
-	static $multiplication;
-	static $division;
-	static $remainder;
-	static $spaceship;
+	public static $exponentiation;
+	public static $identity;
+	public static $negation;
+	public static $pre_increment;
+	public static $post_increment;
+	public static $pre_decrement;
+	public static $post_decrement;
+	public static $addition;
+	public static $subtraction;
+	public static $multiplication;
+	public static $division;
+	public static $remainder;
+	public static $spaceship;
 
-	static $bitwise_not;
-	static $bitwise_and;
-	static $bitwise_xor;
-	static $bitwise_or;
-	static $shift_left;
-	static $shift_right;
+	public static $bitwise_not;
+	public static $bitwise_and;
+	public static $bitwise_xor;
+	public static $bitwise_or;
+	public static $shift_left;
+	public static $shift_right;
 
-	static $lessthan;
-	static $greatethan;
-	static $lessthan_or_equal;
-	static $greatethan_or_equal;
-	static $equal;
-	static $identical;
-	static $not_equal;
-	static $not_identical;
-	static $is;
-	static $bool_not;
-	static $bool_and;
+	public static $lessthan;
+	public static $greatethan;
+	public static $lessthan_or_equal;
+	public static $greatethan_or_equal;
+	public static $equal;
+	public static $identical;
+	public static $not_equal;
+	public static $not_identical;
+	public static $is;
+	public static $bool_not;
+	public static $bool_and;
 	// static $bool_xor;
-	static $bool_or;
-	static $low_bool_and;
-	static $low_bool_xor;
-	static $low_bool_or;
+	public static $bool_or;
+	public static $low_bool_and;
+	public static $low_bool_xor;
+	public static $low_bool_or;
 
 	private static $operator_map = [];
 

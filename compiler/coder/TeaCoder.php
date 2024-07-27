@@ -534,11 +534,11 @@ class TeaCoder
 		return '(' . $node->expression->render($this) . ')';
 	}
 
-	public function render_interpolation(Interpolation $node)
+	public function render_string_interpolation(StringInterpolation $node)
 	{
-		$prefix = $node->escaping ? '#' : '$';
-		$body = $node->content->render($this);
-		$code = "{$prefix}{$body}";
+		// $prefix = $node->escaping ? '#' : '$';
+		$code = $node->content->render($this);
+		// $code = "{$prefix}{$body}";
 
 		return $code;
 	}

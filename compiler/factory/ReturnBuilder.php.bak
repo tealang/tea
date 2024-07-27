@@ -30,7 +30,7 @@ class ReturnBuilder
 	public function build_return_statements()
 	{
 		$array_var_declaration = new VariableDeclaration('__collects', TypeFactory::$_array, new ArrayLiteral([]));
-		$this->vector_identifier = ASTHelper::create_variable_identifier($array_var_declaration);
+		$this->vector_identifier = ASTFactory::create_variable_identifier($array_var_declaration);
 
 		// the fixed statements
 		$fixeds = $this->collect_block($this->node);
@@ -164,7 +164,7 @@ class ReturnBuilder
 			if ($this->collect_type->is_accept_type($callee)) {
 				// create a temp variable to insteadof old expression
 				$var_declar = $this->create_local_variable($call);
-				$var_ident = ASTHelper::create_variable_identifier($var_declar);
+				$var_ident = ASTFactory::create_variable_identifier($var_declar);
 				$fixeds[] = $var_declar;
 				$fixeds[] = new ArrayElementAssignment($this->vector_identifier, null, $var_ident);
 

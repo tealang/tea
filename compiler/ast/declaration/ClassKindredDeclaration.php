@@ -81,9 +81,10 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 		$result = null;
 
 		// check the implements interfaces
-		foreach ($this->bases as $interface) {
-			if ($interface->symbol === $symbol || $interface->symbol->declaration->find_based_with_symbol($symbol) ) {
-				$result = $interface;
+		foreach ($this->bases as $based) {
+			$based_symbol = $based->symbol;
+			if ($based_symbol === $symbol || $based_symbol->declaration->find_based_with_symbol($symbol) ) {
+				$result = $based;
 				break;
 			}
 		}

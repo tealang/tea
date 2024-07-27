@@ -29,4 +29,24 @@ class PlainInterpolatedString extends InterpolatedString
 	const KIND = 'plain_interpolated_string';
 }
 
+trait InterpolationTrait
+{
+	public $content;
+
+	public function __construct(BaseExpression $content)
+	{
+		if ($content instanceof Parentheses) {
+			$content = $content->expression;
+		}
+
+		$this->content = $content;
+	}
+}
+
+class StringInterpolation extends BaseExpression
+{
+	use InterpolationTrait;
+	const KIND = 'string_interpolation';
+}
+
 // end

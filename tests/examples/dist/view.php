@@ -4,7 +4,7 @@ namespace tests\examples;
 #internal
 interface IBaseView {
 	public function __construct(string $id = null);
-	public function add_subitem($item);
+	public function add_subitem(string $item);
 	public function set_attribute(string $key, string $value);
 	public function render(): string;
 	public function __toString(): string;
@@ -20,7 +20,7 @@ trait IBaseViewTrait {
 		}
 	}
 
-	public function add_subitem($item) {
+	public function add_subitem(string $item) {
 		$this->subitems[] = $item;
 	}
 
@@ -48,8 +48,8 @@ class ListView implements IBaseView {
 	use IBaseViewTrait;
 
 	public function get_subviews() {
-		return _std_array_map($this->subitems, function ($item) {
-			return '<li>' . \html_escape($item) . '</li>';
+		return _std_array_map($this->subitems, function (string $item) {
+			return '<li>' . \htmlspecialchars($item) . '</li>';
 		});
 	}
 
