@@ -47,7 +47,7 @@ const
 	_BYTES = 'Bytes',
 	//_RUNES = 'Runes',
 	_STRING = 'String',
-	_PURETEXT = 'Puretext',
+	_PURE_STRING = 'Pures',
 	_INT = 'Int',
 	_UINT = 'UInt',
 	_FLOAT = 'Float',
@@ -55,6 +55,7 @@ const
 	_ITERABLE = 'Iterable',
 	_DICT = 'Dict',
 	_ARRAY = 'Array', // 'Pair', 'Matrix', 'Tensor'
+	_GENERAL_ARRAY = 'GeneralArray',
 	_OBJECT = 'Object',
 	_XVIEW = 'XView',
 	_REGEX = 'Regex',

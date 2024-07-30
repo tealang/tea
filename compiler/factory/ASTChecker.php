@@ -1402,8 +1402,8 @@ class ASTChecker
 					: TypeFactory::$_none;
 				break;
 			case PlainLiteralString::KIND:
-				$infered_type = TeaHelper::is_puretext($node->value)
-					? TypeFactory::$_puretext
+				$infered_type = TeaHelper::is_pure_string($node->value)
+					? TypeFactory::$_pure_string
 					: TypeFactory::$_string;
 				break;
 			case EscapedLiteralString::KIND:
@@ -1680,7 +1680,7 @@ class ASTChecker
 			else {
 				// string
 				$is_pure = $left_type instanceof IPureType and $right_type instanceof IPureType;
-				$node->infered_type = $is_pure ? TypeFactory::$_puretext : TypeFactory::$_string;
+				$node->infered_type = $is_pure ? TypeFactory::$_pure_string : TypeFactory::$_string;
 			}
 		}
 		elseif ($operator->is(OPID::MERGE)) {
@@ -2444,13 +2444,13 @@ class ASTChecker
 					break;
 				}
 			}
-			elseif (!TeaHelper::is_puretext($item)) {
+			elseif (!TeaHelper::is_pure_string($item)) {
 				$is_pure = false;
 				break;
 			}
 		}
 
-		return $is_pure ? TypeFactory::$_puretext : TypeFactory::$_string;
+		return $is_pure ? TypeFactory::$_pure_string : TypeFactory::$_string;
 	}
 
 	private function infer_escaped_interpolated_string(EscapedInterpolatedString $node): IType

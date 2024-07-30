@@ -37,7 +37,7 @@ class PHPParser extends BaseParser
 		'int' => _INT,
 		'float' => _FLOAT,
 		'bool' => _BOOL,
-		'array' => _DICT,
+		'array' => _GENERAL_ARRAY,
 		'iterable' => _ITERABLE,
 		'callable' => _CALLABLE,
 		'object' => _OBJECT,
@@ -376,7 +376,7 @@ class PHPParser extends BaseParser
 				case T_DOC_COMMENT:
 					continue 2;
 				default:
-					// $this->print_token($token);
+					$this->print_token($token);
 					throw $this->new_unexpected_error();
 			}
 
@@ -784,20 +784,24 @@ class PHPParser extends BaseParser
 			$type = $this->get_type_in_doc($doc, 'var');
 		}
 
+		if ($type) {
+			$declaration->hinted_type = $type;
+		}
+
 		if ($this->skip_char_token(_ASSIGN)) {
-			if ($type) {
-				$this->skip_to_char_token(_SEMICOLON);
-				$this->pos--;
-			}
-			else {
-				$type = $this->read_value_type_skip($doc, 'var');
-			}
+			$declaration->value = $this->read_expression();
+			// if ($type) {
+			// 	$this->skip_to_char_token(_SEMICOLON);
+			// 	$this->pos--;
+			// }
+			// else {
+			// 	$type = $this->read_value_type_skip($doc, 'var');
+			// }
 		}
 
 		$this->expect_statement_end();
-		$declaration->hinted_type = $type;
-		$declaration->pos = $this->pos;
 
+		$declaration->pos = $this->pos;
 		return $declaration;
 	}
 
@@ -1099,29 +1103,33 @@ class PHPParser extends BaseParser
 
 	private function create_type_identifier(string $name, bool $nullable = false, string $following_comment = null)
 	{
-		$lower_case_name = strtolower($name);
-		if ($lower_case_name === 'array') {
-			if ($following_comment === '/*list*/') {
-				$identifier = TypeFactory::$_array;
-			}
-			elseif ($following_comment === '/*dict*/') {
-				$identifier = TypeFactory::$_dict;
-			}
-			else {
-				$identifier = TypeFactory::$_hashtable;
-			}
+		$name = static::TYPE_MAP[strtolower($name)] ?? $name;
 
-			if ($nullable) {
-				$identifier = clone $identifier;
+		if ($following_comment !== null) {
+			// trim '/*' and '*/'
+			$maybe_hinted_name = substr($following_comment, 2, -2);
+			if (TeaHelper::is_normal_classkindred_name($maybe_hinted_name)) {
+				$name = $maybe_hinted_name;
 			}
 		}
-		elseif (isset(static::TYPE_MAP[$lower_case_name])) {
-			$name = static::TYPE_MAP[$lower_case_name];
-			if ($following_comment === '/*list*/') {
-				$name = _ARRAY;
-			}
 
-			$identifier = TypeFactory::get_type($name);
+		// if ($lower_case_name === 'array') {
+		// 	if ($following_comment === '/*Array*/') {
+		// 		$identifier = TypeFactory::$_array;
+		// 	}
+		// 	elseif ($following_comment === '/*Dict*/') {
+		// 		$identifier = TypeFactory::$_dict;
+		// 	}
+		// 	else {
+		// 		$identifier = TypeFactory::$_generalized_array;
+		// 	}
+
+		// 	if ($nullable) {
+		// 		$identifier = clone $identifier;
+		// 	}
+		// }
+		// else
+		if ($identifier = TypeFactory::get_type($name)) {
 			if ($nullable) {
 				$identifier = clone $identifier;
 			}

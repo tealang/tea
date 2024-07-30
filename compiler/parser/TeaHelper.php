@@ -16,7 +16,7 @@ const _BUILTIN_TYPE_NAMES = [
 	_VOID,
 	_NONE,
 	_STRING,
-	_PURETEXT,
+	_PURE_STRING,
 	_INT,
 	_UINT,
 	_FLOAT,
@@ -59,13 +59,13 @@ define('_CASE_INSENSITIVE_RESERVEDS', array_merge(
 
 class TeaHelper
 {
-	private const IMPURETEXT_PATTERN = '/[&\'"`<>]/';
+	private const IMPURE_STRING_PATTERN = '/["<>]/';
 
 	private const REGEX_MODIFIER_PATTERN = '/^[imu]+$/';
 
-	public static function is_puretext(string $text)
+	public static function is_pure_string(string $text)
 	{
-		return preg_match(self::IMPURETEXT_PATTERN, $text) == 0;
+		return preg_match(self::IMPURE_STRING_PATTERN, $text) == 0;
 	}
 
 	/**

@@ -27,7 +27,7 @@ class TypeFactory
 	// static $_scalar;
 	public static $_bytes;
 	public static $_string;
-	public static $_puretext;
+	public static $_pure_string;
 	public static $_float;
 	public static $_int;
 	public static $_uint;
@@ -36,7 +36,7 @@ class TypeFactory
 	public static $_iterable;
 	public static $_array;
 	public static $_dict;
-	public static $_hashtable; // for PHP array, same as Array|Dict
+	public static $_generalized_array; // for PHP array, same as Array|Dict
 
 	public static $_xview;
 	public static $_regex;
@@ -73,7 +73,7 @@ class TypeFactory
 		// self::$_scalar = self::create_type(ScalarType::class);
 		self::$_bytes = self::create_type(BytesType::class);
 		self::$_string = self::create_type(StringType::class);
-		self::$_puretext = self::create_type(PuretextType::class);
+		self::$_pure_string = self::create_type(PuresType::class);
 		self::$_float = self::create_type(FloatType::class);
 		self::$_int = self::create_type(IntType::class);
 		self::$_uint = self::create_type(UIntType::class);
@@ -82,7 +82,8 @@ class TypeFactory
 		self::$_iterable = self::create_type(IterableType::class);
 		self::$_array = self::create_type(ArrayType::class);
 		self::$_dict = self::create_type(DictType::class);
-		self::$_hashtable = self::create_union_type([self::$_array, self::$_dict]);
+		self::$_generalized_array = self::create_union_type([self::$_array, self::$_dict]);
+		self::$type_map[_GENERAL_ARRAY] = self::$_generalized_array;
 
 		self::$_xview = self::create_type(XViewType::class);
 		self::$_regex = self::create_type(RegexType::class);

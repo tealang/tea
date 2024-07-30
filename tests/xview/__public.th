@@ -20,18 +20,18 @@ public class BaseView: IView {
 }
 
 public interface PureInterface {
-	public const ABC Puretext
+	public const ABC Pures
 
-	set_css_class(names Puretext)
+	set_css_class(names Pures)
 }
 
 public intertrait IViewDemo: IView {
-	protected const ABC Puretext
+	protected const ABC Pures
 
-	name Puretext
-	css_class Puretext
+	name Pures
+	css_class Pures
 
-	set_css_class(names Puretext) IViewDemo
+	set_css_class(names Pures) IViewDemo
 
 	protected set_some(some String)
 }

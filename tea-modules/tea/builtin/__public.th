@@ -260,7 +260,7 @@ public type String {
 	masked rtrim(characters String = #default) String
 }
 
-public type Puretext: String {
+public type Pures: String {
 	// no any
 }
 

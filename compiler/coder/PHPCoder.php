@@ -45,7 +45,7 @@ class PHPCoder extends TeaCoder
 		_VOID => 'void',
 		_ANY => '',
 		_STRING => 'string',
-		_PURETEXT => 'string',
+		_PURE_STRING => 'string',
 		_INT => 'int',
 		_UINT => 'int',
 		_FLOAT => 'float',

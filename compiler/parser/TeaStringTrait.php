@@ -108,7 +108,7 @@ trait TeaStringTrait
 			// 	continue;
 			// }
 			elseif ($token === _BACK_SLASH) {
-				$string .= $token . $this->scan_string_component(); // 略过转义字符
+				$string .= $token . $this->scan_string_component();
 				continue;
 			}
 

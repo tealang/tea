@@ -60,7 +60,7 @@ trait ITypeTrait
 		}
 		else {
 			if ($this->is_same_with($target)
-				|| ($this instanceof StringType and $target instanceof PuretextType)) {
+				|| ($this instanceof StringType and $target instanceof PuresType)) {
 				$united = $this;
 			}
 			else {
@@ -387,13 +387,13 @@ class BytesType extends BaseType implements IScalarType {
 }
 
 class StringType extends BaseType implements IScalarType {
-	const ACCEPT_TYPES = [_BYTES, _INT, _UINT, _PURETEXT, _XVIEW];
+	const ACCEPT_TYPES = [_BYTES, _INT, _UINT, _PURE_STRING, _XVIEW];
 	public $name = _STRING;
 }
 
-class PuretextType extends StringType implements IPureType {
+class PuresType extends StringType implements IPureType {
 	const ACCEPT_TYPES = [_INT, _UINT];
-	public $name = _PURETEXT;
+	public $name = _PURE_STRING;
 
 	public function is_same_or_based_with(IType $target) {
 		return $this->symbol === $target->symbol || TypeFactory::$_string->symbol === $target->symbol;
