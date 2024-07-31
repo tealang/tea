@@ -16,6 +16,13 @@ const MY_CONST = [
 	// other comments
 ];
 
+const
+	// C1 comment
+	C1 = 1, // tailing comment
+
+	/* C2 comment */
+	C2 = 'abc';
+
 function php_get_num(): int {
 	return __LINE__;
 }

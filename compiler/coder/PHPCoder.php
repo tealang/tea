@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class PHPCoder extends TeaCoder
+class PHPCoder extends BaseCoder
 {
 	const VAR_PREFIX = _DOLLAR;
 

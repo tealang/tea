@@ -15,44 +15,44 @@ class PHPChecker extends ASTChecker
 
 	protected $is_weakly_typed_system = true;
 
-	protected function infer_plain_identifier(PlainIdentifier $node): IType
-	{
-		if (!$node->symbol) {
-			$this->attach_symbol($node);
-			if (!$node->symbol) {
-				return TypeFactory::$_any;
-			}
-		}
+	// protected function infer_plain_identifier(PlainIdentifier $node): IType
+	// {
+	// 	if (!$node->symbol) {
+	// 		$this->attach_symbol($node);
+	// 		if (!$node->symbol) {
+	// 			return TypeFactory::$_any;
+	// 		}
+	// 	}
 
-		$declaration = $node->symbol->declaration;
+	// 	$declaration = $node->symbol->declaration;
 
-		if ($declaration instanceof VariableDeclaration || $declaration instanceof ConstantDeclaration || $declaration instanceof ParameterDeclaration || $declaration instanceof ClassKindredDeclaration) {
-			if (!$declaration->hinted_type) {
-				throw $this->new_syntax_error("Declaration of '{$node->name}' not found.", $node);
-			}
+	// 	if ($declaration instanceof VariableDeclaration || $declaration instanceof ConstantDeclaration || $declaration instanceof ParameterDeclaration || $declaration instanceof ClassKindredDeclaration) {
+	// 		if (!$declaration->hinted_type) {
+	// 			throw $this->new_syntax_error("Declaration of '{$node->name}' not found.", $node);
+	// 		}
 
-			$type = $declaration->hinted_type;
-		}
-		elseif ($declaration instanceof ICallableDeclaration) {
-			$type = TypeFactory::$_callable;
-		}
-		else {
-			throw $this->new_syntax_error('Undexpected declaration for identifier', $node);
-		}
+	// 		$type = $declaration->hinted_type;
+	// 	}
+	// 	elseif ($declaration instanceof ICallableDeclaration) {
+	// 		$type = TypeFactory::$_callable;
+	// 	}
+	// 	else {
+	// 		throw $this->new_syntax_error('Undexpected declaration for identifier', $node);
+	// 	}
 
-		return $type;
-	}
+	// 	return $type;
+	// }
 
-	protected function attach_symbol(PlainIdentifier $identifier)
-	{
-		$symbol = $this->find_plain_symbol_and_check_declaration($identifier);
-		if ($symbol === null) {
-			return null;
-		}
+	// protected function attach_symbol(PlainIdentifier $identifier)
+	// {
+	// 	$symbol = $this->find_plain_symbol_and_check_declaration($identifier);
+	// 	if ($symbol === null) {
+	// 		return null;
+	// 	}
 
-		$identifier->symbol = $symbol;
-		return $symbol;
-	}
+	// 	$identifier->symbol = $symbol;
+	// 	return $symbol;
+	// }
 
 	protected function check_use_target(UseDeclaration $node)
 	{

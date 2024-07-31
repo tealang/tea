@@ -35,8 +35,6 @@ class TeaParser extends BaseParser
 			}
 		}
 
-		$this->factory->end_program();
-
 		// set statements to main function when has any onload executings
 		if ($this->root_statements) {
 			$program->initializer->set_body_with_statements(...$this->root_statements);
@@ -44,6 +42,8 @@ class TeaParser extends BaseParser
 		else {
 			$program->initializer = null;
 		}
+
+		$this->factory->end_program();
 
 		return $program;
 	}

@@ -43,4 +43,7 @@ spl_autoload_register(function ($class) {
 	isset(__AUTOLOADS[$class]) && require UNIT_PATH . __AUTOLOADS[$class];
 });
 
+require_once UNIT_PATH . '_mixed2.php';
+require_once UNIT_PATH . 'function.php';
+
 // end

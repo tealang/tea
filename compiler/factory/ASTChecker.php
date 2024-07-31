@@ -221,7 +221,7 @@ class ASTChecker
 				$this->check_type($node->hinted_type, $node);
 			}
 			else {
-				throw $this->new_syntax_error("The type for declaration of constant '{$node->name}' required", $node);
+				throw $this->new_syntax_error("Type hinting for declaration of constant '{$node->name}' required", $node);
 			}
 
 			return;
@@ -230,7 +230,7 @@ class ASTChecker
 		// has value
 		$infered_type = $this->infer_expression($value);
 		if (!$infered_type) {
-			throw $this->new_syntax_error("The type for declaration of constant '{$node->name}' required", $node);
+			throw $this->new_syntax_error("Type hinting for declaration of constant '{$node->name}' required", $node);
 		}
 
 		$this->assert_compile_time_value_for($node);
@@ -249,6 +249,7 @@ class ASTChecker
 		$value = $node->value;
 
 		if (!$this->is_literal_or_const($value) and !$node instanceof ObjectMember) {
+			dump($value);
 			throw $this->new_syntax_error("Invalid initial value expression", $value);
 		}
 
@@ -745,7 +746,7 @@ class ASTChecker
 		if (!$super_type->is_accept_type($node_type)) {
 			$node_hinted_type = $this->get_type_name($node_type);
 			$super_hinted_type = $this->get_type_name($super_type);
-			throw $this->new_syntax_error("The type '{$node_hinted_type}' in '{$node->belong_block->name}.{$node->name}' must be compatibled with '$super_hinted_type' in '{$super->belong_block->name}.{$super->name}'", $node);
+			throw $this->new_syntax_error("Type '{$node_hinted_type}' in '{$node->belong_block->name}.{$node->name}' must be compatibled with '$super_hinted_type' in '{$super->belong_block->name}.{$super->name}'", $node);
 		}
 
 		// the accessing modifer
@@ -2501,7 +2502,7 @@ class ASTChecker
 		if ($dyn_expr) {
 			$infered = $this->infer_expression($dyn_expr);
 			if (!$infered instanceof DictType) {
-				throw $this->new_syntax_error("The type of activity attributes expression must be String.Dict", $dyn_expr);
+				throw $this->new_syntax_error("Type of activity attributes expression must be String.Dict", $dyn_expr);
 			}
 		}
 
@@ -2557,7 +2558,7 @@ class ASTChecker
 
 		$symbol and $this->check_declaration_for_symbol($symbol);
 
-		// find in module level symbols
+		// find in package level symbols
 		return $symbol;
 	}
 
@@ -2571,7 +2572,7 @@ class ASTChecker
 
 		$symbol and $this->check_declaration_for_symbol($symbol);
 
-		// find in module level symbols
+		// find in package level symbols
 		return $symbol;
 	}
 
@@ -3054,7 +3055,7 @@ class ASTChecker
 	// 	$ns_decl = $this->find_namespace_declaration_in_unit($this->unit, $identifier)
 	// 		?? $this->find_namespace_declaration_in_unit($this->builtin_unit, $identifier);
 	// 	if ($ns_decl === null) {
-	// 		throw $this->new_syntax_error("Namespace '{$identifier->uri}' not found in module '{$this->unit->uri}'", $identifier);
+	// 		throw $this->new_syntax_error("Namespace '{$identifier->uri}' not found in package '{$this->unit->uri}'", $identifier);
 	// 	}
 
 	// 	return $ns_decl;
@@ -3082,7 +3083,7 @@ class ASTChecker
 			// find from the Unit symbols
 			$symbol = $unit->symbols[$name] ?? null;
 			if ($symbol === null) {
-				throw $this->new_syntax_error("Target '{$name}' for use not found in module '{$unit->name}'", $use);
+				throw $this->new_syntax_error("Target '{$name}' for use not found in package '{$unit->name}'", $use);
 			}
 
 			$target_declaration = $symbol->declaration;

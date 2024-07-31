@@ -15,14 +15,9 @@ if (version_compare(PHP_VERSION, SUPPORT_PHP_VERSION, '<')) {
 	trigger_error('The minimum supported PHP version for parser is "' . SUPPORT_PHP_VERSION . '".', E_USER_ERROR);
 }
 
-// // define PHP8 constants to compatible
-// if (!defined('T_NAME_QUALIFIED')) {
-// 	define('T_NAME_QUALIFIED', 1001);
-// 	define('T_NAME_FULLY_QUALIFIED', 1002);
-// }
-
 /**
- * A lite Parser uses to supported the Mixed Programming
+ * A lite parser for PHP programs
+ * uses to supported mixed programming in Tea projects
  */
 class PHPParser extends BaseParser
 {
@@ -30,8 +25,11 @@ class PHPParser extends BaseParser
 
 	const VAL_NONE = _VAL_NULL;
 
+	const BUILTIN_IDENTIFIERS = ['true', 'false'];
+
 	private const TYPE_MAP = [
 		'void' => _VOID,
+		'null' => _NONE,
 		'mixed' => _ANY,
 		'string' => _STRING,
 		'int' => _INT,
@@ -61,7 +59,9 @@ class PHPParser extends BaseParser
 
 	private const EXPRESSION_ENDINGS = [null, _PAREN_CLOSE, _BRACKET_CLOSE, _BLOCK_END, _COMMA, _SEMICOLON];
 
-	private const VALID_TOKEN_TYPES = [T_STRING, T_PRINT, T_ECHO, T_EXIT, T_USE];
+	private const NORMAL_IDENTIFIER_TOKEN_TYPES = [T_STRING, T_ARRAY, T_STATIC, T_NAME_FULLY_QUALIFIED];
+
+	private const MEMBER_IDENTIFIER_TOKEN_TYPES = [T_STRING, T_PRINT, T_ECHO, T_EXIT, T_USE, T_UNSET, T_CLASS];
 
 	/**
 	 * @var NamespaceIdentifier
@@ -142,14 +142,15 @@ class PHPParser extends BaseParser
 				break;
 
 			case T_CONST:
-				$node = $this->read_constant_declaration($doc);
+				$node = $this->read_normal_constant_declaration($doc);
 
-				// for 'const A, B, C;' style
+				// for `const A = xxx, B = xxx, C = xxx;` style
 				while ($this->skip_char_token(_COMMA)) {
 					$this->program->append_declaration($node);
-					$node = $this->read_constant_declaration();
+					$node = $this->read_normal_constant_declaration();
 				}
 
+				$this->expect_statement_end();
 				break;
 
 			// we do not care the others
@@ -338,8 +339,12 @@ class PHPParser extends BaseParser
 
 			switch ($token_type) {
 				case T_STRING:
-					if ($token_content === static::VAL_NONE) {
+					$lower_case_name = strtolower($token_content);
+					if ($lower_case_name === static::VAL_NONE) {
 						$expr = $this->factory->create_none_identifier();
+					}
+					elseif (in_array($lower_case_name, self::BUILTIN_IDENTIFIERS, true)) {
+						$expr = $this->factory->create_builtin_identifier($lower_case_name);
 					}
 					else {
 						$expr = $this->create_unchecking_identifier($token_content);
@@ -521,12 +526,15 @@ class PHPParser extends BaseParser
 		switch ($token[0]) {
 			case T_CONST:
 				$declaration = $this->read_class_constant_declaration($modifier, $doc);
+				$this->expect_statement_end();
 				break;
 			case T_FUNCTION:
 				$declaration = $this->read_method_declaration($modifier, $doc, true);
 				break;
-
+			case T_COMMENT:
+				return $this->read_interface_member();
 			default:
+				$this->print_token($token);
 				throw $this->new_unexpected_error();
 		}
 
@@ -587,6 +595,7 @@ class PHPParser extends BaseParser
 				// unbreak
 			case T_VARIABLE:
 				$declaration = $this->read_property_declaration($token, $modifier, $doc);
+				$this->expect_statement_end();
 				break;
 
 			case T_STRING: // type annotated property
@@ -595,10 +604,12 @@ class PHPParser extends BaseParser
 				$type_identifier = $this->read_type_tailing_and_create_identifier($token[1], $nullable);
 				$token = $this->expect_typed_token_ignore_empty();
 				$declaration = $this->read_property_declaration($token, $modifier, $doc, $type_identifier);
+				$this->expect_statement_end();
 				break;
 
 			case T_CONST:
 				$declaration = $this->read_class_constant_declaration($modifier, $doc);
+				$this->expect_statement_end();
 				break;
 
 			case T_FUNCTION:
@@ -639,16 +650,12 @@ class PHPParser extends BaseParser
 		return new ClassUseTraitsDeclaration($used_traits);
 	}
 
-	private function read_constant_declaration(?string $doc)
+	private function read_normal_constant_declaration(?string $doc = null)
 	{
 		$name = $this->expect_identifier_name();
 		$declaration = $this->factory->create_constant_declaration(_PUBLIC, $name, $this->namespace);
 
-		$this->expect_char_token(_ASSIGN);
-		$declaration->hinted_type = $this->read_value_type_skip($doc);
-		$this->expect_statement_end();
-
-		$declaration->pos = $this->pos;
+		$this->continue_reading_constant_decl($declaration, $doc);
 
 		return $declaration;
 	}
@@ -658,26 +665,36 @@ class PHPParser extends BaseParser
 		$name = $this->expect_member_identifier_name();
 		$declaration = $this->factory->create_class_constant_declaration($modifier ?? _PUBLIC, $name);
 
-		$this->expect_char_token(_ASSIGN);
-		$declaration->hinted_type = $this->read_value_type_skip($doc, 'const', $name);
-		$this->expect_statement_end();
-
-		$declaration->pos = $this->pos;
+		$this->continue_reading_constant_decl($declaration, $doc);
 
 		return $declaration;
 	}
 
-	private function read_value_type_skip(?string $doc, string $doc_kind = 'const', string $name = null)
+	private function continue_reading_constant_decl(IConstantDeclaration $declaration, ?string $doc)
 	{
-		$temp_pos = $this->pos;
-
-		$type = $this->try_detatch_assign_value_type_and_skip($name);
-		if ($type === null and $doc) {
-			$type = $this->get_type_in_doc($doc, $doc_kind);
+		if ($doc) {
+			$type = $this->get_type_in_doc($doc, 'var');
+			if ($type) {
+				$declaration->hinted_type = $type;
+			}
 		}
 
-		return $type;
+		$this->expect_char_token(_ASSIGN);
+		$declaration->value = $this->read_expression();
+		$declaration->pos = $this->pos;
 	}
+
+	// private function read_value_type_skip(?string $doc, string $type_sign = 'var', string $name = null)
+	// {
+	// 	$temp_pos = $this->pos;
+
+	// 	$type = $this->try_detatch_assign_value_type_and_skip($name);
+	// 	if ($type === null and $doc) {
+	// 		$type = $this->get_type_in_doc($doc, $type_sign);
+	// 	}
+
+	// 	return $type;
+	// }
 
 	private function get_type_in_doc(?string $doc, string $kind)
 	{
@@ -780,7 +797,7 @@ class PHPParser extends BaseParser
 		$declaration = $this->factory->create_property_declaration($modifier, $name);
 		$declaration->pos = $this->pos;
 
-		if ($type === null) {
+		if ($type === null and $doc) {
 			$type = $this->get_type_in_doc($doc, 'var');
 		}
 
@@ -790,16 +807,7 @@ class PHPParser extends BaseParser
 
 		if ($this->skip_char_token(_ASSIGN)) {
 			$declaration->value = $this->read_expression();
-			// if ($type) {
-			// 	$this->skip_to_char_token(_SEMICOLON);
-			// 	$this->pos--;
-			// }
-			// else {
-			// 	$type = $this->read_value_type_skip($doc, 'var');
-			// }
 		}
-
-		$this->expect_statement_end();
 
 		$declaration->pos = $this->pos;
 		return $declaration;
@@ -1095,10 +1103,22 @@ class PHPParser extends BaseParser
 
 	private function read_type_tailing_and_create_identifier(string $name, bool $nullable)
 	{
-		$following_comment = $this->scan_comments_ignore_empty();
-		$identifier = $this->create_type_identifier($name, $nullable, $following_comment);
+		if ($this->get_token_ignore_empty() === '|') {
+			$members = [];
+			$members[] = $this->create_type_identifier($name);
+			while ($this->skip_char_token('|')) {
+				$name = $this->expect_identifier_name();
+				$members[] = $this->create_type_identifier($name);
+			}
 
-		return $identifier;
+			$type = TypeFactory::create_union_type($members);
+		}
+		else {
+			$following_comment = $this->scan_comments_ignore_empty();
+			$type = $this->create_type_identifier($name, $nullable, $following_comment);
+		}
+
+		return $type;
 	}
 
 	private function create_type_identifier(string $name, bool $nullable = false, string $following_comment = null)
@@ -1113,22 +1133,6 @@ class PHPParser extends BaseParser
 			}
 		}
 
-		// if ($lower_case_name === 'array') {
-		// 	if ($following_comment === '/*Array*/') {
-		// 		$identifier = TypeFactory::$_array;
-		// 	}
-		// 	elseif ($following_comment === '/*Dict*/') {
-		// 		$identifier = TypeFactory::$_dict;
-		// 	}
-		// 	else {
-		// 		$identifier = TypeFactory::$_generalized_array;
-		// 	}
-
-		// 	if ($nullable) {
-		// 		$identifier = clone $identifier;
-		// 	}
-		// }
-		// else
 		if ($identifier = TypeFactory::get_type($name)) {
 			if ($nullable) {
 				$identifier = clone $identifier;
@@ -1268,7 +1272,21 @@ class PHPParser extends BaseParser
 	private function expect_identifier_name()
 	{
 		$token = $this->scan_token_ignore_empty();
+		while (is_array($token) and $token[0] === T_COMMENT) {
+			$token = $this->scan_token_ignore_empty();
+		}
+
 		return $this->get_identifier_name($token);
+	}
+
+	private function get_identifier_name(string|array $token)
+	{
+		if (is_string($token) || !in_array($token[0], self::NORMAL_IDENTIFIER_TOKEN_TYPES, true) ) {
+			$this->print_token($token);
+			throw $this->new_unexpected_error();
+		}
+
+		return $token[1];
 	}
 
 	private function expect_member_identifier_name()
@@ -1311,20 +1329,9 @@ class PHPParser extends BaseParser
 		return false;
 	}
 
-	private function get_identifier_name($token)
-	{
-		if (is_string($token) || ($token[0] !== T_STRING && $token[0] !== T_ARRAY)) {
-			// $this->print_token($token);
-			throw $this->new_unexpected_error();
-		}
-
-		$type = $token[1];
-		return $type;
-	}
-
 	private function assert_member_identifier_token($token)
 	{
-		if (is_string($token) || !in_array($token[0], self::VALID_TOKEN_TYPES, true) ) {
+		if (is_string($token) || !in_array($token[0], self::MEMBER_IDENTIFIER_TOKEN_TYPES, true) ) {
 			// $this->print_token($token);
 			throw $this->new_unexpected_error();
 		}

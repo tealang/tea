@@ -513,7 +513,6 @@ class ASTFactory
 		$this->check_global_modifier($modifier, 'function');
 
 		$declaration = new FunctionDeclaration($modifier, $name);
-
 		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns);
 
 		$this->begin_root_declaration($declaration);
@@ -546,10 +545,7 @@ class ASTFactory
 		$this->check_global_modifier($modifier, 'constant');
 
 		$declaration = new ConstantDeclaration($modifier, $name);
-
 		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns);
-
-		// $this->add_scope_symbol($symbol);
 
 		$this->begin_root_declaration($declaration);
 
@@ -771,7 +767,10 @@ class ASTFactory
 
 	public function end_program()
 	{
-		$this->program->append_defer_check_identifiers($this->function);
+		$program = $this->program;
+		// $program->append_defer_check_identifiers($this->function);
+
+		// reset
 		$this->program = null;
 		$this->declaration = null;
 		$this->block = $this->function = $this->scope = null;

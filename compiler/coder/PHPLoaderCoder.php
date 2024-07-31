@@ -135,9 +135,12 @@ class PHPLoaderCoder extends PHPCoder
 		}
 	}
 
-	public static function render_autoloads_code(array $autoloads)
+	public function render_autoloads_code(array $autoloads)
 	{
 		$autoloads = self::stringify_autoloads($autoloads);
+
+		$include_stmts = $this->render_internal_includes($this->program->unit);
+		$include_stmts = join("\n", $include_stmts);
 
 		return "
 // autoloads
@@ -147,8 +150,39 @@ spl_autoload_register(function (\$class) {
 	isset(__AUTOLOADS[\$class]) && require UNIT_PATH . __AUTOLOADS[\$class];
 });
 
+{$include_stmts}
+
 // end
 ";
+	}
+
+
+	private function render_internal_includes(Unit $unit)
+	{
+		$items = [];
+		// programs that's has constants/functions
+		foreach ($unit->programs as $program) {
+			if ($program->name !== '__package' && $this->is_need_include_at_loader($program)) {
+				$items[] = "require_once UNIT_PATH . '{$program->name}.php';";
+			}
+		}
+
+		return $items;
+	}
+
+	private function is_need_include_at_loader(Program $program)
+	{
+		$is = false;
+		foreach ($program->declarations as $node) {
+			$is = $node->is_unit_level
+				&& ($node instanceof ConstantDeclaration
+					|| $node instanceof FunctionDeclaration);
+			if ($is) {
+				break;
+			}
+		}
+
+		return $is;
 	}
 
 	private static function stringify_autoloads(array $autoloads)

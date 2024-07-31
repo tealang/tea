@@ -509,7 +509,7 @@ class Compiler
 		$dist_code = $coder->render_loader_program($this->header_program, $this->normal_programs, $this->loaders);
 
 		// the autoloads for classes/interfaces/traits
-		$dist_code .= PHPLoaderCoder::render_autoloads_code($this->autoloads_map);
+		$dist_code .= $coder->render_autoloads_code($this->autoloads_map);
 
 		file_put_contents($this->unit_loader_file, $dist_code);
 	}

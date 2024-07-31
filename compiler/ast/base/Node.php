@@ -31,7 +31,7 @@ abstract class Node
 
 	public $indents;
 
-	public function render(TeaCoder $coder)
+	public function render(BaseCoder $coder)
 	{
 		return $coder->{'render_' . static::KIND}($this);
 	}

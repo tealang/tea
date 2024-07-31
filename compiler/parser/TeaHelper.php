@@ -59,7 +59,7 @@ define('_CASE_INSENSITIVE_RESERVEDS', array_merge(
 
 class TeaHelper
 {
-	private const IMPURE_STRING_PATTERN = '/["<>]/';
+	private const IMPURE_STRING_PATTERN = '/["<>\n\r]/';
 
 	private const REGEX_MODIFIER_PATTERN = '/^[imu]+$/';
 

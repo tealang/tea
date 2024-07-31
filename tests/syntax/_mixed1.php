@@ -8,6 +8,8 @@ class PHPClassInMixed1 {
 	// const2
 	public const CONST2 = 123 * 2;
 
+	public int|string|bool $union_val = false;
+
 	/**
 	 * comments
 	 * @var type

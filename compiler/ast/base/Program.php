@@ -29,19 +29,22 @@ class Program extends Node
 	public $file;
 
 	/**
-	 * the use statements in current program
+	 * using statements that in current program
 	 * @var UseStatement[]
 	 */
 	public $uses = [];
 
 	/**
-	 * the targets of use statements in current program
+	 * targets of use statements in current program
 	 * @var UseDeclcaration[]
 	 */
 	public $use_targets = [];
 
 	public $declarations = [];
 
+	/**
+	 * @var FunctionDeclaration
+	 */
 	public $initializer;
 
 	public $symbols = [];
@@ -49,7 +52,7 @@ class Program extends Node
 	public $unit;
 
 	/**
-	 * just used for PHP scripts
+	 * for PHP scripts
 	 * @var NamespaceIdentifier
 	 */
 	public $ns;
@@ -59,8 +62,6 @@ class Program extends Node
 	public $is_native = false; // for native programs, e.g. PHP scripts
 
 	public $is_external = false;
-
-	private $subdirectory_levels;
 
 	public function __construct(string $file, Unit $unit)
 	{
@@ -105,3 +106,5 @@ class Program extends Node
 		return $name;
 	}
 }
+
+// end

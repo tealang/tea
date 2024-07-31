@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class TeaCoder
+abstract class BaseCoder
 {
 	const INDENT = "\t";
 
@@ -401,6 +401,19 @@ class TeaCoder
 
 		$code = sprintf("%s%s %s",
 			$this->generate_classkindred_header($node, _INTERTRAIT),
+			$this->generate_class_bases($node),
+			$this->wrap_block_code($body)
+		);
+
+		return $code;
+	}
+
+	public function render_trait_declaration(TraitDeclaration $node)
+	{
+		$body = $this->render_block_nodes($node->members);
+
+		$code = sprintf("%s%s %s",
+			$this->generate_classkindred_header($node, _TRAIT),
 			$this->generate_class_bases($node),
 			$this->wrap_block_code($body)
 		);

@@ -7,12 +7,15 @@ use tests\phpdemo { PHP_CONST_DEMO }
 use tests\xview { BaseView }
 
 public const MY_CONST Dict
+public const C1 UInt
+public const C2 Pures
 
 runtime func range(start Int, end Int, step Int = 1) Array
 
 public class PHPClassInMixed1 {
-	protected const CONST1 String
-	public const CONST2
+	protected const CONST1 Pures
+	public const CONST2 UInt
+	public union_val Int|String|Bool
 	public object Object?
 	public some \Exception
 	public construct(caller String, items Array, some Bool = #default)
