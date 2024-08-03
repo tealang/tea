@@ -13,8 +13,8 @@ abstract class BaseExpression extends Node
 {
 	public $infered_type;
 
-	// public ?bool $is_pure;
-	// public ?bool $is_calling;
+	public $is_const_value;
+
 }
 
 // end

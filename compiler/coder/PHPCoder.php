@@ -11,8 +11,6 @@ namespace Tea;
 
 class PHPCoder extends BaseCoder
 {
-	const VAR_PREFIX = _DOLLAR;
-
 	const VAR_DECLARE_PREFIX = _DOLLAR;
 
 	const USE_DECLARE_PREFIX = 'use ';
@@ -31,7 +29,7 @@ class PHPCoder extends BaseCoder
 
 	const DICT_EMPTY_VALUE = '[]';
 
-	const VAL_NONE = PHPParser::VAL_NONE;
+	const VAL_NONE = _VAL_NULL;
 
 	const NAMESPACE_REPLACES = [
 		_STRIKETHROUGH => _UNDERSCORE,
@@ -58,6 +56,7 @@ class PHPCoder extends BaseCoder
 		_REGEX => 'string',
 		_XVIEW => 'string',
 		_METATYPE => 'string',
+		_TYPE_SELF => 'static',
 	];
 
 	const EXTRA_RESERVEDS = [
@@ -297,7 +296,7 @@ class PHPCoder extends BaseCoder
 		// just render return type on hinted
 		// because on unhinted, it's not necessary, and sometimes it makes mistakes
 		if ($node->hinted_type !== null && $node->hinted_type !== TypeFactory::$_any) {
-			$return_type = $this->render_type($node->hinted_type);
+			$return_type = $this->render_type_expr($node->hinted_type);
 			$return_type and $code .= ": $return_type";
 		}
 
@@ -462,7 +461,7 @@ class PHPCoder extends BaseCoder
 		}
 
 		if ($node->hinted_type) {
-			$type = $this->render_type($node->hinted_type);
+			$type = $this->render_type_expr($node->hinted_type);
 			if ($type) {
 				$expr = "{$type} {$expr}";
 			}
@@ -723,7 +722,7 @@ class PHPCoder extends BaseCoder
 		if ($node->else) {
 			// create temp assignment to avoid duplicate computation
 			$temp_assignment = '';
-			if (!$node->iterable instanceof PlainIdentifier && !$node->iterable instanceof ILiteral) {
+			if (!$node->iterable instanceof PlainIdentifier && !$node->iterable->is_const_value) {
 				$temp_name = $this->generate_temp_variable_name();
 				$temp_assignment = "$temp_name = $iterable;\n";
 				$iterable = $temp_name;
@@ -751,14 +750,14 @@ class PHPCoder extends BaseCoder
 		$end = $node->end->render($this);
 
 		$code = '';
-		if (!$node->start instanceof ILiteral && !$node->start instanceof PlainIdentifier) {
+		if (!$node->start->is_const_value && !$node->start instanceof PlainIdentifier) {
 			$temp_name = $this->generate_temp_variable_name();
 			$code .= "$temp_name = $start;\n";
 			$start = $temp_name;
 		}
 
 		$temp_assignment2 = null;
-		if (!$node->end instanceof ILiteral && !$node->end instanceof PlainIdentifier) {
+		if (!$node->end->is_const_value && !$node->end instanceof PlainIdentifier) {
 			$temp_name = $this->generate_temp_variable_name();
 			$code .= "$temp_name = $end;\n";
 			$end = $temp_name;
@@ -793,6 +792,11 @@ class PHPCoder extends BaseCoder
 		}
 
 		return $code;
+	}
+
+	protected function generate_temp_variable_name()
+	{
+		return _DOLLAR . '__tmp' . $this->temp_name_index++;
 	}
 
 	private function build_foreach_statement(ControlBlock $node, string $iterable)
@@ -1027,7 +1031,7 @@ class PHPCoder extends BaseCoder
 			$items[] = ' ' . $key . '="';
 
 			// normal value
-			if ($val instanceof ILiteral) {
+			if ($val->is_const_value) {
 				// static
 				$items[] = $val->value;
 			}
@@ -1258,7 +1262,7 @@ class PHPCoder extends BaseCoder
 				return $masked->render($this);
 			}
 		}
-		elseif ($masked instanceof ILiteral) {
+		elseif ($masked->is_const_value) {
 			return $masked->render($this);
 		}
 		else {
@@ -1299,7 +1303,7 @@ class PHPCoder extends BaseCoder
 				throw new Exception("Unexpected render error for masked call '{$node->callee->name}'.");
 			}
 
-			if ($arg_value === ASTFactory::$default_value_marker) {
+			if ($arg_value === ASTFactory::$default_value_mark) {
 				// is should be the last real argument, so we check it is correct
 				if (count($declaration->arguments_map) !== count($actual_arguments) + 1) {
 					throw new Exception("Unexpected arguments error for masked call '{$node->callee->name}'.");
@@ -1441,7 +1445,7 @@ class PHPCoder extends BaseCoder
 		return $node->name;
 	}
 
-	public function render_type(IType $node)
+	public function render_type_expr(IType $node)
 	{
 		$code = $node->render($this);
 
@@ -1452,7 +1456,7 @@ class PHPCoder extends BaseCoder
 		return $code;
 	}
 
-	public function render_type_identifier(BaseType $node)
+	public function render_type_identifier(IType $node)
 	{
 		return static::BUILTIN_TYPE_MAP[$node->name] ?? $node->name;
 	}

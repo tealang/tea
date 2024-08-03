@@ -12,7 +12,7 @@ namespace Tea;
 class ASTFactory
 {
 	// for #default label
-	public static $default_value_marker;
+	public static $default_value_mark;
 
 	// for properties of Any type object in AccessingIdentifer
 	// public static $virtual_property_for_any;
@@ -54,9 +54,7 @@ class ASTFactory
 		TypeFactory::init();
 		OperatorFactory::init();
 
-		// just use None to simplify the processes
-		self::$default_value_marker = new LiteralNone();
-		self::$default_value_marker->is_default_value_marker = true;
+		self::$default_value_mark = new LiteralDefaultMark();
 	}
 
 	public function __construct(Unit $unit)
@@ -170,7 +168,7 @@ class ASTFactory
 	// 	return $identifier;
 	// }
 
-	public function create_identifier(string $name) // PlainIdentifier or ILiteral
+	public function create_identifier(string $name)
 	{
 		if (TeaHelper::is_builtin_identifier($name)) {
 			$identifier = $this->create_builtin_identifier($name);
@@ -191,52 +189,47 @@ class ASTFactory
 
 	public function create_builtin_identifier(string $token): BaseExpression
 	{
-		if ($token === _THIS) {
-			$identifier = new PlainIdentifier($token);
-			if ($this->class) {
-				// if ($this->function !== $this->scope) { // it is would be in a lambda block
-				// 	throw $this->parser->new_parse_error("Cannot use '$token' identifier in lambda functions");
-				// }
-				// else
-				if ($this->function) {
-					$identifier->symbol = $this->function->is_static ? $this->class->this_class_symbol : $this->class->this_object_symbol;
+		switch ($token) {
+			case _THIS:
+				$identifier = new PlainIdentifier($token);
+				if ($this->class) {
+					// function/const/property declaration
+					$declar = $this->function ?? $this->declaration;
+					$identifier->symbol = $declar->is_static
+						? $this->class->this_class_symbol
+						: $this->class->this_object_symbol;
+				}
+				elseif (!$this->seek_symbol_in_function($identifier)) { // it would be has an #expect
+					throw $this->parser->new_parse_error("Identifier '$token' not defined");
+				}
+
+				break;
+			case _SUPER:
+				$identifier = new PlainIdentifier($token);
+				if ($this->class) {
+					if ($this->function !== $this->scope) { // it is would be in a lambda block
+						throw $this->parser->new_parse_error("Cannot use '$token' identifier in lambda functions");
+					}
 				}
 				else {
-					// the const/property declaration
-					$identifier->symbol = $this->declaration->is_static ? $this->class->this_class_symbol : $this->class->this_object_symbol;
-					// throw $this->parser->new_parse_error("Can not use 'this' on class member declaration");
+					throw $this->parser->new_parse_error("Identifier '$token' cannot use without in a class");
 				}
-			}
-			elseif (!$this->seek_symbol_in_function($identifier)) { // it would be has an #expect
-				throw $this->parser->new_parse_error("Identifier '$token' not defined");
-			}
-		}
-		elseif ($token === _SUPER) {
-			$identifier = new PlainIdentifier($token);
-			if ($this->class) {
-				if ($this->function !== $this->scope) { // it is would be in a lambda block
-					throw $this->parser->new_parse_error("Cannot use '$token' identifier in lambda functions");
-				}
-			}
-			else {
-				throw $this->parser->new_parse_error("Identifier '$token' cannot use without in a class");
-			}
-		}
-		elseif ($token === _VAL_TRUE) {
-			$identifier = new LiteralBoolean(true);
-		}
-		elseif ($token === _VAL_FALSE) {
-			$identifier = new LiteralBoolean(false);
-		}
-		elseif ($token === TeaParser::VAL_NONE) {
-			$identifier = $this->create_none_identifier();
-		}
-		elseif ($token === _UNIT_PATH) {
-			$identifier = new ConstantIdentifier(_UNIT_PATH);
-			$identifier->symbol = $this->unit_path_symbol;
-		}
-		else {
-			throw $this->parser->new_parse_error("Unknow builtin identifier '$token'");
+				break;
+			case _VAL_NONE:
+				$identifier = $this->create_none_identifier();
+				break;
+			case _VAL_TRUE:
+				$identifier = new LiteralBoolean(true);
+				break;
+			case _VAL_FALSE:
+				$identifier = new LiteralBoolean(false);
+				break;
+			case _UNIT_PATH:
+				$identifier = new ConstantIdentifier(_UNIT_PATH);
+				$identifier->symbol = $this->unit_path_symbol;
+				break;
+			default:
+				throw $this->parser->new_parse_error("Unknow builtin identifier '$token'");
 		}
 
 		return $identifier;

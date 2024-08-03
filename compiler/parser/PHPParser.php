@@ -23,9 +23,15 @@ class PHPParser extends BaseParser
 {
 	const NS_SEPARATOR = _BACK_SLASH;
 
-	const VAL_NONE = _VAL_NULL;
-
-	const BUILTIN_IDENTIFIERS = ['true', 'false'];
+	const BUILTIN_IDENTIFIER_MAP = [
+		'this' => _THIS,
+		'parent' => _SUPER,
+		'self' => _THIS,  // Temporary implementation
+		'static' => _THIS,
+		'true' => _VAL_TRUE,
+		'false' => _VAL_FALSE,
+		_VAL_NULL => _VAL_NONE,
+	];
 
 	private const TYPE_MAP = [
 		'void' => _VOID,
@@ -35,10 +41,12 @@ class PHPParser extends BaseParser
 		'int' => _INT,
 		'float' => _FLOAT,
 		'bool' => _BOOL,
+		'false' => _BOOL,
 		'array' => _GENERAL_ARRAY,
 		'iterable' => _ITERABLE,
 		'callable' => _CALLABLE,
 		'object' => _OBJECT,
+		'static' => _TYPE_SELF,
 	];
 
 	private const TYPING_TOKEN_TYPES = [
@@ -340,11 +348,9 @@ class PHPParser extends BaseParser
 			switch ($token_type) {
 				case T_STRING:
 					$lower_case_name = strtolower($token_content);
-					if ($lower_case_name === static::VAL_NONE) {
-						$expr = $this->factory->create_none_identifier();
-					}
-					elseif (in_array($lower_case_name, self::BUILTIN_IDENTIFIERS, true)) {
-						$expr = $this->factory->create_builtin_identifier($lower_case_name);
+					$mapped_name = self::BUILTIN_IDENTIFIER_MAP[$lower_case_name] ?? null;
+					if ($mapped_name) {
+						$expr = $this->factory->create_builtin_identifier($mapped_name);
 					}
 					else {
 						$expr = $this->create_unchecking_identifier($token_content);
@@ -372,7 +378,12 @@ class PHPParser extends BaseParser
 					break;
 				case T_DOUBLE_COLON:
 					$name = $this->expect_member_identifier_name();
-					$expr = $this->factory->create_accessing_identifier($expr, $name);
+					if ($name === _CLASS) {
+						continue 2;
+					}
+					else {
+						$expr = $this->factory->create_accessing_identifier($expr, $name);
+					}
 					break;
 				case T_DOUBLE_ARROW:
 					$this->pos--;
@@ -402,12 +413,26 @@ class PHPParser extends BaseParser
 	{
 		$not_opened && $this->expect_char_token(_BRACKET_OPEN);
 
+		$is_const_value = true;
 		$is_dict = false;
-		while ($expr1 = $this->read_expression($debug_name)) {
+		$members = [];
+		while ($item = $this->read_expression($debug_name)) {
+			if (!$item->is_const_value) {
+				$is_const_value = false;
+			}
+
 			if ($this->skip_typed_token(T_DOUBLE_ARROW)) {
 				$is_dict = true;
-				$expr2 = $this->read_expression();
+				$val = $this->read_expression();
+				if (!$val->is_const_value) {
+					$is_const_value = false;
+				}
+
+				$item = new DictMember($item, $val);
+				$item->pos = $this->pos;
 			}
+
+			$members[] = $item;
 
 			while ($this->get_token_ignore_empty()[0] === T_COMMENT) {
 				$this->scan_token_ignore_empty();
@@ -420,7 +445,11 @@ class PHPParser extends BaseParser
 
 		$this->expect_char_token(_BRACKET_CLOSE);
 
-		return $is_dict ? new DictExpression([]) : new ArrayExpression([]);
+		$expr = $is_dict ? new DictExpression($members) : new ArrayExpression($members);
+		$expr->is_const_value = $is_const_value;
+		$expr->pos = $this->pos;
+
+		return $expr;
 	}
 
 	private function read_interface_declaration()
@@ -938,7 +967,7 @@ class PHPParser extends BaseParser
 				$type = TypeFactory::$_dict;
 			}
 
-			$value = ASTFactory::$default_value_marker;
+			$value = ASTFactory::$default_value_mark;
 		}
 
 		$declar = new ParameterDeclaration($name, $type, $value);

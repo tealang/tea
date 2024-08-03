@@ -111,9 +111,9 @@ trait TeaXTagTrait
 			return $this->read_xtag_comment($align_spaces);
 		}
 
-		$is_literal = true;
+		$is_const_value = true;
 		$xtag = new XTag($name);
-		$this->read_xtag_attributes($xtag, $is_literal);
+		$this->read_xtag_attributes($xtag, $is_const_value);
 
 		$current_token = $this->get_current_token_string();
 		if ($current_token === _XTAG_SELF_CLOSE) {
@@ -130,7 +130,7 @@ trait TeaXTagTrait
 				$xtag->inner_br = true;
 			}
 
-			$this->read_xtag_children($xtag, $align_spaces, $is_literal);
+			$this->read_xtag_children($xtag, $align_spaces, $is_const_value);
 			if ($align_spaces) {
 				$this->strip_align_spaces_for_items($xtag, $align_spaces);
 			}
@@ -139,7 +139,7 @@ trait TeaXTagTrait
 			throw $this->new_unexpected_error();
 		}
 
-		$xtag->is_literal = $is_literal;
+		$xtag->is_const_value = $is_const_value;
 		$xtag->pos = $this->pos;
 
 		return $xtag;
@@ -180,7 +180,7 @@ trait TeaXTagTrait
 		return new XTagComment($content);
 	}
 
-	private function read_xtag_attributes(XTag $xtag, bool &$is_literal)
+	private function read_xtag_attributes(XTag $xtag, bool &$is_const_value)
 	{
 		while ($name = $this->scan_xtag_attr_name()) {
 			if ($this->skip_token_ignore_space(_ASSIGN)) {
@@ -232,7 +232,7 @@ trait TeaXTagTrait
 		return $expr;
 	}
 
-	private function read_xtag_children(XTag $xtag, string $align_spaces, bool &$is_literal)
+	private function read_xtag_children(XTag $xtag, string $align_spaces, bool &$is_const_value)
 	{
 		$is_newline = $xtag->inner_br;
 		$indents = $is_newline ? $this->scan_spaces() : '';
@@ -258,8 +258,8 @@ trait TeaXTagTrait
 						$this->try_read_ending_for_xtag_child($child_tag);
 						$this->xtag_append_expr($xtag, $child_tag, $is_newline, $indents);
 
-						if (!$child_tag->is_literal) {
-							$is_literal = false;
+						if (!$child_tag->is_const_value) {
+							$is_const_value = false;
 						}
 					}
 					elseif ($next === _SLASH) { // the </
@@ -287,7 +287,7 @@ trait TeaXTagTrait
 					break;
 
 				case _BRACE_OPEN:
-					$is_literal = false;
+					$is_const_value = false;
 					if ($text !== '') {
 						$this->xtag_append_text($xtag, $text, false, $is_newline, $indents);
 					}
@@ -302,7 +302,7 @@ trait TeaXTagTrait
 						$text .= $token;
 					}
 					else {
-						$is_literal = false;
+						$is_const_value = false;
 						if ($text !== '') {
 							$this->xtag_append_text($xtag, $text, false, $is_newline, $indents);
 						}

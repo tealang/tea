@@ -19,8 +19,6 @@ abstract class BaseCoder
 
 	const NOSPACE_PREFIX_OPERATORS = ['-', '~', '+', '&', '!'];
 
-	const VAR_PREFIX = '';
-
 	const VAR_DECLARE_PREFIX = 'var ';
 
 	const USE_DECLARE_PREFIX = 'use ';
@@ -39,7 +37,7 @@ abstract class BaseCoder
 
 	const DICT_EMPTY_VALUE = '[:]';
 
-	const VAL_NONE = TeaParser::VAL_NONE;
+	const VAL_NONE = _VAL_NONE;
 
 	const PROGRAM_HEADER = LF; // an empty line
 
@@ -203,10 +201,16 @@ abstract class BaseCoder
 		$prefix = join(' ', $items);
 
 		$parameters = $this->render_parameters($node->parameters);
-		// $callbacks = $node->callbacks ? $this->render_callback_protocols($node->callbacks) : '';
-		$type = $this->generate_declaration_type($node);
+		$code = "{$prefix}($parameters)";
 
-		return "{$prefix}($parameters){$type}";
+		// $callbacks = $node->callbacks ? $this->render_callback_protocols($node->callbacks) : '';
+
+		$type = $this->render_type_expr_for_decl($node);
+		if ($type !== null) {
+			$code .= ' ' . $type;
+		}
+
+		return $code;
 	}
 
 	protected function generate_property_header(PropertyDeclaration $node)
@@ -215,7 +219,11 @@ abstract class BaseCoder
 		if ($node->is_static) $items[] = _STATIC;
 
 		$items[] = $node->name;
-		$this->push_type($items, $node);
+
+		$type = $this->render_type_expr_for_decl($node);
+		if ($type !== null) {
+			$items[] = $type;
+		}
 
 		return join(' ', $items);
 	}
@@ -223,19 +231,6 @@ abstract class BaseCoder
 	protected function generate_class_constant_header(ClassConstantDeclaration $node)
 	{
 		return $this->generate_constant_header($node);
-	}
-
-	protected function get_decl_type(IDeclaration $node)
-	{
-		return $node->hinted_type;
-	}
-
-	protected function push_type(array &$items, IDeclaration $node)
-	{
-		$type = $this->get_decl_type($node);
-		if ($type) {
-			$items[] = $type->render($this);
-		}
 	}
 
 	protected function generate_constant_header(IConstantDeclaration $node)
@@ -249,17 +244,20 @@ abstract class BaseCoder
 			$name
 		];
 
-		$this->push_type($items, $node);
+		$type = $this->render_type_expr_for_decl($node);
+		if ($type !== null) {
+			$items[] = $type;
+		}
 
 		return join(' ', $items);
 	}
 
-	protected function generate_declaration_type(IDeclaration $node)
+	protected function render_type_expr_for_decl(IDeclaration $node)
 	{
-		$type = $this->get_decl_type($node);
+		$type = $node->hinted_type;
 		return $type && $type !== TypeFactory::$_void
-			? ' ' . $type->render($this)
-			: '';
+			? $type->render($this)
+			: null;
 	}
 
 	protected function render_parameters(array $nodes)
@@ -286,7 +284,7 @@ abstract class BaseCoder
 	// {
 	// 	$async = $node->async ? 'async ' : '';
 	// 	$parameters = $this->render_parameters($node->parameters);
-	// 	$type = $this->generate_declaration_type($node);
+	// 	$type = $this->render_type_expr_for_decl($node);
 
 	// 	return "{$async}{$node->name}($parameters){$type}";
 	// }
@@ -299,21 +297,28 @@ abstract class BaseCoder
 
 	public function render_masked_declaration(MaskedDeclaration $node)
 	{
-		$header = _MASKED . " {$node->name}";
-		$type = $this->generate_declaration_type($node);
+		$code = _MASKED . " {$node->name}";
+
+		if ($node->parameters !== null) {
+			$parameters = $this->render_parameters($node->parameters);
+			$code .= "($parameters)";
+		}
+
+		$type = $this->render_type_expr_for_decl($node);
+		if ($type !== null) {
+			$code .= ' ' . $type;
+		}
+
+		// if ($node->callbacks) {
+		// 	$callbacks = $this->render_callback_protocols($node->callbacks);
+		// 	$code .= $callbacks;
+		// }
 
 		$statement = 'return ' . $node->body->render($this) . static::STATEMENT_TERMINATOR;
 		$body = $this->wrap_block_code([$statement]);
+		$code .= "\n" . $body;
 
-		if ($node->parameters === null && $node->callbacks === null) {
-			return "{$header}{$type}\n$body";
-		}
-		else {
-			$parameters = $this->render_parameters($node->parameters);
-			$callbacks = $node->callbacks ? $this->render_callback_protocols($node->callbacks) : '';
-
-			return "{$header}($parameters){$type}{$callbacks}\n$body";
-		}
+		return $code;
 	}
 
 	public function render_method_declaration(MethodDeclaration $node)
@@ -471,7 +476,9 @@ abstract class BaseCoder
 
 	public function render_variable_declaration(VariableDeclaration $node)
 	{
-		$code = static::VAR_DECLARE_PREFIX . $node->name;
+		$name = $this->get_variable_name($node);
+
+		$code = static::VAR_DECLARE_PREFIX . $name;
 		if ($node->value) {
 			$code .= ' = ' . $node->value->render($this);
 		}
@@ -491,17 +498,15 @@ abstract class BaseCoder
 
 	public function render_parameter_declaration(ParameterDeclaration $node)
 	{
-		$expr = static::VAR_PREFIX . $node->name;
+		$expr = $this->get_variable_name($node);
+
 		if ($node->is_inout) {
-			$expr = $expr . ' ' . _INOUT;
+			$expr .= ' ' . _INOUT;
 		}
 
-		$type = $this->get_decl_type($node);
-		if ($type) {
-			$type_str = $type->render($this);
-			if ($type_str) {
-				$expr = "{$expr} {$type_str}";
-			}
+		$type = $this->render_type_expr_for_decl($node);
+		if ($type !== null) {
+			$expr .= ' ' . $type;
 		}
 
 		if ($node->value) {
@@ -686,7 +691,17 @@ abstract class BaseCoder
 
 	public function render_variable_identifier(VariableIdentifier $node)
 	{
-		return $node->name;
+		return $this->get_variable_name($node);
+	}
+
+	private function get_variable_name(VariableIdentifier|BaseVariableDeclaration $node)
+	{
+		$name = $node->name;
+		if (TeaHelper::is_reserved($name)) {
+			$name = '__' . $name;
+		}
+
+		return $name;
 	}
 
 	public function render_plain_identifier(PlainIdentifier $node)
@@ -694,36 +709,37 @@ abstract class BaseCoder
 		return $node->name;
 	}
 
-	public function render_type_identifier(BaseType $node)
+	public function render_type_identifier(IType $node)
 	{
 		if ($node === TypeFactory::$_none) {
 			return null;
 		}
 
 		if ($node instanceof CallableType) {
-			$code = $this->render_callable_type($node);
+			$buffer = $this->render_callable_type($node);
 		}
 		elseif ($node instanceof IterableType and $node->generic_type) {
+			$buffer = $node->name;
 			$gtype = $node->generic_type;
 			if ($gtype instanceof UnionType) {
-				$item = $this->render_union_type_expression($gtype);
-				$item = "($item)";
+				// $item = $this->render_union_type_expression($gtype);
+				// $item = "($item)";
+				// $buffer = $item . '.' $buffer;
 			}
 			else {
 				$item = $gtype->render($this);
+				$buffer = $item . '.' . $buffer;
 			}
-
-			$code = $item . '.' . $node->name;
 		}
 		else {
-			$code = $node->name;
+			$buffer = $node->name;
 		}
 
 		if ($node->nullable) {
-			$code .= '?';
+			$buffer .= '?';
 		}
 
-		return $code;
+		return $buffer;
 	}
 
 	public function render_union_type_expression(UnionType $node)
@@ -832,12 +848,13 @@ abstract class BaseCoder
 		return "{$master}[{$key}]";
 	}
 
+	public function render_literal_default_mark(LiteralDefaultMark $node)
+	{
+		return '#default';
+	}
+
 	public function render_literal_none(LiteralNone $node)
 	{
-		if ($node === ASTFactory::$default_value_marker) {
-			return '#default';
-		}
-
 		return static::VAL_NONE;
 	}
 
@@ -929,19 +946,19 @@ abstract class BaseCoder
 	// 	return $this->render_object_expression($node);
 	// }
 
-	public function render_literal_array(LiteralArray $node)
-	{
-		return $this->render_array_expression($node);
-	}
+	// public function render_literal_array(LiteralArray $node)
+	// {
+	// 	return $this->render_array_expression($node);
+	// }
 
-	public function render_literal_dict(LiteralDict $node)
-	{
-		if (!$node->items) {
-			return static::DICT_EMPTY_VALUE;
-		}
+	// public function render_literal_dict(LiteralDict $node)
+	// {
+	// 	if (!$node->items) {
+	// 		return static::DICT_EMPTY_VALUE;
+	// 	}
 
-		return $this->render_dict_expression($node);
-	}
+	// 	return $this->render_dict_expression($node);
+	// }
 
 	public function render_array_expression(ArrayExpression $node)
 	{
@@ -957,6 +974,10 @@ abstract class BaseCoder
 
 	public function render_dict_expression(DictExpression $node)
 	{
+		if (!$node->items) {
+			return static::DICT_EMPTY_VALUE;
+		}
+
 		$body = $this->render_member_items($node->items, $node->is_vertical_layout);
 		return $this->wrap_dict($body);
 	}
@@ -1442,11 +1463,6 @@ abstract class BaseCoder
 	protected function new_paragraph(string $contents)
 	{
 		return LF . $contents . LF;
-	}
-
-	protected function generate_temp_variable_name()
-	{
-		return static::VAR_PREFIX . '__tmp' . $this->temp_name_index++;
 	}
 }
 

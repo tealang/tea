@@ -10,6 +10,7 @@ interface IDemo extends BaseInterface {
 	const CONST1 = 'const value';
 	public function __construct(string $some);
 	public function get_class_name(string $caller = 'caller1'): string;
+	public function get_self(): static;
 }
 
 trait IDemoTrait {
@@ -21,6 +22,10 @@ trait IDemoTrait {
 
 	public function get_class_name(string $caller = 'caller1'): string {
 		return __CLASS__;
+	}
+
+	public function get_self(): static {
+		return $this;
 	}
 }
 

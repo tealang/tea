@@ -89,6 +89,7 @@ class HeaderParser extends TeaParser
 				break;
 			case _TRAIT:
 				[$origin_name, $name] = $this->read_header_declaration_names();
+				$declaration = $this->read_trait_declaration($name, $modifier);
 				break;
 			case _FUNC:
 				[$origin_name, $name] = $this->read_header_declaration_names();
@@ -265,7 +266,7 @@ class HeaderParser extends TeaParser
 			$this->expect_token_ignore_space(_COLON);
 
 			$expr = $this->read_expression();
-			if ($expr === null || !$expr instanceof ILiteral) {
+			if ($expr === null || !$expr->is_const_value) {
 				throw $this->new_unexpected_error();
 			}
 

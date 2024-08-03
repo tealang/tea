@@ -12,6 +12,10 @@ internal intertrait IDemo: BaseInterface {
 	get_class_name(caller String = 'caller1') String {
 		return __CLASS__
 	}
+
+	get_self() Self {
+		return this
+	}
 }
 
 internal IterableObject: Iterator<K UInt, V String> {

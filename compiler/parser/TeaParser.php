@@ -15,8 +15,6 @@ class TeaParser extends BaseParser
 
 	const NS_SEPARATOR = _BACK_SLASH;
 
-	const VAL_NONE = _VAL_NONE;
-
 	protected $root_statements = [];
 
 	protected $is_in_tea_declaration = false;
@@ -184,7 +182,7 @@ class TeaParser extends BaseParser
 		$token = $this->scan_token();
 		switch ($token) {
 			case _DEFAULT:
-				$expression = ASTFactory::$default_value_marker;
+				$expression = ASTFactory::$default_value_mark;
 				$node = new NormalStatement($expression);
 				break;
 
@@ -1112,7 +1110,7 @@ class TeaParser extends BaseParser
 	{
 		switch ($token) {
 			case _DEFAULT:
-				$expression = ASTFactory::$default_value_marker;
+				$expression = ASTFactory::$default_value_mark;
 				break;
 
 			case _TEXT:
@@ -1377,8 +1375,6 @@ class TeaParser extends BaseParser
 
 	protected function read_object_expression()
 	{
-		// $has_non_literal = false;
-
 		$class = $this->factory->create_virtual_class_declaration();
 
 		$items = [];
@@ -1406,10 +1402,6 @@ class TeaParser extends BaseParser
 				throw $this->new_unexpected_error();
 			}
 
-			// if (!$val instanceof ILiteral) {
-			// 	$has_non_literal = true;
-			// }
-
 			$member->value = $val;
 			$member->pos = $val->pos;
 
@@ -1421,8 +1413,6 @@ class TeaParser extends BaseParser
 		// $this->factory->end_object_class();
 
 		$this->expect_token_ignore_empty(_BRACE_CLOSE);
-
-		// return $has_non_literal ? new ObjectExpression($items) : new LiteralObject($items);
 
 		// if support literal mode, then would be need to support compile-value
 		// example as value for constants, thats a troublesome
@@ -1441,7 +1431,9 @@ class TeaParser extends BaseParser
 
 		if ($token === _SINGLE_QUOTE) {
 			$item = $this->read_single_quoted_expression();
-			$this->assert_literal_string($item);
+			if (!$item instanceof PlainLiteralString) {
+				throw $this->new_parse_error("Required literal string");
+			}
 		}
 		else {
 			$this->scan_token_ignore_empty();
@@ -1455,18 +1447,11 @@ class TeaParser extends BaseParser
 		return $item;
 	}
 
-	private function assert_literal_string($expression)
-	{
-		if (!$expression instanceof ILiteral) {
-			throw $this->new_parse_error("Required literal string");
-		}
-	}
-
 	protected function read_bracket_expression()
 	{
 		$next = $this->get_token_ignore_space();
 		if ($next === _BRACKET_CLOSE and $this->skip_token(_BRACKET_CLOSE)) {
-			// SquareAccessing or empty LiteralArray
+			// SquareAccessing or empty Array
 			if ($next = $this->get_token() and TeaHelper::is_identifier_name($next)) {
 				$this->scan_token();
 				$identifier = $this->factory->create_identifier($next);
@@ -1474,7 +1459,8 @@ class TeaParser extends BaseParser
 				$expr = new SquareAccessing($identifier, true);
 			}
 			else {
-				$expr = new LiteralArray();
+				$expr = new ArrayExpression();
+				$expr->is_const_value = true;
 			}
 
 			return $expr;
@@ -1483,7 +1469,9 @@ class TeaParser extends BaseParser
 			// empty Dict
 			$this->scan_token_ignore_space(); // skip colon
 			$this->expect_token(_BRACKET_CLOSE);
-			return new LiteralDict();
+			$expr = new DictExpression();
+			$expr->is_const_value = true;
+			return $expr;
 		}
 		elseif ($next === LF || $next === _INLINE_COMMENT_MARK) {
 			$is_vertical_layout = true;
@@ -1503,7 +1491,8 @@ class TeaParser extends BaseParser
 		}
 		else {
 			// that should be an empty Array
-			$expr = new LiteralArray();
+			$expr = new ArrayExpression();
+			$expr->is_const_value = true;
 		}
 
 		$this->expect_token_ignore_empty(_BRACKET_CLOSE);
@@ -1513,14 +1502,14 @@ class TeaParser extends BaseParser
 
 	protected function read_array_with_first_item(BaseExpression $item)
 	{
-		$has_non_literal = false;
+		$is_const_value = true;
 		$items = [];
 
 		do {
 			$items[] = $item;
 
-			if (!$item instanceof ILiteral) {
-				$has_non_literal = true;
+			if (!$item->is_const_value) {
+				$is_const_value = false;
 			}
 
 			if (!$this->skip_token(_COMMA)) {
@@ -1528,12 +1517,16 @@ class TeaParser extends BaseParser
 			}
 		} while ($item = $this->read_expression());
 
-		return $has_non_literal ? new ArrayExpression($items) : new LiteralArray($items);
+		$expr = new ArrayExpression($items);
+		$expr->is_const_value = $is_const_value;
+		return $expr;
+
+		// return $is_const_value ? new ArrayExpression($items) : new LiteralArray($items);
 	}
 
 	protected function read_dict_with_first_item(BaseExpression $key)
 	{
-		$has_non_literal = false;
+		$is_const_value = true;
 		$items = [];
 
 		while (true) {
@@ -1544,8 +1537,8 @@ class TeaParser extends BaseParser
 
 			$items[] = new DictMember($key, $value);
 
-			if (!$key instanceof ILiteral || !$value instanceof ILiteral) {
-				$has_non_literal = true;
+			if (!$key->is_const_value || !$value->is_const_value) {
+				$is_const_value = false;
 			}
 
 			if (!$this->skip_token(_COMMA)) {
@@ -1563,7 +1556,11 @@ class TeaParser extends BaseParser
 			}
 		}
 
-		return $has_non_literal ? new DictExpression($items) : new LiteralDict($items);
+		$expr = new DictExpression($items);
+		$expr->is_const_value = $is_const_value;
+		return $expr;
+
+		// return $is_const_value ? new DictExpression($items) : new LiteralDict($items);
 	}
 
 	protected function read_lambda_combination(array $parameters, $arrow_is_optional = false)
@@ -2024,6 +2021,20 @@ class TeaParser extends BaseParser
 		$this->read_rest_for_classkindred_declaration($declaration);
 
 		$this->fallback_declare_mode();
+
+		return $declaration;
+	}
+
+	protected function read_trait_declaration(string $name, ?string $modifier, NamespaceIdentifier $ns = null)
+	{
+		$declaration = $this->factory->create_trait_declaration($name, $modifier, $ns);
+		$declaration->pos = $this->pos;
+
+		// $this->set_declare_mode(true);
+
+		$this->read_rest_for_classkindred_declaration($declaration);
+
+		// $this->fallback_declare_mode();
 
 		return $declaration;
 	}
@@ -2602,7 +2613,7 @@ class TeaParser extends BaseParser
 		$parameter = $this->create_parameter($name, $type, $value);
 
 		if ($inout_mode) {
-			if ($value && $value !== ASTFactory::$default_value_marker) {
+			if ($value && $value !== ASTFactory::$default_value_mark) {
 				throw $this->new_parse_error("Cannot set a default value for inout mode parameter.");
 			}
 

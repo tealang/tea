@@ -248,8 +248,7 @@ class ASTChecker
 	{
 		$value = $node->value;
 
-		if (!$this->is_literal_or_const($value) and !$node instanceof ObjectMember) {
-			dump($value);
+		if (!$this->is_const_expr($value) and !$node instanceof ObjectMember) {
 			throw $this->new_syntax_error("Invalid initial value expression", $value);
 		}
 
@@ -266,25 +265,26 @@ class ASTChecker
 		}
 	}
 
-	private function is_literal_or_const(BaseExpression $node): bool
+	private function is_const_expr(BaseExpression $node): bool
 	{
-		if ($node instanceof ILiteral || $node instanceof ConstantIdentifier) {
-			$result = true;
-		}
-		elseif ($node instanceof Identifiable) {
+		// if ($node instanceof ILiteral || $node instanceof ConstantIdentifier) {
+		// 	$result = true;
+		// }
+		// else
+		if ($node instanceof Identifiable) {
 			$declaration = $node->symbol->declaration;
 			$result = $declaration instanceof IConstantDeclaration || $declaration instanceof ClassKindredDeclaration;
 		}
 		elseif ($node instanceof BinaryOperation) {
-			$result = $this->is_literal_or_const($node->left) && $this->is_literal_or_const($node->right);
+			$result = $this->is_const_expr($node->left) && $this->is_const_expr($node->right);
 		}
 		elseif ($node instanceof PrefixOperation) {
-			$result = $this->is_literal_or_const($node->expression);
+			$result = $this->is_const_expr($node->expression);
 		}
 		elseif ($node instanceof ArrayExpression) {
 			$result = true;
 			foreach ($node->items as $item) {
-				if (!$this->is_literal_or_const($item)) {
+				if (!$this->is_const_expr($item)) {
 					$result = false;
 					break;
 				}
@@ -293,17 +293,17 @@ class ASTChecker
 		elseif ($node instanceof DictExpression) {
 			$result = true;
 			foreach ($node->items as $item) {
-				if (!$this->is_literal_or_const($item->key) || !$this->is_literal_or_const($item->value)) {
+				if (!$this->is_const_expr($item->key) || !$this->is_const_expr($item->value)) {
 					$result = false;
 					break;
 				}
 			}
 		}
-		elseif ($node instanceof XTag) {
-			$result = $node->is_literal;
-		}
+		// elseif ($node instanceof XTag) {
+		// 	$result = $node->is_const_value;
+		// }
 		else {
-			$result = false;
+			$result = $node->is_const_value ?? false;
 		}
 
 		return $result;
@@ -424,7 +424,8 @@ class ASTChecker
 			}
 
 			// the literal value for argument
-			if ($item instanceof ILiteral || ($item instanceof PrefixOperation && $item->expression instanceof ILiteral)) {
+			// if ($item instanceof ILiteral || ($item instanceof PrefixOperation && $item->expression instanceof ILiteral)) {
+			if ($item->is_const_value || ($item instanceof PrefixOperation && $item->expression->is_const_value)) {
 				$node->arguments_map[$dest_idx] = $item;
 				continue;
 			}
@@ -510,10 +511,17 @@ class ASTChecker
 		$hinted_type = $node->hinted_type;
 		if ($hinted_type) {
 			if ($infered_type !== null) {
+				if ($hinted_type === TypeFactory::$_self) {
+					$declar = $node->belong_block;
+					$actual_type = new ClassKindredIdentifier($declar->name);
+					$actual_type->symbol = $declar->symbol;
+					$hinted_type = $actual_type;
+				}
+
 				if (!$hinted_type->is_accept_type($infered_type)) {
 					$infered_name = self::get_type_name($infered_type);
 					$hint_name = self::get_type_name($hinted_type);
-					throw $this->new_syntax_error("The infered return type is '{$infered_name}', do not compatibled with the hint '{$hint_name}'", $node);
+					throw $this->new_syntax_error("The infered return type is '{$infered_name}', do not compatibled with the hinted '{$hint_name}'", $node);
 				}
 			}
 			elseif ($hinted_type !== TypeFactory::$_void && $hinted_type !== TypeFactory::$_yield_generator) {
@@ -1398,9 +1406,10 @@ class ASTChecker
 			// 	$infered_type = $node;
 			// 	break;
 			case LiteralNone::KIND:
-				$infered_type = $node->is_default_value_marker
-					? TypeFactory::$_default_marker
-					: TypeFactory::$_none;
+				$infered_type = TypeFactory::$_none;
+				break;
+			case LiteralDefaultMark::KIND:
+				$infered_type = TypeFactory::$_default_marker;
 				break;
 			case PlainLiteralString::KIND:
 				$infered_type = TeaHelper::is_pure_string($node->value)
@@ -1419,12 +1428,12 @@ class ASTChecker
 			case LiteralBoolean::KIND:
 				$infered_type = TypeFactory::$_bool;
 				break;
-			case LiteralArray::KIND:
-				$infered_type = $this->infer_array_expression($node);
-				break;
-			case LiteralDict::KIND:
-				$infered_type = $this->infer_dict_expression($node);
-				break;
+			// case LiteralArray::KIND:
+			// 	$infered_type = $this->infer_array_expression($node);
+			// 	break;
+			// case LiteralDict::KIND:
+			// 	$infered_type = $this->infer_dict_expression($node);
+			// 	break;
 			// case LiteralObject::KIND:
 			// 	$infered_type = $this->infer_object_expression($node);
 			// 	break;
@@ -1680,7 +1689,7 @@ class ASTChecker
 			}
 			else {
 				// string
-				$is_pure = $left_type instanceof IPureType and $right_type instanceof IPureType;
+				$is_pure = $left_type instanceof IPureType && $right_type instanceof IPureType;
 				$node->infered_type = $is_pure ? TypeFactory::$_pure_string : TypeFactory::$_string;
 			}
 		}
@@ -1759,9 +1768,7 @@ class ASTChecker
 				$infered_type = TypeFactory::$_int;
 			}
 			elseif ($expr_type instanceof UnionType and $expr_type->is_contains_single_type(TypeFactory::$_uint)) {
-				// we need to clone, to avoid of polluting the original expression
-				$infered_type = clone $expr_type;
-				$infered_type->add_single_type(TypeFactory::$_int);
+				$infered_type = $expr_type->merge_with_single_type(TypeFactory::$_int);
 			}
 			else {
 				$infered_type = $expr_type;
@@ -1929,21 +1936,30 @@ class ASTChecker
 
 		$infered_value_types = [];
 		foreach ($node->items as $item) {
-			$key_type = $this->infer_expression($item->key);
-			if (TypeHelper::is_dict_key_type($key_type)) {
-				// okay
+			if ($item instanceof DictMember) {
+				$infered = $this->infer_dict_member($item);
 			}
 			else {
-				$type_name = $this->get_type_name($key_type);
-				throw $this->new_syntax_error("Key type for Dict should be String/Int, {$type_name} supplied", $item->key);
+				$infered = $this->infer_expression($item);
 			}
 
-			$infered_value_types[] = $this->infer_expression($item->value);
+			$infered_value_types[] = $infered;
 		}
 
 		$generic_type = $this->reduce_expr_types(...$infered_value_types);
 
 		return TypeFactory::create_dict_type($generic_type);
+	}
+
+	private function infer_dict_member(DictMember $item)
+	{
+		$key_type = $this->infer_expression($item->key);
+		if (!TypeHelper::is_dict_key_type($key_type)) {
+			$type_name = $this->get_type_name($key_type);
+			throw $this->new_syntax_error("Key type for Dict should be String/Int, {$type_name} supplied", $item->key);
+		}
+
+		return $this->infer_expression($item->value);
 	}
 
 	private function infer_object_expression(ObjectExpression $node): IType
@@ -2313,23 +2329,9 @@ class ASTChecker
 		;
 	}
 
-	private function check_type_compatible(IType $left, IType $right, Node $value_node)
-	{
-		if ($left->is_accept_type($right)) {
-			return true;
-		}
-
-		// for [], [:]
-		if (($value_node instanceof LiteralArray || $value_node instanceof LiteralDict) && !$value_node->items) {
-			return true;
-		}
-
-		return false;
-	}
-
 	private function assert_type_compatible(IType $left, IType $right, Node $value_node, string $kind = 'assign')
 	{
-		if (!$this->check_type_compatible($left, $right, $value_node)) {
+		if (!$this->is_type_compatible($left, $right, $value_node)) {
 			if ($left === TypeFactory::$_none) {
 				throw $this->new_syntax_error("It's required a type hint", $value_node);
 			}
@@ -2337,8 +2339,23 @@ class ASTChecker
 			$left_type_name = self::get_type_name($left);
 			$right_type_name = self::get_type_name($right);
 
+			// dump($value_node);
 			throw $this->new_syntax_error("It's not compatible for type {$left_type_name}, {$kind} with {$right_type_name}", $value_node);
 		}
+	}
+
+	private function is_type_compatible(IType $left, IType $right, Node $value_node)
+	{
+		if ($left->is_accept_type($right)) {
+			return true;
+		}
+
+		// for [], [:]
+		if ($value_node instanceof IArrayLikeExpression && !$value_node->items) {
+			return true;
+		}
+
+		return false;
 	}
 
 	// @return [index, ParameterDeclaration]

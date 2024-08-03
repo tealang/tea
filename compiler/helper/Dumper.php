@@ -37,7 +37,7 @@ class Dumper
 		$this->dumped_depth++;
 
 		if (is_null($data) ) {
-			$tmp = TeaParser::VAL_NONE;
+			$tmp = _VAL_NONE;
 		}
 		elseif (is_int($data) || is_float($data) ) {
 			$tmp = $data;

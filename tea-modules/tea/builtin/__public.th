@@ -388,4 +388,8 @@ public interface IView {
 	// no any
 }
 
+public type Self {
+	// no any
+}
+
 // program end

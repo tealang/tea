@@ -127,9 +127,12 @@ class PlainIdentifier extends Identifiable implements IType
 	}
 }
 
-class ConstantIdentifier extends PlainIdentifier implements ILiteral
+class ConstantIdentifier extends PlainIdentifier
 {
 	const KIND = 'constant_identifier';
+
+	public $is_const_value = true;
+
 }
 
 class VariableIdentifier extends PlainIdentifier

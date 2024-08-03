@@ -11,11 +11,13 @@ namespace Tea;
 
 class TypeFactory
 {
-	// public static $_dict_key_type;
+	// public static $_dict_key;
 
-	public static $_metatype;
+	public static $_self;
 
-	public static $_uniontype;
+	public static $_meta;
+
+	public static $_union;
 
 	public static $_any;
 	public static $_none;
@@ -60,8 +62,10 @@ class TypeFactory
 	{
 		// init all builtin types
 
-		self::$_metatype = self::create_type(MetaType::class);
-		self::$_uniontype = self::create_type(UnionType::class);
+		self::$_self = self::create_type(SelfType::class);
+
+		self::$_meta = self::create_type(MetaType::class);
+		self::$_union = self::create_type(UnionType::class);
 
 		self::$_void = self::create_type(VoidType::class);
 		self::$_none = self::create_type(NoneType::class);
@@ -91,7 +95,7 @@ class TypeFactory
 		self::$_callable = self::create_type(CallableType::class);
 		// self::$_namespace = self::create_type(NamespaceType::class);
 
-		// self::$_dict_key_type = self::create_union_type([self::$_string, self::$_int]);
+		// self::$_dict_key = self::create_union_type([self::$_string, self::$_int]);
 
 		self::$_iterator = new ClassKindredIdentifier('Iterator');
 		// self::$_yield_generator = new ClassKindredIdentifier('YieldGenerator');
@@ -179,7 +183,7 @@ class TypeFactory
 	public static function create_meta_type(IType $generic_type)
 	{
 		$type = new MetaType($generic_type);
-		$type->symbol = self::$_metatype->symbol;
+		$type->symbol = self::$_meta->symbol;
 
 		return $type;
 	}
@@ -187,7 +191,7 @@ class TypeFactory
 	public static function create_union_type(array $members)
 	{
 		$type = new UnionType($members);
-		$type->symbol = self::$_uniontype->symbol;
+		$type->symbol = self::$_union->symbol;
 
 		return $type;
 	}

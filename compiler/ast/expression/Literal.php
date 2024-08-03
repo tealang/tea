@@ -9,17 +9,8 @@
 
 namespace Tea;
 
-interface ILiteral {}
-
-trait LiteralTrait
-{
-	// public $is_calling;
-}
-
 trait LiteralTraitWithValue
 {
-	use LiteralTrait;
-
 	/**
 	 * @var string
 	 */
@@ -30,14 +21,22 @@ trait LiteralTraitWithValue
 	}
 }
 
-class LiteralNone extends BaseExpression implements ILiteral
+abstract class LiteralExpression extends BaseExpression
 {
-	const KIND = 'literal_none';
-
-	public $is_default_value_marker = false;
+	public $is_const_value = true;
 }
 
-abstract class LiteralString extends BaseExpression implements ILiteral
+class LiteralDefaultMark extends LiteralExpression
+{
+	const KIND = 'literal_default_mark';
+}
+
+class LiteralNone extends LiteralExpression
+{
+	const KIND = 'literal_none';
+}
+
+abstract class LiteralString extends LiteralExpression
 {
 	use LiteralTraitWithValue;
 	public $label;
@@ -53,7 +52,7 @@ class EscapedLiteralString extends LiteralString
 	const KIND = 'escaped_literal_string';
 }
 
-class LiteralInteger extends BaseExpression implements ILiteral
+class LiteralInteger extends LiteralExpression
 {
 	use LiteralTraitWithValue;
 
@@ -71,32 +70,16 @@ class LiteralInteger extends BaseExpression implements ILiteral
 	// public $value;
 }
 
-class LiteralFloat extends BaseExpression implements ILiteral
+class LiteralFloat extends LiteralExpression
 {
 	use LiteralTraitWithValue;
 	const KIND = 'literal_float';
 }
 
-class LiteralBoolean extends BaseExpression implements ILiteral
+class LiteralBoolean extends LiteralExpression
 {
 	use LiteralTraitWithValue;
 	const KIND = 'bool_literal';
 }
 
-class LiteralArray extends ArrayExpression implements ILiteral
-{
-	use LiteralTrait;
-	const KIND = 'literal_array';
-}
-
-class LiteralDict extends DictExpression implements ILiteral
-{
-	use LiteralTrait;
-	const KIND = 'literal_dict';
-}
-
-// class LiteralObject extends ObjectExpression implements ILiteral
-// {
-// 	const KIND = 'literal_object';
-// }
-
+// end

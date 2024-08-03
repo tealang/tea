@@ -24,7 +24,9 @@ trait MemberContainerTrait
 	}
 }
 
-class ArrayExpression extends BaseExpression
+interface IArrayLikeExpression {}
+
+class ArrayExpression extends BaseExpression implements IArrayLikeExpression
 {
 	use MemberContainerTrait;
 
@@ -36,7 +38,7 @@ class ArrayExpression extends BaseExpression
 	public $items;
 }
 
-class DictExpression extends BaseExpression
+class DictExpression extends BaseExpression implements IArrayLikeExpression
 {
 	use MemberContainerTrait;
 

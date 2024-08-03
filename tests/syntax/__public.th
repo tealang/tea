@@ -6,7 +6,7 @@ use tests\xview
 use tests\phpdemo { PHP_CONST_DEMO }
 use tests\xview { BaseView }
 
-public const MY_CONST Dict
+public const MY_CONST Pures.Dict
 public const C1 UInt
 public const C2 Pures
 

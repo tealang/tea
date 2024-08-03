@@ -44,6 +44,6 @@ spl_autoload_register(function ($class) {
 });
 
 require_once UNIT_PATH . '_mixed2.php';
-require_once UNIT_PATH . 'function.php';
+require_once UNIT_PATH . 'dist/function.php';
 
 // end

@@ -56,19 +56,17 @@ trait ITypeTrait
 
 	public function unite_type(IType $target): IType {
 		if ($target instanceof UnionType) {
-			$united = $target->add_single_type($this);
+			$result = $target->merge_with_single_type($this);
+		}
+		elseif ($this->is_same_with($target)
+			|| ($this instanceof StringType and $target instanceof PuresType)) {
+			$result = $this;
 		}
 		else {
-			if ($this->is_same_with($target)
-				|| ($this instanceof StringType and $target instanceof PuresType)) {
-				$united = $this;
-			}
-			else {
-				$united = new UnionType([$this, $target]);
-			}
+			$result = new UnionType([$this, $target]);
 		}
 
-		return $united;
+		return $result;
 	}
 
 	public function is_same_with(IType $target) {
@@ -124,6 +122,29 @@ abstract class SingleGenericType extends BaseType
 
 	public function __construct(IType $generic_type = null) {
 		$this->generic_type = $generic_type;
+	}
+
+	public function unite_type(IType $target): IType {
+		if ($target instanceof UnionType) {
+			$result = $target->merge_with_single_type($this);
+		}
+		elseif ($this->name === $target->name) {
+			if ($this->generic_type === $target->generic_type) {
+				$result = $this;
+			}
+			else {
+				// just to uniting the generic_type
+				$generic_type = $this->generic_type ?? TypeFactory::$_any;
+				$generic_type = $generic_type->unite_type($target->generic_type ?? TypeFactory::$_any);
+				$result = clone $this;
+				$result->generic_type = $generic_type;
+			}
+		}
+		else {
+			$result = new UnionType([$this, $target]);
+		}
+
+		return $result;
 	}
 
 	public function is_accept_single_type(IType $target) {
@@ -233,23 +254,38 @@ class UnionType extends BaseType
 	}
 
 	public function unite_type(IType $target): IType {
-		if ($target instanceof UnionType) {
-			foreach ($target->get_members() as $target_member) {
-				$this->add_single_type($target_member);
-			}
-		}
-		else {
-			$this->add_single_type($target);
-		}
+		$result = $target instanceof UnionType
+			? $this->merge_with_union_type($target)
+			: $this->merge_with_single_type($target);
 
-		return $this;
+		return $result;
 	}
 
-	public function add_single_type(IType $target) {
-		$this->is_contains_single_type($target)
-			or $this->members[] = $target;
+	public function merge_with_single_type(IType $target) {
+		if ($this->is_contains_single_type($target)) {
+			return $this;
+		}
 
-		return $this;
+		$new = clone $this;
+		$new->members[] = $target;
+
+		return $new;
+	}
+
+	public function merge_with_union_type(UnionType $target) {
+		$diff_items = [];
+		foreach ($target->get_members() as $target_member) {
+			$diff_items[] = $target_member;
+		}
+
+		if (!$diff_items) {
+			return $this;
+		}
+
+		$new = clone $this;
+		$new->members = array_merge($new->members, $diff_items);
+
+		return $new;
 	}
 
 	public function is_contains_single_type(IType $target) {
@@ -374,6 +410,7 @@ class ObjectType extends BaseType {
 }
 
 interface IScalarType {}
+
 interface IPureType {}
 
 // class ScalarType extends BaseType implements IScalarType {
@@ -543,6 +580,10 @@ class XViewType extends BaseType {
 
 		return $result;
 	}
+}
+
+class SelfType extends BaseType {
+	public $name = _TYPE_SELF;
 }
 
 // class NamespaceType extends BaseType {

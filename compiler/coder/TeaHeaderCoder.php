@@ -68,11 +68,6 @@ class TeaHeaderCoder extends BaseCoder
 		return $code . static::CLASS_MEMBER_TERMINATOR;
 	}
 
-	protected function get_decl_type(IDeclaration $node)
-	{
-		return $node->get_type();
-	}
-
 	public function render_constant_declaration(IConstantDeclaration $node)
 	{
 		if ($node->modifier === _INTERNAL) {
@@ -115,17 +110,29 @@ class TeaHeaderCoder extends BaseCoder
 	public function render_masked_declaration(MaskedDeclaration $node)
 	{
 		$header = _MASKED . " {$node->name}";
-		$type = $this->generate_declaration_type($node);
+		$type = $this->render_type_expr_for_decl($node);
 
 		if ($node->parameters === null && $node->callbacks === null) {
-			return "{$header}{$type}";
+			return "{$header} {$type}";
 		}
 		else {
 			$parameters = $node->parameters ? $this->render_parameters($node->parameters) : '';
 			$callbacks = $node->callbacks ? $this->render_callback_protocols($node->callbacks) : '';
 
-			return "{$header}($parameters){$type}{$callbacks}";
+			return "{$header}($parameters) {$type}{$callbacks}";
 		}
+	}
+
+	protected function render_type_expr_for_decl(IDeclaration $node)
+	{
+		$type = $node->hinted_type ?? $node->infered_type;
+		if ($type === TypeFactory::$_void) {
+			return null;
+		}
+
+		$buffer = $type->render($this);
+
+		return $buffer;
 	}
 }
 

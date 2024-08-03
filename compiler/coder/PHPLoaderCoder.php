@@ -141,6 +141,9 @@ class PHPLoaderCoder extends PHPCoder
 
 		$include_stmts = $this->render_internal_includes($this->program->unit);
 		$include_stmts = join("\n", $include_stmts);
+		if ($include_stmts) {
+			$include_stmts = "\n{$include_stmts}\n";
+		}
 
 		return "
 // autoloads
@@ -149,9 +152,7 @@ const __AUTOLOADS = {$autoloads};
 spl_autoload_register(function (\$class) {
 	isset(__AUTOLOADS[\$class]) && require UNIT_PATH . __AUTOLOADS[\$class];
 });
-
 {$include_stmts}
-
 // end
 ";
 	}
@@ -163,11 +164,26 @@ spl_autoload_register(function (\$class) {
 		// programs that's has constants/functions
 		foreach ($unit->programs as $program) {
 			if ($program->name !== '__package' && $this->is_need_include_at_loader($program)) {
-				$items[] = "require_once UNIT_PATH . '{$program->name}.php';";
+				$file_name = $this->get_file_name($program);
+				$items[] = "require_once UNIT_PATH . '{$file_name}.php';";
 			}
 		}
 
 		return $items;
+	}
+
+	private function get_file_name(Program $program)
+	{
+		$name = $program->name;
+		if (!$program->is_native) {
+			if (str_starts_with($name, 'src/')) {
+				$name = substr($name, 4);
+			}
+
+			$name = 'dist/' . $name;
+		}
+
+		return $name;
 	}
 
 	private function is_need_include_at_loader(Program $program)

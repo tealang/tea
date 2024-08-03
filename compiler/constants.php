@@ -60,6 +60,7 @@ const
 	_XVIEW = 'XView',
 	_REGEX = 'Regex',
 	_CALLABLE = 'Callable',
+	_TYPE_SELF = 'Self',
 
 	// dot signs of compound types
 	_DOT_SIGN_ARRAY = 'Array', _DOT_SIGN_DICT = 'Dict', _DOT_SIGN_METATYPE = 'Type',
@@ -125,7 +126,7 @@ const
 	_COMMENTS_OPEN = '/*', _COMMENTS_CLOSE = '*/',
 
 	_UNIT_PATH = 'UNIT_PATH',
-	_VAL_NULL = 'null', // PHP
+	_VAL_NULL = 'null',
 	_VAL_NONE = 'none',
 	_VAL_TRUE = 'true', _VAL_FALSE = 'false',
 
@@ -155,7 +156,10 @@ const
 	_FINAL = 'final',
 	_MASKED = 'masked',
 	_RUNTIME = 'runtime',
-	_PUBLIC = 'public', _INTERNAL = 'internal', _PROTECTED = 'protected', _PRIVATE = 'private',
+	_PUBLIC = 'public',
+	_INTERNAL = 'internal',
+	_PROTECTED = 'protected',
+	_PRIVATE = 'private',
 
 	_TYPE = 'type',
 	_CLASS = 'class',
@@ -166,8 +170,13 @@ const
 	_ENUM = 'enum',
 	_FUNC = 'func',
 	_CONST = 'const',
-	_THIS = 'this', _SUPER = 'super',
-	_CONSTRUCT = 'construct', _DESTRUCT = 'destruct',
+	_THIS = 'this',
+	_SUPER = 'super',
+	// _CT_SELF = '__ct_self', // self for compile time
+	// _RT_SELF = '__rt_self', // self for run time
+	// _INST_SELF = '__inst_self', // self for instance
+	_CONSTRUCT = 'construct',
+	_DESTRUCT = 'destruct',
 	_EXTENDS = 'extends',
 	_IMPLEMENTS = 'implements';
 

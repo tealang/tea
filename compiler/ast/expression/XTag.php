@@ -11,7 +11,7 @@ namespace Tea;
 
 abstract class XTagElement extends BaseExpression
 {
-	public $is_literal;
+	//
 }
 
 class XTag extends XTagElement
