@@ -86,6 +86,8 @@ runtime func max(n1 Any, n2 Any = #default, n3 Any = #default) Int|UInt|Float
 
 runtime func min(n1 Any, n2 Any = #default, n3 Any = #default) Int|UInt|Float
 
+runtime func abs as int_abs(val Any) UInt
+
 runtime func abs(val Any) Float
 
 runtime func round(val Any, precision Int = 0) Float
@@ -138,7 +140,7 @@ runtime func count(array Any) UInt
 
 runtime func in_array(needle Any, haystack Any, strict Bool = false) Bool
 
-runtime func array_reverse(array Any)
+runtime func array_reverse(array Any) Array
 
 runtime func array_map(callback (item Any) Any, items Array) Array
 
@@ -182,7 +184,7 @@ runtime func preg_match(regex Regex, subject String, matches inout Array? = #def
 
 runtime func preg_match_all(regex Regex, subject String, matches inout Array? = #default, flags Int = #default, offset Int = #default) Bool
 
-runtime func preg_split(regex Regex, subject String, limit Int = #default, flags Int = #default) Array
+runtime func preg_split(regex Regex, subject String, limit Int = #default, flags Int = #default) String.Array
 
 runtime interface Iterator {
 	current() Any
@@ -365,9 +367,9 @@ public type Regex {
 
 	masked separate(string String) String.Array
 
-	masked capture(string String) String.Array
+	masked capture(string String) String.Array?
 
-	masked capture_all(string String) String.Array.Array
+	masked capture_all(string String) String.Array.Array?
 }
 
 public func _build_attributes(items Dict, additions Dict = none) String

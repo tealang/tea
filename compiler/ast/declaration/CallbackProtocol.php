@@ -7,25 +7,25 @@
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
-namespace Tea;
+// namespace Tea;
 
-class CallbackProtocol extends Node implements ICallableDeclaration, IVariableDeclaration
-{
-	use DeclarationTrait;
+// class CallbackProtocol extends Node implements ICallableDeclaration, IVariableDeclaration
+// {
+// 	use DeclarationTrait;
 
-	const KIND = 'callback_protocol';
+// 	const KIND = 'callback_protocol';
 
-	public $async;
+// 	public $async;
 
-	public $parameters;
+// 	public $parameters;
 
-	public $is_checking;
+// 	public $is_checking;
 
-	public function __construct(bool $async, string $name, ?IType $type, ParameterDeclaration ...$parameters)
-	{
-		$this->async = $async;
-		$this->name = $name;
-		$this->hinted_type = $type;
-		$this->parameters = $parameters;
-	}
-}
+// 	public function __construct(bool $async, string $name, ?IType $return_type, ParameterDeclaration ...$parameters)
+// 	{
+// 		$this->async = $async;
+// 		$this->name = $name;
+// 		$this->declared_type = $return_type;
+// 		$this->parameters = $parameters;
+// 	}
+// }

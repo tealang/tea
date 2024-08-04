@@ -338,7 +338,7 @@ class TeaParser extends BaseParser
 		$parameters = $this->read_parameters_with_parentheses();
 		$this->factory->set_scope_parameters($parameters);
 
-		$declaration->hinted_type = $this->try_read_return_type_expression();
+		$declaration->declared_type = $this->try_read_return_type_expression();
 
 		if (!$this->is_declare_mode) {
 			$this->read_body_statements($declaration);
@@ -390,7 +390,7 @@ class TeaParser extends BaseParser
 		$this->assert_not_reserved_word($name);
 
 		$declaration = $this->read_constant_declaration_header($name, $modifier, $ns);
-		if (!$declaration->hinted_type) {
+		if (!$declaration->declared_type) {
 			$this->new_unexpected_error();
 		}
 
@@ -403,7 +403,7 @@ class TeaParser extends BaseParser
 	{
 		$declaration = $this->factory->create_constant_declaration($modifier, $name, $ns);
 		$declaration->pos = $this->pos;
-		$declaration->hinted_type = $this->try_read_type_expression();
+		$declaration->declared_type = $this->try_read_type_expression();
 		return $declaration;
 	}
 
@@ -480,7 +480,7 @@ class TeaParser extends BaseParser
 			$this->factory->set_scope_parameters($parameters);
 		}
 
-		$declaration->hinted_type = $this->try_read_return_type_expression();
+		$declaration->declared_type = $this->try_read_return_type_expression();
 
 		$this->expect_token_ignore_empty(_ARROW);
 
@@ -1575,7 +1575,7 @@ class TeaParser extends BaseParser
 			throw $this->new_parse_error("Unexpected token '$next', or missed token '=>'.");
 		}
 
-		$block = $this->factory->create_lambda_expression($return_type, $parameters);
+		$block = $this->factory->create_anonymous_function($return_type, $parameters);
 		$block->pos = $this->pos;
 
 		if ($this->get_token_ignore_empty() === _BLOCK_BEGIN) {
@@ -2180,15 +2180,25 @@ class TeaParser extends BaseParser
 	protected function try_read_type_expression()
 	{
 		// the callable type
-		$next = $this->get_token_ignore_space();
-		if ($next === _PAREN_OPEN) { // the Callable protocol
+		$token = $this->get_token_ignore_space();
+		if ($token === _PAREN_OPEN) { // the Callable protocol
 			$type = $this->read_callable_type();
 			return $type;
 		}
 
-		$type = $this->try_read_type_identifier();
-		if ($type === null) {
-			return null;
+		if ($token === _SHARP) {
+			// the marked type name
+			$this->scan_token_ignore_space(); // skip
+			$type = $this->try_read_type_identifier();
+			if ($type === null) {
+				throw $this->new_unexpected_error();
+			}
+		}
+		else {
+			$type = $this->try_read_type_identifier();
+			if ($type === null) {
+				return null;
+			}
 		}
 
 		// union with members
@@ -2404,7 +2414,7 @@ class TeaParser extends BaseParser
 		$declaration = $this->factory->create_class_constant_declaration($modifier, $name);
 		$declaration->pos = $this->pos;
 
-		$declaration->hinted_type = $this->try_read_type_expression();
+		$declaration->declared_type = $this->try_read_type_expression();
 
 		if ($this->skip_token_ignore_space(_ASSIGN)) {
 			$declaration->value = $this->read_compile_time_value();
@@ -2412,7 +2422,7 @@ class TeaParser extends BaseParser
 		elseif (!$this->is_declare_mode) {
 			throw $this->new_parse_error('Expected value assign expression');
 		}
-		elseif (!$declaration->hinted_type) {
+		elseif (!$declaration->declared_type) {
 			throw $this->new_parse_error('Expected type expression');
 		}
 
@@ -2440,9 +2450,9 @@ class TeaParser extends BaseParser
 		// type or =
 		$token = $this->get_token_ignore_space();
 
-		// the type name
-		if (TeaHelper::is_identifier_name($token)) {
-			$declaration->hinted_type = $this->try_read_type_expression();
+		if ($token === _SHARP || TeaHelper::is_identifier_name($token)) {
+			// the noted type name
+			$declaration->declared_type = $this->try_read_type_expression();
 			$token = $this->get_token_ignore_space();
 		}
 
@@ -2471,7 +2481,7 @@ class TeaParser extends BaseParser
 		$parameters = $this->read_parameters_with_parentheses();
 		$this->factory->set_scope_parameters($parameters);
 
-		$declaration->hinted_type = $this->try_read_return_type_expression();
+		$declaration->declared_type = $this->try_read_return_type_expression();
 
 		$next = $this->get_token_ignore_empty();
 		if ($next === _BLOCK_BEGIN) {
@@ -2592,7 +2602,12 @@ class TeaParser extends BaseParser
 		}
 
 		$next = $this->get_token_ignore_space();
-		if (TeaHelper::is_identifier_name($next)) {
+		if ($next === _SHARP) {
+			$this->scan_token_ignore_space();
+			$type = $this->try_read_type_expression();
+			$next = $this->get_token_ignore_space();
+		}
+		elseif (TeaHelper::is_identifier_name($next)) {
 			$type = $this->try_read_type_expression();
 			$next = $this->get_token_ignore_space();
 		}

@@ -630,9 +630,12 @@ class PHPParser extends BaseParser
 			case T_STRING: // type annotated property
 			case T_ARRAY:
 			case T_NAME_FULLY_QUALIFIED:
-				$type_identifier = $this->read_type_tailing_and_create_identifier($token[1], $nullable);
+				$name = $token[1];
+				$declared_type = $this->read_declared_type_with_name($name, $nullable);
+				$noted_type = $this->try_read_noted_type();
 				$token = $this->expect_typed_token_ignore_empty();
-				$declaration = $this->read_property_declaration($token, $modifier, $doc, $type_identifier);
+				$declaration = $this->read_property_declaration($token, $modifier, $doc, $declared_type);
+				$declaration->noted_type = $noted_type;
 				$this->expect_statement_end();
 				break;
 
@@ -702,28 +705,13 @@ class PHPParser extends BaseParser
 	private function continue_reading_constant_decl(IConstantDeclaration $declaration, ?string $doc)
 	{
 		if ($doc) {
-			$type = $this->get_type_in_doc($doc, 'var');
-			if ($type) {
-				$declaration->hinted_type = $type;
-			}
+			$declaration->noted_type = $this->get_type_in_doc($doc, 'var');
 		}
 
 		$this->expect_char_token(_ASSIGN);
 		$declaration->value = $this->read_expression();
 		$declaration->pos = $this->pos;
 	}
-
-	// private function read_value_type_skip(?string $doc, string $type_sign = 'var', string $name = null)
-	// {
-	// 	$temp_pos = $this->pos;
-
-	// 	$type = $this->try_detatch_assign_value_type_and_skip($name);
-	// 	if ($type === null and $doc) {
-	// 		$type = $this->get_type_in_doc($doc, $type_sign);
-	// 	}
-
-	// 	return $type;
-	// }
 
 	private function get_type_in_doc(?string $doc, string $kind)
 	{
@@ -732,93 +720,97 @@ class PHPParser extends BaseParser
 		//  */
 
 		if ($doc !== null and preg_match('/\s+\*\s+@' . $kind . '\s+([^\s]+)/', $doc, $match)) {
-			return $this->create_doc_type_identifier($match[1]);
+			$name = $match[1];
+			$identifier = $this->create_doc_type_identifier($name);
+		}
+		else {
+			$identifier = null;
 		}
 
-		return null;
+		return $identifier;
 	}
 
-	private function try_detatch_assign_value_type_and_skip($name = null)
-	{
-		$token = $this->scan_token_ignore_empty();
+	// private function try_detatch_assign_value_type_and_skip($name = null)
+	// {
+	// 	$token = $this->scan_token_ignore_empty();
 
-		if (is_string($token)) {
-			if ($token === _BRACKET_OPEN) {
-				$expr = $this->read_bracket_expression(false, $name);
+	// 	if (is_string($token)) {
+	// 		if ($token === _BRACKET_OPEN) {
+	// 			$expr = $this->read_bracket_expression(false, $name);
 
-				if ($this->skip_char_token(_SEMICOLON)) {
-					$this->pos--; // back to ;
-					return $expr instanceof ArrayExpression
-						? TypeFactory::$_array
-						: TypeFactory::$_dict;
-				}
-			}
-			elseif (in_array($token, self::PREFIX_OPERATORS, true)) {
-				if ($token === _EXCLAMATION) {
-					$this->read_expression(); // skip the expression when is bool
-					return TypeFactory::$_bool;
-				}
+	// 			if ($this->skip_char_token(_SEMICOLON)) {
+	// 				$this->pos--; // back to ;
+	// 				return $expr instanceof ArrayExpression
+	// 					? TypeFactory::$_array
+	// 					: TypeFactory::$_dict;
+	// 			}
+	// 		}
+	// 		elseif (in_array($token, self::PREFIX_OPERATORS, true)) {
+	// 			if ($token === _EXCLAMATION) {
+	// 				$this->read_expression(); // skip the expression when is bool
+	// 				return TypeFactory::$_bool;
+	// 			}
 
-				return $this->try_detatch_assign_value_type_and_skip($name);
-			}
-			else {
-				// $this->print_token($token);
-				throw $this->new_unexpected_error();
-			}
-		}
+	// 			return $this->try_detatch_assign_value_type_and_skip($name);
+	// 		}
+	// 		else {
+	// 			// $this->print_token($token);
+	// 			throw $this->new_unexpected_error();
+	// 		}
+	// 	}
 
-		switch ($token[0]) {
-			// constants
-			case T_NS_SEPARATOR:
-				$token = $this->scan_token();
-			case T_STRING:
-				$lower_case = strtolower($token[1]);
-				if ($lower_case === _VAL_TRUE || $lower_case === _VAL_FALSE) {
-					$type = TypeFactory::$_string;
-				}
-				else {
-					// may be a user defined constant
-					$type = null;
-				}
+	// 	switch ($token[0]) {
+	// 		// constants
+	// 		case T_NS_SEPARATOR:
+	// 			$token = $this->scan_token();
+	// 		case T_STRING:
+	// 			$lower_case = strtolower($token[1]);
+	// 			if ($lower_case === _VAL_TRUE || $lower_case === _VAL_FALSE) {
+	// 				$type = TypeFactory::$_string;
+	// 			}
+	// 			else {
+	// 				// may be a user defined constant
+	// 				$type = null;
+	// 			}
 
-				break;
+	// 			break;
 
-			case T_LNUMBER:
-			case T_LINE: // __LINE__
-				$type = TypeFactory::$_int;
-				break;
+	// 		case T_LNUMBER:
+	// 		case T_LINE: // __LINE__
+	// 			$type = TypeFactory::$_int;
+	// 			break;
 
-			case T_DNUMBER:
-				$type = TypeFactory::$_float;
-				break;
+	// 		case T_DNUMBER:
+	// 			$type = TypeFactory::$_float;
+	// 			break;
 
-			case T_CONSTANT_ENCAPSED_STRING:
-			case T_DIR: // __DIR__
-			case T_FILE: // __FILE__
-			case T_CLASS_C: // __CLASS__
-			case T_NS_C: // __NAMESPACE__
-				$type = TypeFactory::$_string;
-				break;
+	// 		case T_CONSTANT_ENCAPSED_STRING:
+	// 		case T_DIR: // __DIR__
+	// 		case T_FILE: // __FILE__
+	// 		case T_CLASS_C: // __CLASS__
+	// 		case T_NS_C: // __NAMESPACE__
+	// 			$type = TypeFactory::$_string;
+	// 			break;
 
-			case T_NAME_FULLY_QUALIFIED:
-			case T_NAME_QUALIFIED:
-				$type = null;
-				break;
+	// 		case T_NAME_FULLY_QUALIFIED:
+	// 		case T_NAME_QUALIFIED:
+	// 			$type = null;
+	// 			break;
 
-			default:
-				// $this->print_token($token);
-				throw $this->new_unexpected_error();
-		}
+	// 		default:
+	// 			// $this->print_token($token);
+	// 			throw $this->new_unexpected_error();
+	// 	}
 
-		$next = $this->get_token_ignore_empty();
-		if ($next !== _SEMICOLON) {
-			$type = $next === _DOT ? TypeFactory::$_string : null;
-			$this->skip_to_char_token(_SEMICOLON);
-			$this->pos--; // back to ;
-		}
+	// 	$next = $this->get_token_ignore_empty();
+	// 	if ($next !== _SEMICOLON) {
+	// 		$type = $next === _DOT ? TypeFactory::$_string : null;
+	// 		$this->skip_to_char_token(_SEMICOLON);
+	// 		$this->pos--; // back to ;
+	// 	}
 
-		return $type;
-	}
+	// 	return $type;
+	// }
 
 	private function read_property_declaration(array $token, string $modifier, ?string $doc, IType $type = null)
 	{
@@ -826,12 +818,12 @@ class PHPParser extends BaseParser
 		$declaration = $this->factory->create_property_declaration($modifier, $name);
 		$declaration->pos = $this->pos;
 
-		if ($type === null and $doc) {
-			$type = $this->get_type_in_doc($doc, 'var');
+		if ($doc) {
+			$declaration->noted_type = $this->get_type_in_doc($doc, 'var');
 		}
 
 		if ($type) {
-			$declaration->hinted_type = $type;
+			$declaration->declared_type = $type;
 		}
 
 		if ($this->skip_char_token(_ASSIGN)) {
@@ -854,8 +846,7 @@ class PHPParser extends BaseParser
 		$parameters = $this->read_parameters();
 		$this->factory->set_scope_parameters($parameters);
 
-		$declaration->hinted_type = $this->try_read_function_return_type();
-
+		$this->try_read_function_return_types_for($declaration);
 		$declaration->pos = $this->pos;
 
 		if ($is_interface) {
@@ -875,11 +866,9 @@ class PHPParser extends BaseParser
 		$declaration = $this->factory->create_function_declaration(_PUBLIC, $name, $this->namespace);
 
 		$parameters = $this->read_parameters();
-		$return_type = $this->try_read_function_return_type();
-
 		$this->factory->set_scope_parameters($parameters);
-		$declaration->hinted_type = $return_type;
 
+		$this->try_read_function_return_types_for($declaration);
 		$declaration->pos = $this->pos;
 
 		$this->read_function_block();
@@ -887,14 +876,18 @@ class PHPParser extends BaseParser
 		return $declaration;
 	}
 
-	private function try_read_function_return_type()
+	private function try_read_function_return_types_for(IFunctionDeclaration $declaration)
 	{
-		$type = null;
 		if ($this->skip_char_token(_COLON)) {
-			$type = $this->read_type_identifier();
+			$nullable = $this->skip_char_token('?');
+			$name = $this->expect_identifier_name();
+			$declaration->declared_type = $this->read_declared_type_with_name($name, $nullable);
 		}
 
-		return $type;
+		$noted_type = $this->try_read_noted_type();
+		if ($noted_type) {
+			$declaration->noted_type = $noted_type;
+		}
 	}
 
 	private function read_parameters()
@@ -934,8 +927,10 @@ class PHPParser extends BaseParser
 			$token_type = $token[0];
 		}
 
-		$type = $this->try_read_type_expression_with_token($token);
-		if ($type) {
+		$declared_type = $this->try_read_type_expression_with_token($token);
+		$noted_type = $this->try_read_noted_type();
+
+		if ($declared_type or $noted_type) {
 			$token = $this->scan_token_ignore_empty();
 		}
 
@@ -963,19 +958,20 @@ class PHPParser extends BaseParser
 		$value = null;
 		if ($this->skip_char_token(_ASSIGN)) {
 			$value = $this->read_expression($name);
-			if ($type === null and $value instanceof DictType) {
-				$type = TypeFactory::$_dict;
+			if ($declared_type === null and $value instanceof DictType) {
+				$declared_type = TypeFactory::$_dict;
 			}
 
 			$value = ASTFactory::$default_value_mark;
 		}
 
-		$declar = new ParameterDeclaration($name, $type, $value);
+		$declar = new ParameterDeclaration($name, $declared_type, $value);
 		if ($inout_mode) {
 			$declar->is_inout = true;
 			$declar->is_mutable = true;
 		}
 
+		$declar->noted_type = $noted_type;
 		$declar->is_variadic = $is_variadic;
 
 		return $declar;
@@ -988,17 +984,13 @@ class PHPParser extends BaseParser
 			$token = $this->expect_typed_token_ignore_empty();
 		}
 
-		$following_comment = $this->scan_comments_ignore_empty();
-
 		$token_type = $token[0];
 		if (in_array($token_type, self::TYPING_TOKEN_TYPES)) {
 			$name = $token[1];
-			$type = $this->create_type_identifier($name, $nullable, $following_comment);
-			while ($this->skip_char_token(_TYPE_UNION)) {
-				$member_name = $this->expect_identifier_name();
-				$member_type = $this->create_type_identifier($member_name);
-				$type = $type->unite_type($member_type);
-			}
+			$type = $this->read_declared_type_with_name($name, $nullable);
+		}
+		elseif ($nullable) {
+			throw $this->new_unexpected_error();
 		}
 		else {
 			$type = null;
@@ -1122,20 +1114,12 @@ class PHPParser extends BaseParser
 		return $statement;
 	}
 
-	private function read_type_identifier()
+	private function read_declared_type_with_name(string $name, bool $nullable)
 	{
-		$nullable = $this->skip_char_token('?');
-		$name = $this->expect_identifier_name();
-
-		return $this->read_type_tailing_and_create_identifier($name, $nullable);
-	}
-
-	private function read_type_tailing_and_create_identifier(string $name, bool $nullable)
-	{
-		if ($this->get_token_ignore_empty() === '|') {
+		if ($this->get_token_ignore_empty() === _TYPE_UNION) {
 			$members = [];
 			$members[] = $this->create_type_identifier($name);
-			while ($this->skip_char_token('|')) {
+			while ($this->skip_char_token(_TYPE_UNION)) {
 				$name = $this->expect_identifier_name();
 				$members[] = $this->create_type_identifier($name);
 			}
@@ -1143,25 +1127,40 @@ class PHPParser extends BaseParser
 			$type = TypeFactory::create_union_type($members);
 		}
 		else {
-			$following_comment = $this->scan_comments_ignore_empty();
-			$type = $this->create_type_identifier($name, $nullable, $following_comment);
+			$type = $this->create_type_identifier($name, $nullable);
 		}
 
 		return $type;
 	}
 
-	private function create_type_identifier(string $name, bool $nullable = false, string $following_comment = null)
+	private function try_read_noted_type()
 	{
-		$name = static::TYPE_MAP[strtolower($name)] ?? $name;
-
+		$type = null;
+		$following_comment = $this->scan_comments_ignore_space();
 		if ($following_comment !== null) {
 			// trim '/*' and '*/'
-			$maybe_hinted_name = substr($following_comment, 2, -2);
-			if (TeaHelper::is_normal_classkindred_name($maybe_hinted_name)) {
-				$name = $maybe_hinted_name;
+			$name = substr($following_comment, 2, -2);
+			$nullable = str_ends_with($name, _INVALIDABLE_SIGN);
+			if ($nullable) {
+				$name = substr($name, 0, -1);
+			}
+
+			if (TeaHelper::is_normal_classkindred_name($name)) {
+				$type = $this->create_compatible_type_identifier($name, $nullable);
 			}
 		}
 
+		return $type;
+	}
+
+	private function create_type_identifier(string $name, bool $nullable = false)
+	{
+		$name = static::TYPE_MAP[strtolower($name)] ?? $name;
+		return $this->create_compatible_type_identifier($name, $nullable);
+	}
+
+	private function create_compatible_type_identifier(string $name, bool $nullable = false)
+	{
 		if ($identifier = TypeFactory::get_type($name)) {
 			if ($nullable) {
 				$identifier = clone $identifier;
@@ -1382,11 +1381,11 @@ class PHPParser extends BaseParser
 		return $token;
 	}
 
-	private function scan_comments_ignore_empty()
+	private function scan_comments_ignore_space()
 	{
 		$comment = null;
-		$next = $this->get_token_ignore_empty();
-		if ($next !== null and ($next[0] === T_DOC_COMMENT || $next[0] === T_COMMENT) and !strpos("\n", $this->get_token()[1])) {
+		$next = $this->get_token_ignore_space();
+		if ($next !== null and ($next[0] === T_DOC_COMMENT || $next[0] === T_COMMENT)) {
 			$comment = $next[1];
 			do {
 				$this->pos++;
@@ -1405,7 +1404,7 @@ class PHPParser extends BaseParser
 		do {
 			$this->pos++;
 			$token = $this->tokens[$this->pos] ?? null;
-			if ($token !== _SPACE && (!is_array($token) || $token[0] !== T_WHITESPACE)) {
+			if ($token !== _SPACE && !$this->is_whitespace($token)) {
 				break;
 			}
 		} while ($token !== null);
@@ -1425,6 +1424,21 @@ class PHPParser extends BaseParser
 		return $token;
 	}
 
+	private function get_token_ignore_space()
+	{
+		$pos = $this->pos;
+
+		do {
+			$pos++;
+			$token = $this->tokens[$pos] ?? null;
+			if ($token !== _SPACE && !$this->is_inline_whitespace($token)) {
+				break;
+			}
+		} while ($token !== null);
+
+		return $token;
+	}
+
 	private function get_token_ignore_empty()
 	{
 		$pos = $this->pos;
@@ -1432,13 +1446,22 @@ class PHPParser extends BaseParser
 		do {
 			$pos++;
 			$token = $this->tokens[$pos] ?? null;
-
-			if ($token !== _SPACE && (!is_array($token) || $token[0] !== T_WHITESPACE)) {
+			if ($token !== _SPACE && !$this->is_whitespace($token)) {
 				break;
 			}
 		} while ($token !== null);
 
 		return $token;
+	}
+
+	private function is_inline_whitespace($token)
+	{
+		return is_array($token) && $token[0] === T_WHITESPACE && strpos($token[1], "\n") === false;
+	}
+
+	private function is_whitespace($token)
+	{
+		return is_array($token) && $token[0] === T_WHITESPACE;
 	}
 
 	private function get_token()

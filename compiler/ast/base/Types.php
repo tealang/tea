@@ -500,24 +500,17 @@ class DictType extends IterableType {
 
 class CallableType extends BaseType implements ICallableDeclaration {
 
+	use TypingTrait;
+
 	public $name = _CALLABLE;
 
 	public $parameters = [];
 
-	public $hinted_type;
-
-	public $infered_type;
-
 	public $is_checked;
 
 	public function __construct(IType $return_type = null, array $parameters = []) {
-		$this->hinted_type = $return_type;
+		$this->declared_type = $return_type;
 		$this->parameters = $parameters;
-	}
-
-	public function get_type()
-	{
-		return $this->hinted_type ?? $this->infered_type;
 	}
 
 	public function is_accept_single_type(IType $target) {
@@ -537,11 +530,11 @@ class CallableType extends BaseType implements ICallableDeclaration {
 			return false;
 		}
 
-		if ($this->hinted_type === null) {
+		if ($this->declared_type === null) {
 			return true;
 		}
 
-		if (!$this->hinted_type->is_accept_type($target->hinted_type)) {
+		if (!$this->declared_type->is_accept_type($target->declared_type)) {
 			return false;
 		}
 
@@ -555,7 +548,7 @@ class CallableType extends BaseType implements ICallableDeclaration {
 				return false;
 			}
 
-			if (!$this->hinted_type->is_accept_type($target->hinted_type)) {
+			if (!$this->declared_type->is_accept_type($target->declared_type)) {
 				return false;
 			}
 		}

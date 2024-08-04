@@ -41,7 +41,7 @@ abstract class BaseCallExpression extends BaseExpression
 	{
 		$declar = $this->infered_callee_declaration;
 		return $declar instanceof ClassDeclaration
-			|| ($declar instanceof IVariableDeclaration && $declar->hinted_type instanceof MetaType);
+			|| ($declar instanceof IVariableDeclaration && $declar->declared_type instanceof MetaType);
 	}
 }
 

@@ -125,12 +125,16 @@ class TeaHeaderCoder extends BaseCoder
 
 	protected function render_type_expr_for_decl(IDeclaration $node)
 	{
-		$type = $node->hinted_type ?? $node->infered_type;
+		$type = $node->get_type();
 		if ($type === TypeFactory::$_void) {
 			return null;
 		}
 
 		$buffer = $type->render($this);
+
+		// if ($node->declared_type === null) {
+		// 	$buffer = '#' . $buffer;
+		// }
 
 		return $buffer;
 	}

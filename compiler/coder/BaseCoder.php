@@ -254,7 +254,7 @@ abstract class BaseCoder
 
 	protected function render_type_expr_for_decl(IDeclaration $node)
 	{
-		$type = $node->hinted_type;
+		$type = $node->declared_type;
 		return $type && $type !== TypeFactory::$_void
 			? $type->render($this)
 			: null;
@@ -353,7 +353,7 @@ abstract class BaseCoder
 	// 	return "{$declaration} $body";
 	// }
 
-	public function render_lambda_expression(LambdaExpression $node)
+	public function render_anonymous_function(AnonymousFunction $node)
 	{
 		$parameters = $this->render_parameters($node->parameters);
 		$body = $this->render_function_body($node);
@@ -760,7 +760,7 @@ abstract class BaseCoder
 		}
 
 		$parameters = $this->render_parameters($node->parameters);
-		$type = $node->hinted_type->render($this);
+		$type = $node->declared_type->render($this);
 
 		return sprintf('(%s) %s', $parameters, $type);
 	}
@@ -1274,7 +1274,7 @@ abstract class BaseCoder
 	public function render_catch_block(CatchBlock $node)
 	{
 		$var = static::VAR_DECLARE_PREFIX . $node->var->name;
-		$type = $node->var->hinted_type->render($this);
+		$type = $node->var->declared_type->render($this);
 
 		$items = [];
 		$items[] = "\ncatch ($type $var) " . $this->render_control_structure_body($node);

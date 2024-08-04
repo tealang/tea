@@ -253,7 +253,7 @@ class ASTFactory
 	public function create_yield_expression(BaseExpression $argument)
 	{
 		// force set type YieldGenerator to current function
-		$this->function->hinted_type = TypeFactory::$_yield_generator;
+		$this->function->declared_type = TypeFactory::$_yield_generator;
 
 		return new YieldExpression($argument);
 	}
@@ -456,7 +456,7 @@ class ASTFactory
 		$declaration->this_object_symbol = self::create_symbol_this($class_identifier);
 
 		// create the MetaType
-		$declaration->hinted_type = TypeFactory::create_meta_type($class_identifier);
+		$declaration->declared_type = TypeFactory::create_meta_type($class_identifier);
 	}
 
 	private static function create_symbol_this(ClassKindredIdentifier $class)
@@ -563,9 +563,9 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_lambda_expression(IType $type = null, array $parameters)
+	public function create_anonymous_function(IType $type = null, array $parameters)
 	{
-		$block = new LambdaExpression($type, $parameters);
+		$block = new AnonymousFunction($type, $parameters);
 
 		$this->scope = $block;
 		$this->begin_block($block);
@@ -834,7 +834,7 @@ class ASTFactory
 
 		if ($block->belong_block) {
 			$this->block = $block->belong_block;
-			if ($block instanceof LambdaExpression) {
+			if ($block instanceof AnonymousFunction) {
 				$this->scope = $this->find_super_scope($block);
 			}
 		}
@@ -904,7 +904,7 @@ class ASTFactory
 
 		if ($symbol === null && $seek_block) {
 			// add to lambda check list
-			if ($seek_block instanceof LambdaExpression) {
+			if ($seek_block instanceof AnonymousFunction) {
 				$seek_block->set_defer_check_identifier($identifier);
 				$identifier->lambda = $seek_block; // for the mutating feature
 			}
