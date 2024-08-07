@@ -14,7 +14,38 @@ interface ICallableDeclaration extends IDeclaration {}
 interface IMemberDeclaration extends IDeclaration {}
 interface IValuedDeclaration extends IDeclaration {}
 
+trait TypingTrait {
+	/**
+	 * @var IType
+	 */
+	public $declared_type;
+
+	/**
+	 * Type that writed in comments
+	 * eg. "@var ...", "@return ...", or tailing type notes
+	 * @var IType
+	 */
+	public $noted_type;
+
+	/**
+	 * @var IType
+	 */
+	public $infered_type;
+
+	public function get_hinted_type()
+	{
+		return $this->noted_type ?? $this->declared_type;
+	}
+
+	public function get_type()
+	{
+		return $this->noted_type ?? $this->declared_type ?? $this->infered_type;
+	}
+}
+
 trait DeclarationTrait {
+
+	use TypingTrait;
 
 	public $label;
 
@@ -26,16 +57,6 @@ trait DeclarationTrait {
 	public $name;
 
 	public $origin_name;
-
-	/**
-	 * @var IType
-	 */
-	public $hinted_type;
-
-	/**
-	 * @var IType
-	 */
-	public $infered_type;
 
 	/**
 	 * @var Symbol
@@ -50,11 +71,6 @@ trait DeclarationTrait {
 	public $uses = [];
 
 	public $defer_check_identifiers = [];
-
-	public function get_type()
-	{
-		return $this->hinted_type ?? $this->infered_type;
-	}
 
 	public function set_depends_to_unit_level()
 	{

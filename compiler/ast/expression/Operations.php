@@ -51,14 +51,14 @@ class IsOperation extends BinaryOperation
 {
 	const KIND = 'is_operation';
 
-	public $is_not;
+	public $not;
 
-	public function __construct(BaseExpression $left, IType $right, bool $is_not = false)
+	public function __construct(BaseExpression $left, IType $right, bool $not = false)
 	{
 		$this->operator = OperatorFactory::$is;
 		$this->left = $left;
 		$this->right = $right;
-		$this->is_not = $is_not;
+		$this->not = $not;
 	}
 }
 
@@ -142,3 +142,5 @@ class PrefixOperation extends UnaryOperation
 // 		$this->items = $items;
 // 	}
 // }
+
+// end

@@ -18,7 +18,7 @@ public class PHPClassInMixed1 {
 	public union_val Int|String|Bool
 	public object Object?
 	public some \Exception
-	public construct(caller String, items Array, some Bool = #default)
+	public construct(caller String, items Array|Dict#Array, some Bool = #default)
 	public get_message() String
 }
 

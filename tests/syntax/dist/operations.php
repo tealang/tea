@@ -7,7 +7,7 @@ require_once dirname(__DIR__, 1) . '/__public.php';
 const PI = 3.1415926;
 
 // ---------
-$some = 'abc' . 1 + fmod((2 & 2) * pow(2, 3) / 5, 6);
+$some = 'abc' . (1 + 2 & fmod(2 * pow(2, 3) / 5, 6));
 
 $uint_num = 123;
 $int_num = -123;
@@ -27,7 +27,11 @@ if (is_string($str_from_float)) {
 }
 
 if (!is_string($uint_num)) {
-	echo $uint_num . ' is not a String', LF;
+	echo $uint_num . ' is not String', LF;
+}
+
+if ($uint_num !== null) {
+	echo $uint_num . ' is not None', LF;
 }
 
 $str_for_find = 'abc123';
@@ -53,7 +57,10 @@ $l1 = !($num < 0) && $num != 3;
 is_int(1);
 is_uint(2);
 !is_int(1);
-new \ErrorException('demo') instanceof \Exception;
+
+$exception = new \ErrorException('demo');
+$exception instanceof \Exception;
+!$exception instanceof \Exception;
 
 $a = 1;
 

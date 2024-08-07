@@ -293,10 +293,9 @@ class PHPCoder extends BaseCoder
 		$parameters = $this->render_function_parameters($node);
 		$code = "{$prefix}function {$name}({$parameters})";
 
-		// just render return type on hinted
-		// because on unhinted, it's not necessary, and sometimes it makes mistakes
-		if ($node->hinted_type !== null && $node->hinted_type !== TypeFactory::$_any) {
-			$return_type = $this->render_type_expr($node->hinted_type);
+		// just render return type on declared, otherwise maybe causing error
+		if ($node->declared_type !== null && $node->declared_type !== TypeFactory::$_any) {
+			$return_type = $this->render_type_expr($node->declared_type);
 			$return_type and $code .= ": $return_type";
 		}
 
@@ -388,7 +387,7 @@ class PHPCoder extends BaseCoder
 		return $header . ' ' . $body;
 	}
 
-	public function render_lambda_expression(LambdaExpression $node)
+	public function render_anonymous_function(AnonymousFunction $node)
 	{
 		$parameters = $this->render_parameters($node->parameters);
 		$body = $this->render_function_body($node);
@@ -404,7 +403,7 @@ class PHPCoder extends BaseCoder
 		return $header . ' ' . $body;
 	}
 
-	protected function render_lambda_use_arguments(LambdaExpression $node)
+	protected function render_lambda_use_arguments(AnonymousFunction $node)
 	{
 		foreach ($node->use_variables as $arg) {
 			$item = $arg->render($this);
@@ -460,8 +459,8 @@ class PHPCoder extends BaseCoder
 			$expr = '&' . $expr;
 		}
 
-		if ($node->hinted_type) {
-			$type = $this->render_type_expr($node->hinted_type);
+		if ($node->declared_type) {
+			$type = $this->render_type_expr($node->declared_type);
 			if ($type) {
 				$expr = "{$type} {$expr}";
 			}
@@ -1754,7 +1753,7 @@ class PHPCoder extends BaseCoder
 	// 	$items = [];
 	// 	foreach ($members as $subnode) {
 	// 		$items[] = $subnode->render($this);
-	// 		if ($subnode->value instanceof LambdaExpression) {
+	// 		if ($subnode->value instanceof AnonymousFunction) {
 	// 			//
 	// 		}
 	// 	}
@@ -1809,18 +1808,18 @@ class PHPCoder extends BaseCoder
 			}
 
 			$code = "is_{$type_name}($left)";
-			if ($node->is_not) {
+			if ($node->not) {
 				$code = '!' . $code;
 			}
 		}
 		elseif ($node->right instanceof NoneType) {
-			$operator = $node->is_not ? '!==' : '===';
+			$operator = $node->not ? '!==' : '===';
 			$code = "{$left} $operator null";
 		}
 		else {
 			$right = $this->get_classkindred_identifier_name($node->right);
 			$code = "{$left} instanceof {$right}";
-			if ($node->is_not) {
+			if ($node->not) {
 				$code = '!' . $code;
 			}
 		}
@@ -1888,8 +1887,19 @@ class PHPCoder extends BaseCoder
 	private function is_need_parentheses_for_operation_item(BaseExpression $expr, Operator $prev_operator, bool $right_side = false)
 	{
 		if ($expr instanceof BaseOperation) {
+			$curr_operator = $expr->operator;
+			if ($expr instanceof IsOperation) {
+				// use the actual operators
+				if ($expr->right instanceof NoneType) {
+					$curr_operator = OperatorFactory::$identical;
+				}
+				elseif ($expr->not) {
+					$curr_operator = OperatorFactory::$not;
+				}
+			}
+
 			$prev_prec = $prev_operator->php_prec;
-			$curr_prec = $expr->operator->php_prec;
+			$curr_prec = $curr_operator->php_prec;
 			$need = ($curr_prec > $prev_prec)
 				|| (($right_side || ($prev_operator->php_assoc === OP_R)) && ($curr_prec === $prev_prec));
 		}

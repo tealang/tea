@@ -12,7 +12,7 @@ class PHPClassInMixed1 {
 
 	/**
 	 * comments
-	 * @var type
+	 * @var Pures
 	 */
 	private string $caller;
 

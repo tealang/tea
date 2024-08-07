@@ -21,7 +21,7 @@ class PHPSyntax
 			OPID::EXPONENTIATION => ['**', OP_BIN, OP_R],
 		],
 		[
-			OPID::CAST => ['#', OP_BIN, OP_L, OP_NA],
+			OPID::CAST => ['(?)', OP_BIN, OP_L, OP_NA],
 			OPID::REFERENCE => ['&', OP_PRE, OP_NA],
 			OPID::IDENTITY => ['+', OP_PRE, OP_NA],
 			OPID::NEGATION => ['-', OP_PRE, OP_NA],

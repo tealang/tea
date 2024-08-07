@@ -34,7 +34,7 @@ trait IScopeBlockTrait
 
 		$this->modifier = $modifier;
 		$this->name = $name;
-		$this->hinted_type = $return_type;
+		$this->declared_type = $return_type;
 		$this->parameters = $parameters;
 	}
 

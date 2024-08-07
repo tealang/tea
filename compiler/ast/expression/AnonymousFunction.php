@@ -9,11 +9,11 @@
 
 namespace Tea;
 
-class LambdaExpression extends BaseExpression implements IScopeBlock
+class AnonymousFunction extends BaseExpression implements IScopeBlock
 {
 	use IScopeBlockTrait;
 
-	const KIND = 'lambda_expression';
+	const KIND = 'anonymous_function';
 
 	/**
 	 * @var PlainIdentifier[]
@@ -24,12 +24,12 @@ class LambdaExpression extends BaseExpression implements IScopeBlock
 
 	public function __construct(IType $return_type = null, array $parameters = null)
 	{
-		$this->hinted_type = $return_type;
+		$this->declared_type = $return_type;
 		$this->parameters = $parameters;
 	}
 }
 
-// class CoroutineBlock extends LambdaExpression implements IStatement
+// class CoroutineBlock extends AnonymousFunction implements IStatement
 // {
 // 	const KIND = 'coroutine_block';
 // }

@@ -29,7 +29,7 @@ class PropertyDeclaration extends BaseVariableDeclaration implements IClassMembe
 		$this->modifier = $modifier;
 		$this->name = $name;
 		$this->value = $value;
-		$this->hinted_type = $type;
+		$this->declared_type = $type;
 	}
 }
 

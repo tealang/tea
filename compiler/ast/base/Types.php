@@ -78,7 +78,7 @@ trait ITypeTrait
 	}
 }
 
-class BaseType extends Node implements IType
+abstract class BaseType extends Node implements IType
 {
 	use ITypeTrait;
 
@@ -156,9 +156,7 @@ abstract class SingleGenericType extends BaseType
 			return $this->nullable;
 		}
 
-		if ($target === $this
-			// || $target === TypeFactory::$_none
-		) {
+		if ($target === $this) {
 			return true;
 		}
 
@@ -200,7 +198,7 @@ abstract class SingleGenericType extends BaseType
 
 class UnionType extends BaseType
 {
-	const KIND = 'union_type_expression';
+	const KIND = 'union_type';
 
 	public $name = _UNIONTYPE;
 
@@ -500,67 +498,48 @@ class DictType extends IterableType {
 
 class CallableType extends BaseType implements ICallableDeclaration {
 
+	use TypingTrait;
+
 	public $name = _CALLABLE;
 
 	public $parameters = [];
 
-	public $hinted_type;
-
-	public $infered_type;
-
 	public $is_checked;
 
-	public function __construct(IType $return_type = null, array $parameters = []) {
-		$this->hinted_type = $return_type;
+	public function __construct(?IType $return_type = null, array $parameters = []) {
+		$this->declared_type = $return_type;
 		$this->parameters = $parameters;
-	}
-
-	public function get_type()
-	{
-		return $this->hinted_type ?? $this->infered_type;
 	}
 
 	public function is_accept_single_type(IType $target) {
 		if ($target->has_null and !$this->nullable and !$this->has_null) {
-			return false;
+			$is = false;
 		}
-
-		if ($target instanceof NoneType) {
-			return $this->nullable;
+		elseif ($target instanceof NoneType) {
+			$is = $this->nullable;
 		}
-
-		if ($this === TypeFactory::$_callable) {
-			return true;
+		elseif ($this === TypeFactory::$_callable
+			|| !$target instanceof CallableType
+			|| $this->declared_type === null) {
+			$is = true;
 		}
-
-		if (!$target instanceof CallableType) {
-			return false;
+		elseif (!$this->declared_type->is_accept_type($target->declared_type)
+			|| count($target->parameters) > count($this->parameters)) {
+			$is = false;
 		}
-
-		if ($this->hinted_type === null) {
-			return true;
-		}
-
-		if (!$this->hinted_type->is_accept_type($target->hinted_type)) {
-			return false;
-		}
-
-		if (count($target->parameters) > count($this->parameters)) {
-			return false;
-		}
-
-		foreach ($this->parameters as $key => $protocol_param) {
-			$implement_param = $target->parameters[$key] ?? null;
-			if ($implement_param === null && $protocol_param->value === null) {
-				return false;
-			}
-
-			if (!$this->hinted_type->is_accept_type($target->hinted_type)) {
-				return false;
+		else {
+			$is = true;
+			foreach ($this->parameters as $key => $protocol_param) {
+				$implement_param = $target->parameters[$key] ?? null;
+				if ($implement_param === null && $protocol_param->value === null
+					|| !$this->declared_type->is_accept_type($target->declared_type)) {
+					$is = false;
+					break;
+				}
 			}
 		}
 
-		return true;
+		return $is;
 	}
 }
 

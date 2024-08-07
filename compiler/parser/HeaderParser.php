@@ -122,12 +122,12 @@ class HeaderParser extends TeaParser
 	{
 		$declaration = $this->factory->create_class_constant_declaration($modifier, $name);
 
-		$declaration->hinted_type = $this->try_read_type_expression();
+		$declaration->declared_type = $this->try_read_type_expression();
 
 		if ($this->skip_token_ignore_space(_ASSIGN)) {
 			$declaration->value = $this->read_compile_time_value();
 		}
-		elseif (!$declaration->hinted_type) {
+		elseif (!$declaration->declared_type) {
 			throw $this->new_parse_error('Expected type or value assign expression for define constant.');
 		}
 
@@ -146,7 +146,7 @@ class HeaderParser extends TeaParser
 		$parameters = $this->read_parameters_with_parentheses();
 		$this->factory->set_scope_parameters($parameters);
 
-		$declaration->hinted_type = $this->try_read_return_type_expression();
+		$this->read_type_hints_for_declaration($declaration);
 
 		$this->factory->end_class_member();
 		$this->expect_statement_end();

@@ -41,7 +41,7 @@ class OPID
 	// const PHP_ARRAY_UNION = 62;
 	const MERGE = 63; // for dicts in tea
 
-	const IS = 70; // is_type / instanceof
+	const IS = 70; // is, is not
 	const EQUAL = 71;
 	const IDENTICAL = 72;
 	const NOT_EQUAL = 73;

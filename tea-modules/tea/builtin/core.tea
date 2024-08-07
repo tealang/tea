@@ -57,7 +57,7 @@ public _std_replace(it String, search, replacement) {
 
 // processing using byte mode
 public type Bytes {
-	masked length UInt => strlen(this)
+	masked length => strlen(this)
 	masked find(str String, offset Int = #default) => strpos(this, str, offset)
 	masked find_last(str String, offset Int = #default) => strrpos(this, str, offset)
 	masked copy(start Int, length UInt = #default) => substr(this, start, length)
@@ -65,7 +65,7 @@ public type Bytes {
 
 // processing through default charset using char/rune mode
 public type String {
-	masked length UInt => mb_strlen(this)
+	masked length => mb_strlen(this)
 	masked find(str String, offset Int = #default) => mb_strpos(this, str, offset)
 	masked find_last(str String, offset Int = #default) => mb_strrpos(this, str, offset)
 	masked copy(start Int, length UInt = #default) => mb_substr(this, start, length)
@@ -85,7 +85,7 @@ public type Pures: String {
 }
 
 public type Int {
-	masked abs() UInt => abs(this)
+	masked abs() UInt => int_abs(this)
 }
 
 public type UInt: Int {}
@@ -134,8 +134,8 @@ public type Array {
 
 	masked join(separator String = LF) => _std_join(this, separator)
 
-	masked copy(start Int, length UInt = #default) Array => array_slice(this, start, length)
-	masked reversed() Array => array_reverse(this)
+	masked copy(start Int, length UInt = #default) => array_slice(this, start, length)
+	masked reversed() => array_reverse(this)
 
 	masked unshift(item) => array_unshift(this, item)
 	masked shift() => array_shift(this)
@@ -200,16 +200,16 @@ public _regex_capture_all(regex Regex, subject String) String.Array.Array? {
 
 public type Regex {
 	// match in target string, returns is matched
-	masked test(string String) Bool => _regex_test(this, string)
+	masked test(string String) => _regex_test(this, string)
 
 	// use this pattern to separate a string, returns the separated items
-	masked separate(string String) String.Array => preg_split(this, string)
+	masked separate(string String) => preg_split(this, string)
 
 	// match the target string and returns the first matching item
-	masked capture(string String) String.Array => _regex_capture(this, string)
+	masked capture(string String) => _regex_capture(this, string)
 
 	// match the target string and returns all matching items
-	masked capture_all(string String) String.Array.Array => _regex_capture_all(this, string)
+	masked capture_all(string String) => _regex_capture_all(this, string)
 }
 
 // use for processing XView

@@ -181,20 +181,24 @@ var var_without_decared = 123
 - When nesting ternary operators, parentheses must be used to specify the order of operations.
 	Therefore, associativity does not need to be considered.
 
-|Precedence	|	Operators							|	Notes	|
-|-----------|---------------------------------------|---------------|
-|1 			|	. [] () :: #						|	Member accessing, Element accessing, Function Call or Class New, Pipe Call, Type Casting	|
-|2			|	- ~									|	Negation, Bitwise Not	|
-|3			|	* / % << >> &						|	Multiplication, Division, Remainder, Bitwise Shift Left, Bitwise Shift Right, Bitwise And	|
-|4			|	+ - \| ^  							|	Addition, Subtraction, Bitwise Or, Bitwise Xor	|
-|5			|	concat 								|	String Concat	|
-|6			|	<=> < <= > >= != !== == === is  	|	Comparisons	|
-|7			|	not 								|	Logical Not	|
-|8			|	and 								|	Logical And	|
-|9			|	or 									|	Logical Or	|
-|10			|	??									|	None Coalescing	|
-|11			|	condition ? exp1 : exp2 			|	Ternary	|
-|12  		|	= *= /= += -= .= &= \|= ^= <<= >>= 	|	Assignments	|
+|	Operators							|	Description	|
+|------|---------------------------------------|---------------|
+|	. [] () :: #						|	Member accessing, Element accessing, Function Call or Class New, Pipe Call, Type Casting	|
+|	- ~									|	Negation, Bitwise Not	|
+|	* / % << >> &						|	Multiplication, Division, Remainder	|
+|	+ - 	  							|	Addition, Subtraction	|
+|	<< >>								|	Bitwise Shift Left, Bitwise Shift Right	|
+|	&  									|	Bitwise And	|
+|	^  									|	Bitwise Xor	|
+|	\| 		  							|	Bitwise Or	|
+|	concat 								|	String Concat	|
+|	<=> < <= > >= != !== == === is  	|	Comparisons	|
+|	not 								|	Logical Not	|
+|	and 								|	Logical And	|
+|	or 									|	Logical Or	|
+|	??									|	None Coalescing	|
+|	condition ? exp1 : exp2 			|	Ternary	|
+|	= *= /= += -= .= &= \|= ^= <<= >>= 	|	Assignments	|
 
 ```tea
 // The concatenation operator is used for joining strings or arrays.
@@ -470,7 +474,7 @@ runtime class BadFunctionCallException: Exception {
 	including variable names, constant names, function names, class names, etc. Case sensitivity applies.
 - When no class/func/const is specified, the compiler will identify classes, functions,
 	and constants based on the identifier style. Specifically:
-  "snake_case" style will be recognized as function names/method names/property names,
+  "snake_case" style will be recognized as function/method/property names,
   "UPPER_CASE" style will be recognized as constant names,
   "PascalCase" style will be recognized as class names.
 - Using consistent coding conventions helps in reading and understanding code more quickly and clearly.

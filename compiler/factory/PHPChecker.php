@@ -27,11 +27,11 @@ class PHPChecker extends ASTChecker
 	// 	$declaration = $node->symbol->declaration;
 
 	// 	if ($declaration instanceof VariableDeclaration || $declaration instanceof ConstantDeclaration || $declaration instanceof ParameterDeclaration || $declaration instanceof ClassKindredDeclaration) {
-	// 		if (!$declaration->hinted_type) {
+	// 		if (!$declaration->declared_type) {
 	// 			throw $this->new_syntax_error("Declaration of '{$node->name}' not found.", $node);
 	// 		}
 
-	// 		$type = $declaration->hinted_type;
+	// 		$type = $declaration->declared_type;
 	// 	}
 	// 	elseif ($declaration instanceof ICallableDeclaration) {
 	// 		$type = TypeFactory::$_callable;

@@ -37,30 +37,6 @@ class TypeHelper
 		return $is;
 	}
 
-	// static function is_iterable_type(IType $type)
-	// {
-	// 	if ($type === TypeFactory::$_any || $type instanceof IterableType) {
-	// 		$result = true;
-	// 	}
-	// 	elseif ($type instanceof PlainIdentifier) {
-	// 		$result = $type->symbol->declaration->is_same_or_based_with_symbol(self::$_iterator_symbol);
-	// 	}
-	// 	elseif ($type instanceof UnionType) {
-	// 		$result = true;
-	// 		foreach ($type->get_members() as $member_type) {
-	// 			if (!TypeHelper::is_iterable_type($member_type)) {
-	// 				$result = false;
-	// 				break;
-	// 			}
-	// 		}
-	// 	}
-	// 	else {
-	// 		$result = false;
-	// 	}
-
-	// 	return $result;
-	// }
-
 	public static function is_dict_key_type(?IType $type)
 	{
 		$is = false;
