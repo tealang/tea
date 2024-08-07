@@ -2456,6 +2456,7 @@ class TeaParser extends BaseParser
 		$this->read_type_hints_for_declaration($declaration);
 
 		$token = $this->get_token_ignore_space();
+
 		if ($token === _ASSIGN) {
 			// the assign expression
 			$this->scan_token_ignore_space(); // skip =

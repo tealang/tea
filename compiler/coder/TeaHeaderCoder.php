@@ -134,6 +134,10 @@ class TeaHeaderCoder extends BaseCoder
 			$buffer .= '#' . $node->noted_type->render($this);
 		}
 
+		// if ($node->declared_type === null) {
+		// 	$buffer = '#' . $buffer;
+		// }
+
 		return $buffer;
 	}
 }
