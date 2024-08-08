@@ -157,11 +157,6 @@ class TeaHelper
 		return preg_match('/^_{0,2}[a-z][a-z0-9_]*$/', $token);
 	}
 
-	static function is_normal_classkindred_name(?string $token)
-	{
-		return preg_match('/^[A-Z][a-zA-Z0-9_]*$/', $token);
-	}
-
 	static function is_builtin_type_name(?string $token)
 	{
 		return in_array($token, _BUILTIN_TYPE_NAMES, true);

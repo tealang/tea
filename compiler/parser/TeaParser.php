@@ -2174,19 +2174,9 @@ class TeaParser extends BaseParser
 			return $type;
 		}
 
-		if ($token === _SHARP) {
-			// the marked type name
-			$this->scan_token_ignore_space(); // skip
-			$type = $this->try_read_type_identifier();
-			if ($type === null) {
-				throw $this->new_unexpected_error();
-			}
-		}
-		else {
-			$type = $this->try_read_type_identifier();
-			if ($type === null) {
-				return null;
-			}
+		$type = $this->try_read_type_identifier();
+		if ($type === null) {
+			return null;
 		}
 
 		// union with members

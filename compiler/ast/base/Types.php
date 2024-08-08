@@ -337,14 +337,35 @@ class UnionType extends BaseType
 		return true;
 	}
 
+	// check current is a superset type of target type
 	public function is_same_or_based_with(IType $target) {
-		foreach ($this->members as $member) {
-			if (!$member->is_same_or_based_with($target)) {
-				return false;
+		$is = true;
+		if ($target instanceof UnionType) {
+			foreach ($target->members as $target_member) {
+				$has_child = false;
+				foreach ($this->members as $member) {
+					if (!$member->is_same_or_based_with($target_member)) {
+						$has_child = true;
+						break;
+					}
+				}
+
+				if (!$has_child) {
+					$is = false;
+					break;
+				}
+			}
+		}
+		else {
+			foreach ($this->members as $member) {
+				if (!$member->is_same_or_based_with($target)) {
+					$is = false;
+					break;
+				}
 			}
 		}
 
-		return true;
+		return $is;
 	}
 
 	public function is_accept_single_type(IType $target) {

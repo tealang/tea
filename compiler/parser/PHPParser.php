@@ -686,6 +686,7 @@ class PHPParser extends BaseParser
 	{
 		$name = $this->expect_identifier_name();
 		$declaration = $this->factory->create_constant_declaration(_PUBLIC, $name, $this->namespace);
+		$declaration->pos = $this->pos;
 
 		$this->continue_reading_constant_decl($declaration, $doc);
 
@@ -696,6 +697,7 @@ class PHPParser extends BaseParser
 	{
 		$name = $this->expect_member_identifier_name();
 		$declaration = $this->factory->create_class_constant_declaration($modifier ?? _PUBLIC, $name);
+		$declaration->pos = $this->pos;
 
 		$this->continue_reading_constant_decl($declaration, $doc);
 
@@ -710,7 +712,6 @@ class PHPParser extends BaseParser
 
 		$this->expect_char_token(_ASSIGN);
 		$declaration->value = $this->read_expression();
-		$declaration->pos = $this->pos;
 	}
 
 	private function get_type_in_doc(?string $doc, string $kind)
@@ -721,7 +722,7 @@ class PHPParser extends BaseParser
 
 		if ($doc !== null and preg_match('/\s+\*\s+@' . $kind . '\s+([^\s]+)/', $doc, $match)) {
 			$name = $match[1];
-			$identifier = $this->create_doc_type_identifier($name);
+			$identifier = $this->create_noted_type_identifier($name);
 		}
 		else {
 			$identifier = null;
@@ -830,7 +831,6 @@ class PHPParser extends BaseParser
 			$declaration->value = $this->read_expression();
 		}
 
-		$declaration->pos = $this->pos;
 		return $declaration;
 	}
 
@@ -842,12 +842,12 @@ class PHPParser extends BaseParser
 		}
 
 		$declaration = $this->factory->create_method_declaration($modifier ?? _PUBLIC, $name);
+		$declaration->pos = $this->pos;
 
 		$parameters = $this->read_parameters();
 		$this->factory->set_scope_parameters($parameters);
 
 		$this->try_read_function_return_types_for($declaration);
-		$declaration->pos = $this->pos;
 
 		if ($is_interface) {
 			$this->expect_statement_end();
@@ -864,12 +864,12 @@ class PHPParser extends BaseParser
 		$name = $this->expect_identifier_name();
 
 		$declaration = $this->factory->create_function_declaration(_PUBLIC, $name, $this->namespace);
+		$declaration->pos = $this->pos;
 
 		$parameters = $this->read_parameters();
 		$this->factory->set_scope_parameters($parameters);
 
 		$this->try_read_function_return_types_for($declaration);
-		$declaration->pos = $this->pos;
 
 		$this->read_function_block();
 
@@ -973,6 +973,7 @@ class PHPParser extends BaseParser
 
 		$declar->noted_type = $noted_type;
 		$declar->is_variadic = $is_variadic;
+		$declar->pos = $this->pos;
 
 		return $declar;
 	}
@@ -1145,12 +1146,17 @@ class PHPParser extends BaseParser
 				$name = substr($name, 0, -1);
 			}
 
-			if (TeaHelper::is_normal_classkindred_name($name)) {
-				$type = $this->create_compatible_type_identifier($name, $nullable);
+			if (self::is_looks_like_type_expression($name)) {
+				$type = $this->create_noted_type_identifier($name, $nullable);
 			}
 		}
 
 		return $type;
+	}
+
+	private static function is_looks_like_type_expression(?string $token)
+	{
+		return preg_match('/^[A-Z][a-zA-Z0-9_]*(\.[A-Z][a-zA-Z0-9_]*)*$/', $token);
 	}
 
 	private function create_type_identifier(string $name, bool $nullable = false)
@@ -1180,7 +1186,7 @@ class PHPParser extends BaseParser
 		return $identifier;
 	}
 
-	private function create_doc_type_identifier(string $name, bool $nullable = false)
+	private function create_noted_type_identifier(string $name, bool $nullable = false)
 	{
 		if (strpos($name, _DOT)) {
 			$identifier = $this->create_dots_style_compound_type($name);

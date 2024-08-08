@@ -220,11 +220,11 @@ class ASTChecker
 
 		if ($declared) {
 			$this->check_type($declared, $node);
-			if ($noted and !$declared->is_accept_type($noted)) {
-				$noted_name = self::get_type_name($noted);
-				$declared_name = self::get_type_name($declared);
-				throw $this->new_syntax_error("The noted return type is '{$noted_name}', do not compatibled with the declared '{$declared_name}'", $node);
-			}
+			// if ($noted and !$declared->is_accept_type($noted)) {
+			// 	$noted_name = self::get_type_name($noted);
+			// 	$declared_name = self::get_type_name($declared);
+			// 	throw $this->new_syntax_error("The noted type '{$noted_name}' is incompatible with the declared '{$declared_name}'", $node);
+			// }
 		}
 
 		return $noted ?? $declared;
@@ -532,7 +532,7 @@ class ASTChecker
 				if (!$hinted->is_accept_type($infered)) {
 					$infered_name = self::get_type_name($infered);
 					$hinted_name = self::get_type_name($hinted);
-					throw $this->new_syntax_error("The infered return type is '{$infered_name}', do not compatibled with the hinted '{$hinted_name}'", $node);
+					throw $this->new_syntax_error("The infered return type '{$infered_name}' is incompatible with the hinted '{$hinted_name}'", $node);
 				}
 			}
 			elseif ($hinted !== TypeFactory::$_void && $hinted !== TypeFactory::$_yield_generator) {
@@ -694,7 +694,7 @@ class ASTChecker
 		foreach ($node->aggregated_members as $name => $super_class_member) {
 			if (isset($node->members[$name])) {
 				// check super class member declared in current class
-				$this->assert_member_declarations($node->members[$name], $super_class_member);
+				$this->check_overrided_member($node->members[$name], $super_class_member);
 			}
 		}
 	}
@@ -708,11 +708,11 @@ class ASTChecker
 			foreach ($interface->aggregated_members as $name => $member) {
 				if (isset($node->members[$name])) {
 					// check member declared in current class/interface
-					$this->assert_member_declarations($node->members[$name], $member, true);
+					$this->check_overrided_member($node->members[$name], $member, true);
 				}
 				elseif (isset($node->aggregated_members[$name])) {
 					// check member declared in bases class/interfaces
-					$this->assert_member_declarations($node->aggregated_members[$name], $member, true);
+					$this->check_overrided_member($node->aggregated_members[$name], $member, true);
 
 					// replace to the default method implementation in interface
 					if ($member instanceof MethodDeclaration && $member->body !== null) {
@@ -736,20 +736,11 @@ class ASTChecker
 		}
 	}
 
-	protected function assert_member_declarations(IClassMemberDeclaration $node, IClassMemberDeclaration $super, bool $is_interface = false)
+	protected function check_overrided_member(IClassMemberDeclaration $node, IClassMemberDeclaration $super, bool $is_interface = false)
 	{
 		// do not need check for construct
 		if ($node->name === _CONSTRUCT) {
 			return;
-		}
-
-		// check types
-		$node_type = $node->get_type();
-		$super_type = $super->get_type();
-		if (!$super_type->is_accept_type($node_type)) {
-			$node_hinted_type = $this->get_type_name($node_type);
-			$super_hinted_type = $this->get_type_name($super_type);
-			throw $this->new_syntax_error("Type '{$node_hinted_type}' in '{$node->belong_block->name}.{$node->name}' is incompatible with '$super_hinted_type' in '{$super->belong_block->name}.{$super->name}'", $node);
 		}
 
 		// the accessing modifer
@@ -759,18 +750,14 @@ class ASTChecker
 			throw $this->new_syntax_error("Modifier in '{$node->belong_block->name}.{$node->name}' must be same as '{$super->belong_block->name}.{$super->name}'", $node->belong_block);
 		}
 
+		$covariance_mode = false;
 		if ($super instanceof MethodDeclaration) {
 			if (!$node instanceof MethodDeclaration) {
 				throw $this->new_syntax_error("Kind of '{$node->belong_block->name}.{$node->name}' is incompatible with '{$super->belong_block->name}.{$super->name}'", $node);
 			}
 
-			// check type hint
-			if ($super_type and !$node_type) {
-				$super_hinted_type = $this->get_type_name($super_type);
-				throw $this->new_syntax_error("There are declared type '{$super_hinted_type}' in '{$super->belong_block->name}.{$super->name}', but not in '{$node->belong_block->name}.{$node->name}'", $node);
-			}
-
-			$this->assert_classkindred_method_parameters($node, $super);
+			$this->check_overrided_method_parameters($node, $super);
+			$covariance_mode = true;
 		}
 		elseif ($super instanceof PropertyDeclaration) {
 			if (!$node instanceof PropertyDeclaration) {
@@ -780,27 +767,70 @@ class ASTChecker
 		elseif ($super instanceof ClassConstantDeclaration && $is_interface) {
 			throw $this->new_syntax_error("Cannot override interface constant '{$super->belong_block->name}.{$super->name}' in '{$node->belong_block->name}'", $node);
 		}
+
+		$this->check_overrided_member_declared_type($node, $super, $covariance_mode);
 	}
 
-	private function assert_classkindred_method_parameters(MethodDeclaration $node, MethodDeclaration $protocol)
+	private function check_overrided_member_declared_type(IClassMemberDeclaration $node, IClassMemberDeclaration $super, bool $covariance_mode)
+	{
+		// only check the declared
+		$current_type = $node->declared_type;
+		$super_type = $super->declared_type;
+
+		if ($super_type === null) {
+			if ($current_type === null) {
+				return;
+			}
+
+			$current_type_name = $this->get_type_name($current_type);
+			throw $this->new_syntax_error("There are declared type '{$current_type_name}' in '{$node->belong_block->name}', but not declared in '{$super->belong_block->name}'", $node);
+		}
+
+		if ($current_type === null) {
+			$super_type_name = $this->get_type_name($super_type);
+			throw $this->new_syntax_error("There are not declared type in '{$node->belong_block->name}', but declared '{$super_type_name}' in '{$super->belong_block->name}'", $node);
+		}
+
+		$compatible = $covariance_mode
+			? $current_type->is_same_or_based_with($super_type)  // supports Covariance
+			: $current_type->is_same_with($super_type);
+		if (!$compatible) {
+			$current_type_name = $this->get_type_name($current_type);
+			$super_type_name = $this->get_type_name($super_type);
+			throw $this->new_syntax_error("The declared type '{$current_type_name}' in '{$node->belong_block->name}' is incompatible with '$super_type_name' in '{$super->belong_block->name}'", $node);
+		}
+	}
+
+	private function check_overrided_method_parameters(MethodDeclaration $node, MethodDeclaration $protocol)
 	{
 		if ($protocol->parameters === null && $protocol->parameters === null) {
 			return;
 		}
 
 		// the parameters count
-		if (count($protocol->parameters) !== count($node->parameters)) {
+		if (count($protocol->parameters) > count($node->parameters)) {
 			throw $this->new_syntax_error("Parameters of '{$node->belong_block->name}.{$node->name}' is incompatible with '{$protocol->belong_block->name}.{$protocol->name}'", $node);
 		}
 
 		// the parameter types
 		foreach ($protocol->parameters as $idx => $protocol_param) {
 			$node_param = $node->parameters[$idx];
-			if (!$this->is_strict_compatible_types($protocol_param->get_type(), $node_param->get_type())) {
-				$type_name = $this->get_type_name($node_param->get_type());
+			$super_type = $protocol_param->get_type();
+			$current_type = $node_param->get_type();
+			if (!$this->is_overrided_method_param_compatible_types($super_type, $current_type)) {
+				$type_name = $this->get_type_name($current_type);
 				throw $this->new_syntax_error("Parameter '{$node_param->name} {$type_name}' in '{$node->belong_block->name}.{$node->name}' is incompatible with '{$protocol->belong_block->name}.{$protocol->name}'", $node_param);
 			}
 		}
+	}
+
+	private function is_overrided_method_param_compatible_types(IType $super, IType $current)
+	{
+		return $super === $current
+			|| $super->symbol === $current->symbol
+			|| ($super === TypeFactory::$_int && $current === TypeFactory::$_uint)
+			|| $current instanceof UnionType && $current->is_accept_type($super)  // supports Contravariance
+		;
 	}
 
 	private function infer_if_block(IfBlock $node): ?IType
@@ -2308,14 +2338,6 @@ class ASTChecker
 		return $symbol->declaration;
 	}
 
-	private function is_strict_compatible_types(IType $left, IType $right)
-	{
-		return $left === $right
-			|| $left->symbol === $right->symbol
-			|| ($left === TypeFactory::$_int && $right === TypeFactory::$_uint)
-		;
-	}
-
 	private function assert_type_compatible(IType $left, IType $right, Node $value_node, string $kind = 'assign')
 	{
 		if (!$this->is_type_compatible($left, $right, $value_node)) {
@@ -3194,13 +3216,12 @@ class ASTChecker
 	{
 		if ($type instanceof IterableType) {
 			if ($type->generic_type === null) {
-				$generic_type_name = _ANY;
+				$name = $type->name;
 			}
 			else {
 				$generic_type_name = self::get_type_name($type->generic_type);
+				$name = "{$generic_type_name}.{$type->name}";
 			}
-
-			$name = "{$generic_type_name}.{$type->name}";
 		}
 		elseif ($type instanceof MetaType) {
 			$generic_type_name = self::get_type_name($type->generic_type);

@@ -122,12 +122,12 @@ class HeaderParser extends TeaParser
 	{
 		$declaration = $this->factory->create_class_constant_declaration($modifier, $name);
 
-		$declaration->declared_type = $this->try_read_type_expression();
+		$this->read_type_hints_for_declaration($declaration);
 
 		if ($this->skip_token_ignore_space(_ASSIGN)) {
 			$declaration->value = $this->read_compile_time_value();
 		}
-		elseif (!$declaration->declared_type) {
+		elseif (!$declaration->declared_type and !$declaration->noted_type) {
 			throw $this->new_parse_error('Expected type or value assign expression for define constant.');
 		}
 

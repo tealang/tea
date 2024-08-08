@@ -958,7 +958,8 @@ class PHPCoder extends BaseCoder
 	{
 		$expr = $node->content;
 		$type = $expr->infered_type;
-		if ($type instanceof XViewType) {
+
+		if ($type instanceof XViewType or $type instanceof PuresType) {
 			$code = $this->render_subexpression($expr, OperatorFactory::$concat);
 		}
 		elseif ($type instanceof IterableType and $type->generic_type instanceof XViewType) {

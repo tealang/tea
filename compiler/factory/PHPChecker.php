@@ -13,7 +13,7 @@ class PHPChecker extends ASTChecker
 {
 	const NS_SEPARATOR = PHPParser::NS_SEPARATOR;
 
-	protected $is_weakly_typed_system = true;
+	// protected $is_weakly_typed_system = true;
 
 	// protected function infer_plain_identifier(PlainIdentifier $node): IType
 	// {
@@ -62,10 +62,10 @@ class PHPChecker extends ASTChecker
 		}
 	}
 
-	protected function assert_member_declarations(IClassMemberDeclaration $node, IClassMemberDeclaration $super, bool $is_interface = false)
-	{
-		//
-	}
+	// protected function assert_member_declarations(IClassMemberDeclaration $node, IClassMemberDeclaration $super, bool $is_interface = false)
+	// {
+	// 	//
+	// }
 }
 
 // end
