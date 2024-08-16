@@ -15,6 +15,7 @@ const
 	OP_POST = 0x01,	// postfix
 	OP_BIN = 0x02,  // binary
 	OP_TERNARY = 0x04,
+	OP_ASSIGN = 0x08,
 	OP_NA = 0x20,  	// n/a associative,
 	OP_NON = 0x21, 	// non associative, cannot be used next to each other
 	OP_L = 0x22,  	// left associative
@@ -94,24 +95,26 @@ const
 	_IDENTITY = '+', // +1, +num
 	_NEGATION = '-', // -1, -num
 	_BITWISE_NOT = '~',
+	_CLONE = 'clone',
+	_CONCAT = 'concat',
 	_NOT = 'not',
+	_AND = 'and', _OR = 'or', _XOR = 'xor',
 	// _ADDITION = '+', _SUBTRACTION = '-', _MULTIPLICATION = '*', _DIVISION = '/', _REMAINDER = '%', _EXPONENTIATION = '**',
 	// _BITWISE_AND = '&', _BITWISE_OR = '|', _BITWISE_XOR = '^',
-	// _CONCAT = 'concat', _ARRAY_CONCAT = 'array_concat', _MERGE = 'merge',
+	// _ARRAY_CONCAT = 'array_concat', _MERGE = 'merge',
 	// _EQUAL = '==', _NOT_EQUAL = '!=', _IDENTICAL = '===', _NOT_IDENTICAL = '!==',
 	// _LESS_THAN = '<', _GREATER_THAN = '>',
 	// _LESS_THAN_OR_EQUAL_TO = '<=', _GREATER_THAN_OR_EQUAL_TO = '>=',
 	// _SPACESHIP = '<=>',
-	// _AND = 'and', _OR = 'or', _XOR = 'xor',
 	_NONE_COALESCING = '??', _QUESTION = '?',
 	_DOT = '.',
 	_DOUBLE_COLON = '::',
 	// _PUT = '<-', _NOTIFY = '->',
-	_ARROW = '=>',
+	_DOUBLE_ARROW = '=>',
 	// _SHIFT_LEFT = '<<', _SHIFT_RIGHT = '>>',
 
 	_ASSIGN = '=',
-	_ASSIGN_OPERATORS = [_ASSIGN, '.=', '**=', '+=', '-=', '*=', '/=', '&=', '|=', '^=', '<<=', '>>='], // '??='
+	_ASSIGN_OPERATORS = ['=', '+=', '-=', '*=', '/=', '.=', '%=', '&=', '|=', '^=', '<<=', '>>=', '??='], // '**=',
 
 	_SINGLE_QUOTE = '\'',
 	_DOUBLE_QUOTE = '"',
@@ -121,9 +124,9 @@ const
 	_BRACE_OPEN = '{', _BRACE_CLOSE = '}',
 	_GENERIC_OPEN = '<', _GENERIC_CLOSE = '>',
 	_BLOCK_BEGIN = _BRACE_OPEN, _BLOCK_END = _BRACE_CLOSE,
-	_DOCS_MARK = '---',
-	_INLINE_COMMENT_MARK = '//',
-	_COMMENTS_OPEN = '/*', _COMMENTS_CLOSE = '*/',
+	_DOC_MARK = '---',
+	_LINE_COMMENT_MARK = '//',
+	_BLOCK_COMMENT_OPEN = '/*', _BLOCK_COMMENT_CLOSE = '*/',
 
 	_UNIT_PATH = 'UNIT_PATH',
 	_VAL_NULL = 'null',
@@ -132,7 +135,6 @@ const
 
 	_NAMESPACE = 'namespace',
 	_USE = 'use',
-	// _NEW = 'new', _CLONE = 'clone',
 	_VAR = 'var',
 	_MUT = 'mut',
 	_INOUT = 'inout',
@@ -179,5 +181,58 @@ const
 	_DESTRUCT = 'destruct',
 	_EXTENDS = 'extends',
 	_IMPLEMENTS = 'implements';
+
+const _BUILTIN_TYPE_NAMES = [
+	_UNIONTYPE,
+	_METATYPE,
+	_ANY,
+	_VOID,
+	_NONE,
+	_STRING,
+	_PURE_STRING,
+	_INT,
+	_UINT,
+	_FLOAT,
+	_BOOL,
+	_DICT,
+	_ARRAY,
+	_ITERABLE,
+	_OBJECT,
+	_XVIEW,
+	_REGEX,
+	_CALLABLE,
+];
+
+const _CTRL_STRUCTURE_NAMES = [
+	_VAR, _UNSET,
+	_IF, _SWITCH, _FOR, _WHILE, _TRY, // _LOOP
+	_ECHO, _RETURN, _EXIT, _BREAK, _CONTINUE, _THROW,
+];
+
+const _ACCESSING_MODIFIERS = [_MASKED, _PUBLIC, _INTERNAL, _PROTECTED, _PRIVATE];
+
+const _BUILTIN_IDENTIFIERS = [_TYPE_SELF, _THIS, _SUPER, _VAL_NONE, _VAL_TRUE, _VAL_FALSE, _UNIT_PATH];
+
+const _OTHER_KEY_WORDS = [
+	// _CONSTRUCT, _DESTRUCT,
+	_STATIC,
+	_ELSEIF, _ELSE,
+	_IN, _TO, _DOWNTO,
+	_CATCH, _FINALLY,
+	_CLONE, _CONCAT, _NOT, _AND, _OR, _XOR,
+];
+
+define('_CASE_SENSITIVE_RESERVEDS', array_merge(
+	_CTRL_STRUCTURE_NAMES,
+	_ACCESSING_MODIFIERS,
+	_BUILTIN_IDENTIFIERS,
+	_OTHER_KEY_WORDS,
+));
+
+define('_CASE_INSENSITIVE_RESERVEDS', array_merge(
+	_BUILTIN_TYPE_NAMES,
+	[_UNIT_PATH],
+));
+
 
 // program end

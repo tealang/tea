@@ -22,9 +22,9 @@ abstract class Node
 	public $tailing_br = false;
 
 	/**
-	 * @var Docs
+	 * @var DocComment
 	 */
-	public $docs;
+	public $doc;
 
 	// tailing inline comment
 	public $tailing_comment;
@@ -36,3 +36,5 @@ abstract class Node
 		return $coder->{'render_' . static::KIND}($this);
 	}
 }
+
+// end

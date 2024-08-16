@@ -14,8 +14,38 @@ abstract class BaseOperation extends BaseExpression
 	public $operator;
 }
 
-abstract class UnaryOperation extends BaseOperation {}
+abstract class UnaryOperation extends BaseOperation
+{
+	public $expression;
+
+	public function __construct(BaseExpression $expression, Operator $operator)
+	{
+		$this->expression = $expression;
+		$this->operator = $operator;
+	}
+}
+
 abstract class MultiOperation extends BaseOperation {}
+
+class PrefixOperation extends UnaryOperation
+{
+	const KIND = 'prefix_operation';
+}
+
+class PostfixOperation extends UnaryOperation
+{
+	const KIND = 'postfix_operation';
+}
+
+// class ReferenceOperation extends UnaryOperation
+// {
+// 	const KIND = 'reference_operation';
+
+// 	public function __construct(Identifiable $identifier)
+// 	{
+// 		parent::__construct($identifier, OperatorFactory::$reference);
+// 	}
+// }
 
 class BinaryOperation extends MultiOperation
 {
@@ -26,24 +56,28 @@ class BinaryOperation extends MultiOperation
 	public $left;
 	public $right;
 
-	public function __construct(Operator $operator, BaseExpression $left, BaseExpression $right) {
-		$this->operator = $operator;
+	public function __construct(BaseExpression $left, BaseExpression $right, Operator $operator)
+	{
 		$this->left = $left;
 		$this->right = $right;
+		$this->operator = $operator;
 	}
 }
 
-class CastOperation extends BinaryOperation
+class AssignmentOperation extends BinaryOperation
 {
-	const KIND = 'cast_operation';
+	const KIND = 'assignment_operation';
+}
 
-	// public $is_calling;
+class AsOperation extends BinaryOperation
+{
+	const KIND = 'as_operation';
 
 	public function __construct(BaseExpression $left, IType $right)
 	{
-		$this->operator = OperatorFactory::$cast;
 		$this->left = $left;
 		$this->right = $right;
+		$this->operator = OperatorFactory::$as;
 	}
 }
 
@@ -55,10 +89,10 @@ class IsOperation extends BinaryOperation
 
 	public function __construct(BaseExpression $left, IType $right, bool $not = false)
 	{
-		$this->operator = OperatorFactory::$is;
 		$this->left = $left;
 		$this->right = $right;
 		$this->not = $not;
+		$this->operator = OperatorFactory::$is;
 	}
 }
 
@@ -71,9 +105,9 @@ class NoneCoalescingOperation extends MultiOperation
 	 */
 	public $items;
 
-	public function __construct(BaseExpression ...$items) {
-		$this->operator = OperatorFactory::$none_coalescing;
+	public function __construct(array $items) {
 		$this->items = $items;
+		$this->operator = OperatorFactory::$none_coalescing;
 	}
 }
 
@@ -87,60 +121,11 @@ class TernaryExpression extends MultiOperation
 
 	public function __construct(BaseExpression $condition, ?BaseExpression $then, BaseExpression $else)
 	{
-		$this->operator = OperatorFactory::$ternary;
 		$this->condition = $condition;
 		$this->then = $then;
 		$this->else = $else;
+		$this->operator = OperatorFactory::$ternary;
 	}
 }
-
-class PrefixOperation extends UnaryOperation
-{
-	const KIND = 'prefix_operation';
-
-	public $expression;
-
-	public function __construct(Operator $operator, BaseExpression $expression) {
-		$this->operator = $operator;
-		$this->expression = $expression;
-	}
-}
-
-// class ReferenceOperation extends UnaryOperation
-// {
-// 	const KIND = 'reference_operation';
-
-// 	public $identifier;
-
-// 	public function __construct(Identifiable $identifier) {
-// 		$this->identifier = $identifier;
-// 	}
-// }
-
-// class PostfixOperation extends UnaryOperation
-// {
-// 	const KIND = 'postfix_operation';
-
-// 	public $expression;
-
-// 	public function __construct(Operator $operator, BaseExpression $expression)
-// 	{
-// 		$this->operator = $operator;
-// 		$this->expression = $expression;
-// 	}
-// }
-
-// class FunctionalOperation extends MultiOperation
-// {
-// 	const KIND = 'functional_operation';
-
-// 	public $items;
-
-// 	public function __construct(Operator $operator, BaseExpression ...$items)
-// 	{
-// 		$this->operator = $operator;
-// 		$this->items = $items;
-// 	}
-// }
 
 // end

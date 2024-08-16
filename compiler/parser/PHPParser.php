@@ -65,7 +65,7 @@ class PHPParser extends BaseParser
 
 	private const PREFIX_OPERATORS = [_EXCLAMATION, _NEGATION, _IDENTITY, _BITWISE_NOT];
 
-	private const EXPRESSION_ENDINGS = [null, _PAREN_CLOSE, _BRACKET_CLOSE, _BLOCK_END, _COMMA, _SEMICOLON];
+	private const EXPR_STOPPING_SIGNS = [_PAREN_CLOSE, _BRACKET_CLOSE, _BLOCK_END, _COMMA, _SEMICOLON];
 
 	private const NORMAL_IDENTIFIER_TOKEN_TYPES = [T_STRING, T_ARRAY, T_STATIC, T_NAME_FULLY_QUALIFIED];
 
@@ -109,62 +109,164 @@ class PHPParser extends BaseParser
 	private function read_root_statement()
 	{
 		$token = $this->scan_token_ignore_empty();
-		if ($token === null || is_string($token)) {
+		if ($token === null) {
 			return null;
 		}
 
+		$token_type = is_string($token) ? $token : $token[0];
+
 		$doc = null;
-		if ($token[0] === T_DOC_COMMENT) {
+		if ($token_type === T_DOC_COMMENT) {
 			$doc = $token[1];
 			$token = $this->expect_typed_token_ignore_empty();
 		}
 
-		switch ($token[0]) {
+		switch ($token_type) {
 			case T_NAMESPACE:
 				$node = $this->read_namespace_statement();
 				break;
-
 			case T_USE:
-				$node = $this->read_use_statement();
+				$node = $this->read_use_namespace_statement();
 				break;
-
 			case T_CLASS:
 				$node = $this->read_class_declaration();
 				break;
-
 			case T_ABSTRACT:
 				$this->expect_typed_token(T_CLASS);
 				$node = $this->read_class_declaration(true);
 				break;
-
 			case T_INTERFACE:
 				$node = $this->read_interface_declaration();
 				break;
-
 			case T_TRAIT:
 				$node = $this->read_trait_declaration();
 				break;
-
 			case T_FUNCTION:
 				$node = $this->read_function_declaration($doc);
 				break;
-
 			case T_CONST:
-				$node = $this->read_normal_constant_declaration($doc);
-
-				// for `const A = xxx, B = xxx, C = xxx;` style
-				while ($this->skip_char_token(_COMMA)) {
-					$this->program->append_declaration($node);
-					$node = $this->read_normal_constant_declaration();
-				}
-
-				$this->expect_statement_end();
+				$node = $this->read_const_statement();
 				break;
-
-			// we do not care the others
-			default:
+			case T_OPEN_TAG:
+			case T_CLOSE_TAG:
 				$node = null;
+				break;
+			default:
+				$node = $this->read_normal_statement_with_token($token);
+				break;
 		}
+
+		return $node;
+	}
+
+	protected function read_inner_statement()
+	{
+		$token = $this->scan_token_ignore_empty();
+		if ($token === null) {
+			return null;
+		}
+
+		$token_type = is_string($token) ? $token : $token[0];
+		switch ($token_type) {
+			case T_USE:
+				$node = $this->read_use_trait_statement();
+				break;
+			case _BLOCK_END:
+				$this->back();
+				$node = null;
+				break;
+			default:
+				$node = $this->read_normal_statement_with_token($token);
+				break;
+		}
+
+		return $node;
+	}
+
+	private function read_normal_statement_with_token(array|string $token): ?IStatement
+	{
+		$token_type = is_string($token) ? $token : $token[0];
+		switch ($token_type) {
+			case T_COMMENT:
+				$content = $token[1];
+				$node = str_starts_with($content, '/*')
+					? new BlockComment($content)
+					: new LineComment($token[1]);
+				$node->pos = $this->pos;
+				break;
+			case T_DOC_COMMENT:
+				$node = new DocComment($token[1]);
+				$node->pos = $this->pos;
+				break;
+			case T_ECHO:
+				$node = $this->read_echo_statement();
+				break;
+			case T_EXIT:
+				$node = $this->read_exit_statement();
+				break;
+			case T_RETURN:
+				$node = $this->read_return_statement();
+				break;
+			case T_BREAK:
+				$node = $this->read_break_statement();
+				break;
+			case T_CONTINUE:
+				$node = $this->read_continue_statement();
+				break;
+			case T_THROW:
+				$node = $this->read_throw_statement();
+				break;
+			case T_IF:
+				$node = $this->read_if_block();
+				break;
+			case T_SWITCH:
+				$node = $this->read_switch_block();
+				break;
+			case T_MATCH:
+				$node = $this->read_match_block();
+				break;
+			case T_FOR:
+				$node = $this->read_for_block();
+				break;
+			case T_FOREACH:
+				$node = $this->read_foreach_block();
+				break;
+			case T_WHILE:
+				$node = $this->read_while_block();
+				break;
+			case T_DO:
+				$node = $this->read_do_block();
+				break;
+			case T_TRY:
+				$node = $this->read_try_block();
+				break;
+			case T_GLOBAL:
+				$node = $this->read_global_statement();
+				break;
+			case T_STATIC:
+				if ($this->get_typed_token_ignore_empty(T_VARIABLE)) {
+					$node = $this->read_static_statement();
+					break;
+				}
+			default:
+				$node = $this->read_expression_statement_with($token);
+				break;
+		}
+
+		return $node;
+	}
+
+	private function read_expression_statement_with(string|array $token): ?NormalStatement
+	{
+		$expr = $this->read_expression_with_token($token);
+		if ($expr === null) {
+			return null;
+		}
+
+		$this->expect_statement_end();
+
+		$node = new NormalStatement($expr);
+		$node->pos = $this->pos;
 
 		return $node;
 	}
@@ -183,18 +285,20 @@ class PHPParser extends BaseParser
 		$this->program->ns = $ns;
 
 		$statement = new NamespaceStatement($ns);
+
+		$this->expect_statement_end();
+
 		return $statement;
 	}
 
 	private function create_namespace_identifier(array $names)
 	{
-		$ns = $this->factory->create_namespace_identifier($names);
-		$ns->pos = $this->pos;
-
-		return $ns;
+		$identifier = $this->factory->create_namespace_identifier($names);
+		$identifier->pos = $this->pos;
+		return $identifier;
 	}
 
-	private function read_use_statement()
+	private function read_use_namespace_statement()
 	{
 		// e.g. use NS\Target;
 		// e.g. use NS\Target as AliasName1;
@@ -220,6 +324,7 @@ class PHPParser extends BaseParser
 		// scan the namespace components
 		while ($token = $this->scan_token_ignore_empty()) {
 			if ($token === _SEMICOLON) {
+				$this->back();
 				break;
 			}
 			elseif ($token[0] === T_NS_SEPARATOR) {
@@ -261,6 +366,8 @@ class PHPParser extends BaseParser
 
 		$statement = $this->create_use_statement_when_not_exists($ns, $targets);
 
+		$this->expect_statement_end();
+
 		return $statement;
 	}
 
@@ -290,116 +397,737 @@ class PHPParser extends BaseParser
 		return $targets;
 	}
 
-	private function read_expression($debug_name = null)
+// ---
+
+	private function read_global_statement()
 	{
-		// we do not care about the contents, just skip ...
+		// global var0 Type0, var1 Type1, ...
 
-		$expr = null;
-		while (($token = $this->scan_token_ignore_empty()) !== null) {
-			// the string token
-			if (is_string($token)) {
-				if (in_array($token, static::EXPRESSION_ENDINGS, true)) {
-					$this->pos--;
-					break;
-				}
+		$members = [];
+		do {
+			$members[] = $this->read_variable_declaration(true);
+		}
+		while ($this->skip_comma());
 
-				switch ($token) {
-					case _PAREN_OPEN:
-						$expr = $this->read_expression();
-						$this->expect_char_token(_PAREN_CLOSE);
-						break 2;
+		$this->expect_statement_end();
 
-					case _BRACKET_OPEN:
-						$expr = $this->read_bracket_expression();
-						break 2;
+		return new VarStatement($members);
+	}
 
-					default:
-						if ($expr === null) {
-							$operator = OperatorFactory::get_php_prefix_operator($token);
-						}
-						else {
-							$operator = OperatorFactory::get_php_normal_operator($token);
-						}
+	private function read_static_statement()
+	{
+		// static var0 Type0, var1 Type1, ...
 
-						if ($operator === null) {
-							return $expr;
-						}
+		$members = [];
+		do {
+			$members[] = $this->read_variable_declaration();
+		}
+		while ($this->skip_comma());
 
-						// we don't care the precedences
-						$right_expr = $this->read_expression();
+		$this->expect_statement_end();
 
-						if ($expr === null) {
-							$expr = new PrefixOperation($operator, $right_expr);
-						}
-						else {
-							$expr = new BinaryOperation($operator, $expr, $right_expr);
-						}
+		return new VarStatement($members);
+	}
 
-						break;
-				}
+	private function read_variable_declaration(bool $without_value = false)
+	{
+		// var abc
+		// var abc Type
+		// var abc Type = expression
 
-				continue;
+		$name = $this->scan_token_ignore_empty();
+		$type = $this->try_read_type_expression();
+
+		$value = null;
+
+		if (!$without_value) {
+			if ($this->get_token_ignore_empty() === _ASSIGN) {
+				$this->scan_token_ignore_empty();
+				$value = $this->read_expression();
+			}
+		}
+
+		return $this->factory->create_variable_declaration($name, $type, $value);
+	}
+
+	private function read_continue_statement()
+	{
+		// continue
+		// continue target_layers
+
+		$statement = new ContinueStatement();
+
+		$token = $this->scan_typed_token_ignore_empty(T_LNUMBER);
+		if ($token !== null) {
+			$statement->target_layers = $token[1];
+		}
+
+		$this->expect_statement_end();
+
+		return $statement;
+	}
+
+	private function read_break_statement()
+	{
+		// break
+		// break target_layers
+
+		$statement = new BreakStatement();
+
+		$token = $this->scan_typed_token_ignore_empty(T_LNUMBER);
+		if ($token !== null) {
+			$statement->target_layers = $token[1];
+		}
+
+		$this->expect_statement_end();
+
+		return $statement;
+	}
+
+	private function read_exit_statement()
+	{
+		// exit
+		// exit expression
+
+		$argument = $this->read_expression();
+		$statement = $this->factory->create_exit_statement($argument);
+
+		$this->expect_statement_end();
+
+		return $statement;
+	}
+
+	private function read_return_statement()
+	{
+		// return
+		// return expression
+
+		$argument = $this->read_expression();
+		$statement = $this->factory->create_return_statement($argument);
+
+		$this->expect_statement_end();
+
+		return $statement;
+	}
+
+	private function read_throw_statement()
+	{
+		// throw Exception()
+
+		$argument = $this->read_expression();
+		if ($argument === null) {
+			throw $this->new_parse_error("Required an Exception argument.");
+		}
+
+		$statement = $this->factory->create_throw_statement($argument);
+
+		$this->expect_statement_end();
+
+		return $statement;
+	}
+
+	protected function read_echo_statement()
+	{
+		// echo
+		// echo argument0, argument1, ...
+
+		$args = $this->read_arguments();
+
+		$this->expect_statement_end();
+
+		return new EchoStatement($args);
+	}
+
+	private function read_if_block()
+	{
+		// if test_expression { ... } [elseif test_expression {...}] [else { ... }] [catch e Exception {}] finally {}
+
+		$this->expect_char_token(_PAREN_OPEN);
+		$test = $this->read_expression();
+		$this->expect_char_token(_PAREN_CLOSE);
+
+		$block = $this->factory->create_if_block($test);
+		$this->read_block_body_for($block);
+
+		$this->try_attach_else_block($block);
+
+		$this->factory->end_branches($block);
+
+		return $block;
+	}
+
+	private function try_attach_else_block(IElseAble $main_block)
+	{
+		$this->skip_comments();
+
+		$token = $this->get_token_ignore_empty();
+		$token_type = $token[0];
+		if ($token_type === T_ELSE) {
+			$this->scan_token_ignore_empty();
+			$sub_block = $this->factory->create_else_block();
+			$this->read_block_body_for($sub_block);
+
+			// else block would be the end
+		}
+		elseif ($token_type === T_ELSEIF) {
+			$this->scan_token_ignore_empty();
+			$this->expect_char_token(_PAREN_OPEN);
+			$test = $this->read_expression();
+			$this->expect_char_token(_PAREN_CLOSE);
+
+			$sub_block = $this->factory->create_elseif_block($test);
+			$this->read_block_body_for($sub_block);
+
+			// another else block
+			$this->try_attach_else_block($sub_block);
+		}
+		else {
+			return;
+		}
+
+		$main_block->set_else_block($sub_block);
+	}
+
+	private function skip_comments()
+	{
+		do {
+			$token = $this->get_token_ignore_empty();
+			$type = is_string($token) ? 0 : $token[0];
+			if ($type !== T_COMMENT && $type !== T_DOC_COMMENT) {
+				break;
 			}
 
-			// the typed token
-			$token_type = $token[0];
-			$token_content = $token[1];
+			$this->scan_token_ignore_empty();
+		}
+		while (true);
+	}
 
-			switch ($token_type) {
-				case T_STRING:
-					$lower_case_name = strtolower($token_content);
-					$mapped_name = self::BUILTIN_IDENTIFIER_MAP[$lower_case_name] ?? null;
-					if ($mapped_name) {
-						$expr = $this->factory->create_builtin_identifier($mapped_name);
-					}
-					else {
-						$expr = $this->create_unchecking_identifier($token_content);
-					}
+	private function read_try_block()
+	{
+		$block = $this->factory->create_try_block();
+		$this->read_block_body_for($block);
+
+		$this->try_read_catching_block($block);
+
+		$this->factory->end_branches($block);
+
+		return $block;
+	}
+
+	private function try_read_catching_block(IExceptAble $main_block)
+	{
+		$this->skip_comments();
+
+		$token = $this->get_token_ignore_empty();
+		$token_type = $token[0];
+
+		if ($token_type === T_CATCH) {
+			$this->scan_token_ignore_empty();
+			$this->expect_char_token(_PAREN_OPEN);
+
+			$type = $this->try_read_type_expression();
+			$var_name = $this->expect_variable_name();
+
+			$this->expect_char_token(_PAREN_CLOSE);
+
+			$sub_block = $this->factory->create_catch_block($var_name, $type);
+			$this->read_block_body_for($sub_block);
+			$main_block->add_catching_block($sub_block);
+
+			// another except block
+			$this->try_read_catching_block($main_block);
+		}
+		elseif ($token_type === T_FINALLY) {
+			$this->scan_token_ignore_empty();
+
+			$sub_block = $this->factory->create_finally_block();
+			$this->read_block_body_for($sub_block);
+			$main_block->set_finally_block($sub_block);
+
+			// finally block would be the end
+		}
+	}
+
+	private function read_switch_block(string $label = null)
+	{
+		$this->expect_char_token(_PAREN_OPEN);
+		$argument = $this->read_expression();
+		$this->expect_char_token(_PAREN_CLOSE);
+
+		$block = $this->factory->create_switch_block($argument);
+		$block->label = $label;
+
+		$branches = $this->read_case_branches();
+		$block->set_branches($branches);
+
+		return $block;
+	}
+
+	private function read_case_branches()
+	{
+		$this->expect_block_begin();
+
+		$branches = [];
+		$case_type = $this->skip_case();
+
+		while ($case_type) {
+			$arguments = $this->read_case_arguments($case_type);
+			$case_branch = $this->factory->create_case_branch_block($arguments);
+
+			$stmts = [];
+			while ($item = $this->read_inner_statement()) {
+				$stmts[] = $item;
+				$this->skip_comments();
+				$case_type = $this->skip_case();
+				if ($case_type) {
 					break;
-				case T_NS_SEPARATOR:
-					$expr = $this->read_classkindred_identifier($token);
-					break;
-				case T_NAME_QUALIFIED:
-				case T_NAME_FULLY_QUALIFIED:
-					$expr = $this->create_unchecking_identifier($token_content);
-					break;
-				case T_CONSTANT_ENCAPSED_STRING:
-					$quote = $token_content[0];
-					$quote_content = substr($token_content, 1, -1);
-					$expr = $quote === _SINGLE_QUOTE
-						? new PlainLiteralString($quote_content)
-						: new EscapedLiteralString($quote_content);
-					break;
-				case T_LNUMBER:
-					$expr = new LiteralInteger($token_content);
-					break;
-				case T_DNUMBER:
-					$expr = new LiteralFloat($token_content);
-					break;
-				case T_DOUBLE_COLON:
-					$name = $this->expect_member_identifier_name();
-					if ($name === _CLASS) {
-						continue 2;
-					}
-					else {
-						$expr = $this->factory->create_accessing_identifier($expr, $name);
-					}
-					break;
-				case T_DOUBLE_ARROW:
-					$this->pos--;
-					break 2;
-				case T_COMMENT:
-				case T_DOC_COMMENT:
-					continue 2;
-				default:
-					$this->print_token($token);
-					throw $this->new_unexpected_error();
+				}
 			}
 
-			$expr->pos = $this->pos;
+			$case_branch->set_body_with_statements($stmts);
+			$branches[] = $case_branch;
+		}
+
+		$this->expect_block_end();
+
+		return $branches;
+	}
+
+	private function skip_case()
+	{
+		$next = $this->get_token_ignore_empty();
+		$type = is_string($next) ? 0 : $next[0];
+
+		$skiped = $type === T_CASE
+			? T_CASE
+			: ($type === T_DEFAULT ? T_DEFAULT : 0);
+
+		if ($skiped) {
+			$this->scan_token_ignore_empty();
+		}
+
+		return $skiped;
+	}
+
+	private function read_case_arguments(int $case_type)
+	{
+		$items = [];
+		do {
+			$items[] = $case_type === T_CASE
+				? $this->expect_expression()
+				: null;
+
+			$this->expect_char_token(_COLON);
+			$case_type = $this->skip_case();
+		}
+		while ($case_type);
+
+		return $items;
+	}
+
+	private function read_foreach_block(string $label = null)
+	{
+		$this->expect_char_token(_PAREN_OPEN);
+		$iterable = $this->read_expression();
+
+		$this->expect_typed_token_ignore_empty(_AS);
+		$val_var = $this->read_variable_identifier();
+
+		$key_var = null;
+		if ($this->skip_typed_token(T_DOUBLE_ARROW)) {
+			$key_var = $val_var;
+			$val_var = $this->read_variable_identifier();
+		}
+
+		$this->expect_char_token(_PAREN_CLOSE);
+
+		$block = $this->factory->create_forin_block($key_var, $val_var, $iterable);
+
+		$block->label = $label;
+		$this->read_block_body_for($block);
+
+		return $block;
+	}
+
+	private function read_variable_identifier()
+	{
+		$token = $this->scan_token_ignore_empty();
+		$name = $this->get_var_name($token);
+		$identifier = $this->create_variable_identifier($name);
+		return $identifier;
+	}
+
+	private function create_variable_identifier(string $name)
+	{
+		$identifier = $this->factory->create_variable_identifier($name);
+		$identifier->pos = $this->pos;
+		return $identifier;
+	}
+
+	private function read_for_block(string $label = null)
+	{
+		$this->expect_char_token(_PAREN_OPEN);
+		$args1 = $this->read_arguments();
+
+		$this->expect_char_token(_SEMICOLON);
+		$args2 = $this->read_arguments();
+
+		$this->expect_char_token(_SEMICOLON);
+		$args3 = $this->read_arguments();
+
+		$this->expect_char_token(_PAREN_CLOSE);
+
+		$block = $this->factory->create_for_block($args1, $args2, $args3);
+
+		$block->label = $label;
+		$this->read_block_body_for($block);
+
+		return $block;
+	}
+
+	private function read_arguments()
+	{
+		$args = [];
+		do {
+			$args[] = $this->read_expression();
+		}
+		while ($this->skip_comma());
+
+		return $args;
+	}
+
+	private function read_while_block(string $label = null)
+	{
+		$this->expect_char_token(_PAREN_OPEN);
+		$test = $this->read_expression();
+		$this->expect_char_token(_PAREN_CLOSE);
+
+		$block = $this->factory->create_while_block($test);
+		$block->label = $label;
+
+		$this->read_block_body_for($block);
+
+		return $block;
+	}
+
+	private function read_do_while_block(string $label = null)
+	{
+		// e.g. while test_expression {}
+
+		$block = $this->factory->create_do_while_block($test);
+		$block->label = $label;
+
+		$this->read_block_body_for($block);
+
+		$this->expect_typed_token_ignore_empty(T_WHILE);
+
+		$this->expect_char_token(_PAREN_OPEN);
+		$test = $this->read_expression();
+		$this->expect_char_token(_PAREN_CLOSE);
+
+		return $block;
+	}
+
+// ---
+
+	protected function expect_expression(): BaseExpression
+	{
+		$expr = $this->read_expression();
+		if ($expr === null) {
+			throw $this->new_unexpected_error();
 		}
 
 		return $expr;
+	}
+
+	protected function read_expression(Operator $prev_operator = null): ?BaseExpression
+	{
+		$token = $this->scan_token_ignore_empty();
+		if ($token === null or $this->is_expression_stopping_token($token)) {
+			$this->back();
+			return null;
+		}
+
+		$expr = $this->read_expression_with_token($token, $prev_operator);
+		return $expr;
+	}
+
+	private function is_expression_stopping_token(string|array $token)
+	{
+		return is_string($token) && in_array($token, static::EXPR_STOPPING_SIGNS, true);
+	}
+
+	private function read_expression_with_token(string|array $token, Operator $prev_operator = null): ?BaseExpression
+	{
+		// the typed token
+		if (is_string($token)) {
+			$token_type = $token;
+			$token_content = $token;
+		}
+		else {
+			$token_type = $token[0];
+			$token_content = $token[1];
+		}
+
+		switch ($token_type) {
+			case T_VARIABLE:
+				$name = $this->get_var_name($token);
+				$expr = $this->create_variable_identifier($name);
+				break;
+
+			case T_LINE:
+			case T_FILE:
+			case T_DIR:
+			case T_EMPTY:
+			case T_ISSET:
+			case T_UNSET:
+			case T_STATIC:
+			case T_STRING:
+				$lower_case_name = strtolower($token_content);
+				$mapped_name = self::BUILTIN_IDENTIFIER_MAP[$lower_case_name] ?? null;
+				if ($mapped_name) {
+					$expr = $this->factory->create_builtin_identifier($mapped_name);
+				}
+				else {
+					$expr = $this->create_unchecking_identifier($token_content);
+				}
+				$expr->pos = $this->pos;
+				break;
+			case T_NS_SEPARATOR:
+				$expr = $this->read_classkindred_identifier($token);
+				break;
+			case T_NAME_QUALIFIED:
+			case T_NAME_FULLY_QUALIFIED:
+				$expr = $this->create_unchecking_identifier($token_content);
+				$expr->pos = $this->pos;
+				break;
+
+			case T_CONSTANT_ENCAPSED_STRING:
+				$quote_sign = $token_content[0];
+				$quote_content = substr($token_content, 1, -1);
+				$expr = $quote_sign === _DOUBLE_QUOTE
+					? new EscapedLiteralString($quote_content)
+					: new PlainLiteralString($quote_content);
+				$expr->pos = $this->pos;
+				break;
+			case T_LNUMBER:
+				$expr = new LiteralInteger($token_content);
+				$expr->pos = $this->pos;
+				break;
+			case T_DNUMBER:
+				$expr = new LiteralFloat($token_content);
+				$expr->pos = $this->pos;
+				break;
+
+			case _DOUBLE_QUOTE:
+				$expr = $this->read_double_quoted_string_expression();
+				break;
+
+			case _BRACKET_OPEN:
+				$expr = $this->read_bracket_expression(true);
+				break;
+			case T_FN:
+				$expr = $this->read_lambda_expression();
+				break;
+
+			case T_DOUBLE_ARROW:
+				$this->back();
+				return null;
+
+			case T_COMMENT:
+			case T_DOC_COMMENT:
+				return $this->read_expression($prev_operator);
+
+			case T_INCLUDE_ONCE:
+			case T_INCLUDE:
+			case T_REQUIRE_ONCE:
+			case T_REQUIRE:
+				$expr = $this->expect_expression();
+				$expr = new IncludeExpression($expr, $token_type);
+				$expr->pos = $this->pos;
+				return $expr;
+
+			default:
+				// check is prefix operator
+				$operator = OperatorFactory::get_php_prefix_operator($token_content);
+				if ($operator === null) {
+					throw $this->new_unexpected_error();
+				}
+
+				$expr = $this->read_prefix_operation($operator);
+				break;
+		}
+
+		$expr = $this->read_expression_combination($expr, $prev_operator);
+
+		return $expr;
+	}
+
+	protected function read_double_quoted_string_expression()
+	{
+		$items = [];
+		do {
+			$token = $this->scan_token();
+			if ($token === _DOUBLE_QUOTE) {
+				break;
+			}
+
+			$token_content = $token[1];
+			switch ($token[0]) {
+				case T_ENCAPSED_AND_WHITESPACE:
+					$item = $token_content;
+					break;
+				case T_VARIABLE:
+					$name = $this->get_var_name($token);
+					$item = $this->create_variable_identifier($name);
+					while ($this->skip_typed_token(T_OBJECT_OPERATOR)) {
+						$accessing_name = $this->expect_identifier_name();
+						$item = $this->factory->create_accessing_identifier($item, $accessing_name);
+						$item->pos = $this->pos;
+					}
+					break;
+				case T_CURLY_OPEN:
+					$item = $this->read_expression();
+					$this->expect_char_token(_BRACE_CLOSE);
+					break;
+				default:
+					throw $this->new_unexpected_error();
+			}
+
+			$items[] = $token;
+		}
+		while (1);
+
+		$expr = new EscapedInterpolatedString($items);
+		$expr->pos = $this->pos;
+		return $expr;
+	}
+
+	// protected function read_plain_identifier()
+	// {
+	// 	$name = $this->expect_identifier_name();
+	// 	$identifier = $this->factory->create_identifier($name);
+	// 	$identifier->pos = $this->pos;
+	// 	return $identifier;
+	// }
+
+	protected function read_expression_combination(BaseExpression $expr, Operator $prev_operator = null)
+	{
+		$token = $this->get_token_ignore_empty();
+		$token_type = is_string($token) ? $token : $token[0];
+		switch ($token_type) {
+			case _PAREN_OPEN:
+				$expr = $this->read_call_expression($expr);
+				break;
+
+			case _BRACKET_OPEN:
+				$expr = $this->read_bracket_expression();
+				break;
+
+			case T_OBJECT_OPERATOR:
+				$this->scan_token_ignore_empty();
+				$name = $this->expect_member_identifier_name();
+				$expr = $this->factory->create_accessing_identifier($expr, $name);
+				$expr->pos = $this->pos;
+				break;
+
+			case T_DOUBLE_COLON:
+				$this->scan_token_ignore_empty();
+				$name = $this->expect_member_identifier_name();
+				$expr = $this->factory->create_accessing_identifier($expr, $name);
+				$expr->pos = $this->pos;
+				break;
+
+			default:
+				return $this->try_read_operation($expr, $prev_operator);
+		}
+
+		return $this->read_expression_combination($expr, $prev_operator);
+	}
+
+	protected function read_call_expression(BaseExpression $handler)
+	{
+		$this->expect_char_token(_PAREN_OPEN);
+		$args = $this->read_call_expression_arguments();
+		$this->expect_char_token(_PAREN_CLOSE);
+
+		$call = new CallExpression($handler, $args);
+		$call->pos = $this->pos;
+
+		return $call;
+	}
+
+	protected function read_call_expression_arguments()
+	{
+		$items = [];
+		while ($item = $this->read_argument()) {
+			$items[] = $item;
+			if (!$this->skip_char_token(_COMMA)) {
+				break;
+			}
+		}
+
+		return $items;
+	}
+
+	protected function read_argument()
+	{
+		$token = $this->scan_token_ignore_empty();
+		if ($token === null or $this->is_expression_stopping_token($token)) {
+			$this->back();
+			return null;
+		}
+
+		$expr = $this->read_expression_with_token($token);
+		return $expr;
+	}
+
+	protected function try_read_operation(BaseExpression $expr, Operator $prev_operator = null)
+	{
+		$token = $this->get_token_ignore_empty();
+		$maybe_oper = is_string($token) ? $token : $token[1];
+
+		$operator = OperatorFactory::get_php_normal_operator($maybe_oper);
+		if ($operator === null) {
+			return $expr;
+		}
+
+		// compare operator precedences
+		if ($prev_operator !== null and $this->is_prev_priority($prev_operator, $operator)) {
+			return $expr;
+		}
+
+		$this->scan_token_ignore_empty();
+
+		if ($operator->is(OPID::TERNARY)) {
+			$expr2 = $this->read_expression($operator);
+			$this->expect_char_token(_COLON);
+			$expr3 = $this->read_expression($operator);
+			$expr = new TernaryExpression($expr, $expr2, $expr3);
+		}
+		elseif ($operator->is_assignment()) {
+			$expr2 = $this->read_expression($operator);
+			$expr = $this->factory->create_assignment($expr, $expr2, $operator);
+		}
+		// elseif ($operator->is(OPID::MEMBER_ACCESSING)) {
+		// 	$name = $this->expect_identifier_name();
+		// 	$expr = $this->factory->create_accessing_identifier($expr, $name);
+		// }
+		else {
+			$expr2 = $this->read_expression($operator);
+			$expr = $this->factory->create_binary_operation($expr, $expr2, $operator);
+		}
+
+		$expr->pos = $this->pos;
+
+		return $this->try_read_operation($expr, $prev_operator);
+	}
+
+	private function is_prev_priority(Operator $prev_op, Operator $curr_op)
+	{
+		$prev_prec = $prev_op->php_prec;
+		$curr_prec = $curr_op->php_prec;
+		return ($prev_prec < $curr_prec) || ($prev_prec === $curr_prec && $curr_op->php_assoc !== OP_R);
 	}
 
 	private function create_unchecking_identifier(string $name)
@@ -409,14 +1137,14 @@ class PHPParser extends BaseParser
 		return $identifier;
 	}
 
-	private function read_bracket_expression(bool $not_opened = false, $debug_name = null)
+	private function read_bracket_expression(bool $opened = false)
 	{
-		$not_opened && $this->expect_char_token(_BRACKET_OPEN);
+		$opened || $this->expect_char_token(_BRACKET_OPEN);
 
 		$is_const_value = true;
 		$is_dict = false;
 		$members = [];
-		while ($item = $this->read_expression($debug_name)) {
+		while ($item = $this->read_expression()) {
 			if (!$item->is_const_value) {
 				$is_const_value = false;
 			}
@@ -563,7 +1291,6 @@ class PHPParser extends BaseParser
 			case T_COMMENT:
 				return $this->read_interface_member();
 			default:
-				$this->print_token($token);
 				throw $this->new_unexpected_error();
 		}
 
@@ -598,9 +1325,8 @@ class PHPParser extends BaseParser
 			$token = $this->scan_token_ignore_empty();;
 		}
 
-		$is_static = false;
-		if ($token[0] === T_STATIC) {
-			$is_static = true;
+		$is_static = $token[0] === T_STATIC;
+		if ($is_static) {
 			$token = $this->scan_token_ignore_empty();;
 		}
 
@@ -617,7 +1343,6 @@ class PHPParser extends BaseParser
 			$token = $this->expect_typed_token_ignore_empty();
 		}
 
-		// $this->print_token($token);
 		switch ($token[0]) {
 			case T_VAR:
 				$token = $this->expect_typed_token_ignore_empty();
@@ -656,7 +1381,6 @@ class PHPParser extends BaseParser
 				break;
 
 			default:
-				$this->print_token($token);
 				throw $this->new_unexpected_error();
 		}
 
@@ -680,6 +1404,23 @@ class PHPParser extends BaseParser
 		$this->expect_statement_end();
 
 		return new ClassUseTraitsDeclaration($used_traits);
+	}
+
+	private function read_const_statement()
+	{
+		$members = [];
+		// for `const A = xxx, B = xxx, C = xxx;` style
+		do {
+			$node = $this->read_normal_constant_declaration();
+			$this->program->append_declaration($node);
+		}
+		while ($this->skip_char_token(_COMMA));
+
+		$this->expect_statement_end();
+
+		$node = new ConstStatement($members);
+
+		return $node;
 	}
 
 	private function read_normal_constant_declaration(?string $doc = null)
@@ -731,91 +1472,9 @@ class PHPParser extends BaseParser
 		return $identifier;
 	}
 
-	// private function try_detatch_assign_value_type_and_skip($name = null)
-	// {
-	// 	$token = $this->scan_token_ignore_empty();
-
-	// 	if (is_string($token)) {
-	// 		if ($token === _BRACKET_OPEN) {
-	// 			$expr = $this->read_bracket_expression(false, $name);
-
-	// 			if ($this->skip_char_token(_SEMICOLON)) {
-	// 				$this->pos--; // back to ;
-	// 				return $expr instanceof ArrayExpression
-	// 					? TypeFactory::$_array
-	// 					: TypeFactory::$_dict;
-	// 			}
-	// 		}
-	// 		elseif (in_array($token, self::PREFIX_OPERATORS, true)) {
-	// 			if ($token === _EXCLAMATION) {
-	// 				$this->read_expression(); // skip the expression when is bool
-	// 				return TypeFactory::$_bool;
-	// 			}
-
-	// 			return $this->try_detatch_assign_value_type_and_skip($name);
-	// 		}
-	// 		else {
-	// 			// $this->print_token($token);
-	// 			throw $this->new_unexpected_error();
-	// 		}
-	// 	}
-
-	// 	switch ($token[0]) {
-	// 		// constants
-	// 		case T_NS_SEPARATOR:
-	// 			$token = $this->scan_token();
-	// 		case T_STRING:
-	// 			$lower_case = strtolower($token[1]);
-	// 			if ($lower_case === _VAL_TRUE || $lower_case === _VAL_FALSE) {
-	// 				$type = TypeFactory::$_string;
-	// 			}
-	// 			else {
-	// 				// may be a user defined constant
-	// 				$type = null;
-	// 			}
-
-	// 			break;
-
-	// 		case T_LNUMBER:
-	// 		case T_LINE: // __LINE__
-	// 			$type = TypeFactory::$_int;
-	// 			break;
-
-	// 		case T_DNUMBER:
-	// 			$type = TypeFactory::$_float;
-	// 			break;
-
-	// 		case T_CONSTANT_ENCAPSED_STRING:
-	// 		case T_DIR: // __DIR__
-	// 		case T_FILE: // __FILE__
-	// 		case T_CLASS_C: // __CLASS__
-	// 		case T_NS_C: // __NAMESPACE__
-	// 			$type = TypeFactory::$_string;
-	// 			break;
-
-	// 		case T_NAME_FULLY_QUALIFIED:
-	// 		case T_NAME_QUALIFIED:
-	// 			$type = null;
-	// 			break;
-
-	// 		default:
-	// 			// $this->print_token($token);
-	// 			throw $this->new_unexpected_error();
-	// 	}
-
-	// 	$next = $this->get_token_ignore_empty();
-	// 	if ($next !== _SEMICOLON) {
-	// 		$type = $next === _DOT ? TypeFactory::$_string : null;
-	// 		$this->skip_to_char_token(_SEMICOLON);
-	// 		$this->pos--; // back to ;
-	// 	}
-
-	// 	return $type;
-	// }
-
 	private function read_property_declaration(array $token, string $modifier, ?string $doc, IType $type = null)
 	{
-		$name = ltrim($token[1], '$');
+		$name = $this->get_var_name($token);
 		$declaration = $this->factory->create_property_declaration($modifier, $name);
 		$declaration->pos = $this->pos;
 
@@ -853,10 +1512,28 @@ class PHPParser extends BaseParser
 			$this->expect_statement_end();
 		}
 		else {
-			$this->read_function_block();
+			$this->read_body_statements_for($declaration);
+			$this->factory->end_class_member();
 		}
 
 		return $declaration;
+	}
+
+	private function read_lambda_expression()
+	{
+		$lambda = $this->factory->create_anonymous_function();
+		$parameters = $this->read_parameters();
+		$this->factory->set_scope_parameters($parameters);
+
+		$lambda->pos = $this->pos;
+		$this->expect_typed_token_ignore_empty(T_DOUBLE_ARROW);
+
+		$expr = $this->expect_expression();
+		$lambda->set_body_with_expression($expr);
+
+		$this->factory->end_block();
+
+		return $lambda;
 	}
 
 	private function read_function_declaration(?string $doc)
@@ -871,7 +1548,8 @@ class PHPParser extends BaseParser
 
 		$this->try_read_function_return_types_for($declaration);
 
-		$this->read_function_block();
+		$this->read_body_statements_for($declaration);
+		$this->factory->end_root_declaration();
 
 		return $declaration;
 	}
@@ -915,8 +1593,6 @@ class PHPParser extends BaseParser
 		}
 
 		$this->scan_token_ignore_empty();
-
-		// $this->print_token($token);
 		$token_type = $token[0];
 
 		// parameters at __construct maybe has modifiers
@@ -924,7 +1600,6 @@ class PHPParser extends BaseParser
 		if (in_array($token_type, [T_PUBLIC, T_PROTECTED, T_PRIVATE])) {
 			$modifier = $token[1];
 			$token = $this->scan_token_ignore_empty();
-			$token_type = $token[0];
 		}
 
 		$declared_type = $this->try_read_type_expression_with_token($token);
@@ -948,21 +1623,14 @@ class PHPParser extends BaseParser
 			$token = $this->expect_typed_token_ignore_empty();
 		}
 
-		if ($token[0] !== T_VARIABLE) {
-			$this->print_token($token);
-			throw $this->new_unexpected_error();
-		}
-
-		$name = substr($token[1], 1); // remove the prefix '$'
+		$name = $this->get_var_name($token);
 
 		$value = null;
 		if ($this->skip_char_token(_ASSIGN)) {
-			$value = $this->read_expression($name);
-			if ($declared_type === null and $value instanceof DictType) {
-				$declared_type = TypeFactory::$_dict;
+			$value = $this->read_expression();
+			if ($value === null) {
+				throw $this->new_unexpected_error();
 			}
-
-			$value = ASTFactory::$default_value_mark;
 		}
 
 		$declar = new ParameterDeclaration($name, $declared_type, $value);
@@ -976,6 +1644,12 @@ class PHPParser extends BaseParser
 		$declar->pos = $this->pos;
 
 		return $declar;
+	}
+
+	private function try_read_type_expression()
+	{
+		$token = $this->scan_token_ignore_empty();
+		return $this->try_read_type_expression_with_token($token);
 	}
 
 	private function try_read_type_expression_with_token($token)
@@ -1000,74 +1674,68 @@ class PHPParser extends BaseParser
 		return $type;
 	}
 
-	private function read_function_block()
-	{
-		$this->read_block('function');
-		$this->factory->end_block();
-	}
+	// private function read_block(string $label = null)
+	// {
+	// 	// echo "\n--------------------begin {$label}\n";
+	// 	$this->expect_block_begin();
 
-	private function read_block(string $label = null)
-	{
-		// echo "\n--------------------begin {$label}\n";
-		$this->expect_block_begin();
+	// 	// we don't care the contents
+	// 	while (($token = $this->get_token_ignore_empty()) !== null) {
+	// 		// var_dump($token);
+	// 		if ($token === _BLOCK_BEGIN) {
+	// 			$this->read_block('local');
+	// 		}
+	// 		elseif ($token === _BLOCK_END) {
+	// 			break;
+	// 		}
+	// 		elseif ($token === _DOUBLE_QUOTE) {
+	// 			$this->scan_token_ignore_empty();
+	// 			$this->read_double_quoted_literal_string();
+	// 		}
+	// 		elseif ($token === _SINGLE_QUOTE) {
+	// 			$this->scan_token_ignore_empty();
+	// 			$this->read_single_quoted_literal_string();
+	// 		}
+	// 		elseif ($token[0] === T_START_HEREDOC) {
+	// 			$this->scan_token_ignore_empty();
+	// 			$this->read_heredoc();
+	// 		}
+	// 		else {
+	// 			$this->scan_token_ignore_empty();
+	// 		}
+	// 	}
 
-		// we don't care the contents
-		while (($token = $this->get_token_ignore_empty()) !== null) {
-			// var_dump($token);
-			if ($token === _BLOCK_BEGIN) {
-				$this->read_block('local');
-			}
-			elseif ($token === _BLOCK_END) {
-				break;
-			}
-			elseif ($token === _DOUBLE_QUOTE) {
-				$this->scan_token_ignore_empty();
-				$this->read_double_quoted_string();
-			}
-			elseif ($token === _SINGLE_QUOTE) {
-				$this->scan_token_ignore_empty();
-				$this->read_single_quoted_string();
-			}
-			elseif ($token[0] === T_START_HEREDOC) {
-				$this->scan_token_ignore_empty();
-				$this->read_heredoc();
-			}
-			else {
-				$this->scan_token_ignore_empty();
-			}
-		}
+	// 	$this->expect_block_end();
+	// 	// echo "\n--------------------end {$label}\n";
+	// }
 
-		$this->expect_block_end();
-		// echo "\n--------------------end {$label}\n";
-	}
+	// private function read_heredoc()
+	// {
+	// 	$items = [];
+	// 	while (($token = $this->scan_token_ignore_empty())) {
+	// 		if ($token[0] === T_END_HEREDOC) {
+	// 			break;
+	// 		}
 
-	private function read_heredoc()
-	{
-		$items = [];
-		while (($token = $this->scan_token_ignore_empty())) {
-			if ($token[0] === T_END_HEREDOC) {
-				break;
-			}
+	// 		$items[] = $token;
+	// 	}
 
-			$items[] = $token;
-		}
+	// 	return $items;
+	// }
 
-		return $items;
-	}
+	// private function read_double_quoted_literal_string()
+	// {
+	// 	$value = $this->skip_to_char_token(_DOUBLE_QUOTE);
+	// 	$this->scan_token();
+	// 	return $value;
+	// }
 
-	private function read_double_quoted_string()
-	{
-		$value = $this->skip_to_char_token(_DOUBLE_QUOTE);
-		$this->scan_token();
-		return $value;
-	}
-
-	private function read_single_quoted_string()
-	{
-		$value = $this->skip_to_char_token(_SINGLE_QUOTE);
-		$this->scan_token();
-		return $value;
-	}
+	// private function read_single_quoted_literal_string()
+	// {
+	// 	$value = $this->skip_to_char_token(_SINGLE_QUOTE);
+	// 	$this->scan_token();
+	// 	return $value;
+	// }
 
 	private function read_classkindred_identifier($token = null)
 	{
@@ -1080,6 +1748,7 @@ class PHPParser extends BaseParser
 
 		$components = $this->read_qualified_name_with($token);
 		$identifier = $this->create_classkindred_identifier(array_pop($components), $components);
+		$identifier->pos = $this->pos;
 
 		return $identifier;
 	}
@@ -1137,7 +1806,7 @@ class PHPParser extends BaseParser
 	private function try_read_noted_type()
 	{
 		$type = null;
-		$following_comment = $this->scan_comments_ignore_space();
+		$following_comment = $this->scan_comment_ignore_space();
 		if ($following_comment !== null) {
 			// trim '/*' and '*/'
 			$name = substr($following_comment, 2, -2);
@@ -1232,17 +1901,17 @@ class PHPParser extends BaseParser
 		return $type;
 	}
 
-	private function expect_statement_end()
+	protected function expect_statement_end()
 	{
 		return $this->expect_char_token(_SEMICOLON);
 	}
 
-	private function expect_block_begin()
+	protected function expect_block_begin()
 	{
 		return $this->expect_char_token(_BLOCK_BEGIN);
 	}
 
-	private function expect_block_end()
+	protected function expect_block_end()
 	{
 		return $this->expect_char_token(_BLOCK_END);
 	}
@@ -1284,7 +1953,6 @@ class PHPParser extends BaseParser
 				break;
 
 			default:
-				// $this->print_token($token);
 				throw $this->new_unexpected_error();
 		}
 
@@ -1303,6 +1971,26 @@ class PHPParser extends BaseParser
 		return $names;
 	}
 
+	private function expect_variable_name()
+	{
+		$token = $this->scan_token_ignore_empty();
+		while (is_array($token) and $token[0] === T_COMMENT) {
+			$token = $this->scan_token_ignore_empty();
+		}
+
+		$name = $this->get_var_name($token);
+		return $name;
+	}
+
+	private function get_var_name(array|string $token)
+	{
+		if ($token[0] !== T_VARIABLE) {
+			throw $this->new_unexpected_error();
+		}
+
+		return substr($token[1], 1); // remove the prefix '$'
+	}
+
 	private function expect_identifier_name()
 	{
 		$token = $this->scan_token_ignore_empty();
@@ -1316,7 +2004,6 @@ class PHPParser extends BaseParser
 	private function get_identifier_name(string|array $token)
 	{
 		if (is_string($token) || !in_array($token[0], self::NORMAL_IDENTIFIER_TOKEN_TYPES, true) ) {
-			$this->print_token($token);
 			throw $this->new_unexpected_error();
 		}
 
@@ -1366,7 +2053,6 @@ class PHPParser extends BaseParser
 	private function assert_member_identifier_token($token)
 	{
 		if (is_string($token) || !in_array($token[0], self::MEMBER_IDENTIFIER_TOKEN_TYPES, true) ) {
-			// $this->print_token($token);
 			throw $this->new_unexpected_error();
 		}
 	}
@@ -1387,7 +2073,28 @@ class PHPParser extends BaseParser
 		return $token;
 	}
 
-	private function scan_comments_ignore_space()
+	private function scan_typed_token_ignore_empty(int $type)
+	{
+		$token = $this->get_token_ignore_empty();
+		if (is_array($token) && $token[0] === $type) {
+			$this->scan_token_ignore_empty();
+			return $token;
+		}
+
+		return null;
+	}
+
+	private function get_typed_token_ignore_empty(int $type)
+	{
+		$token = $this->get_token_ignore_empty();
+		if (is_array($token) && $token[0] === $type) {
+			return $token;
+		}
+
+		return null;
+	}
+
+	private function scan_comment_ignore_space()
 	{
 		$comment = null;
 		$next = $this->get_token_ignore_space();
@@ -1541,7 +2248,7 @@ class PHPParser extends BaseParser
 		return $code;
 	}
 
-	private function print_token($token = null, string $marker = null)
+	protected function print_token($token = null, string $marker = null)
 	{
 		$token === null and ($token = $this->tokens[$this->pos] ?? null);
 

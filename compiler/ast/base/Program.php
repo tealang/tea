@@ -22,8 +22,6 @@ class Program extends Node
 
 	public $as_main;
 
-	public $docs;
-
 	public $name;
 
 	public $file;

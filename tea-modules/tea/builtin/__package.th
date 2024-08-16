@@ -7,11 +7,18 @@ copyright: (c) YJ Technology Ltd. All rights reserved.
 
 namespace tea\builtin
 
+runtime var _GET Dict
+runtime var _POST Dict
+runtime var _FILE Dict
+runtime var _COOKIE Dict
+runtime var _SERVER Dict
+
 runtime func isset(expr Any) Bool
 runtime func is_int(val) Bool
 runtime func is_array(val) Bool
 runtime func is_numeric(val) Bool
 
+runtime func exit(status Int|String) Void
 runtime func empty(expr Any) Bool
 runtime func var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default)
 runtime func print(expr) Int
@@ -164,7 +171,7 @@ runtime func preg_split(regex Regex , subject String, limit Int = #default, flag
 // interfaces
 runtime interface Iterator {
 	current() Any
-	key() String
+	key() Int|String
 	next()
 	rewind()
 	valid() Bool

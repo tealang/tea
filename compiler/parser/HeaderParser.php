@@ -13,7 +13,7 @@ class HeaderParser extends TeaParser
 {
 	public $is_parsing_header = true;
 
-	protected function read_root_statement(bool $leading_br = false, Docs $docs = null)
+	protected function read_root_statement(bool $leading_br = false, DocComment $doc = null)
 	{
 		$token = $this->scan_token_ignore_space();
 		if ($token === LF) {
@@ -29,13 +29,13 @@ class HeaderParser extends TeaParser
 		if ($token === _SHARP) {
 			$node = $this->read_label_statement();
 		}
-		elseif ($token === _DOCS_MARK) {
-			$docs = $this->read_docs();
-			return $this->read_root_statement($leading_br, $docs);
+		elseif ($token === _DOC_MARK) {
+			$doc = $this->read_doc_comment();
+			return $this->read_root_statement($leading_br, $doc);
 		}
-		elseif ($token === _INLINE_COMMENT_MARK) {
+		elseif ($token === _LINE_COMMENT_MARK) {
 			$this->skip_current_line();
-			return $this->read_root_statement($leading_br, $docs);
+			return $this->read_root_statement($leading_br, $doc);
 		}
 		elseif ($token === _RUNTIME) {
 			$node = $this->read_runtime_declaration();
@@ -58,7 +58,7 @@ class HeaderParser extends TeaParser
 		$this->expect_statement_end();
 		if ($node !== null) {
 			$node->leading_br = $leading_br;
-			$node->docs = $docs;
+			$node->doc = $doc;
 		}
 
 		return $node;
@@ -188,11 +188,11 @@ class HeaderParser extends TeaParser
 				[$origin_name, $name] = $this->read_header_declaration_names();
 				$declaration = $this->read_constant_declaration_without_value($name, $modifier, $root_namespace);
 				break;
-			// case _VAR:
-			//	$origin_name = null;
-			// 	$name = $this->expect_identifier_token();
-			// 	$declaration = $this->read_php_super_var_declaration($name);
-			// 	break;
+			case _VAR:
+				$origin_name = null;
+				$name = $this->expect_identifier_token_ignore_space();
+				$declaration = $this->read_super_var_declaration($name);
+				break;
 			default:
 				throw $this->new_parse_error("Unknow declaration type '$token'");
 		}
@@ -232,17 +232,18 @@ class HeaderParser extends TeaParser
 		return [$origin_name, $name];
 	}
 
-	// private function read_php_super_var_declaration(string $name)
-	// {
-	// 	$type = $this->try_read_type_expression();
-	// 	if (!$type) {
-	// 		throw $this->new_parse_error("Expected type for declared super variable '$name'.");
-	// 	}
+	private function read_super_var_declaration(string $name)
+	{
+		$type = $this->try_read_type_expression();
+		if (!$type) {
+			throw $this->new_parse_error("Expected type for declared super variable '$name'.");
+		}
 
-	// 	$declaration = $this->factory->create_super_variable_declaration($name, $type, null);
+		$declaration = $this->factory->create_super_variable_declaration($name, $type);
+		$declaration->pos = $this->pos;
 
-	// 	return $declaration;
-	// }
+		return $declaration;
+	}
 
 	private function read_module_declaration()
 	{

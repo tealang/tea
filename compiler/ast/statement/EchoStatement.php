@@ -13,12 +13,17 @@ class EchoStatement extends BaseStatement
 {
 	const KIND = 'echo_statement';
 
+	/**
+	 * @var BaseExpression[]
+	 */
 	public $arguments;
 
 	public $end_newline = true;
 
-	public function __construct(BaseExpression ...$arguments)
+	public function __construct(array $arguments)
 	{
 		$this->arguments = $arguments;
 	}
 }
+
+// end

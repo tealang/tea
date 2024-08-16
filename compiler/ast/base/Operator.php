@@ -13,6 +13,8 @@ class Operator
 {
 	private $id;
 
+	public $type;
+
 	public $tea_sign;
 	public $tea_prec;	// precedence
 	public $tea_assoc; 	// associativity
@@ -29,6 +31,11 @@ class Operator
 	public function is(int $id)
 	{
 		return $this->id === $id;
+	}
+
+	public function is_assignment()
+	{
+		return $this->type === OP_ASSIGN;
 	}
 
 	public function get_debug_sign()

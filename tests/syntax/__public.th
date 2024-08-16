@@ -6,47 +6,47 @@ use tests\xview
 use tests\phpdemo { PHP_CONST_DEMO }
 use tests\xview { BaseView }
 
-public const MY_CONST Pures.Dict
-public const C1 UInt
-public const C2 Pures
+public const MY_CONST #Pures.Dict
+public const C1 #UInt
+public const C2 #Pures
 
-runtime func range(start Int, end Int, step Int = 1) Array
+runtime func range(start Int, end Int, step #Int = 1) Array
 
 public class PHPClassInMixed1 {
-	protected const CONST1 Pures
-	public const CONST2 UInt
+	protected const CONST1 #Pures
+	public const CONST2 #UInt
 	public union_val Int|String|Bool
 	public object Object?
 	public some \Exception
-	public construct(caller String, items Array|Dict#Array, some Bool = #default)
+	public construct(caller String, items Array|Dict#Array|Dict, some Bool = none) #Void
 	public get_message() String
 }
 
 public func php_get_num() Int
 
-public func fn0(str Any) String
+public func fn0(str #Any) #String
 
 public class TeaDemoClass {
-	static static_prop1 Pures
+	static static_prop1 #Pures
 
 	prop1 String|Int
 
-	static static_method(some inout Dict) Pures
+	static static_method(some inout Dict) #Pures
 
-	method1(param1 String|Int) String|Int
+	method1(param1 String|Int) #String|Int
 
 	method2() String
 }
 
 public class DemoList: BaseView {
-	internal const ABC Pures
+	internal const ABC #Pures
 
 	title String
 	items String.Array
 
 	cells Array
 
-	construct(name String, title Pures = '', items String.Array = [], each () Cell? = none, error (message Any) Void = none)
+	construct(name String, title #Pures = '', items String.Array = [], each () Cell? = none, error (message #Any) Void = none) #Void
 
 	render() String
 }

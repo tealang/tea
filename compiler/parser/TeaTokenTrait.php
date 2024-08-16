@@ -225,7 +225,6 @@ trait TeaTokenTrait
 		return $token;
 	}
 
-	private $is_in_comment_block = false;
 	protected function scan_token()
 	{
 		$this->pos++;
@@ -235,27 +234,45 @@ trait TeaTokenTrait
 			return $this->scan_token();
 		}
 
-		if ($token === _COMMENTS_OPEN && !$this->is_in_comment_block) {
-			$this->skip_comments();
+		if ($token === _BLOCK_COMMENT_OPEN) {
+			$this->scan_block_comment();
 			return $this->scan_token();
 		}
 
 		return $token;
 	}
 
-	protected function scan_inline_comment()
+	protected function scan_line_comment_content()
 	{
 		return $this->scan_to_token(LF);
 	}
 
-	protected function skip_comments()
+	protected function scan_block_comment()
 	{
+		$buffer = '';
 		while (($token = $this->get_token()) !== null) {
+			$buffer .= $token;
 			$this->pos++;
-			if ($token === _COMMENTS_CLOSE) {
+			if ($token === _BLOCK_COMMENT_CLOSE) {
 				break;
 			}
 		}
+
+		return $buffer;
+	}
+
+	protected function scan_doc_comment()
+	{
+		$buffer = '';
+		while (($token = $this->get_token()) !== null) {
+			$buffer .= $token;
+			$this->pos++;
+			if ($token === _DOC_MARK) {
+				break;
+			}
+		}
+
+		return $buffer;
 	}
 
 	protected function scan_token_ignore_empty()
@@ -308,11 +325,6 @@ trait TeaTokenTrait
 		}
 
 		return $tmp;
-	}
-
-	protected function back(int $num = 1)
-	{
-		$this->pos -= $num;
 	}
 
 	// protected function is_next_token(string ...$tokens)
@@ -430,7 +442,7 @@ trait TeaTokenTrait
 	// 	$this->skip_token_ignore_space(LF);
 	// }
 
-	protected function expect_block_begin_inline()
+	protected function expect_block_begin()
 	{
 		$this->expect_token_ignore_space(_BLOCK_BEGIN);
 		$this->skip_token_ignore_space(LF);
@@ -456,15 +468,15 @@ trait TeaTokenTrait
 				$this->scan_token_ignore_space();
 			}
 		}
-		elseif ($token === _INLINE_COMMENT_MARK) {
-			$this->scan_token_ignore_space(); // skip the _INLINE_COMMENT_MARK
+		elseif ($token === _LINE_COMMENT_MARK) {
+			$this->scan_token_ignore_space(); // skip the _LINE_COMMENT_MARK
 			$this->scan_to_token(LF); // ignore the inline comment
 			$this->scan_token_ignore_space(); // skip the LF
 		}
-		elseif ($token === _COMMENTS_OPEN) {
-			$this->scan_token_ignore_space(); // skip the _COMMENTS_OPEN
-			$this->scan_to_token(_COMMENTS_CLOSE); // ignore the comments
-			$this->scan_token(); // skip the _COMMENTS_CLOSE
+		elseif ($token === _BLOCK_COMMENT_OPEN) {
+			$this->scan_token_ignore_space(); // skip the _BLOCK_COMMENT_OPEN
+			$this->scan_to_token(_BLOCK_COMMENT_CLOSE); // ignore the comments
+			$this->scan_token(); // skip the _BLOCK_COMMENT_CLOSE
 			$this->scan_token_ignore_space(); // skip the LF
 		}
 		else {

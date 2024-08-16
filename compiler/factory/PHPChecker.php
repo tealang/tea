@@ -13,7 +13,7 @@ class PHPChecker extends ASTChecker
 {
 	const NS_SEPARATOR = PHPParser::NS_SEPARATOR;
 
-	// protected $is_weakly_typed_system = true;
+	// protected $is_weakly_checking = true;
 
 	// protected function infer_plain_identifier(PlainIdentifier $node): IType
 	// {

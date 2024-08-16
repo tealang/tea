@@ -160,13 +160,18 @@ class ASTFactory
 		return $identifier;
 	}
 
-	// public static function create_variable_identifier(VariableDeclaration $declaration)
-	// {
-	// 	$symbol = new Symbol($declaration);
-	// 	$identifier = VariableIdentifier::create_with_symbol($symbol);
+	public function create_variable_identifier(string $name)
+	{
+		if (TeaHelper::is_builtin_identifier($name)) {
+			$identifier = $this->create_builtin_identifier($name);
+		}
+		else {
+			$identifier = new VariableIdentifier($name);
+			$this->set_defer_check($identifier);
+		}
 
-	// 	return $identifier;
-	// }
+		return $identifier;
+	}
 
 	public function create_identifier(string $name)
 	{
@@ -268,16 +273,22 @@ class ASTFactory
 	public function remove_defer_check(PlainIdentifier $identifier)
 	{
 		$block = $this->scope;
-		$block->remove_defer_check_identifier($identifier);
+		$block->remove_defer_check_for_key($identifier->name);
 
 		while ($block = $block->belong_block) {
 			if ($block instanceof IScopeBlock) {
-				$block->remove_defer_check_identifier($identifier);
+				$block->remove_defer_check_for_key($identifier->name);
 			}
 		}
 	}
 
-	public function create_assignment(IAssignable $assignable, BaseExpression $value, string $operator = null)
+	public function create_binary_operation(BaseExpression $left, BaseExpression $right, Operator $operator)
+	{
+		$expr = new BinaryOperation($left, $right, $operator);
+		return $expr;
+	}
+
+	public function create_assignment(BaseExpression $assignable, BaseExpression $value, Operator $operator)
 	{
 		if ($assignable instanceof PlainIdentifier) {
 			if ($assignable->symbol) {
@@ -291,17 +302,15 @@ class ASTFactory
 				$this->remove_defer_check($assignable);
 			}
 		}
-		elseif ($assignable instanceof IAssignable) {
-			// includes AccessingIdentifier / KeyAccessing / SquareAccessing
-			// post-check required
-		}
-		else {
-			throw $this->parser->new_parse_error('Invalid assignment.');
-		}
+		// elseif ($assignable instanceof IAssignable) {
+		// 	// includes AccessingIdentifier / KeyAccessing / SquareAccessing
+		// 	// post-check required
+		// }
+		// else {
+		// 	throw $this->parser->new_parse_error('Invalid assignment.');
+		// }
 
-		$assignment = _ASSIGN === $operator
-			? new Assignment($assignable, $value)
-			: new CompoundAssignment($operator, $assignable, $value);
+		$assignment = new AssignmentOperation($assignable, $value, $operator);
 
 		return $assignment;
 	}
@@ -533,7 +542,7 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_constant_declaration(?string $modifier, string $name, NamespaceIdentifier $ns = null)
+	public function create_constant_declaration(?string $modifier, string $name, ?NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'constant');
 
@@ -545,17 +554,17 @@ class ASTFactory
 		return $declaration;
 	}
 
-	// public function create_super_variable_declaration(string $name, IType $type = null)
-	// {
-	// 	$declaration = new SuperVariableDeclaration($name, $type);
+	public function create_super_variable_declaration(string $name, IType $type)
+	{
+		$declaration = new SuperVariableDeclaration($name, $type);
 
-	// 	$this->begin_root_declaration($declaration);
-	// 	$this->create_internal_symbol($declaration);
+		$this->begin_root_declaration($declaration);
+		$this->create_internal_symbol($declaration);
 
-	// 	return $declaration;
-	// }
+		return $declaration;
+	}
 
-	public function create_variable_declaration(string $name, IType $type = null, BaseExpression $value = null)
+	public function create_variable_declaration(string $name, ?IType $type = null, ?BaseExpression $value = null)
 	{
 		$declaration = new VariableDeclaration($name, $type, $value);
 		$this->create_local_symbol($declaration);
@@ -632,16 +641,16 @@ class ASTFactory
 		return $block;
 	}
 
-	public function create_switch_block(BaseExpression $argument)
+	public function create_switch_block(BaseExpression $test_argument)
 	{
-		$block = new SwitchBlock($argument);
+		$block = new SwitchBlock($test_argument);
 		$this->begin_block($block);
 		return $block;
 	}
 
-	public function create_case_branch_block(BaseExpression $rule)
+	public function create_case_branch_block(array $rule_arguments)
 	{
-		$block = new CaseBranch($rule);
+		$block = new CaseBranch($rule_arguments);
 		$this->begin_block($block);
 		return $block;
 	}
@@ -709,6 +718,14 @@ class ASTFactory
 		return $switch_layers;
 	}
 
+	public function create_for_block(array $args1, array $args2, array $args3)
+	{
+		$block = new ForBlock($args1, $args2, $args3);
+		$this->begin_block($block);
+
+		return $block;
+	}
+
 	public function create_forin_block(?VariableIdentifier $key, VariableIdentifier $val, BaseExpression $iterable)
 	{
 		$block = new ForInBlock($key, $val, $iterable);
@@ -748,6 +765,13 @@ class ASTFactory
 		return $block;
 	}
 
+	public function create_do_while_block()
+	{
+		$block = new DoWhileBlock();
+		$this->begin_block($block);
+		return $block;
+	}
+
 	public function create_loop_block()
 	{
 		$block = new LoopBlock();
@@ -757,11 +781,38 @@ class ASTFactory
 
 // --------
 
+	public function end_branches(ControlBlock $node)
+	{
+		if ($node instanceof IfBlock and $node->else) {
+			$this->process_scope_hoisting_for_blocks($node, $node->else);
+		}
+		elseif ($node instanceof TryBlock and $node->finally) {
+			$this->process_scope_hoisting_for_blocks($node, $node->finally);
+		}
+	}
+
+	private function process_scope_hoisting_for_blocks(ControlBlock $block, ControlBlock $else_block)
+	{
+		$symbols = $block->symbols;
+
+		if (!$else_block->is_returned) {
+			$symbols = array_intersect_key($symbols, $else_block->symbols);
+		}
+
+		$super_block = $block->belong_block;
+		foreach ($symbols as $key => $symbol) {
+			if (!isset($super_block->symbols[$key])) {
+				$super_block->symbols[$key] = $symbol;
+				// $super_block->remove_defer_check_for_key($key);
+				// if ($super_block->belong_block) {
+				// 	$super_block->belong_block->remove_defer_check_for_key($key);
+				// }
+			}
+		}
+	}
+
 	public function end_program()
 	{
-		$program = $this->program;
-		// $program->append_defer_check_identifiers($this->function);
-
 		// reset
 		$this->program = null;
 		$this->declaration = null;
@@ -838,6 +889,7 @@ class ASTFactory
 			}
 		}
 		else {
+			throw $this->parser->new_parse_error("Unknow block");
 			$this->set_initializer();
 		}
 
@@ -1016,25 +1068,25 @@ class ASTFactory
 
 	private function find_or_create_namespace_declaration(array $namepath)
 	{
-		$ns_name = array_shift($namepath);
+		$name = array_shift($namepath);
 
-		$ns_decl = $this->unit->namespaces[$ns_name] ?? null;
-		if ($ns_decl === null) {
-			$ns_decl = $this->create_namespace_declaration($ns_name);
-			$this->unit->namespaces[$ns_name] = $ns_decl;
+		$decl = $this->unit->namespaces[$name] ?? null;
+		if ($decl === null) {
+			$decl = $this->create_namespace_declaration($name);
+			$this->unit->namespaces[$name] = $decl;
 		}
 
-		foreach ($namepath as $sub_ns_name) {
-			$sub_ns_decl = $ns_decl->namespaces[$sub_ns_name] ?? null;
-			if ($sub_ns_decl === null) {
-				$sub_ns_decl = $this->create_namespace_declaration($sub_ns_name);
-				$ns_decl->namespaces[$sub_ns_name] = $sub_ns_decl;
+		foreach ($namepath as $sub_name) {
+			$sub_decl = $decl->namespaces[$sub_name] ?? null;
+			if ($sub_decl === null) {
+				$sub_decl = $this->create_namespace_declaration($sub_name);
+				$decl->namespaces[$sub_name] = $sub_decl;
 			}
 
-			$ns_decl = $sub_ns_decl;
+			$decl = $sub_decl;
 		}
 
-		return $ns_decl;
+		return $decl;
 	}
 
 	private function create_namespace_declaration(string $name)

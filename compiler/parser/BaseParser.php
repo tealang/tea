@@ -85,6 +85,44 @@ abstract class BaseParser
 
 	protected abstract function tokenize(string $source);
 
+	protected function read_block_body_for(IBlock $block)
+	{
+		$this->read_body_statements_for($block);
+		$this->factory->end_block();
+	}
+
+	protected function read_body_statements_for(IBlock $block)
+	{
+		$this->expect_block_begin();
+
+		$items = [];
+		while (($item = $this->read_inner_statement()) !== null) {
+			$items[] = $item;
+		}
+
+		$this->expect_block_end();
+
+		$block->set_body_with_statements($items);
+	}
+
+	protected function read_prefix_operation(Operator $operator)
+	{
+		$expression = $this->read_expression($operator);
+		if ($expression === null) {
+			throw $this->new_unexpected_error();
+		}
+
+		$expression = new PrefixOperation($expression, $operator);
+		$expression->pos = $this->pos;
+
+		return $expression;
+	}
+
+	protected function back(int $num = 1)
+	{
+		$this->pos -= $num;
+	}
+
 	public function new_parse_error(string $message, int $trace_start = 0)
 	{
 		$place = $this->get_error_place_with_pos($this->pos);
@@ -97,8 +135,15 @@ abstract class BaseParser
 
 	public function new_unexpected_error()
 	{
-		$token = $this->get_current_token_string();
-		return $this->new_parse_error("Unexpected token '$token'", 1);
+		$this->print_token();
+		$token_string = $this->get_current_token_string();
+		return $this->new_parse_error("Unexpected token '$token_string'", 1);
+	}
+
+	protected function print_token(array|string $token = null)
+	{
+		$token === null and ($token = $this->tokens[$this->pos] ?? null);
+		dump($token);
 	}
 
 	public function get_error_place_with_pos(int $pos)

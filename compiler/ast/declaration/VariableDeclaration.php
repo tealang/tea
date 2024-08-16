@@ -48,11 +48,12 @@ class InvariantDeclaration extends VariableDeclaration
 	public $is_mutable;
 }
 
-// class SuperVariableDeclaration extends VariableDeclaration implements IRootDeclaration
-// {
-// 	const KIND = 'super_variable_declaration';
-// 	public $is_final;
-// }
+class SuperVariableDeclaration extends VariableDeclaration implements IRootDeclaration
+{
+	const KIND = 'super_variable_declaration';
+	public $is_final;
+	public $program;
+}
 
 // The rules to supports the declarative programming
 class RuleOptions

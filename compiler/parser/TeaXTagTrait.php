@@ -61,9 +61,9 @@ trait TeaXTagTrait
 
 		$next = $this->get_token();
 
-		// <prefix:posfix
-		// <prefix-posfix
-		if ($next === '-' || $next === ':') {
+		// <prefix-name
+		// <prefix:name
+		if ($next === _STRIKETHROUGH || $next === _COLON) {
 			$this->scan_token();
 			$after = $this->scan_token();
 			$token .= $next . $after;
@@ -86,7 +86,7 @@ trait TeaXTagTrait
 		$this->scan_token_ignore_empty();
 
 		$name = $token;
-		if ($token === ':') {
+		if ($token === _COLON) {
 			$token = $this->expect_identifier_token();
 			$name .= $token;
 		}
@@ -95,7 +95,7 @@ trait TeaXTagTrait
 		}
 
 		$next = $this->get_token();
-		while ($next === '-') {
+		while ($next === _STRIKETHROUGH) {
 			$name .= $next;
 			$this->scan_token(); // skip -
 			$name .= $this->expect_identifier_token();

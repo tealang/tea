@@ -5,10 +5,10 @@ namespace tests\xview
 public class BaseView: IView {
 	name String
 
-	protected props Dict
-	protected subviews Array
+	protected props #Dict
+	protected subviews #Array
 
-	construct(props Dict = none)
+	construct(props Dict = none) #Void
 
 	prop(key String, value Any) BaseView
 
@@ -20,20 +20,20 @@ public class BaseView: IView {
 }
 
 public interface PureInterface {
-	public const ABC Pures
+	public const ABC #Pures
 
-	set_css_class(names Pures)
+	set_css_class(names Pures) #Void
 }
 
 public intertrait IViewDemo: IView {
-	protected const ABC Pures
+	protected const ABC #Pures
 
-	name Pures
-	css_class Pures
+	name #Pures
+	css_class #Pures
 
-	set_css_class(names Pures) IViewDemo
+	set_css_class(names Pures) #IViewDemo
 
-	protected set_some(some String)
+	protected set_some(some String) #Void
 }
 
 // program end

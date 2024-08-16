@@ -486,15 +486,15 @@ abstract class BaseCoder
 		return $code . static::STATEMENT_TERMINATOR;
 	}
 
-	// public function render_super_variable_declaration(SuperVariableDeclaration $node)
-	// {
-	// 	$code = static::VAR_DECLARE_PREFIX . $node->name;
-	// 	if ($node->value) {
-	// 		$code .= ' = ' . $node->value->render($this);
-	// 	}
+	public function render_super_variable_declaration(SuperVariableDeclaration $node)
+	{
+		$code = static::VAR_DECLARE_PREFIX . $node->name;
+		if ($node->value) {
+			$code .= ' = ' . $node->value->render($this);
+		}
 
-	// 	return $code . static::STATEMENT_TERMINATOR;
-	// }
+		return $code . static::STATEMENT_TERMINATOR;
+	}
 
 	public function render_parameter_declaration(ParameterDeclaration $node)
 	{
@@ -521,29 +521,21 @@ abstract class BaseCoder
 		return 'unset ' . $node->argument->render($this) . static::STATEMENT_TERMINATOR;
 	}
 
-	public function render_array_element_assignment(ArrayElementAssignment $node)
-	{
-		$master = $node->master->render($this);
-		$key = $node->key ? $node->key->render($this) : '';
-		$value = $node->value->render($this);
+	// public function render_array_element_assignment(ArrayElementAssignment $node)
+	// {
+	// 	$master = $node->master->render($this);
+	// 	$key = $node->key ? $node->key->render($this) : '';
+	// 	$value = $node->value->render($this);
 
-		return "{$master}[{$key}] = {$value}" . static::STATEMENT_TERMINATOR;
-	}
+	// 	return "{$master}[{$key}] = {$value}" . static::STATEMENT_TERMINATOR;
+	// }
 
-	public function render_normal_assignment(Assignment $node)
-	{
-		return sprintf('%s = %s',
-			$node->master->render($this),
-			$node->value->render($this)
-		) . static::STATEMENT_TERMINATOR;
-	}
-
-	public function render_compound_assignment(CompoundAssignment $node)
+	public function render_assignment_operation(AssignmentOperation $node)
 	{
 		return sprintf('%s %s %s',
-			$node->master->render($this),
-			$node->operator,
-			$node->value->render($this)
+			$node->left->render($this),
+			$this->get_operator_sign($node->operator),
+			$node->right->render($this)
 		) . static::STATEMENT_TERMINATOR;
 	}
 
@@ -835,9 +827,9 @@ abstract class BaseCoder
 
 // ------
 
-	public function render_inline_comments(InlineComments $node)
+	public function render_line_comment(LineComment $node)
 	{
-		return _INLINE_COMMENT_MARK . join(_INLINE_COMMENT_MARK, $node->items);
+		return _LINE_COMMENT_MARK . $node->content;
 	}
 
 	public function render_key_accessing(KeyAccessing $node)
@@ -1055,7 +1047,7 @@ abstract class BaseCoder
 	// 	return join(" {$node->operator} ", $items);
 	// }
 
-	public function render_cast_operation(CastOperation $node)
+	public function render_as_operation(AsOperation $node)
 	{
 		$left = $node->left->render($this);
 		$right = $node->right->render($this);
@@ -1237,21 +1229,28 @@ abstract class BaseCoder
 
 		$code = join($items);
 
-		if ($node->except) {
-			$code = $this->wrap_with_except_block($node->except, $code);
+		if ($node->has_exceptional()) {
+			$code = $this->wrap_with_except_block($node, $code);
 		}
 
 		return $code;
 	}
 
-	protected function wrap_with_except_block(CatchBlock $catch, string $code)
+	protected function wrap_with_except_block(IExceptAble $node, string $code)
 	{
 		$items = [];
 		$code = $this->indents($code);
 		$items[] = "try {\n{$code}\n}";
-		$items[] = $this->render_catch_block($catch);
 
-		return join($items);
+		foreach ($node->catchings as $block) {
+			$items[] = $this->render_catch_block($block);
+		}
+
+		if ($node->finally) {
+			$items[] = $this->render_finally_block($node->finally);
+		}
+
+		return join("\n", $items);
 	}
 
 	public function render_elseif_block(ElseIfBlock $node)
@@ -1276,19 +1275,12 @@ abstract class BaseCoder
 		$var = static::VAR_DECLARE_PREFIX . $node->var->name;
 		$type = $node->var->declared_type->render($this);
 
-		$items = [];
-		$items[] = "\ncatch ($type $var) " . $this->render_control_structure_body($node);
-
-		if ($node->except) {
-			$items[] = $node->except->render($this);
-		}
-
-		return join($items);
+		return "catch ($type $var) " . $this->render_control_structure_body($node);
 	}
 
 	public function render_finally_block(FinallyBlock $node)
 	{
-		return "\nfinally " . $this->render_control_structure_body($node);
+		return "finally " . $this->render_control_structure_body($node);
 	}
 
 	public function render_echo_statement(EchoStatement $node)
@@ -1304,19 +1296,19 @@ abstract class BaseCoder
 		}
 	}
 
-	protected function render_with_post_condition(PostConditionAbleStatement $node, string $code)
-	{
-		return $code . ' when ' . $node->condition->render($this);
-	}
+	// protected function render_with_post_condition(PostConditionAbleStatement $node, string $code)
+	// {
+	// 	return $code . ' when ' . $node->condition->render($this);
+	// }
 
 	public function render_break_statement(Node $node)
 	{
 		$argument = $node->argument ? ' #' . $node->argument : '';
 		$code = 'break' . $argument;
 
-		if ($node->condition) {
-			$code = $this->render_with_post_condition($node, $code);
-		}
+		// if ($node->condition) {
+		// 	$code = $this->render_with_post_condition($node, $code);
+		// }
 
 		return $code;
 	}
@@ -1326,9 +1318,9 @@ abstract class BaseCoder
 		$argument = $node->argument ? ' #' . $node->argument : '';
 		$code = 'continue' . $argument;
 
-		if ($node->condition) {
-			$code = $this->render_with_post_condition($node, $code);
-		}
+		// if ($node->condition) {
+		// 	$code = $this->render_with_post_condition($node, $code);
+		// }
 
 		return $code;
 	}
@@ -1338,9 +1330,9 @@ abstract class BaseCoder
 		$statement = $node->argument ? "return " . $node->argument->render($this) : 'return';
 		$code = $statement . static::STATEMENT_TERMINATOR;
 
-		if ($node->condition) {
-			$code = $this->render_with_post_condition($node, $code);
-		}
+		// if ($node->condition) {
+		// 	$code = $this->render_with_post_condition($node, $code);
+		// }
 
 		return $code;
 	}
@@ -1349,9 +1341,9 @@ abstract class BaseCoder
 	{
 		$code = "throw " . $node->argument->render($this) . static::STATEMENT_TERMINATOR;
 
-		if ($node->condition) {
-			$code = $this->render_with_post_condition($node, $code);
-		}
+		// if ($node->condition) {
+		// 	$code = $this->render_with_post_condition($node, $code);
+		// }
 
 		return $code;
 	}
@@ -1361,9 +1353,9 @@ abstract class BaseCoder
 		$argument = $node->argument ? ' ' . $node->argument->render($this) : '';
 		$code = 'exit' . $argument . static::STATEMENT_TERMINATOR;
 
-		if ($node->condition) {
-			$code = $this->render_with_post_condition($node, $code);
-		}
+		// if ($node->condition) {
+		// 	$code = $this->render_with_post_condition($node, $code);
+		// }
 
 		return $code;
 	}
@@ -1429,15 +1421,15 @@ abstract class BaseCoder
 		return _YIELD . ' ' . $argument;
 	}
 
-	public function render_expression_list(ExpressionList $expr)
-	{
-		$items = [];
-		foreach ($expr->items as $subexpr) {
-			$items[] = $subexpr->render($this);
-		}
+	// public function render_expression_list(ExpressionList $expr)
+	// {
+	// 	$items = [];
+	// 	foreach ($expr->items as $subexpr) {
+	// 		$items[] = $subexpr->render($this);
+	// 	}
 
-		return join(', ', $items);
-	}
+	// 	return join(', ', $items);
+	// }
 
 	protected function indents(string $contents, $number = 1)
 	{

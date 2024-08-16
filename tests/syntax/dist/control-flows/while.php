@@ -3,17 +3,12 @@ namespace tests\syntax;
 
 // ---------
 $i = 0;
-try {
-	while ($i < 10) {
-		if ($i == 5) {
-			continue;
-		}
-
-		$i += 1;
+while ($i < 10) {
+	if ($i == 5) {
+		continue;
 	}
-}
-catch (\Exception $ex) {
-	// no any
+
+	$i += 1;
 }
 
 $i = 0;

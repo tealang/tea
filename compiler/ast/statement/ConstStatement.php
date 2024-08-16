@@ -9,15 +9,19 @@
 
 namespace Tea;
 
-class ExitStatement extends PostConditionAbleStatement
+class ConstStatement extends BaseStatement
 {
-	const KIND = 'exit_statement';
+	const KIND = 'const_statement';
 
-	public $argument;
+	/**
+	 * @var ConstantDeclaration[]
+	 */
+	public $members;
 
-	public function __construct(BaseExpression $argument = null, IBlock $belong_block)
+	public function __construct(array $members)
 	{
-		$this->argument = $argument;
-		$this->belong_block = $belong_block;
+		$this->members = $members;
 	}
 }
+
+// end

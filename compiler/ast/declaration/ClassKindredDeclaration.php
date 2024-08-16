@@ -29,7 +29,9 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 	public $members = [];
 
 	/**
-	 * 聚合的，实际可用的成员，包括继承父类的、接口中默认实现的，和本类中定义的
+	 * the aggregated, actually available members,
+	 * including those that inherit from the parent class,
+	 * those implemented by default in the interface, and those defined in this class
 	 * @var array  [name => IClassMemberDeclaration]
 	 */
 	public $aggregated_members = [];

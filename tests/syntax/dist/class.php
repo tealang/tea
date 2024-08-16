@@ -34,24 +34,24 @@ class IterableObject implements \Iterator {
 	public $pos;
 	public $items = ['item1', 'item2', 'item3'];
 
-	public function current(): string {
+	public function current() {
 		return $this->items[$this->pos];
 	}
 
-	public function key(): int {
+	public function key(): int|string {
 		return $this->pos;
 	}
 
-	public function next(): void {
+	public function next() {
 		$this->pos += 1;
+	}
+
+	public function rewind() {
+		$this->pos = 0;
 	}
 
 	public function valid(): bool {
 		return isset($this->items[$this->pos]);
-	}
-
-	public function rewind(): void {
-		$this->pos = 0;
 	}
 }
 

@@ -14,7 +14,7 @@ runtime func imagesx(image) Int
 runtime func imagesy(image) Int
 runtime func imagettfbbox(size Float, angle Float, fontfile String, text String) Int.Array
 runtime func imagettftext(image, size Float, angle Float, x Int, y Int, color Int, fontfile String, text String) Int.Array
-runtime func imagepng(image, to String = none, quality = -1, filters Int = #default) Bool
+runtime func imagepng(image, file String? = none, quality = #default, filters Int = #default) Bool
 runtime func imagedestroy(image)
 
 // PDO

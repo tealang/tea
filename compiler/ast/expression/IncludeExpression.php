@@ -7,21 +7,30 @@
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
-// namespace Tea;
+namespace Tea;
 
-// class IncludeExpression extends BaseExpression
-// {
-// 	const KIND = 'include_expression';
+class IncludeExpression extends BaseExpression
+{
+	const KIND = 'include_expression';
 
-// 	public $target;
+	public $target;
 
-// 	/**
-// 	 * @var Symbol[]
-// 	 */
-// 	public $symbols; // use for check
+	/**
+	 * the including mode
+	 * @var int  T_INCLUDE | T_INCLUDE_ONCE | T_REQUIRE | T_REQUIRE_ONCE
+	 */
+	public $mode;
 
-// 	public function __construct(string $target)
-// 	{
-// 		$this->target = $target;
-// 	}
-// }
+	/**
+	 * @var Symbol[]
+	 */
+	public $symbols; // use for check
+
+	public function __construct(BaseExpression $target, int $mode)
+	{
+		$this->target = $target;
+		$this->mode = $mode;
+	}
+}
+
+// end

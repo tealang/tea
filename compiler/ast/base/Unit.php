@@ -11,8 +11,6 @@ namespace Tea;
 
 class Unit implements IRootDeclaration
 {
-	public $docs;
-
 	public $name;
 
 	public $ns;

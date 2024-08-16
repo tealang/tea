@@ -14,9 +14,9 @@ class TeaSyntax
 	const OPERATORS = [
 		[
 			OPID::CLONE => ['clone', OP_PRE, OP_NA],
-			OPID::DOT => ['.', OP_BIN, OP_L, OP_NA],
+			OPID::MEMBER_ACCESSING => ['.', OP_BIN, OP_L, OP_NA],
 			OPID::PIPE => ['::', OP_BIN, OP_L, OP_NA],
-			OPID::CAST => ['#', OP_BIN, OP_L, OP_NA],
+			OPID::AS => ['#', OP_BIN, OP_L, OP_NA],
 		],
 		[
 			// OPID::REFERENCE => ['&', OP_PRE, OP_NA],
@@ -76,10 +76,24 @@ class TeaSyntax
 		[
 			OPID::TERNARY => ['?', OP_TERNARY, OP_NON],
 		],
-		// [
-		// 	OPID::ASSIGNMENT => ['=', OP_BIN, OP_R],
-		// ],
+		[
+			OPID::ASSIGNMENT=> ['=', OP_ASSIGN, OP_R],
+			OPID::ADD_ASSIGNMENT=> ['+=', OP_ASSIGN, OP_R],
+			OPID::SUB_ASSIGNMENT=> ['-=', OP_ASSIGN, OP_R],
+			OPID::MUL_ASSIGNMENT=> ['*=', OP_ASSIGN, OP_R],
+			OPID::DIV_ASSIGNMENT=> ['/=', OP_ASSIGN, OP_R],
+			OPID::EXPONENT_ASSIGNMENT => ['**=', OP_ASSIGN, OP_R],
+			OPID::CONCAT_ASSIGNMENT=> ['.=', OP_ASSIGN, OP_R],
+			OPID::REM_ASSIGNMENT=> ['%=', OP_ASSIGN, OP_R],
+			OPID::BITAND_ASSIGNMENT=> ['&=', OP_ASSIGN, OP_R],
+			OPID::BITOR_ASSIGNMENT=> ['|=', OP_ASSIGN, OP_R],
+			OPID::BITXOR_ASSIGNMENT=> ['^=', OP_ASSIGN, OP_R],
+			OPID::SHL_ASSIGNMENT=> ['<<=', OP_ASSIGN, OP_R],
+			OPID::SHR_ASSIGNMENT=> ['>>=', OP_ASSIGN, OP_R],
+			OPID::NULL_COALESCE_ASSIGNMENT=> ['??=', OP_ASSIGN, OP_R],
+		],
 	];
 }
+
 
 // end

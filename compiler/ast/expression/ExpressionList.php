@@ -7,16 +7,21 @@
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
-namespace Tea;
+// namespace Tea;
 
-class ExpressionList extends BaseExpression
-{
-	const KIND = 'expression_list';
+// class ExpressionList extends BaseExpression
+// {
+// 	const KIND = 'expression_list';
 
-	public $items;
+// 	/**
+// 	 * @var BaseExpression[]
+// 	 */
+// 	public $items;
 
-	public function __construct(BaseExpression ...$items)
-	{
-		$this->items = $items;
-	}
-}
+// 	public function __construct(array $items)
+// 	{
+// 		$this->items = $items;
+// 	}
+// }
+
+// end

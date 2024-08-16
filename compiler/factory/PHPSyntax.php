@@ -15,13 +15,14 @@ class PHPSyntax
 		[
 			OPID::NEW => ['new', OP_PRE, OP_NA],
 			OPID::CLONE => ['clone', OP_PRE, OP_NA],
-			OPID::DOT => ['.', OP_BIN, OP_L, OP_NA],
+			OPID::MEMBER_ACCESSING => ['->', OP_BIN, OP_L, OP_NA],
+			OPID::STATIC_ACCESSING => ['::', OP_BIN, OP_L, OP_NA],
 		],
 		[
 			OPID::EXPONENTIATION => ['**', OP_BIN, OP_R],
 		],
 		[
-			OPID::CAST => ['(?)', OP_BIN, OP_L, OP_NA],
+			OPID::AS => ['(?)', OP_BIN, OP_L, OP_NA],
 			OPID::REFERENCE => ['&', OP_PRE, OP_NA],
 			OPID::IDENTITY => ['+', OP_PRE, OP_NA],
 			OPID::NEGATION => ['-', OP_PRE, OP_NA],
@@ -89,7 +90,20 @@ class PHPSyntax
 			OPID::TERNARY => ['?', OP_TERNARY, OP_NON],
 		],
 		[
-			OPID::ASSIGNMENT => ['=', OP_BIN, OP_R],
+			OPID::ASSIGNMENT => ['=', OP_ASSIGN, OP_R],
+			OPID::ADD_ASSIGNMENT => ['+=', OP_ASSIGN, OP_R],
+			OPID::SUB_ASSIGNMENT => ['-=', OP_ASSIGN, OP_R],
+			OPID::MUL_ASSIGNMENT => ['*=', OP_ASSIGN, OP_R],
+			OPID::DIV_ASSIGNMENT => ['/=', OP_ASSIGN, OP_R],
+			OPID::EXPONENT_ASSIGNMENT => ['**=', OP_ASSIGN, OP_R],
+			OPID::CONCAT_ASSIGNMENT => ['.=', OP_ASSIGN, OP_R],
+			OPID::REM_ASSIGNMENT => ['%=', OP_ASSIGN, OP_R],
+			OPID::BITAND_ASSIGNMENT => ['&=', OP_ASSIGN, OP_R],
+			OPID::BITOR_ASSIGNMENT => ['|=', OP_ASSIGN, OP_R],
+			OPID::BITXOR_ASSIGNMENT => ['^=', OP_ASSIGN, OP_R],
+			OPID::SHL_ASSIGNMENT => ['<<=', OP_ASSIGN, OP_R],
+			OPID::SHR_ASSIGNMENT => ['>>=', OP_ASSIGN, OP_R],
+			OPID::NULL_COALESCE_ASSIGNMENT => ['??=', OP_ASSIGN, OP_R],
 		],
 		[
 			OPID::YIELD_FROM => ['yield from', OP_PRE, OP_NA],
@@ -104,10 +118,10 @@ class PHPSyntax
 			OPID::LOW_BOOL_AND => ['and', OP_BIN, OP_L],
 		],
 		[
-			OPID::LOW_BOOL_XOR => ['or', OP_BIN, OP_L],
+			OPID::LOW_BOOL_XOR => ['xor', OP_BIN, OP_L],
 		],
 		[
-			OPID::LOW_BOOL_OR => ['xor', OP_BIN, OP_L],
+			OPID::LOW_BOOL_OR => ['or', OP_BIN, OP_L],
 		],
 	];
 }

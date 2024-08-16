@@ -95,10 +95,10 @@ trait DeclarationTrait {
 		$this->defer_check_identifiers[$identifier->name] = $identifier;
 	}
 
-	public function remove_defer_check_identifier(Identifiable $identifier)
+	public function remove_defer_check_for_key(string $key)
 	{
-		if (isset($this->defer_check_identifiers[$identifier->name])) {
-			unset($this->defer_check_identifiers[$identifier->name]);
+		if (isset($this->defer_check_identifiers[$key])) {
+			unset($this->defer_check_identifiers[$key]);
 		}
 	}
 

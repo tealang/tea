@@ -25,8 +25,6 @@ abstract class BaseCallExpression extends BaseExpression
 
 	public $infered_callee_declaration;
 
-	// public $is_calling;
-
 	public function __construct(BaseExpression $callee, array $arguments)
 	{
 		if ($callee instanceof PlainIdentifier) {

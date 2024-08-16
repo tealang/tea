@@ -16,15 +16,18 @@ class SwitchBlock extends ControlBlock implements IElseAble, IExceptAble, IBreak
 	const KIND = 'switch_block';
 
 	public $test;
+
+	/**
+	 * @var CaseBranch[]
+	 */
 	public $branches;
-	public $is_senior_mode;
 
 	public function __construct(BaseExpression $test)
 	{
 		$this->test = $test instanceof Parentheses ? $test->expression : $test;
 	}
 
-	public function set_branches(CaseBranch ...$branches)
+	public function set_branches(array $branches)
 	{
 		$this->branches = $branches;
 	}
@@ -34,10 +37,15 @@ class CaseBranch extends ControlBlock
 {
 	const KIND = 'case_branch';
 
-	public $rule;
+	/**
+	 * @var BaseExpression[]
+	 */
+	public $rule_arguments;
 
-	public function __construct(BaseExpression $rule)
+	public function __construct(array $rule_arguments)
 	{
-		$this->rule = $rule;
+		$this->rule_arguments = $rule_arguments;
 	}
 }
+
+// end

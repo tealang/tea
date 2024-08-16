@@ -16,7 +16,7 @@ trait IBlockTrait {
 	public $label;
 
 	/**
-	 * @var IStatement[] or BaseExpression
+	 * @var IStatement[] | BaseExpression
 	 */
 	public $body;
 
@@ -26,7 +26,7 @@ trait IBlockTrait {
 
 	public $is_returned = false;
 
-	public function set_body_with_statements(IStatement ...$statements)
+	public function set_body_with_statements(array $statements)
 	{
 		$this->body = $statements;
 	}

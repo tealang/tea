@@ -9,18 +9,20 @@
 
 namespace Tea;
 
-class InlineComments extends Node implements IStatement
+// "// ..."
+class LineComment extends Node implements IStatement
 {
-	const KIND = 'inline_comments';
+	const KIND = 'line_comment';
 
-	public $items;
+	public $content;
 
-	public function __construct(string ...$items)
+	public function __construct(string $content)
 	{
-		$this->items = $items;
+		$this->content = $content;
 	}
 }
 
+// "/* ... */"
 class BlockComment extends Node implements IStatement
 {
 	const KIND = 'block_comment';
@@ -32,3 +34,18 @@ class BlockComment extends Node implements IStatement
 		$this->content = $content;
 	}
 }
+
+// "/** ... */"
+class DocComment extends Node implements IStatement
+{
+	const KIND = 'doc_comment';
+
+	public $content;
+
+	public function __construct(string $content)
+	{
+		$this->content = $content;
+	}
+}
+
+// end

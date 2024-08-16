@@ -27,7 +27,14 @@ class PHPClassInMixed1 {
 	}
 
 	function get_message(): string {
-		return "Hei, $this->caller";
+		if (1) {
+			$caller = $this->caller;
+		}
+		else {
+			$caller = 'Unknow caller';
+		}
+
+		return "Hei, $caller";
 	}
 }
 

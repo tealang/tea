@@ -22,24 +22,24 @@ internal IterableObject: Iterator<K UInt, V String> {
 	public pos UInt
 	public items = ['item1', 'item2', 'item3']
 
-	current() String {
+	current() Any {
 		return this.items[this.pos]
 	}
 
-	key() UInt {
+	key() Int|String {
 		return this.pos
 	}
 
-	next() Void {
+	next() {
 		this.pos += 1
+	}
+
+	rewind() {
+		this.pos = 0
 	}
 
 	valid() Bool {
 		return isset(this.items[this.pos])
-	}
-
-	rewind() Void {
-		this.pos = 0
 	}
 }
 

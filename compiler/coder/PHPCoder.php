@@ -652,8 +652,8 @@ class PHPCoder extends BaseCoder
 		$branches = $this->indents(join(LF, $branches));
 		$code = "switch ($test) {\n$branches\n}";
 
-		if ($node->except) {
-			$code = $this->wrap_with_except_block($node->except, $code);
+		if ($node->has_exceptional()) {
+			$code = $this->wrap_with_except_block($node, $code);
 		}
 
 		return $code;
@@ -683,15 +683,16 @@ class PHPCoder extends BaseCoder
 	protected function render_case_branch(CaseBranch $node)
 	{
 		$codes = [];
-		if ($node->rule instanceof ExpressionList) {
-			foreach ($node->rule->items as $subexpr) {
-				$expr = $subexpr->render($this);
-				$codes[] = "case {$expr}:";
+		foreach ($node->rule_arguments as $argument) {
+			if ($argument) {
+				$expr = $argument->render($this);
+				$branch = "case {$expr}:";
 			}
-		}
-		else {
-			$expr = $node->rule->render($this);
-			$codes[] = "case {$expr}:";
+			else {
+				$branch = 'default:';
+			}
+
+			$codes[] = $branch;
 		}
 
 		$codes[] = $this->render_case_branch_body($node->body);
@@ -736,8 +737,8 @@ class PHPCoder extends BaseCoder
 			$code .= $node->else->render($this);
 		}
 
-		if ($node->except) {
-			$code = $this->wrap_with_except_block($node->except, $code);
+		if ($node->has_exceptional()) {
+			$code = $this->wrap_with_except_block($node, $code);
 		}
 
 		return $code;
@@ -755,7 +756,6 @@ class PHPCoder extends BaseCoder
 			$start = $temp_name;
 		}
 
-		$temp_assignment2 = null;
 		if (!$node->end->is_const_value && !$node->end instanceof PlainIdentifier) {
 			$temp_name = $this->generate_temp_variable_name();
 			$code .= "$temp_name = $end;\n";
@@ -786,8 +786,8 @@ class PHPCoder extends BaseCoder
 			$code .= $for_code;
 		}
 
-		if ($node->except) {
-			$code = $this->wrap_with_except_block($node->except, $code);
+		if ($node->has_exceptional()) {
+			$code = $this->wrap_with_except_block($node, $code);
 		}
 
 		return $code;
@@ -826,8 +826,8 @@ class PHPCoder extends BaseCoder
 			$code = sprintf('while (%s) %s', $test, $body);
 		// }
 
-		if ($node->except) {
-			$code = $this->wrap_with_except_block($node->except, $code);
+		if ($node->has_exceptional()) {
+			$code = $this->wrap_with_except_block($node, $code);
 		}
 
 		return $code;
@@ -838,8 +838,8 @@ class PHPCoder extends BaseCoder
 		$body = $this->render_control_structure_body($node);
 		$code = sprintf('while (true) %s', $body);
 
-		if ($node->except) {
-			$code = $this->wrap_with_except_block($node->except, $code);
+		if ($node->has_exceptional()) {
+			$code = $this->wrap_with_except_block($node, $code);
 		}
 
 		return $code;
@@ -850,45 +850,54 @@ class PHPCoder extends BaseCoder
 		$items = [];
 		$code = $this->render_control_structure_body($node);
 		$items[] = "try {$code}";
-		$items[] = $this->render_catch_block($node->except);
 
-		return join($items);
+		foreach ($node->catchings as $block) {
+			$items[] = $this->render_catch_block($block);
+		}
+
+		if ($node->finally) {
+			$items[] = $this->render_finally_block($node->finally);
+		}
+
+		return join("\n", $items);
 	}
 
 // ---
 
-	public function render_array_element_assignment(ArrayElementAssignment $node)
+	// public function render_array_element_assignment(ArrayElementAssignment $node)
+	// {
+	// 	$master = $node->master;
+	// 	if ($master instanceof AsOperation) {
+	// 		$master = $master->left;
+	// 	}
+
+	// 	$master = $master->render($this);
+	// 	$key = $node->key ? $node->key->render($this) : '';
+	// 	$value = $node->value->render($this);
+
+	// 	return "{$master}[{$key}] = {$value}" . static::STATEMENT_TERMINATOR;
+	// }
+
+	public function render_assignment_operation(AssignmentOperation $node)
 	{
-		$master = $node->master;
-		if ($master instanceof CastOperation) {
-			$master = $master->left;
-		}
+		$left = $node->left;
+		$right = $node->right->render($this);
 
-		$master = $master->render($this);
-		$key = $node->key ? $node->key->render($this) : '';
-		$value = $node->value->render($this);
-
-		return "{$master}[{$key}] = {$value}" . static::STATEMENT_TERMINATOR;
-	}
-
-	public function render_normal_assignment(Assignment $node)
-	{
-		$master = $node->master;
-		$right = $node->value->render($this);
-
-		if ($master instanceof SquareAccessing) {
-			$expr = $master->expression->render($this);
-			if ($master->is_prefix) {
-				return "array_unshift({$expr}, {$right})" . static::STATEMENT_TERMINATOR;
+		if ($left instanceof SquareAccessing) {
+			$expr = $left->expression->render($this);
+			if ($left->is_prefix) {
+				return "array_unshift({$expr}, {$right})";
 			}
 
-			$master =  "{$expr}[]";
+			$left =  "{$expr}[]";
 		}
 		else {
-			$master = $master->render($this);
+			$left = $left->render($this);
 		}
 
-		return sprintf('%s = %s', $master, $right) . static::STATEMENT_TERMINATOR;
+		$op = $this->get_operator_sign($node->operator);
+
+		return sprintf('%s %s %s', $left, $op, $right);
 	}
 
 	public function render_xtag(XTag $node)
@@ -1553,8 +1562,8 @@ class PHPCoder extends BaseCoder
 
 	private function render_master_expression(BaseExpression $expr)
 	{
-		if ($expr instanceof CastOperation) {
-			$code = $this->render_cast_operation($expr, true);
+		if ($expr instanceof AsOperation) {
+			$code = $this->render_as_operation($expr, true);
 		}
 		else {
 			$code = $expr->render($this);
@@ -1774,7 +1783,7 @@ class PHPCoder extends BaseCoder
 		return '(object)[' . $body . ']';
 	}
 
-	public function render_cast_operation(CastOperation $node, bool $add_parentheses = false)
+	public function render_as_operation(AsOperation $node, bool $add_parentheses = false)
 	{
 		$tea_type_name = $node->right->name;
 		$native_type_name = static::BUILTIN_TYPE_MAP[$tea_type_name] ?? null;
@@ -1929,7 +1938,7 @@ class PHPCoder extends BaseCoder
 			$item = $node->items[$i];
 			$left = $item->render($this);
 
-			if ($item instanceof CastOperation) {
+			if ($item instanceof AsOperation) {
 				$test = $item->left->render($this);
 				$expr = sprintf("isset(%s) ? %s : %s", $test, $left, $expr ?? static::VAL_NONE);
 				if ($i !== 0) {
@@ -1947,19 +1956,19 @@ class PHPCoder extends BaseCoder
 		return $expr;
 	}
 
-	protected function render_with_post_condition(PostConditionAbleStatement $node, string $code)
-	{
-		return sprintf("if (%s) {\n\t%s\n}", $node->condition->render($this), $code);
-	}
+	// protected function render_with_post_condition(PostConditionAbleStatement $node, string $code)
+	// {
+	// 	return sprintf("if (%s) {\n\t%s\n}", $node->condition->render($this), $code);
+	// }
 
 	public function render_break_statement(Node $node)
 	{
 		$argument = $node->target_layers > 1 ? ' ' . $node->target_layers : '';
 		$code = 'break' . $argument . static::STATEMENT_TERMINATOR;
 
-		if ($node->condition) {
-			$code = $this->render_with_post_condition($node, $code);
-		}
+		// if ($node->condition) {
+		// 	$code = $this->render_with_post_condition($node, $code);
+		// }
 
 		return $code;
 	}
@@ -1979,9 +1988,9 @@ class PHPCoder extends BaseCoder
 		$argument = $target_layers > 1 ? ' ' . $target_layers : '';
 		$code = 'continue' . $argument . static::STATEMENT_TERMINATOR;
 
-		if ($node->condition) {
-			$code = $this->render_with_post_condition($node, $code);
-		}
+		// if ($node->condition) {
+		// 	$code = $this->render_with_post_condition($node, $code);
+		// }
 
 		return $code;
 	}

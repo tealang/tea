@@ -11,51 +11,38 @@ namespace Tea;
 
 
 interface IAssignable {}
-interface IAssignment {}
+// interface IAssignment {}
 
-class Assignment extends BaseStatement implements IAssignment
-{
-	const KIND = 'normal_assignment';
+// class Assignment extends BaseStatement implements IAssignment
+// {
+// 	const KIND = 'assignment';
 
-	public $master;
-	public $value;
+// 	public $master;
+// 	public $value;
+// 	public $operator;
 
-	public function __construct(IAssignable $master, BaseExpression $value)
-	{
-		$this->master = $master;
-		$this->value = $value;
-	}
-}
+// 	public function __construct(IAssignable $master, BaseExpression $value, string $operator)
+// 	{
+// 		$this->master = $master;
+// 		$this->value = $value;
+// 		$this->operator = $operator;
+// 	}
+// }
 
-class CompoundAssignment extends BaseStatement implements IAssignment
-{
-	const KIND = 'compound_assignment';
+// class ArrayElementAssignment extends BaseStatement implements IAssignment
+// {
+// 	const KIND = 'array_element_assignment';
 
-	public $operator;
-	public $master;
-	public $value;
+// 	public $master;
+// 	public $key;
+// 	public $value;
 
-	public function __construct(string $operator, IAssignable $master, BaseExpression $value)
-	{
-		$this->operator = $operator;
-		$this->master = $master;
-		$this->value = $value;
-	}
-}
+// 	public function __construct(BaseExpression $master, ?BaseExpression $key, BaseExpression $value)
+// 	{
+// 		$this->master = $master;
+// 		$this->key = $key;
+// 		$this->value = $value;
+// 	}
+// }
 
-class ArrayElementAssignment extends BaseStatement implements IAssignment
-{
-	const KIND = 'array_element_assignment';
-
-	public $master;
-	public $key;
-	public $value;
-
-	public function __construct(BaseExpression $master, ?BaseExpression $key, BaseExpression $value)
-	{
-		$this->master = $master;
-		$this->key = $key;
-		$this->value = $value;
-	}
-}
-
+// end

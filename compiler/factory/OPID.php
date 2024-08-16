@@ -14,8 +14,11 @@ class OPID
 	const NEW = 1;
 	const CLONE = 2;
 
+	const MEMBER_ACCESSING = 5;
+	const STATIC_ACCESSING = 6; // static member accessing
+
 	const REFERENCE = 20;
-	const IDENTITY = 21;
+	const IDENTITY = 21;  		// conversion of string to int/float, eg. +"123" to 123
 	const NEGATION = 22;
 	const BITWISE_NOT = 23;
 	const BOOL_NOT = 24;
@@ -25,8 +28,7 @@ class OPID
 	const POST_INCREMENT = 32;
 	const POST_DECREMENT = 33;
 
-	const DOT = 40;
-	const CAST = 41;
+	const AS = 41;
 	const PIPE = 42;
 
 	const EXPONENTIATION = 50;
@@ -66,14 +68,27 @@ class OPID
 	const TERNARY = 111;
 
 	const ASSIGNMENT = 201;
+	const ADD_ASSIGNMENT = 202;
+	const SUB_ASSIGNMENT = 203;
+	const MUL_ASSIGNMENT = 204;
+	const DIV_ASSIGNMENT = 205;
+	const EXPONENT_ASSIGNMENT = 206;
+	const CONCAT_ASSIGNMENT = 207;
+	const REM_ASSIGNMENT = 208;
+	const BITAND_ASSIGNMENT = 209;
+	const BITOR_ASSIGNMENT = 210;
+	const BITXOR_ASSIGNMENT = 211;
+	const SHL_ASSIGNMENT = 212;
+	const SHR_ASSIGNMENT = 213;
+	const NULL_COALESCE_ASSIGNMENT = 214;
 
-	const YIELD_FROM = 210;
-	const YIELD = 211;
-	const PRINT = 212;
+	const YIELD_FROM = 220;
+	const YIELD = 221;
+	const PRINT = 222;
 
-	const LOW_BOOL_AND = 220;
-	const LOW_BOOL_XOR = 221;
-	const LOW_BOOL_OR = 222;
+	const LOW_BOOL_AND = 230;
+	const LOW_BOOL_XOR = 231;
+	const LOW_BOOL_OR = 232;
 }
 
 // end

@@ -11,26 +11,30 @@ namespace Tea;
 
 class OperatorFactory
 {
-	public static $cast;
-	public static $concat;
-	public static $array_concat;
-	public static $merge;
-	public static $none_coalescing;
-	public static $ternary; // exp0 ? exp1 : exp2, or exp0 ?: exp1
+	public static $member_accessing;
+	public static $static_accessing;
+	public static $as;
+	public static $pipe;
 
-	public static $exponentiation;
 	public static $identity;
 	public static $negation;
 	public static $pre_increment;
-	public static $post_increment;
 	public static $pre_decrement;
+
+	public static $post_increment;
 	public static $post_decrement;
+
+	public static $exponentiation;
 	public static $addition;
 	public static $subtraction;
 	public static $multiplication;
 	public static $division;
 	public static $remainder;
 	public static $spaceship;
+
+	public static $concat;
+	public static $array_concat;
+	// public static $merge;
 
 	public static $bitwise_not;
 	public static $bitwise_and;
@@ -48,13 +52,20 @@ class OperatorFactory
 	public static $not_equal;
 	public static $not_identical;
 	public static $is;
+
 	public static $bool_not;
 	public static $bool_and;
 	// static $bool_xor;
 	public static $bool_or;
+
+	public static $none_coalescing;
+	public static $ternary; 		// exp0 ? exp1 : exp2, or exp0 ?: exp1
+
 	public static $low_bool_and;
 	public static $low_bool_xor;
 	public static $low_bool_or;
+
+// ---
 
 	private static $operator_map = [];
 
@@ -75,9 +86,11 @@ class OperatorFactory
 		self::create_operator(OPID::NEW);
 		self::create_operator(OPID::CLONE);
 
-		self::create_operator(OPID::DOT);
-		self::$cast = self::create_operator(OPID::CAST);
-		self::create_operator(OPID::PIPE);
+		self::$member_accessing = self::create_operator(OPID::MEMBER_ACCESSING);
+		self::$static_accessing = self::create_operator(OPID::STATIC_ACCESSING);
+
+		self::$as = self::create_operator(OPID::AS);
+		self::$pipe = self::create_operator(OPID::PIPE);
 
 		self::create_operator(OPID::REFERENCE);
 		self::$identity = self::create_operator(OPID::IDENTITY);
@@ -101,7 +114,7 @@ class OperatorFactory
 
 		self::$concat = self::create_operator(OPID::CONCAT);
 		self::$array_concat = self::create_operator(OPID::ARRAY_CONCAT);
-		self::$merge = self::create_operator(OPID::MERGE);
+		// self::$merge = self::create_operator(OPID::MERGE);
 
 		self::$shift_left = self::create_operator(OPID::SHIFT_LEFT);
 		self::$shift_right = self::create_operator(OPID::SHIFT_RIGHT);
@@ -129,6 +142,19 @@ class OperatorFactory
 		self::$ternary = self::create_operator(OPID::TERNARY);
 
 		self::create_operator(OPID::ASSIGNMENT);
+		self::create_operator(OPID::ADD_ASSIGNMENT);
+		self::create_operator(OPID::SUB_ASSIGNMENT);
+		self::create_operator(OPID::MUL_ASSIGNMENT);
+		self::create_operator(OPID::DIV_ASSIGNMENT);
+		self::create_operator(OPID::EXPONENT_ASSIGNMENT);
+		self::create_operator(OPID::CONCAT_ASSIGNMENT);
+		self::create_operator(OPID::REM_ASSIGNMENT);
+		self::create_operator(OPID::BITAND_ASSIGNMENT);
+		self::create_operator(OPID::BITOR_ASSIGNMENT);
+		self::create_operator(OPID::BITXOR_ASSIGNMENT);
+		self::create_operator(OPID::SHL_ASSIGNMENT);
+		self::create_operator(OPID::SHR_ASSIGNMENT);
+		self::create_operator(OPID::NULL_COALESCE_ASSIGNMENT);
 
 		self::create_operator(OPID::YIELD_FROM);
 		self::create_operator(OPID::YIELD);
@@ -147,13 +173,15 @@ class OperatorFactory
 	{
 		// number
 		self::$number_operators = [
-			self::$exponentiation,
 			self::$identity,
 			self::$negation,
 			self::$pre_increment,
-			self::$post_increment,
 			self::$pre_decrement,
+
+			self::$post_increment,
 			self::$post_decrement,
+
+			self::$exponentiation,
 			self::$addition,
 			self::$subtraction,
 			self::$multiplication,
@@ -249,6 +277,7 @@ class OperatorFactory
 
 				$sign = $opt[0];
 				$type = $opt[1];
+				$operator->type = $type;
 				$operator->tea_sign = $sign;
 				$operator->tea_assoc = $opt[2];
 				$operator->tea_prec = $prec;
@@ -260,6 +289,7 @@ class OperatorFactory
 					case OP_POST:
 						self::$tea_postfix_map[$sign] = $operator;
 						break;
+					case OP_ASSIGN:
 					case OP_BIN:
 					case OP_TERNARY:
 						self::$tea_normal_map[$sign] = $operator;
@@ -293,6 +323,7 @@ class OperatorFactory
 					case OP_POST:
 						self::$php_postfix_map[$sign] = $operator;
 						break;
+					case OP_ASSIGN:
 					case OP_BIN:
 					case OP_TERNARY:
 						self::$php_normal_map[$sign] = $operator;

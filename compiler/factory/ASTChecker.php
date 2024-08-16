@@ -13,7 +13,7 @@ class ASTChecker
 {
 	const NS_SEPARATOR = TeaParser::NS_SEPARATOR;
 
-	protected $is_weakly_typed_system = false;
+	protected $is_weakly_checking = false;
 
 	/**
 	 * the builtin unit
@@ -173,6 +173,9 @@ class ASTChecker
 
 			case ConstantDeclaration::KIND:
 				$this->check_constant_declaration($node);
+				break;
+			case SuperVariableDeclaration::KIND:
+				$this->check_variable_declaration($node);
 				break;
 
 			default:
@@ -745,9 +748,14 @@ class ASTChecker
 
 		// the accessing modifer
 		$super_modifier = $super->modifier ?? _PUBLIC;
-		$this_modifier = $node->modifier ?? _PUBLIC;
-		if ($super_modifier !== $this_modifier) {
-			throw $this->new_syntax_error("Modifier in '{$node->belong_block->name}.{$node->name}' must be same as '{$super->belong_block->name}.{$super->name}'", $node->belong_block);
+		$current_modifier = $node->modifier ?? _PUBLIC;
+		if ($super_modifier !== $current_modifier) {
+			if (($super_modifier === _PROTECTED || $super_modifier === _INTERNAL) && $current_modifier === _PUBLIC) {
+				// pass
+			}
+			else {
+				throw $this->new_syntax_error("Modifier in '{$node->belong_block->name}.{$node->name}' must be same as '{$super->belong_block->name}.{$super->name}'", $node);
+			}
 		}
 
 		$covariance_mode = false;
@@ -837,7 +845,7 @@ class ASTChecker
 	{
 		$result_type = $this->infer_base_if_block($node);
 
-		if ($node->except) {
+		if ($node->has_exceptional()) {
 			$result_type = $this->reduce_types_with_except_block($node, $result_type);
 		}
 
@@ -945,31 +953,25 @@ class ASTChecker
 		return $result_type;
 	}
 
-	protected function infer_except_block(IExceptBlock $node): ?IType
-	{
-		if ($node instanceof CatchBlock) {
-			$this->check_variable_declaration($node->var);
-			$result_type = $this->infer_block($node);
-
-			if ($node->except) {
-				$result_type = $this->reduce_types_with_except_block($node, $result_type);
-			}
-		}
-		else {
-			$result_type = $this->infer_block($node);
-		}
-
-		return $result_type;
-	}
-
 	private function reduce_types_with_except_block(IExceptAble $node, ?IType $previous_type)
 	{
-		$infered = $this->infer_except_block($node->except);
+		$types = [];
 		if ($previous_type) {
-			return $this->reduce_types([$previous_type, $infered]);
+			$types[] = $previous_type;
 		}
 
-		return $infered;
+		foreach ($node->catchings as $sub_block) {
+			$this->check_variable_declaration($sub_block->var);
+			$types[] = $this->infer_block($sub_block);
+		}
+
+		if ($node->finally) {
+			$types[] = $this->infer_block($node->finally);
+		}
+
+		$reduced = $this->reduce_types($types);
+
+		return $reduced;
 	}
 
 	private function infer_switch_block(SwitchBlock $node): ?IType
@@ -982,22 +984,12 @@ class ASTChecker
 
 		$infereds = [];
 		foreach ($node->branches as $branch) {
-			if ($branch->rule instanceof ExpressionList) {
-				foreach ($branch->rule->items as $rule_sub_expr) {
-					$case_type = $this->infer_expression($rule_sub_expr);
-					if (!TypeHelper::is_switch_compatible($matching_type, $case_type)) {
-						$matching_type_name = self::get_type_name($matching_type);
-						$case_type_name = self::get_type_name($case_type);
-						throw $this->new_syntax_error("Incompatible matching types, matching type is $matching_type_name, case type is $case_type_name", $rule_sub_expr);
-					}
-				}
-			}
-			else {
-				$case_type = $this->infer_expression($branch->rule);
+			foreach ($branch->rule_arguments as $argument) {
+				$case_type = $this->infer_expression($argument);
 				if (!TypeHelper::is_switch_compatible($matching_type, $case_type)) {
 					$matching_type_name = self::get_type_name($matching_type);
 					$case_type_name = self::get_type_name($case_type);
-					throw $this->new_syntax_error("Incompatible matching types, matching type is $matching_type_name, case type is $case_type_name", $branch->rule);
+					throw $this->new_syntax_error("Incompatible matching types, matching type is $matching_type_name, case type is $case_type_name", $argument);
 				}
 			}
 
@@ -1010,7 +1002,7 @@ class ASTChecker
 			$result_type = $this->reduce_types_with_else_block($node, $result_type);
 		}
 
-		if ($node->except) {
+		if ($node->has_exceptional()) {
 			$result_type = $this->reduce_types_with_except_block($node, $result_type);
 		}
 
@@ -1042,7 +1034,7 @@ class ASTChecker
 			$result_type = $this->reduce_types_with_else_block($node, $result_type);
 		}
 
-		if ($node->except) {
+		if ($node->has_exceptional()) {
 			$result_type = $this->reduce_types_with_except_block($node, $result_type);
 		}
 
@@ -1112,7 +1104,7 @@ class ASTChecker
 			$result_type = $this->reduce_types_with_else_block($node, $result_type);
 		}
 
-		if ($node->except) {
+		if ($node->has_exceptional()) {
 			$result_type = $this->reduce_types_with_except_block($node, $result_type);
 		}
 
@@ -1124,7 +1116,7 @@ class ASTChecker
 		$this->infer_expression($node->condition);
 		$result_type = $this->infer_block($node);
 
-		if ($node->except) {
+		if ($node->has_exceptional()) {
 			$result_type = $this->reduce_types_with_except_block($node, $result_type);
 		}
 
@@ -1135,7 +1127,7 @@ class ASTChecker
 	{
 		$result_type = $this->infer_block($node);
 
-		if ($node->except) {
+		if ($node->has_exceptional()) {
 			$result_type = $this->reduce_types_with_except_block($node, $result_type);
 		}
 
@@ -1146,7 +1138,7 @@ class ASTChecker
 	{
 		$result_type = $this->infer_block($node);
 
-		if ($node->except) {
+		if ($node->has_exceptional()) {
 			$result_type = $this->reduce_types_with_except_block($node, $result_type);
 		}
 
@@ -1184,6 +1176,14 @@ class ASTChecker
 		return $infereds ? $this->reduce_types($infereds, $block) : null;
 	}
 
+	private function is_control_transfering(IStatement $node)
+	{
+		return $node instanceof ExitStatement
+			|| $node instanceof ReturnStatement
+			|| $node instanceof ThrowStatement
+		;
+	}
+
 	private function infer_statement(IStatement $node): ?IType
 	{
 		switch ($node::KIND) {
@@ -1191,14 +1191,9 @@ class ASTChecker
 				$this->infer_expression($node->expression);
 				break;
 
-			case Assignment::KIND:
-			case CompoundAssignment::KIND:
-				$this->check_assignment($node);
-				break;
-
-			case ArrayElementAssignment::KIND:
-				$this->check_array_element_assignment($node);
-				break;
+			// case ArrayElementAssignment::KIND:
+			// 	$this->check_array_element_assignment($node);
+			// 	break;
 
 			case EchoStatement::KIND:
 				$this->check_echo_statement($node);
@@ -1223,7 +1218,7 @@ class ASTChecker
 				$this->check_exit_statement($node);
 			case BreakStatement::KIND:
 			case ContinueStatement::KIND:
-				$node->condition && $this->check_condition_clause($node);
+				// $node->condition && $this->check_condition_clause($node);
 				break;
 
 			case UnsetStatement::KIND:
@@ -1254,10 +1249,6 @@ class ASTChecker
 			case UseStatement::KIND:
 				break;
 
-			// case SuperVariableDeclaration::KIND:
-			// 	$this->check_variable_declaration($node);
-			// 	break;
-
 			// case CoroutineBlock::KIND:
 			// 	$this->check_coroutine_block($node);
 			// 	break;
@@ -1286,7 +1277,7 @@ class ASTChecker
 	private function check_throw_statement(ThrowStatement $node)
 	{
 		$this->infer_expression($node->argument);
-		$node->condition && $this->check_condition_clause($node);
+		// $node->condition && $this->check_condition_clause($node);
 
 		$node->belong_block->is_returned = true;
 	}
@@ -1294,7 +1285,7 @@ class ASTChecker
 	private function infer_return_statement(ReturnStatement $node)
 	{
 		$infered = $node->argument ? $this->infer_expression($node->argument) : null;
-		$node->condition && $this->check_condition_clause($node);
+		// $node->condition && $this->check_condition_clause($node);
 
 		$node->belong_block->is_returned = true;
 
@@ -1304,7 +1295,7 @@ class ASTChecker
 	private function check_exit_statement(ExitStatement $node)
 	{
 		$node->argument === null || $this->expect_infered_type($node->argument, TypeFactory::$_uint, TypeFactory::$_int);
-		$node->condition && $this->check_condition_clause($node);
+		// $node->condition && $this->check_condition_clause($node);
 
 		$node->belong_block->is_returned = true;
 	}
@@ -1319,10 +1310,10 @@ class ASTChecker
 		}
 	}
 
-	private function check_condition_clause(PostConditionAbleStatement $node)
-	{
-		$this->infer_expression($node->condition);
-	}
+	// private function check_condition_clause(PostConditionAbleStatement $node)
+	// {
+	// 	$this->infer_expression($node->condition);
+	// }
 
 	private function check_var_statement(VarStatement $node)
 	{
@@ -1338,86 +1329,31 @@ class ASTChecker
 		}
 	}
 
-	private function check_array_element_assignment(ArrayElementAssignment $node)
-	{
-		$master_type = $this->infer_expression($node->master);
+	// private function check_array_element_assignment(ArrayElementAssignment $node)
+	// {
+	// 	$master_type = $this->infer_expression($node->master);
 
-		if (!$master_type) {
-			throw $this->new_syntax_error("identifier '{$node->master->name}' not defined", $node->master);
-		}
+	// 	if (!$master_type) {
+	// 		throw $this->new_syntax_error("identifier '{$node->master->name}' not defined", $node->master);
+	// 	}
 
-		if (!$master_type instanceof ArrayType && $master_type !== TypeFactory::$_any) {
-			throw $this->new_syntax_error("Cannot assign with element accessing for type '{$master_type->name}' expression", $node->master);
-		}
+	// 	if (!$master_type instanceof ArrayType && $master_type !== TypeFactory::$_any) {
+	// 		throw $this->new_syntax_error("Cannot assign with element accessing for type '{$master_type->name}' expression", $node->master);
+	// 	}
 
-		if ($node->key) {
-			$key_type = $this->infer_expression($node->key);
-			if ($key_type !== TypeFactory::$_uint) {
-				throw $this->new_syntax_error("Type for Array key expression should be int", $node);
-			}
-		}
+	// 	if ($node->key) {
+	// 		$key_type = $this->infer_expression($node->key);
+	// 		if ($key_type !== TypeFactory::$_uint) {
+	// 			throw $this->new_syntax_error("Type for Array key expression should be int", $node);
+	// 		}
+	// 	}
 
-		// check the value type is valid
-		$infered = $this->infer_expression($node->value);
-		if ($master_type !== TypeFactory::$_any && $master_type->generic_type) {
-			$this->assert_type_compatible($master_type->generic_type, $infered, $node->value);
-		}
-	}
-
-	private function check_assignment(IAssignment $node)
-	{
-		$infered = $this->infer_expression($node->value);
-
-		if ($infered === TypeFactory::$_void) {
-			throw $this->new_syntax_error("Cannot use the Void type as a value", $node->value);
-		}
-
-		$master = $node->master;
-
-		if ($master instanceof AccessingIdentifier) {
-			$master_type = $this->infer_accessing_identifier($master);
-		}
-		elseif ($master instanceof KeyAccessing) {
-			$master_type = $this->infer_key_accessing($master); // it should be not null
-
-			// // for generates the use-variables for lambda
-			// if (isset($master->left->lambda)) {
-			// 	$master->left->lambda->mutating_variable_names[] = $master->left->name;
-			// }
-		}
-		elseif ($master instanceof SquareAccessing) {
-			$master_type = $this->infer_square_accessing($master); // it should be not null
-		}
-		else {
-			// the PlainIdentifier
-			$master_type = $master->symbol->declaration->declared_type;
-
-			// // for generates the use-variables for lambda
-			// if (isset($master->lambda)) {
-			// 	$master->lambda->mutating_variable_names[] = $master->name;
-			// }
-		}
-
-		if (!ASTHelper::is_assignable_expr($master)) {
-			if ($master instanceof KeyAccessing) {
-				throw $this->new_syntax_error("Cannot change a immutable item", $master->left);
-			}
-			elseif ($master instanceof SquareAccessing) {
-				throw $this->new_syntax_error("Cannot change a immutable item", $master);
-			}
-			else {
-				throw $this->new_syntax_error("Cannot assign to a final(un-reassignable) item", $master);
-			}
-		}
-
-		if ($master_type) {
-			$this->assert_type_compatible($master_type, $infered, $node->value);
-		}
-		else {
-			// just for the undeclared var
-			$master->symbol->declaration->infered_type = $infered;
-		}
-	}
+	// 	// check the value type is valid
+	// 	$infered = $this->infer_expression($node->value);
+	// 	if ($master_type !== TypeFactory::$_any && $master_type->generic_type) {
+	// 		$this->assert_type_compatible($master_type->generic_type, $infered, $node->value);
+	// 	}
+	// }
 
 	private function infer_expression(BaseExpression $node): IType
 	{
@@ -1497,20 +1433,25 @@ class ASTChecker
 			case PipeCallExpression::KIND:
 				$infered = $this->infer_pipecall_expression($node);
 				break;
+
+			case AssignmentOperation::KIND:
+				$infered = $this->infer_assignment_operation($node);
+				break;
 			case BinaryOperation::KIND:
 				$infered = $this->infer_binary_operation($node);
+				break;
+			case AsOperation::KIND:
+				$infered = $this->infer_as_operation($node);
+				break;
+			case IsOperation::KIND:
+				$infered = $this->infer_is_operation($node);
 				break;
 			case PrefixOperation::KIND:
 				$infered = $this->infer_prefix_operation($node);
 				break;
+
 			case Parentheses::KIND:
 				$infered = $this->infer_expression($node->expression);
-				break;
-			case CastOperation::KIND:
-				$infered = $this->infer_cast_operation($node);
-				break;
-			case IsOperation::KIND:
-				$infered = $this->infer_is_operation($node);
 				break;
 			// case StringInterpolation::KIND:
 			// 	$infered = $this->infer_expression($node->expression);
@@ -1536,9 +1477,9 @@ class ASTChecker
 			// case NamespaceIdentifier::KIND:
 			// 	$infered = $this->infer_namespace_identifier($node);
 			//	break;
-			// case IncludeExpression::KIND:
-			// 	$infered = $this->infer_include_expression($node);
-			// 	break;
+			case IncludeExpression::KIND:
+				$infered = $this->infer_include_expression($node);
+				break;
 			case YieldExpression::KIND:
 				$infered = $this->infer_yield_expression($node);
 				break;
@@ -1665,6 +1606,65 @@ class ASTChecker
 		return $infered ?? TypeFactory::$_any;
 	}
 
+	private function infer_assignment_operation(AssignmentOperation $node)
+	{
+		$master = $node->left;
+		$value = $node->right;
+		$infered = $this->infer_expression($value);
+
+		if ($infered === TypeFactory::$_void) {
+			throw $this->new_syntax_error("Cannot use a Void type as value", $value);
+		}
+
+		if ($master instanceof AccessingIdentifier) {
+			$master_type = $this->infer_accessing_identifier($master);
+		}
+		elseif ($master instanceof KeyAccessing) {
+			$master_type = $this->infer_key_accessing($master); // it should be not null
+
+			// // for generates the use-variables for lambda
+			// if (isset($master->left->lambda)) {
+			// 	$master->left->lambda->mutating_variable_names[] = $master->left->name;
+			// }
+		}
+		elseif ($master instanceof SquareAccessing) {
+			$master_type = $this->infer_square_accessing($master); // it should be not null
+		}
+		elseif ($master instanceof PlainIdentifier) {
+			$master_type = $master->symbol->declaration->declared_type;
+
+			// // for generates the use-variables for lambda
+			// if (isset($master->lambda)) {
+			// 	$master->lambda->mutating_variable_names[] = $master->name;
+			// }
+		}
+		else {
+			throw $this->new_syntax_error("Required assignable expression", $value);
+		}
+
+		if (!ASTHelper::is_assignable_expr($master)) {
+			if ($master instanceof KeyAccessing) {
+				throw $this->new_syntax_error("Cannot change a immutable item", $master->left);
+			}
+			elseif ($master instanceof SquareAccessing) {
+				throw $this->new_syntax_error("Cannot change a immutable item", $master);
+			}
+			else {
+				throw $this->new_syntax_error("Cannot assign to a final(un-reassignable) item", $master);
+			}
+		}
+
+		if ($master_type) {
+			$this->assert_type_compatible($master_type, $infered, $value);
+		}
+		else {
+			// just for the undeclared var
+			$master->symbol->declaration->infered_type = $infered;
+		}
+
+		return $infered;
+	}
+
 	private function infer_binary_operation(BinaryOperation $node): IType
 	{
 		$operator = $node->operator;
@@ -1737,7 +1737,7 @@ class ASTChecker
 		return $infered;
 	}
 
-	private function infer_cast_operation(CastOperation $node): IType
+	private function infer_as_operation(AsOperation $node): IType
 	{
 		$this->infer_expression($node->left);
 		$this->check_type($node->right, null);
@@ -2079,7 +2079,17 @@ class ASTChecker
 		return TypeFactory::$_any;
 	}
 
-	// private function infer_include_expression(IncludeExpression $node): ?IType
+	private function infer_include_expression(IncludeExpression $node): ?IType
+	{
+		$infered = $this->infer_expression($node->target);
+		if (!$infered instanceof StringType) {
+			throw $this->new_syntax_error("Expected String type expression", $node->target);
+		}
+
+		return TypeFactory::$_any;
+	}
+
+	// private function infer_include_target(IncludeExpression $node): ?IType
 	// {
 	// 	$including = $this->program;
 	// 	$program = $this->require_program_declaration($node->target, $node);
@@ -2497,7 +2507,11 @@ class ASTChecker
 
 	private function infer_variable_identifier(VariableIdentifier $node): IType
 	{
-		return $this->attach_symbol($node)->declaration->get_type();
+		if ($node->symbol === null) {
+			$this->attach_symbol($node);
+		}
+
+		return $node->symbol->declaration->get_type();
 	}
 
 	private function infer_xtag(XTag $node)
@@ -3035,7 +3049,7 @@ class ASTChecker
 		if ($symbol === null) {
 			$symbol = $this->find_symbol_for_plain_identifier($identifier);
 			if ($symbol === null) {
-				if (!$required and $this->is_weakly_typed_system) {
+				if (!$required and $this->is_weakly_checking) {
 					return null;
 				}
 
@@ -3092,7 +3106,7 @@ class ASTChecker
 		if ($use->source_declaration === null) {
 			$unit = $this->get_uses_unit_declaration($use->ns);
 			if ($unit === null) {
-				throw $this->new_syntax_error("Unit '{$use->ns->uri}' not found", $use->ns);
+				throw $this->new_syntax_error("Package '{$use->ns->uri}' not found", $use->ns);
 			}
 
 			$this->attach_source_declaration_for_use($use, $unit);
@@ -3194,7 +3208,7 @@ class ASTChecker
 				$place .= " of '$node->name'";
 			}
 
-			$place = "Near $place";
+			$place = "Near $place on check {$this->program->name}";
 		}
 
 		$message = "Syntax check error:\n{$place}\n{$message}";

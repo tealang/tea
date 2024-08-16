@@ -13,10 +13,15 @@ class VarStatement extends BaseStatement
 {
 	const KIND = 'var_statement';
 
+	/**
+	 * @var VariableDeclaration[]
+	 */
 	public $members;
 
-	public function __construct(VariableDeclaration ...$members)
+	public function __construct(array $members)
 	{
 		$this->members = $members;
 	}
 }
+
+// end

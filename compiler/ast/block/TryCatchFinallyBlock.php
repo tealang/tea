@@ -19,10 +19,8 @@ class TryBlock extends ControlBlock implements IExceptAble
 	const KIND = 'try_block';
 }
 
-class CatchBlock extends ControlBlock implements IExceptBlock, IExceptAble
+class CatchBlock extends ControlBlock
 {
-	use ExceptTrait;
-
 	const KIND = 'catch_block';
 
 	public $var;
@@ -33,18 +31,31 @@ class CatchBlock extends ControlBlock implements IExceptBlock, IExceptAble
 	}
 }
 
-class FinallyBlock extends ControlBlock implements IExceptBlock
+class FinallyBlock extends ControlBlock
 {
 	const KIND = 'finally_block';
 }
 
 trait ExceptTrait
 {
-	public $except;
+	public $catchings = [];
 
-	public function set_except_block(IExceptBlock $except)
+	public $finally;
+
+	public function has_exceptional()
 	{
-		$this->except = $except;
+		return $this->catchings && $this->finally;
+	}
+
+	public function add_catching_block(CatchBlock $block)
+	{
+		$this->catchings[] = $block;
+	}
+
+	public function set_finally_block(FinallyBlock $block)
+	{
+		$this->finally = $block;
 	}
 }
 
+// end

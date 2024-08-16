@@ -66,7 +66,7 @@ trait TeaStringTrait
 		if (empty($items)) {
 			$expression = new PlainLiteralString(_NOTHING);
 		}
-		elseif (!isset($items[1]) && is_string($items[0])) {
+		elseif (count($items) === 1 && is_string($items[0])) {
 			$expression = new EscapedLiteralString($items[0]);
 		}
 		else {

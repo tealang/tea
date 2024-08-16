@@ -9,7 +9,7 @@
 
 namespace Tea;
 
-class UnsetStatement extends PostConditionAbleStatement
+class UnsetStatement extends BaseStatement
 {
 	const KIND = 'unset_statement';
 
