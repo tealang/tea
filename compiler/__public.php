@@ -236,6 +236,7 @@ const __AUTOLOADS = [
 	'Tea\DictMember' => 'ast/expression/ArrayDictExpression.php',
 	'Tea\BaseExpression' => 'ast/expression/BaseExpression.php',
 	'Tea\BaseCallExpression' => 'ast/expression/CallExpression.php',
+	'Tea\NewExpression' => 'ast/expression/CallExpression.php',
 	'Tea\PipeCallExpression' => 'ast/expression/CallExpression.php',
 	'Tea\CallExpression' => 'ast/expression/CallExpression.php',
 	'Tea\CallbackArgument' => 'ast/expression/CallExpression.php',

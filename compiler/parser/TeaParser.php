@@ -885,7 +885,7 @@ class TeaParser extends BaseParser
 		return $expression;
 	}
 
-	protected function read_argument()
+	protected function try_read_argument()
 	{
 		$token = $this->scan_token_ignore_empty();
 		if ($token === null or in_array($token, static::EXPR_STOPPING_SIGNS, true)) {
@@ -1262,9 +1262,8 @@ class TeaParser extends BaseParser
 
 	protected function read_object_expression()
 	{
-		$class = $this->factory->create_virtual_class_declaration();
+		$class = $this->factory->create_object_virtual_class();
 
-		$items = [];
 		while ($key = $this->read_object_key()) {
 			$this->expect_token_ignore_space(_COLON);
 
@@ -1274,14 +1273,10 @@ class TeaParser extends BaseParser
 				$key = $key->value;
 			}
 
-			if (array_key_exists($key, $items)) {
-				throw $this->new_unexpected_error("Key can not be duplicated");
-			}
-
-			$member = $this->factory->create_property_declaration_for_virtual_class($quote_mark, $key);
+			$member = $this->factory->create_object_property($quote_mark, $key);
 
 			if (!$class->append_member($member)) {
-				throw $this->parser->new_parse_error("Class member '{$member->name}' of '{$class->name}' has duplicated");
+				throw $this->parser->new_parse_error("The object member '{$member->name}' is duplicated");
 			}
 
 			$val = $this->read_expression();
@@ -1791,7 +1786,7 @@ class TeaParser extends BaseParser
 	{
 		$has_label = false;
 		$items = [];
-		while ($item = $this->read_argument()) {
+		while ($item = $this->try_read_argument()) {
 			if (isset($item->label)) {
 				// the labeled argument
 				if (isset($items[$item->label])) {

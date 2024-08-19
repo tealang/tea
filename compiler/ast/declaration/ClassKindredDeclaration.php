@@ -105,6 +105,8 @@ class ClassDeclaration extends ClassKindredDeclaration implements ICallableDecla
 
 	public $is_final;
 
+	public $is_dynamic;
+
 	public function find_based_with_symbol(Symbol $symbol)
 	{
 		// check the extends class first

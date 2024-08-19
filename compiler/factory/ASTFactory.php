@@ -373,9 +373,10 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_virtual_class_declaration()
+	public function create_object_virtual_class()
 	{
 		$declaration = new ClassDeclaration(null, '__object_class');
+		$declaration->is_dynamic = true;
 
 		$symbol = new Symbol($declaration);
 		$this->bind_class_symbol($declaration, $symbol);
@@ -388,7 +389,7 @@ class ASTFactory
 		return $declaration;
 	}
 
-	public function create_property_declaration_for_virtual_class(?string $quote_mark, string $name)
+	public function create_object_property(?string $quote_mark, string $name)
 	{
 		$declaration = new ObjectMember($name, $quote_mark);
 		new Symbol($declaration);

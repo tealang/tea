@@ -13,7 +13,7 @@ class PHPChecker extends ASTChecker
 {
 	const NS_SEPARATOR = PHPParser::NS_SEPARATOR;
 
-	// protected $is_weakly_checking = true;
+	protected $is_weakly_checking = true;
 
 	// protected function infer_plain_identifier(PlainIdentifier $node): IType
 	// {
@@ -54,13 +54,13 @@ class PHPChecker extends ASTChecker
 	// 	return $symbol;
 	// }
 
-	protected function check_use_target(UseDeclaration $node)
-	{
-		$unit = $this->get_uses_unit_declaration($node->ns);
-		if ($unit !== null) {
-			$this->attach_source_declaration_for_use($node, $unit);
-		}
-	}
+	// protected function check_use_target(UseDeclaration $node)
+	// {
+	// 	$unit = $this->get_uses_unit_declaration($node->ns);
+	// 	if ($unit !== null) {
+	// 		$this->attach_source_declaration_for_use($node, $unit);
+	// 	}
+	// }
 
 	// protected function assert_member_declarations(IClassMemberDeclaration $node, IClassMemberDeclaration $super, bool $is_interface = false)
 	// {

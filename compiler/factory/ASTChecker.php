@@ -1430,6 +1430,9 @@ class ASTChecker
 			case CallExpression::KIND:
 				$infered = $this->infer_call_expression($node);
 				break;
+			case NewExpression::KIND:
+				$infered = $this->infer_new_expression($node);
+				break;
 			case PipeCallExpression::KIND:
 				$infered = $this->infer_pipecall_expression($node);
 				break;
@@ -2130,6 +2133,11 @@ class ASTChecker
 		return $program;
 	}
 
+	private function infer_new_expression(NewExpression $node): IType
+	{
+		return $this->infer_basecall_expression($node);
+	}
+
 	private function infer_pipecall_expression(PipeCallExpression $node): IType
 	{
 		return $this->infer_basecall_expression($node);
@@ -2143,8 +2151,6 @@ class ASTChecker
 	private function infer_basecall_expression(BaseCallExpression $node): IType
 	{
 		$callee_declar = $this->require_callee_declaration($node->callee);
-
-		// if $callee_declar is AnyType, do not has the type property
 		$callee_type = $callee_declar->get_type();
 
 		// cache for render
@@ -2773,6 +2779,10 @@ class ASTChecker
 		$node->symbol || $this->attach_symbol($node);
 
 		$declar = $node->symbol->declaration;
+		if ($declar === null) {
+			throw $this->new_syntax_error("Unknow declaration of expression", $node);
+		}
+
 		$return_type = $declar->get_type();
 		if ($declar instanceof ICallableDeclaration) {
 			$return_type === null && $this->check_callable_declaration($declar);
@@ -2872,18 +2882,26 @@ class ASTChecker
 			$classkindred = $master_type->symbol->declaration;
 			$symbol = $this->find_member_symbol_in_class_declaration($classkindred, $node->name);
 			if ($symbol === null) {
-				// if ($master_type === TypeFactory::$_any) {
-				// 	// let member type to Any on master is Any when member not defined
-				// 	$this->create_any_symbol_for_accessing_identifier($node);
-				// }
-				// else {
+				if ($classkindred->is_dynamic) {
+					$property = $this->create_dynamic_property($node->name, $classkindred);
+					$symbol = $property->symbol;
+				}
+				else {
 					throw $this->new_syntax_error("Member '{$node->name}' not found in '{$classkindred->name}'", $node);
-				// }
+				}
 			}
-			else {
-				$node->symbol = $symbol;
-			}
+
+			$node->symbol = $symbol;
 		}
+	}
+
+	private function create_dynamic_property(string $name, ClassDeclaration $class)
+	{
+		$property = new PropertyDeclaration(_PUBLIC, $name, TypeFactory::$_any);
+		$class->append_member($property);
+		new Symbol($property);
+
+		return $property;
 	}
 
 	private function attach_symbol_for_metatype_accessing_identifier(Node $node, MetaType $master_type) {
@@ -3105,11 +3123,12 @@ class ASTChecker
 	{
 		if ($use->source_declaration === null) {
 			$unit = $this->get_uses_unit_declaration($use->ns);
-			if ($unit === null) {
+			if ($unit) {
+				$this->attach_source_declaration_for_use($use, $unit);
+			}
+			elseif (!$this->is_weakly_checking) {
 				throw $this->new_syntax_error("Package '{$use->ns->uri}' not found", $use->ns);
 			}
-
-			$this->attach_source_declaration_for_use($use, $unit);
 		}
 
 		return $use->source_declaration;

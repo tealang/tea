@@ -43,12 +43,22 @@ abstract class BaseCallExpression extends BaseExpression
 	}
 }
 
+/**
+ * class instance creating expression
+ */
+class NewExpression extends BaseCallExpression
+{
+	const KIND = 'new_expression';
+}
+
 class PipeCallExpression extends BaseCallExpression
 {
 	const KIND = 'pipecall_expression';
 }
 
-// the normal call
+/**
+ * function calling / class instance creating expression
+ */
 class CallExpression extends BaseCallExpression
 {
 	const KIND = 'call_expression';
@@ -74,3 +84,5 @@ class CallbackArgument extends Node
 		$this->value = $value;
 	}
 }
+
+// end

@@ -11,6 +11,8 @@ namespace Tea;
 
 class OperatorFactory
 {
+	public static $new;
+	public static $clone;
 	public static $member_accessing;
 	public static $static_accessing;
 	public static $as;
@@ -83,8 +85,8 @@ class OperatorFactory
 
 	public static function init()
 	{
-		self::create_operator(OPID::NEW);
-		self::create_operator(OPID::CLONE);
+		self::$new = self::create_operator(OPID::NEW);
+		self::$clone = self::create_operator(OPID::CLONE);
 
 		self::$member_accessing = self::create_operator(OPID::MEMBER_ACCESSING);
 		self::$static_accessing = self::create_operator(OPID::STATIC_ACCESSING);
