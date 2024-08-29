@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -82,8 +80,7 @@ class Program extends Node
 	{
 		$unit_path = rtrim($this->unit->path, DS);
 
-		$i = 1;
-
+		$i = 0;
 		$count_path = dirname($this->file);
 		while ($unit_path !== $count_path) {
 			$i++;

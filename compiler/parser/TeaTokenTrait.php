@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -72,7 +70,7 @@ trait TeaTokenTrait
 
 	protected function skip_current_line()
 	{
-		$this->scan_to_token(LF);
+		$this->scan_to_end();
 		$this->scan_token(); // skip LF
 	}
 
@@ -235,20 +233,49 @@ trait TeaTokenTrait
 		}
 
 		if ($token === _BLOCK_COMMENT_OPEN) {
-			$this->scan_block_comment();
+			$this->scan_block_comment(true);
 			return $this->scan_token();
 		}
 
 		return $token;
 	}
 
-	protected function scan_line_comment_content()
+	protected function skip_comments()
 	{
-		return $this->scan_to_token(LF);
+		$this->pos_before_skiped_comments = $this->pos;
+
+		while ($token = $this->get_token_ignore_empty()) {
+			switch ($token) {
+	 			case _LINE_COMMENT_MARK:
+	 				$this->scan_token_ignore_empty();
+	 				$this->scan_to_end();
+					break;
+				case _BLOCK_COMMENT_OPEN:
+	 				$this->scan_token_ignore_empty();
+	 				$this->scan_block_comment(true);
+					break;
+				default:
+					return;
+			}
+		}
 	}
 
-	protected function scan_block_comment()
+	protected function scan_line_comment_inline(bool $opened = false)
 	{
+		if (!$opened && !$this->skip_token_ignore_empty(_LINE_COMMENT_MARK)) {
+			return;
+		}
+
+		$buffer = $this->scan_to_end();
+		return $buffer;
+	}
+
+	protected function scan_block_comment(bool $opened = false)
+	{
+		if (!$opened && !$this->skip_token_ignore_empty(_BLOCK_COMMENT_OPEN)) {
+			return;
+		}
+
 		$buffer = '';
 		while (($token = $this->get_token()) !== null) {
 			$buffer .= $token;
@@ -261,8 +288,12 @@ trait TeaTokenTrait
 		return $buffer;
 	}
 
-	protected function scan_doc_comment()
+	protected function scan_doc_comment(bool $opened = false)
 	{
+		if (!$opened && !$this->skip_token_ignore_empty(_DOC_MARK)) {
+			return;
+		}
+
 		$buffer = '';
 		while (($token = $this->get_token()) !== null) {
 			$buffer .= $token;
@@ -277,39 +308,64 @@ trait TeaTokenTrait
 
 	protected function scan_token_ignore_empty()
 	{
-		while (true) {
+		do {
 			$token = $this->scan_token();
-			if (!TeaHelper::is_space_tab_nl($token)) {
-				return $token;
-			}
 		}
+		while (TeaHelper::is_space_tab_nl($token));
+
+		return $token;
 	}
 
 	protected function scan_token_ignore_space()
 	{
-		while (true) {
+		do {
 			$token = $this->scan_token();
-			if (!TeaHelper::is_space_tab($token)) {
-				return $token;
-			}
 		}
+		while (TeaHelper::is_space_tab($token));
+
+		return $token;
+	}
+
+	protected function scan_empty_lines()
+	{
+		$num = 0;
+		do {
+			$token = $this->get_token();
+			if ($token === LF) {
+				$num++;
+			}
+			elseif (!TeaHelper::is_space_tab($token)) {
+				break;
+			}
+
+			$this->scan_token();
+		}
+		while (true);
+
+		return $num;
 	}
 
 	protected function scan_spaces()
 	{
-		$spaces = '';
-		while (true) {
+		$buffer = '';
+		do {
 			$token = $this->get_token();
 			if (TeaHelper::is_space_tab($token)) {
 				$this->scan_token();
-				$spaces .= $token;
+				$buffer .= $token;
 			}
 			else {
 				break;
 			}
 		}
+		while (true);
 
-		return $spaces;
+		return $buffer;
+	}
+
+	protected function scan_to_end()
+	{
+		return $this->scan_to_token(LF);
 	}
 
 	protected function scan_to_token(string $to)
@@ -442,6 +498,13 @@ trait TeaTokenTrait
 	// 	$this->skip_token_ignore_space(LF);
 	// }
 
+	protected function skip_block_begin()
+	{
+		$skiped = $this->skip_token_ignore_space(_BLOCK_BEGIN);
+		$skiped && $this->skip_token_ignore_space(LF);
+		return $skiped;
+	}
+
 	protected function expect_block_begin()
 	{
 		$this->expect_token_ignore_space(_BLOCK_BEGIN);
@@ -470,7 +533,7 @@ trait TeaTokenTrait
 		}
 		elseif ($token === _LINE_COMMENT_MARK) {
 			$this->scan_token_ignore_space(); // skip the _LINE_COMMENT_MARK
-			$this->scan_to_token(LF); // ignore the inline comment
+			$this->scan_to_end(); // ignore the inline comment
 			$this->scan_token_ignore_space(); // skip the LF
 		}
 		elseif ($token === _BLOCK_COMMENT_OPEN) {

@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -47,16 +45,17 @@ class TypeFactory
 	public static $_namespace;
 
 	public static $_iterator;
-	public static $_yield_generator;
+	public static $_generator;
 
 	// for check accepts
 	public static $_iview_symbol;
 
 	// for check Iterable type accepts
 	public static $_iterator_symbol;
-	public static $_yield_generator_symbol;
+	public static $_generator_symbol;
 
-	private static $type_map = [];
+	private static $_type_map = [];
+	private static $_casting_map;
 
 	public static function init()
 	{
@@ -87,7 +86,7 @@ class TypeFactory
 		self::$_array = self::create_type(ArrayType::class);
 		self::$_dict = self::create_type(DictType::class);
 		self::$_generalized_array = self::create_union_type([self::$_array, self::$_dict]);
-		self::$type_map[_GENERAL_ARRAY] = self::$_generalized_array;
+		self::$_type_map[_GENERAL_ARRAY] = self::$_generalized_array;
 
 		self::$_xview = self::create_type(XViewType::class);
 		self::$_regex = self::create_type(RegexType::class);
@@ -98,8 +97,18 @@ class TypeFactory
 		// self::$_dict_key = self::create_union_type([self::$_string, self::$_int]);
 
 		self::$_iterator = new ClassKindredIdentifier('Iterator');
-		// self::$_yield_generator = new ClassKindredIdentifier('YieldGenerator');
-		self::$_yield_generator = self::$_iterator;
+		// self::$_generator = new ClassKindredIdentifier('Generator');
+		self::$_generator = self::$_iterator;
+
+		self::$_casting_map = [
+			T_STRING_CAST => self::$_string,
+			T_INT_CAST => self::$_int,
+			T_DOUBLE_CAST => self::$_float,
+			T_BOOL_CAST => self::$_bool,
+			T_ARRAY_CAST => self::$_dict,
+			T_OBJECT_CAST => self::$_object,
+			T_UNSET_CAST => self::$_none,
+		];
 	}
 
 	public static function find_iterator_identifier(IType $type)
@@ -116,7 +125,7 @@ class TypeFactory
 
 	public static function set_symbols(Unit $unit)
 	{
-		foreach (self::$type_map as $type_name => $object) {
+		foreach (self::$_type_map as $type_name => $object) {
 			if (isset($unit->symbols[$type_name])) {
 				$object->symbol = $unit->symbols[$type_name];
 			}
@@ -124,23 +133,28 @@ class TypeFactory
 
 		self::$_iview_symbol = $unit->symbols['IView'] ?? null;
 		self::$_iterator_symbol = $unit->symbols['Iterator'] ?? null;
-		// self::$_yield_generator_symbol = $unit->symbols['YieldGenerator'] ?? null;
-		self::$_yield_generator_symbol = self::$_iterator_symbol;
+		// self::$_generator_symbol = $unit->symbols['Generator'] ?? null;
+		self::$_generator_symbol = self::$_iterator_symbol;
+	}
+
+	public static function get_for_casting_token_id(int $id)
+	{
+		return self::$_casting_map[$id] ?? null;
 	}
 
 	public static function exists_type(string $name): bool
 	{
-		return isset(self::$type_map[$name]);
+		return isset(self::$_type_map[$name]);
 	}
 
 	public static function get_type(string $name)
 	{
-		return self::$type_map[$name] ?? null;
+		return self::$_type_map[$name] ?? null;
 	}
 
 	public static function clone_type(string $name)
 	{
-		$type = self::$type_map[$name] ?? null;
+		$type = self::$_type_map[$name] ?? null;
 		if ($type !== null) {
 			$type = clone $type;
 		}
@@ -151,7 +165,7 @@ class TypeFactory
 	private static function create_type(string $class)
 	{
 		$type_object = new $class();
-		self::$type_map[$type_object->name] = $type_object;
+		self::$_type_map[$type_object->name] = $type_object;
 
 		return $type_object;
 	}

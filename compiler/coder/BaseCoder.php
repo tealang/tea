@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -523,11 +521,11 @@ abstract class BaseCoder
 
 	// public function render_array_element_assignment(ArrayElementAssignment $node)
 	// {
-	// 	$master = $node->master->render($this);
+	// 	$basing = $node->basing->render($this);
 	// 	$key = $node->key ? $node->key->render($this) : '';
 	// 	$value = $node->value->render($this);
 
-	// 	return "{$master}[{$key}] = {$value}" . static::STATEMENT_TERMINATOR;
+	// 	return "{$basing}[{$key}] = {$value}" . static::STATEMENT_TERMINATOR;
 	// }
 
 	public function render_assignment_operation(AssignmentOperation $node)
@@ -780,8 +778,8 @@ abstract class BaseCoder
 
 	public function render_accessing_identifier(AccessingIdentifier $node)
 	{
-		$master = $node->master->render($this);
-		return sprintf('%s%s%s', $master, static::OBJECT_MEMBER_OPERATOR, $node->name);
+		$basing = $node->basing->render($this);
+		return sprintf('%s%s%s', $basing, static::OBJECT_MEMBER_OPERATOR, $node->name);
 	}
 
 	public function render_class_new(BaseExpression $node)
@@ -834,10 +832,10 @@ abstract class BaseCoder
 
 	public function render_key_accessing(KeyAccessing $node)
 	{
-		$master = $node->left->render($this);
-		$key = $node->right->render($this);
+		$basing = $node->basing->render($this);
+		$key = $node->key->render($this);
 
-		return "{$master}[{$key}]";
+		return "{$basing}[{$key}]";
 	}
 
 	public function render_literal_default_mark(LiteralDefaultMark $node)
@@ -970,11 +968,11 @@ abstract class BaseCoder
 			return static::DICT_EMPTY_VALUE;
 		}
 
-		$body = $this->render_member_items($node->items, $node->is_vertical_layout);
+		$body = $this->render_dict_members($node->items, $node->is_vertical_layout);
 		return $this->wrap_dict($body);
 	}
 
-	protected function render_member_items(array $subnodes, bool $is_vertical_layout)
+	protected function render_dict_members(array $subnodes, bool $is_vertical_layout)
 	{
 		$items = [];
 		foreach ($subnodes as $subnode) {
@@ -1028,8 +1026,22 @@ abstract class BaseCoder
 
 	public function render_object_expression(BaseExpression $node)
 	{
-		$body = $this->render_member_items($node->class_declaration->members, $node->is_vertical_layout);
+		$body = $this->render_object_members($node->class_declaration->members, $node->is_vertical_layout);
 		return $this->wrap_object($body);
+	}
+
+	protected function render_object_members(array $subnodes, bool $is_vertical_layout)
+	{
+		$items = [];
+		foreach ($subnodes as $subnode) {
+			if ($subnode->is_dynamic) {
+				continue;
+			}
+
+			$items[] = $subnode->render($this);
+		}
+
+		return $this->join_member_items($items, $is_vertical_layout);
 	}
 
 	// public function render_functional_operation(FunctionalOperation $node)
@@ -1362,7 +1374,11 @@ abstract class BaseCoder
 
 	public function render_normal_statement(NormalStatement $statement)
 	{
-		return $statement->expression->render($this) . static::STATEMENT_TERMINATOR;
+		$expr = $statement->expression
+			? $statement->expression->render($this)
+			: '';
+
+		return $expr . static::STATEMENT_TERMINATOR;
 	}
 
 	public function render_function_body(IScopeBlock $node)

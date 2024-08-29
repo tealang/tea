@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -15,6 +13,24 @@ interface IElseBlock {}
 trait ElseTrait
 {
 	public $else;
+
+	public function get_else_branches()
+	{
+		$items = [];
+
+		$branch = $this->else;
+		while ($branch) {
+			$items[] = $branch;
+			if ($branch instanceof ElseIfBlock) {
+				$branch = $branch->else;
+			}
+			else {
+				break;
+			}
+		}
+
+		return $items;
+	}
 
 	public function set_else_block(IElseBlock $else)
 	{

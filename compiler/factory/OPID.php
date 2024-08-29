@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -27,6 +25,8 @@ class OPID
 	const PRE_DECREMENT = 31;
 	const POST_INCREMENT = 32;
 	const POST_DECREMENT = 33;
+
+	const ERROR_CONTROL = 34;
 
 	const AS = 41;
 	const PIPE = 42;
@@ -89,6 +89,8 @@ class OPID
 	const LOW_BOOL_AND = 230;
 	const LOW_BOOL_XOR = 231;
 	const LOW_BOOL_OR = 232;
+
+	const SPREAD = 250;
 }
 
 // end

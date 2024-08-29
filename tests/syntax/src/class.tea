@@ -53,7 +53,7 @@ internal Test1: IterableObject, IDemo {
 	}
 
 	static static_method() {
-		echo this.CONST1
+		return this.CONST1
 	}
 
 	static get_closure() {
@@ -65,7 +65,8 @@ echo "# start to run closure"
 Test1.get_closure()()::var_dump
 echo "# finished run closure"
 
-var t1 = Test1('some')
+var newable = Test1
+var t1 = newable('some')
 var t1_1 = clone t1
 echo t1_1.get_class_name('Unknow')
 

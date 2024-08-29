@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -17,6 +15,11 @@ class TryBlock extends ControlBlock implements IExceptAble
 	use ExceptTrait;
 
 	const KIND = 'try_block';
+
+	/**
+	 * @var CatchBlock
+	 */
+	public $catching_all;
 }
 
 class CatchBlock extends ControlBlock
@@ -44,7 +47,7 @@ trait ExceptTrait
 
 	public function has_exceptional()
 	{
-		return $this->catchings && $this->finally;
+		return $this->catchings || $this->finally;
 	}
 
 	public function add_catching_block(CatchBlock $block)

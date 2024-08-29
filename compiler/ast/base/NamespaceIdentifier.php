@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -30,8 +28,7 @@ class NamespaceIdentifier extends Node
 
 	public function __construct(array $names)
 	{
-		$this->names = $names;
-		$this->uri = join(TeaParser::NS_SEPARATOR, $names);
+		$this->set_names($names);
 	}
 
 	public function set_based_unit(Unit $unit)
@@ -42,6 +39,12 @@ class NamespaceIdentifier extends Node
 	public function set_names(array $names)
 	{
 		$this->names = $names;
+		$this->uri = join(TeaParser::NS_SEPARATOR, $names);
+	}
+
+	public function is_global_space()
+	{
+		return $this->uri === '';
 	}
 
 	public function get_last_name()

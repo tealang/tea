@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -25,28 +23,24 @@ abstract class BaseCallExpression extends BaseExpression
 
 	public $infered_callee_declaration;
 
+	/**
+	 * when creating class instance, set to true
+	 * @var bool
+	 */
+	public $is_instancing;
+
 	public function __construct(BaseExpression $callee, array $arguments)
 	{
-		if ($callee instanceof PlainIdentifier) {
-			$callee->is_calling = true;
-		}
-
+		$callee->is_calling = true;
 		$this->callee = $callee;
 		$this->arguments = $arguments;
-	}
-
-	public function is_class_new()
-	{
-		$declar = $this->infered_callee_declaration;
-		return $declar instanceof ClassDeclaration
-			|| ($declar instanceof IVariableDeclaration && $declar->declared_type instanceof MetaType);
 	}
 }
 
 /**
  * class instance creating expression
  */
-class NewExpression extends BaseCallExpression
+class InstancingExpression extends BaseCallExpression
 {
 	const KIND = 'new_expression';
 }

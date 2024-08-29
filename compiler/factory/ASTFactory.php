@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -32,9 +30,17 @@ class ASTFactory
 
 	private $declaration;
 
+	/**
+	 * current classkindred
+	 * @var ClasskindredDeclaration
+	 */
 	private $class;
 
-	private $function;
+	// /**
+	//  * current function or method
+	//  * @var IFunctionDeclaration
+	//  */
+	// private $function;
 
 	/**
 	 * current function or lambda
@@ -68,7 +74,7 @@ class ASTFactory
 
 
 		// use for untyped catch
-		$this->base_exception_identifier = new ClassKindredIdentifier('Exception');
+		$this->base_exception_identifier = new ClassKindredIdentifier(_BASE_EXCEPTION);
 	}
 
 	public function set_as_main()
@@ -132,6 +138,16 @@ class ASTFactory
 		return $declaration;
 	}
 
+	public function create_break_statement(?BaseExpression $argument = null)
+	{
+		return new BreakStatement($argument, $this->block);
+	}
+
+	public function create_continue_statement(?BaseExpression $argument = null)
+	{
+		return new ContinueStatement($argument, $this->block);
+	}
+
 	public function create_return_statement(?BaseExpression $argument)
 	{
 		return new ReturnStatement($argument, $this->block);
@@ -147,9 +163,9 @@ class ASTFactory
 		return new ExitStatement($argument, $this->block);
 	}
 
-	public function create_accessing_identifier(BaseExpression $master, string $name)
+	public function create_accessing_identifier(BaseExpression $basing, string $name)
 	{
-		return new AccessingIdentifier($master, $name);
+		return new AccessingIdentifier($basing, $name);
 	}
 
 	public function create_classkindred_identifier(string $name)
@@ -199,7 +215,8 @@ class ASTFactory
 				$identifier = new PlainIdentifier($token);
 				if ($this->class) {
 					// function/const/property declaration
-					$declar = $this->function ?? $this->declaration;
+					$declar = $this->declaration;
+					// $declar = $this->function ?? $this->declaration;
 					$identifier->symbol = $declar->is_static
 						? $this->class->this_class_symbol
 						: $this->class->this_object_symbol;
@@ -211,13 +228,8 @@ class ASTFactory
 				break;
 			case _SUPER:
 				$identifier = new PlainIdentifier($token);
-				if ($this->class) {
-					if ($this->function !== $this->scope) { // it is would be in a lambda block
-						throw $this->parser->new_parse_error("Cannot use '$token' identifier in lambda functions");
-					}
-				}
-				else {
-					throw $this->parser->new_parse_error("Identifier '$token' cannot use without in a class");
+				if (!$this->class) {
+					throw $this->parser->new_parse_error("Identifier '$token' required use in class context");
 				}
 				break;
 			case _VAL_NONE:
@@ -257,8 +269,12 @@ class ASTFactory
 
 	public function create_yield_expression(BaseExpression $argument)
 	{
-		// force set type YieldGenerator to current function
-		$this->function->declared_type = TypeFactory::$_yield_generator;
+		if ($this->declaration instanceof IFunctionDeclaration) {
+			$this->declaration->declared_type = TypeFactory::$_generator;
+		}
+
+		// force set type Generator to current function
+		// $this->function->declared_type = TypeFactory::$_generator;
 
 		return new YieldExpression($argument);
 	}
@@ -282,46 +298,70 @@ class ASTFactory
 		}
 	}
 
+	public function create_prefix_operation(BaseExpression $expr, Operator $operator)
+	{
+		$expr = new PrefixOperation($expr, $operator);
+		return $expr;
+	}
+
+	public function create_postfix_operation(BaseExpression $expr, Operator $operator)
+	{
+		$expr = new PostfixOperation($expr, $operator);
+		return $expr;
+	}
+
 	public function create_binary_operation(BaseExpression $left, BaseExpression $right, Operator $operator)
 	{
 		$expr = new BinaryOperation($left, $right, $operator);
 		return $expr;
 	}
 
-	public function create_assignment(BaseExpression $assignable, BaseExpression $value, Operator $operator)
+	public function create_assignment(BaseExpression $assigned_to, BaseExpression $value, Operator $operator)
 	{
-		if ($assignable instanceof PlainIdentifier) {
-			if ($assignable->symbol) {
-				// no any
-			}
-			else {
-				// symbol has not declared
-				$this->auto_declare_for_assigning_identifier($assignable);
-
-				// remove from check list
-				$this->remove_defer_check($assignable);
+		if ($assigned_to instanceof PlainIdentifier) {
+			$this->process_assigned_target($assigned_to, $value);
+		}
+		elseif ($assigned_to instanceof Destructuring) {
+			foreach ($assigned_to->items as $item) {
+				if ($item instanceof PlainIdentifier) {
+					$this->process_assigned_target($item);
+				}
+				elseif ($item instanceof DictMember && $item->value instanceof PlainIdentifier) {
+					$this->process_assigned_target($item->value);
+				}
 			}
 		}
-		// elseif ($assignable instanceof IAssignable) {
-		// 	// includes AccessingIdentifier / KeyAccessing / SquareAccessing
-		// 	// post-check required
-		// }
-		// else {
-		// 	throw $this->parser->new_parse_error('Invalid assignment.');
-		// }
+		elseif (ASTHelper::is_pure_bracket_accessing_expr($assigned_to)) {
+			$basing = $assigned_to->get_final_basing();
+			$this->process_assigned_target($basing);
+		}
 
-		$assignment = new AssignmentOperation($assignable, $value, $operator);
+		$assignment = new AssignmentOperation($assigned_to, $value, $operator);
 
 		return $assignment;
 	}
 
-	private function auto_declare_for_assigning_identifier(BaseExpression $identifier)
+	private function process_assigned_target(PlainIdentifier $identifier, ?BaseExpression $value = null)
 	{
-		if (!TeaHelper::is_normal_variable_name($identifier->name)) {
-			throw $this->parser->new_parse_error("Identifier '$identifier->name' not a valid variable name");
+		if ($identifier->symbol) {
+			// no any
 		}
+		else {
+			// symbol has not declared
+			$this->auto_declare_for_assigning_identifier($identifier, $value);
 
-		$declaration = new VariableDeclaration($identifier->name);
+			// remove from check list
+			$this->remove_defer_check($identifier);
+		}
+	}
+
+	private function auto_declare_for_assigning_identifier(BaseExpression $identifier, ?BaseExpression $value)
+	{
+		// if (!TeaHelper::is_normal_variable_name($identifier->name)) {
+		// 	throw $this->parser->new_parse_error("Identifier '$identifier->name' not a valid variable name");
+		// }
+
+		$declaration = new VariableDeclaration($identifier->name, null, $value);
 		$declaration->block = $this->block;
 
 		// link to symbol
@@ -348,9 +388,67 @@ class ASTFactory
 		$this->program = $program;
 		$this->unit->programs[$program->name] = $program;
 
-		$this->set_initializer();
+		$this->switch_to_initializer();
 
 		return $program;
+	}
+
+	public static function create_virtual_function(string $name)
+	{
+		$decl = new FunctionDeclaration(_INTERNAL, $name, null, []);
+		$decl->is_dynamic = true;
+
+		$symbol = new Symbol($decl);
+
+		return $decl;
+	}
+
+	public static function create_virtual_class(string $name = '__object_class')
+	{
+		$decl = new ClassDeclaration(null, $name);
+		$decl->is_dynamic = true;
+
+		$symbol = new Symbol($decl);
+		self::bind_class_symbol($decl, $symbol);
+
+		// do not need other context, it's just for ast-check
+
+		return $decl;
+	}
+
+	public static function create_virtual_method(string $name, ClassDeclaration $class)
+	{
+		$decl = new MethodDeclaration(null, $name);
+		$decl->is_dynamic = true;
+		$decl->infered_type = TypeFactory::$_any;
+		$decl->parameters = [];
+
+		new Symbol($decl);
+		$class->append_member($decl);
+
+		return $decl;
+	}
+
+	public static function create_virtual_property(string $name, ClassDeclaration $class)
+	{
+		$decl = new PropertyDeclaration(null, $name, TypeFactory::$_any);
+		$decl->is_dynamic = true;
+		$decl->infered_type = TypeFactory::$_any;
+
+		new Symbol($decl);
+		$class->append_member($decl);
+
+		return $decl;
+	}
+
+	public function create_object_member(?string $quote_mark, string $name)
+	{
+		$declaration = new ObjectMember($name, $quote_mark);
+		new Symbol($declaration);
+
+		// $this->begin_class_member($declaration);
+
+		return $declaration;
 	}
 
 	public function create_builtin_type_class_declaration(string $name)
@@ -369,32 +467,6 @@ class ASTFactory
 		$type_identifier->symbol = $symbol;
 
 		$this->begin_class($declaration);
-
-		return $declaration;
-	}
-
-	public function create_object_virtual_class()
-	{
-		$declaration = new ClassDeclaration(null, '__object_class');
-		$declaration->is_dynamic = true;
-
-		$symbol = new Symbol($declaration);
-		$this->bind_class_symbol($declaration, $symbol);
-
-		// do not create class context, because it not a normal class, it just for ast-check
-
-		// $this->pushed_env = [$this->class, $this->declaration, $this->function, $this->scope, $this->block];
-		// $this->begin_class($declaration);
-
-		return $declaration;
-	}
-
-	public function create_object_property(?string $quote_mark, string $name)
-	{
-		$declaration = new ObjectMember($name, $quote_mark);
-		new Symbol($declaration);
-
-		// $this->begin_class_member($declaration);
 
 		return $declaration;
 	}
@@ -455,7 +527,7 @@ class ASTFactory
 		return $declaration;
 	}
 
-	private function bind_class_symbol(ClassKindredDeclaration $declaration, Symbol $symbol)
+	private static function bind_class_symbol(ClassKindredDeclaration $declaration, Symbol $symbol)
 	{
 		// create 'this' symbol
 		$class_identifier = new ClassKindredIdentifier($declaration->name); // as a Type for 'this'
@@ -495,8 +567,16 @@ class ASTFactory
 
 		$this->declaration = $declaration;
 		$this->scope = $declaration;
-		$this->function = $declaration;
+		// $this->function = $declaration;
 		$this->block = $declaration;
+
+		return $declaration;
+	}
+
+	public function create_traits_using_statement(array $items)
+	{
+		$declaration = new TraitsUsingStatement($items);
+		$this->class->append_trait_using($declaration);
 
 		return $declaration;
 	}
@@ -727,27 +807,27 @@ class ASTFactory
 		return $block;
 	}
 
-	public function create_forin_block(?VariableIdentifier $key, VariableIdentifier $val, BaseExpression $iterable)
+	public function create_forin_block(?ParameterDeclaration $key, ParameterDeclaration $val, BaseExpression $iterable)
 	{
 		$block = new ForInBlock($key, $val, $iterable);
 		$this->begin_block($block);
 
-		$this->prepare_forblock_vars($key, $val, $block);
+		$this->prepare_forin_vars($key, $val, $block);
 
 		return $block;
 	}
 
-	public function create_forto_block(?VariableIdentifier $key, VariableIdentifier $val, BaseExpression $start, BaseExpression $end, ?int $step)
+	public function create_forto_block(?ParameterDeclaration $key, ParameterDeclaration $val, BaseExpression $start, BaseExpression $end, ?int $step)
 	{
 		$block = new ForToBlock($key, $val, $start, $end, $step);
 		$this->begin_block($block);
 
-		$this->prepare_forblock_vars($key, $val, $block);
+		$this->prepare_forin_vars($key, $val, $block);
 
 		return $block;
 	}
 
-	private function prepare_forblock_vars(?VariableIdentifier $key, VariableIdentifier $val, ControlBlock $block)
+	private function prepare_forin_vars(?ParameterDeclaration $key, ParameterDeclaration $val, ControlBlock $block)
 	{
 		if ($key) {
 			// use String as the default type, because String can be compatible with Int/UInt
@@ -784,30 +864,48 @@ class ASTFactory
 
 	public function end_branches(ControlBlock $node)
 	{
-		if ($node instanceof IfBlock and $node->else) {
-			$this->process_scope_hoisting_for_blocks($node, $node->else);
-		}
-		elseif ($node instanceof TryBlock and $node->finally) {
-			$this->process_scope_hoisting_for_blocks($node, $node->finally);
-		}
+		$symbols = $this->dig_intersected_symbols_for_block($node);
+		$this->add_symbols_to_block($node->belong_block, $symbols);
 	}
 
-	private function process_scope_hoisting_for_blocks(ControlBlock $block, ControlBlock $else_block)
+	private function dig_intersected_symbols_for_block(ControlBlock $node)
 	{
-		$symbols = $block->symbols;
+		$symbols = [];
+		if ($node instanceof IfBlock) {
+			if ($node->else) {
+				$symbols = $this->intersect_symbols_with_blocks($node, $node->get_else_branches());
+			}
+		}
+		elseif ($node instanceof TryBlock) {
+			if ($node->catching_all) {
+				$symbols = $this->intersect_symbols_with_blocks($node, [$node->catching_all]);
+			}
 
-		if (!$else_block->is_returned) {
-			$symbols = array_intersect_key($symbols, $else_block->symbols);
+			if ($node->finally) {
+				$symbols += $node->finally->symbols;
+			}
 		}
 
-		$super_block = $block->belong_block;
+		return $symbols;
+	}
+
+	private function intersect_symbols_with_blocks(ControlBlock $block, array $branches)
+	{
+		$symbols = $block->symbols;
+		foreach ($branches as $branch) {
+			if (!$branch->is_ended_function) {
+				$symbols = array_intersect_key($symbols, $branch->symbols);
+			}
+		}
+
+		return $symbols;
+	}
+
+	private function add_symbols_to_block(IBlock $block, array $symbols)
+	{
 		foreach ($symbols as $key => $symbol) {
-			if (!isset($super_block->symbols[$key])) {
-				$super_block->symbols[$key] = $symbol;
-				// $super_block->remove_defer_check_for_key($key);
-				// if ($super_block->belong_block) {
-				// 	$super_block->belong_block->remove_defer_check_for_key($key);
-				// }
+			if (!isset($block->symbols[$key])) {
+				$block->symbols[$key] = $symbol;
 			}
 		}
 	}
@@ -817,20 +915,24 @@ class ASTFactory
 		// reset
 		$this->program = null;
 		$this->declaration = null;
-		$this->block = $this->function = $this->scope = null;
+		$this->block = null;
+		// $this->function = null;
+		$this->scope = null;
 	}
 
 	public function begin_class(ClassKindredDeclaration $declaration)
 	{
 		$this->class = $declaration;
 		$this->declaration = $declaration;
-		$this->block = $this->function = $this->scope = null;
+		$this->block = null;
+		// $this->function = null;
+		$this->scope = null;
 	}
 
 	public function end_class()
 	{
 		$this->class = null;
-		$this->set_initializer();
+		$this->switch_to_initializer();
 	}
 
 	public function begin_class_member(IClassMemberDeclaration $declaration)
@@ -841,7 +943,7 @@ class ASTFactory
 
 		if ($declaration instanceof MethodDeclaration) {
 			$this->scope = $declaration;
-			$this->function = $declaration;
+			// $this->function = $declaration;
 		}
 
 		$this->block = $declaration;
@@ -854,7 +956,7 @@ class ASTFactory
 
 		$this->declaration = $this->class;
 		$this->scope = null;
-		$this->function = null;
+		// $this->function = null;
 	}
 
 	public function begin_root_declaration(IRootDeclaration $declaration)
@@ -864,13 +966,19 @@ class ASTFactory
 		if ($declaration instanceof FunctionDeclaration) {
 			$this->block = $declaration;
 			$this->scope = $declaration;
-			$this->function = $declaration;
+			// $this->function = $declaration;
 		}
 	}
 
 	public function end_root_declaration()
 	{
-		$this->set_initializer();
+		$this->switch_to_initializer();
+	}
+
+	private function switch_to_initializer()
+	{
+		$this->declaration = $this->scope = $this->block = $this->program->initializer;
+		// $this->function = $this->declaration;
 	}
 
 	public function begin_block(IBlock $block)
@@ -889,17 +997,8 @@ class ASTFactory
 				$this->scope = $this->find_super_scope($block);
 			}
 		}
-		else {
-			throw $this->parser->new_parse_error("Unknow block");
-			$this->set_initializer();
-		}
 
 		return $block;
-	}
-
-	private function set_initializer()
-	{
-		$this->declaration = $this->function = $this->scope = $this->block = $this->program->initializer;
 	}
 
 	private static function find_super_scope(IBlock $block)
@@ -958,7 +1057,7 @@ class ASTFactory
 			// add to lambda check list
 			if ($seek_block instanceof AnonymousFunction) {
 				$seek_block->set_defer_check_identifier($identifier);
-				$identifier->lambda = $seek_block; // for the mutating feature
+				// $identifier->lambda = $seek_block; // for the mutating feature
 			}
 
 			if ($seek_block->belong_block && !$seek_block->belong_block instanceof ClassKindredDeclaration) {

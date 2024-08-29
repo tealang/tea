@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -145,7 +143,7 @@ trait TeaXTagTrait
 		return $xtag;
 	}
 
-	protected function try_read_ending_for_xtag_child(XTagElement $child)
+	protected function scan_ending_for_xtag_child(XTagElement $child)
 	{
 		// is ending with line break?
 		if ($this->get_token_ignore_space() === LF) {
@@ -255,7 +253,7 @@ trait TeaXTagTrait
 						}
 
 						$child_tag = $this->read_xtag_with_name($next, $align_spaces);
-						$this->try_read_ending_for_xtag_child($child_tag);
+						$this->scan_ending_for_xtag_child($child_tag);
 						$this->xtag_append_expr($xtag, $child_tag, $is_newline, $indents);
 
 						if (!$child_tag->is_const_value) {
@@ -297,7 +295,7 @@ trait TeaXTagTrait
 					break;
 
 				case _DOLLAR:
-					$expr = $this->try_read_normal_interpolation();
+					$expr = $this->scan_normal_interpolation();
 					if ($expr === null) {
 						$text .= $token;
 					}

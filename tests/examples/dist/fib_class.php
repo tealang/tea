@@ -46,8 +46,13 @@ class Fib implements IFib {
 
 // ---------
 $fib = new Fib(9);
-while ($fib->has_next()) {
-	echo $fib->get_next(), LF;
+try {
+	while ($fib->has_next()) {
+		echo $fib->get_next(), LF;
+	}
+}
+catch (\Exception $ex) {
+	echo $ex->getMessage(), LF;
 }
 // ---------
 

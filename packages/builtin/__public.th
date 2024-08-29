@@ -50,7 +50,7 @@ runtime func strtotime(datetime #Any, now Int = #default) Int
 
 runtime func str_repeat(input #Any, multiplier Int) String
 
-runtime func filter_input(type Int, key String, filter Int = #default, options Dict = #default) String|Int|UInt|Float|Bool?
+runtime func filter_input(type Int, key String, filter Int = #default, options Dict = #default) String?
 
 runtime class Exception {
 	public construct(message String, code Int = 0) #Void

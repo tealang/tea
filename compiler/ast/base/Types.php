@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -19,6 +17,7 @@ trait ITypeTrait
 
 	public function let_nullable() {
 		$this->nullable = true;
+		$this->has_null = true;
 	}
 
 	public function remove_nullable() {
@@ -221,7 +220,10 @@ class UnionType extends BaseType
 	public function remove_nullable() {
 		$this->nullable = false;
 		foreach ($this->members as $key => $type) {
-			if ($type->nullable or $type->has_null) {
+			if ($type instanceof NoneType) {
+				unset($this->members[$key]);
+			}
+			elseif ($type->nullable or $type->has_null) {
 				$type = clone $type; // not to be affected the source
 				$type->remove_nullable();
 
@@ -244,6 +246,16 @@ class UnionType extends BaseType
 	public function is_all_dict_types() {
 		foreach ($this->members as $member_type) {
 			if (!$member_type instanceof DictType) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public function is_array_or_dict_types() {
+		foreach ($this->members as $member_type) {
+			if (!$member_type instanceof ArrayType && !$member_type instanceof DictType) {
 				return false;
 			}
 		}
@@ -526,6 +538,8 @@ class CallableType extends BaseType implements ICallableDeclaration {
 	public $parameters = [];
 
 	public $is_checked;
+
+	public $is_dynamic;
 
 	public function __construct(?IType $return_type = null, array $parameters = []) {
 		$this->declared_type = $return_type;

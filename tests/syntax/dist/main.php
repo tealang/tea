@@ -5,7 +5,7 @@ use tests\phpdemo\{ NS1\Demo as PHPClassDemo, function php_function_demo, const 
 
 require_once dirname(__DIR__, 1) . '/__public.php';
 
-require_once UNIT_PATH . '_mixed2.php';
+require_once UNIT_PATH . 'php/_mixed2.php';
 
 #public
 class TeaDemoClass {

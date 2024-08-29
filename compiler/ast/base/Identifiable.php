@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -44,15 +42,21 @@ class AccessingIdentifier extends Identifiable implements IType
 
 	const KIND = 'accessing_identifier';
 
-	public $master;
+	public $basing;
 
-	public function __construct(BaseExpression $master, string $name)
+	/**
+	 * is static accessing mode
+	 * var bool
+	 */
+	public $is_static;
+
+	public function __construct(BaseExpression $basing, string $name)
 	{
-		if ($master instanceof PlainIdentifier) {
-			$master->is_calling = true;
+		if ($basing instanceof PlainIdentifier) {
+			$basing->is_accessing = true;
 		}
 
-		$this->master = $master;
+		$this->basing = $basing;
 		$this->name = $name;
 	}
 }
@@ -73,14 +77,7 @@ class PlainIdentifier extends Identifiable implements IType
 
 	public $generic_types;
 
-	public $lambda;
-
-	/**
-	 * is has any operation like accessing or call
-	 * use for rendering dist code
-	 * @var bool
-	 */
-	public $is_calling;
+	// public $lambda;
 
 	public static function create_with_symbol(Symbol $symbol)
 	{

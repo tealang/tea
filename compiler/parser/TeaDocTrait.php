@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -89,7 +87,8 @@ trait TeaDocTrait
 
 		$this->expect_statement_end();
 
-		return new DocComment($tmp);
+		$node = $this->create_doc_comment($tmp);
+		return $node;
 	}
 
 	// private function remove_prefix_spaces(string $content, string $left_spaces, int $left_spaces_len)
@@ -110,7 +109,7 @@ trait TeaDocTrait
 	// private function read_doc_parameter_item()
 	// {
 	// 	$name = $this->expect_identifier_token();
-	// 	$comment = $this->scan_to_token(LF);
+	// 	$comment = $this->scan_to_end();
 	// 	$this->scan_token(); // skip LF
 
 	// 	return new DocParameterItem($name, null, $comment);

@@ -16,15 +16,16 @@ class TeaInitializer
 	{
 		$unit_dir = $this->uri;
 
-		// create the module dir
-		is_dir($unit_dir) or FileHelper::mkdir($unit_dir);
+		// create dir
+		is_dir($unit_dir . '/src') or FileHelper::mkdir($unit_dir . '/src');
 
 		// the header file
 		$header_file = $unit_dir . '/__package.th';
-		file_exists($header_file) or file_put_contents($header_file, "\n" . _NAMESPACE . " {$this->uri}\n\n");
+		$ns = strtr($this->uri, '/', '\\');
+		file_exists($header_file) or file_put_contents($header_file, "\n" . _NAMESPACE . " {$ns}\n\n");
 
 		// the main.tea
-		$main_file = $unit_dir . '/main.tea';
+		$main_file = $unit_dir . '/src/main.tea';
 		file_exists($main_file) or file_put_contents($main_file, "\necho 'Hello!'\n\n// end\n");
 
 		// the editorconfig settings

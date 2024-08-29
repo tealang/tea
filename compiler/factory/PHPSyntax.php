@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -23,6 +21,7 @@ class PHPSyntax
 		],
 		[
 			OPID::AS => ['(?)', OP_BIN, OP_L, OP_NA],
+			OPID::ERROR_CONTROL => ['@', OP_PRE, OP_L, OP_NA],
 			OPID::REFERENCE => ['&', OP_PRE, OP_NA],
 			OPID::IDENTITY => ['+', OP_PRE, OP_NA],
 			OPID::NEGATION => ['-', OP_PRE, OP_NA],
@@ -122,6 +121,9 @@ class PHPSyntax
 		],
 		[
 			OPID::LOW_BOOL_OR => ['or', OP_BIN, OP_L],
+		],
+		[
+			OPID::SPREAD => ['...', OP_PRE, OP_NA],
 		],
 	];
 }

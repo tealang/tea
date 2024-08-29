@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -15,10 +13,12 @@ class NormalStatement extends BaseStatement
 
 	public $label;
 
-	public $expression;
+	public ?BaseExpression $expression;
 
-	public function __construct(BaseExpression $expression)
+	public function __construct(?BaseExpression $expression = null)
 	{
 		$this->expression = $expression;
 	}
 }
+
+// end

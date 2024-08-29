@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -22,12 +20,22 @@ interface IContinueAble {}
 
 abstract class ControlStatement extends BaseStatement
 {
-	public $argument;
+	public ?BaseExpression $argument;
 
-	public function __construct(?BaseExpression $argument = null, ?IBlock $belong_block = null)
+	public function __construct(?BaseExpression $argument, IBlock $belong_block)
 	{
 		$this->argument = $argument;
 		$this->belong_block = $belong_block;
+	}
+}
+
+abstract class FunctionEndingStatement extends ControlStatement
+{
+	public function __construct(?BaseExpression $argument, IBlock $belong_block)
+	{
+		$this->argument = $argument;
+		$this->belong_block = $belong_block;
+		$belong_block->is_ended_function = true;
 	}
 }
 
@@ -48,17 +56,17 @@ class ContinueStatement extends LabeledControlStatement
 	const KIND = 'continue_statement';
 }
 
-class ReturnStatement extends ControlStatement
+class ReturnStatement extends FunctionEndingStatement
 {
 	const KIND = 'return_statement';
 }
 
-class ThrowStatement extends ControlStatement
+class ThrowStatement extends FunctionEndingStatement
 {
 	const KIND = 'throw_statement';
 }
 
-class ExitStatement extends ControlStatement
+class ExitStatement extends FunctionEndingStatement
 {
 	const KIND = 'exit_statement';
 }

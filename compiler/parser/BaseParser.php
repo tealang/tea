@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -27,7 +25,9 @@ abstract class BaseParser
 	protected $program;
 
 	// current token position
-	protected $pos = -1;
+	public $pos = -1;
+
+	protected $pos_before_skiped_comments = 0;
 
 	/**
 	 * @var int[:]
@@ -85,13 +85,28 @@ abstract class BaseParser
 
 	protected abstract function tokenize(string $source);
 
-	protected function read_block_body_for(IBlock $block)
+	protected function read_body_for_control_block(IBlock $block)
 	{
-		$this->read_body_statements_for($block);
+		$items = [];
+		if ($this->skip_block_begin()) {
+			while (($item = $this->read_inner_statement()) !== null) {
+				$items[] = $item;
+			}
+
+			$this->expect_block_end();
+		}
+		else {
+			$items[] = $this->read_inner_statement();
+		}
+
+		$block->set_body_with_statements($items);
+		// $block->tailing_comment = $this->scan_line_comment_inline();
+		// $block->tailing_newlines = $this->scan_empty_lines();
+
 		$this->factory->end_block();
 	}
 
-	protected function read_body_statements_for(IBlock $block)
+	protected function read_body_for_decl(IBlock $block)
 	{
 		$this->expect_block_begin();
 
@@ -100,9 +115,9 @@ abstract class BaseParser
 			$items[] = $item;
 		}
 
-		$this->expect_block_end();
-
 		$block->set_body_with_statements($items);
+
+		$this->expect_block_end();
 	}
 
 	protected function read_prefix_operation(Operator $operator)
@@ -112,15 +127,55 @@ abstract class BaseParser
 			throw $this->new_unexpected_error();
 		}
 
-		$expression = new PrefixOperation($expression, $operator);
+		$expression = $this->factory->create_prefix_operation($expression, $operator);
 		$expression->pos = $this->pos;
 
 		return $expression;
 	}
 
-	protected function back(int $num = 1)
+	protected function create_normal_statement(?BaseExpression $expr = null)
 	{
-		$this->pos -= $num;
+		$node = new NormalStatement($expr);
+		$node->pos = $this->pos;
+		return $node;
+	}
+
+	protected function create_line_comment(string $content)
+	{
+		$node = new LineComment($content);
+		$node->pos = $this->pos;
+		return $node;
+	}
+
+	protected function create_block_comment(string $content)
+	{
+		$node = new BlockComment($content);
+		$node->pos = $this->pos;
+		return $node;
+	}
+
+	protected function create_doc_comment(string $content)
+	{
+		$node = new DocComment($content);
+		$node->pos = $this->pos;
+		return $node;
+	}
+
+	protected function create_parameter(string $name)
+	{
+		$parameter = new ParameterDeclaration($name, null);
+		$parameter->pos = $this->pos;
+		return $parameter;
+	}
+
+	protected function back()
+	{
+		$this->pos--;
+	}
+
+	protected function back_skiped_comments()
+	{
+		$this->pos = $this->pos_before_skiped_comments;
 	}
 
 	public function new_parse_error(string $message, int $trace_start = 0)

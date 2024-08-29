@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -24,9 +22,17 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 	public $inherits;
 
 	/**
+	 * @var TraitsUsingStatement[]
+	 */
+	public $usings = [];
+
+	/**
 	 * @var IClassMemberDeclaration[]
 	 */
 	public $members = [];
+
+	// just for that used traits
+	public $trait_members = [];
 
 	/**
 	 * the aggregated, actually available members,
@@ -59,6 +65,11 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 	public function set_bases(ClassKindredIdentifier ...$bases)
 	{
 		$this->bases = $bases;
+	}
+
+	public function append_trait_using(TraitsUsingStatement $using)
+	{
+		$this->usings[] = $using;
 	}
 
 	public function append_member(IClassMemberDeclaration $member)
@@ -104,8 +115,6 @@ class ClassDeclaration extends ClassKindredDeclaration implements ICallableDecla
 	public $is_readonly;
 
 	public $is_final;
-
-	public $is_dynamic;
 
 	public function find_based_with_symbol(Symbol $symbol)
 	{

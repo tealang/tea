@@ -23,13 +23,10 @@ The slogan of the Tea language is: "Programming is like drinking tea."
 
 1. Switch to the work directory and execute the compile command:
 ```bash
-# use the normal method
-php tea/bin/tea tea/tests/examples
-# if you use Mac or Linux, you can use shebang mode, such as:
-tea/bin/tea tea/tests/examples
+tea/bin/teac tea/tests/examples
 ```
 
-2. Create a new module, such as:
+2. Create a new package, such as:
 ```bash
-php tea/bin/tea --init myproject/hello
+php tea/bin/teac --init myproject/hello
 ```

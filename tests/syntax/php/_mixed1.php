@@ -24,6 +24,10 @@ class PHPClassInMixed1 {
 
 	public function __construct(string $caller, array /*Array*/ $items, bool $some = null) {
 		$this->caller = $caller;
+
+		list($a, $b) = $items;
+		[$c, $d] = $items;
+		var_dump($a, $b, $c, $d);
 	}
 
 	function get_message(): string {

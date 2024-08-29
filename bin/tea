@@ -1,72 +1,21 @@
 #!/usr/bin/env php
 <?php
-/**
- * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
- * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
- */
-
-/// The complier script for the Tea programming language
-
-namespace Tea;
-
-define('TEA_BASE_PATH', dirname(__DIR__) . '/');
-
-require TEA_BASE_PATH . 'compiler/__public.php';
-
-// stats start
-UsageTracer::start();
-
-const DEBUG = 0;
-
-const KEY_INIT = 'init';
-const OPTION_KEYS = [KEY_INIT];
-
-const USAGE = 'Usage: tea tea/tests/syntax
-Usage: tea --init myproject/hello';
-
-try {
-	$opts = process_cli_options($argv, OPTION_KEYS);
-
-	$target = $opts[0] ?? null;
-	if ($target === null) {
-		error("Missed target for compile.");
-		halt(USAGE);
-	}
-
-	// init
-	if (isset($opts[KEY_INIT])) {
-		$init = new TeaInitializer($target);
-		$init->process();
-		halt("Init '$target' success.");
-	}
-
-	// compile
-	$realpath = realpath($target);
-	if ($realpath === false) {
-		error("Target '{$target}' not found.");
-		halt(USAGE);
-	}
-
-	if (!is_dir($realpath)) {
-		throw new Exception("The target path '{$realpath}' is not a valid Unit directory.");
-	}
-
-	echo LF;
-
-	$compiler = new Compiler();
-	$count = $compiler->make($realpath);
-
-	echo "\n$count programs compiled.\n\n";
-}
-catch (\Exception $e) {
-	echo $e->getTraceAsString(), LF, LF;
-	halt(LF . $e->getMessage());
+$target = $argv[1] ?? null;
+if (empty($target)) {
+	echo "\nPlease input a target file path...\n\n";
+	exit;
 }
 
-// stats end
-echo join("\t", UsageTracer::end()), LF;
+$target_file = getcwd() . '/' . $target;
+if (!file_exists($target_file)) {
+	echo "\nTarget file not found.\n\n";
+	exit;
+}
+
+// load the builtin libs
+require dirname(__DIR__) . '/packages/builtin/__public.php';
+
+// run target
+include $target_file;
 
 // end

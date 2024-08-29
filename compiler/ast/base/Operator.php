@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -33,9 +31,9 @@ class Operator
 		return $this->id === $id;
 	}
 
-	public function is_assignment()
+	public function is_type(int $type)
 	{
-		return $this->type === OP_ASSIGN;
+		return $this->type === $type;
 	}
 
 	public function get_debug_sign()

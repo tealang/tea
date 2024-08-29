@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -62,6 +60,8 @@ const
 	_REGEX = 'Regex',
 	_CALLABLE = 'Callable',
 	_TYPE_SELF = 'Self',
+
+	_BASE_EXCEPTION = 'Exception',
 
 	// dot signs of compound types
 	_DOT_SIGN_ARRAY = 'Array', _DOT_SIGN_DICT = 'Dict', _DOT_SIGN_METATYPE = 'Type',

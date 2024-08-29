@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -69,7 +67,7 @@ class PHPParser extends BaseParser
 
 	private const NORMAL_IDENTIFIER_TOKEN_TYPES = [T_STRING, T_ARRAY, T_STATIC, T_NAME_FULLY_QUALIFIED];
 
-	private const MEMBER_IDENTIFIER_TOKEN_TYPES = [T_STRING, T_PRINT, T_ECHO, T_EXIT, T_USE, T_UNSET, T_CLASS];
+	private const MEMBER_IDENTIFIER_TOKEN_TYPES = [T_STRING, T_VARIABLE, T_PRINT, T_ECHO, T_EXIT, T_USE, T_UNSET, T_CLASS];
 
 	/**
 	 * @var NamespaceIdentifier
@@ -106,7 +104,7 @@ class PHPParser extends BaseParser
 		$this->tokens_count = count($this->tokens);
 	}
 
-	private function read_root_statement()
+	private function read_root_statement(array $attributes = [])
 	{
 		$token = $this->scan_token_ignore_empty();
 		if ($token === null) {
@@ -114,12 +112,6 @@ class PHPParser extends BaseParser
 		}
 
 		$token_type = is_string($token) ? $token : $token[0];
-
-		$doc = null;
-		if ($token_type === T_DOC_COMMENT) {
-			$doc = $token[1];
-			$token = $this->expect_typed_token_ignore_empty();
-		}
 
 		switch ($token_type) {
 			case T_NAMESPACE:
@@ -128,38 +120,26 @@ class PHPParser extends BaseParser
 			case T_USE:
 				$node = $this->read_use_namespace_statement();
 				break;
-			case T_CLASS:
-				$node = $this->read_class_declaration();
-				break;
-			case T_ABSTRACT:
-				$this->expect_typed_token(T_CLASS);
-				$node = $this->read_class_declaration(true);
-				break;
-			case T_INTERFACE:
-				$node = $this->read_interface_declaration();
-				break;
-			case T_TRAIT:
-				$node = $this->read_trait_declaration();
-				break;
-			case T_FUNCTION:
-				$node = $this->read_function_declaration($doc);
-				break;
 			case T_CONST:
-				$node = $this->read_const_statement();
+				$node = $this->read_const_statement($attributes);
+				break;
+			case T_ATTRIBUTE:
+				$attributes = $this->read_meta_attributes($attributes);
+				$node = $this->read_root_statement($attributes);
 				break;
 			case T_OPEN_TAG:
 			case T_CLOSE_TAG:
 				$node = null;
 				break;
 			default:
-				$node = $this->read_normal_statement_with_token($token);
+				$node = $this->read_normal_statement_with_token($token, $attributes);
 				break;
 		}
 
 		return $node;
 	}
 
-	protected function read_inner_statement()
+	protected function read_inner_statement(array $attributes = [])
 	{
 		$token = $this->scan_token_ignore_empty();
 		if ($token === null) {
@@ -168,35 +148,68 @@ class PHPParser extends BaseParser
 
 		$token_type = is_string($token) ? $token : $token[0];
 		switch ($token_type) {
-			case T_USE:
-				$node = $this->read_use_trait_statement();
-				break;
 			case _BLOCK_END:
 				$this->back();
 				$node = null;
 				break;
+			case T_ATTRIBUTE:
+				$attributes = $this->read_meta_attributes($attributes);
+				$node = $this->read_inner_statement($attributes);
+				break;
 			default:
-				$node = $this->read_normal_statement_with_token($token);
+				$node = $this->read_normal_statement_with_token($token, $attributes);
 				break;
 		}
 
 		return $node;
 	}
 
-	private function read_normal_statement_with_token(array|string $token): ?IStatement
+	protected function read_meta_attributes(array $items)
+	{
+		$group = empty($items) ? 0 : end($items)->group;
+		do {
+			$identifier = $this->read_classkindred_identifier();
+			$args = $this->scan_instancing_arguments();
+			$meta_attribute = new MetaAttribute($identifier, $args, $group);
+			$meta_attribute->pos = $this->pos;
+			$items[] = $meta_attribute;
+		}
+		while ($this->skip_comma());
+
+		$this->expect_char_token(_BRACKET_CLOSE);
+
+		return $items;
+	}
+
+	private function read_normal_statement_with_token(array|string $token, array $attributes): IStatement
 	{
 		$token_type = is_string($token) ? $token : $token[0];
 		switch ($token_type) {
 			case T_COMMENT:
 				$content = $token[1];
 				$node = str_starts_with($content, '/*')
-					? new BlockComment($content)
-					: new LineComment($token[1]);
-				$node->pos = $this->pos;
+					? $this->create_block_comment($content)
+					: $this->create_line_comment($content);
 				break;
 			case T_DOC_COMMENT:
-				$node = new DocComment($token[1]);
-				$node->pos = $this->pos;
+				$node = $this->create_doc_comment($token[1]);
+				break;
+			case T_FUNCTION:
+				$node = $this->read_function_declaration($attributes);
+				break;
+			case T_CLASS:
+				$node = $this->read_class_declaration($attributes);
+				break;
+			case T_ABSTRACT:
+				$this->expect_typed_token(T_CLASS);
+				$node = $this->read_class_declaration($attributes);
+				$node->is_abstract = true;
+				break;
+			case T_INTERFACE:
+				$node = $this->read_interface_declaration($attributes);
+				break;
+			case T_TRAIT:
+				$node = $this->read_trait_declaration($attributes);
 				break;
 			case T_ECHO:
 				$node = $this->read_echo_statement();
@@ -243,11 +256,16 @@ class PHPParser extends BaseParser
 			case T_GLOBAL:
 				$node = $this->read_global_statement();
 				break;
+			case _SEMICOLON:
+				$node = $this->create_normal_statement();
+				break;
 			case T_STATIC:
 				if ($this->get_typed_token_ignore_empty(T_VARIABLE)) {
 					$node = $this->read_static_statement();
 					break;
 				}
+
+				// otherwise fallthrough to default
 			default:
 				$node = $this->read_expression_statement_with($token);
 				break;
@@ -261,9 +279,7 @@ class PHPParser extends BaseParser
 		$expr = $this->read_expression_with_token($token);
 
 		$this->expect_statement_end();
-
-		$node = new NormalStatement($expr);
-		$node->pos = $this->pos;
+		$node = $this->create_normal_statement($expr);
 
 		return $node;
 	}
@@ -398,7 +414,7 @@ class PHPParser extends BaseParser
 
 	private function read_global_statement()
 	{
-		// global var0 Type0, var1 Type1, ...
+		// global var0, var1, ...
 
 		$members = [];
 		do {
@@ -413,7 +429,7 @@ class PHPParser extends BaseParser
 
 	private function read_static_statement()
 	{
-		// static var0 Type0, var1 Type1, ...
+		// static var0, var1, ...
 
 		$members = [];
 		do {
@@ -429,21 +445,21 @@ class PHPParser extends BaseParser
 	private function read_variable_declaration(bool $without_value = false)
 	{
 		// var abc
-		// var abc Type
-		// var abc Type = expression
+		// var abc = expression
 
-		$name = $this->scan_token_ignore_empty();
-		$type = $this->read_type_expression();
+		$name = $this->expect_variable_name();
 
 		$value = null;
-
 		if (!$without_value) {
-			if ($this->skip_char_token(_ASSIGN) === _ASSIGN) {
+			if ($this->skip_char_token(_ASSIGN)) {
 				$value = $this->read_expression();
 			}
 		}
 
-		return $this->factory->create_variable_declaration($name, $type, $value);
+		$decl = $this->factory->create_variable_declaration($name, null, $value);
+		$decl->pos = $this->pos;
+
+		return $decl;
 	}
 
 	private function read_continue_statement()
@@ -451,7 +467,7 @@ class PHPParser extends BaseParser
 		// continue
 		// continue target_layers
 
-		$statement = new ContinueStatement();
+		$statement = $this->factory->create_continue_statement();
 
 		$token = $this->scan_typed_token_ignore_empty(T_LNUMBER);
 		if ($token !== null) {
@@ -459,6 +475,7 @@ class PHPParser extends BaseParser
 		}
 
 		$this->expect_statement_end();
+		$statement->pos = $this->pos;
 
 		return $statement;
 	}
@@ -468,7 +485,7 @@ class PHPParser extends BaseParser
 		// break
 		// break target_layers
 
-		$statement = new BreakStatement();
+		$statement = $this->factory->create_break_statement();
 
 		$token = $this->scan_typed_token_ignore_empty(T_LNUMBER);
 		if ($token !== null) {
@@ -476,6 +493,7 @@ class PHPParser extends BaseParser
 		}
 
 		$this->expect_statement_end();
+		$statement->pos = $this->pos;
 
 		return $statement;
 	}
@@ -494,6 +512,7 @@ class PHPParser extends BaseParser
 		$statement = $this->factory->create_exit_statement($argument);
 
 		$this->expect_statement_end();
+		$statement->pos = $this->pos;
 
 		return $statement;
 	}
@@ -507,6 +526,7 @@ class PHPParser extends BaseParser
 		$statement = $this->factory->create_return_statement($argument);
 
 		$this->expect_statement_end();
+		$statement->pos = $this->pos;
 
 		return $statement;
 	}
@@ -519,6 +539,7 @@ class PHPParser extends BaseParser
 		$statement = $this->factory->create_throw_statement($argument);
 
 		$this->expect_statement_end();
+		$statement->pos = $this->pos;
 
 		return $statement;
 	}
@@ -532,7 +553,10 @@ class PHPParser extends BaseParser
 
 		$this->expect_statement_end();
 
-		return new EchoStatement($args);
+		$statement = new EchoStatement($args);
+		$statement->pos = $this->pos;
+
+		return $statement;
 	}
 
 	private function read_if_block()
@@ -544,16 +568,16 @@ class PHPParser extends BaseParser
 		$this->expect_char_token(_PAREN_CLOSE);
 
 		$block = $this->factory->create_if_block($test);
-		$this->read_block_body_for($block);
+		$this->read_body_for_control_block($block);
 
-		$this->try_attach_else_block($block);
+		$this->scan_else_block_for($block);
 
 		$this->factory->end_branches($block);
 
 		return $block;
 	}
 
-	private function try_attach_else_block(IElseAble $main_block)
+	private function scan_else_block_for(IElseAble $main_block)
 	{
 		$this->skip_comments();
 
@@ -562,7 +586,9 @@ class PHPParser extends BaseParser
 		if ($token_type === T_ELSE) {
 			$this->scan_token_ignore_empty();
 			$sub_block = $this->factory->create_else_block();
-			$this->read_block_body_for($sub_block);
+			$this->read_body_for_control_block($sub_block);
+
+			$main_block->set_else_block($sub_block);
 
 			// else block would be the end
 		}
@@ -573,20 +599,22 @@ class PHPParser extends BaseParser
 			$this->expect_char_token(_PAREN_CLOSE);
 
 			$sub_block = $this->factory->create_elseif_block($test);
-			$this->read_block_body_for($sub_block);
+			$this->read_body_for_control_block($sub_block);
+
+			$main_block->set_else_block($sub_block);
 
 			// another else block
-			$this->try_attach_else_block($sub_block);
+			$this->scan_else_block_for($sub_block);
 		}
 		else {
-			return;
+			$this->back_skiped_comments();
 		}
-
-		$main_block->set_else_block($sub_block);
 	}
 
 	private function skip_comments()
 	{
+		$this->pos_before_skiped_comments = $this->pos;
+
 		do {
 			$token = $this->get_token_ignore_empty();
 			$type = is_string($token) ? 0 : $token[0];
@@ -602,7 +630,7 @@ class PHPParser extends BaseParser
 	private function read_try_block()
 	{
 		$block = $this->factory->create_try_block();
-		$this->read_block_body_for($block);
+		$this->read_body_for_control_block($block);
 
 		$this->read_catching_block_for($block);
 
@@ -622,14 +650,18 @@ class PHPParser extends BaseParser
 			$this->scan_token_ignore_empty();
 			$this->expect_char_token(_PAREN_OPEN);
 
-			$type = $this->read_type_expression();
+			$type = $this->read_classkindred_identifier();
 			$var_name = $this->expect_variable_name();
 
 			$this->expect_char_token(_PAREN_CLOSE);
 
 			$sub_block = $this->factory->create_catch_block($var_name, $type);
-			$this->read_block_body_for($sub_block);
+			$this->read_body_for_control_block($sub_block);
 			$main_block->add_catching_block($sub_block);
+
+			if ($type->name === _BASE_EXCEPTION && $type->ns?->is_global_space()) {
+				$main_block->catching_all = $sub_block;
+			}
 
 			// another except block
 			$this->read_catching_block_for($main_block);
@@ -638,10 +670,13 @@ class PHPParser extends BaseParser
 			$this->scan_token_ignore_empty();
 
 			$sub_block = $this->factory->create_finally_block();
-			$this->read_block_body_for($sub_block);
+			$this->read_body_for_control_block($sub_block);
 			$main_block->set_finally_block($sub_block);
 
 			// finally block would be the end
+		}
+		else {
+			$this->back_skiped_comments();
 		}
 	}
 
@@ -728,30 +763,29 @@ class PHPParser extends BaseParser
 		$iterable = $this->read_expression();
 
 		$this->expect_typed_token_ignore_empty(_AS);
-		$val_var = $this->read_variable_identifier();
+		$val = $this->read_lite_parameter();
 
-		$key_var = null;
+		$key = null;
 		if ($this->skip_typed_token(T_DOUBLE_ARROW)) {
-			$key_var = $val_var;
-			$val_var = $this->read_variable_identifier();
+			$key = $val;
+			$val = $this->read_lite_parameter();
 		}
 
 		$this->expect_char_token(_PAREN_CLOSE);
 
-		$block = $this->factory->create_forin_block($key_var, $val_var, $iterable);
+		$block = $this->factory->create_forin_block($key, $val, $iterable);
 
 		$block->label = $label;
-		$this->read_block_body_for($block);
+		$this->read_body_for_control_block($block);
 
 		return $block;
 	}
 
-	private function read_variable_identifier()
+	private function read_lite_parameter()
 	{
-		$token = $this->scan_token_ignore_empty();
-		$name = $this->get_var_name($token);
-		$identifier = $this->create_variable_identifier($name);
-		return $identifier;
+		$token = $this->expect_typed_token_ignore_empty();
+		$param = $this->read_lite_parameter_with_token($token);
+		return $param;
 	}
 
 	private function create_variable_identifier(string $name)
@@ -764,33 +798,22 @@ class PHPParser extends BaseParser
 	private function read_for_block(string $label = null)
 	{
 		$this->expect_char_token(_PAREN_OPEN);
-		$args1 = $this->read_arguments();
+		$args1 = $this->scan_arguments();
 
 		$this->expect_char_token(_SEMICOLON);
-		$args2 = $this->read_arguments();
+		$args2 = $this->scan_arguments();
 
 		$this->expect_char_token(_SEMICOLON);
-		$args3 = $this->read_arguments();
+		$args3 = $this->scan_arguments();
 
 		$this->expect_char_token(_PAREN_CLOSE);
 
 		$block = $this->factory->create_for_block($args1, $args2, $args3);
 
 		$block->label = $label;
-		$this->read_block_body_for($block);
+		$this->read_body_for_control_block($block);
 
 		return $block;
-	}
-
-	private function read_arguments()
-	{
-		$args = [];
-		do {
-			$args[] = $this->read_expression();
-		}
-		while ($this->skip_comma());
-
-		return $args;
 	}
 
 	private function read_while_block(string $label = null)
@@ -802,7 +825,7 @@ class PHPParser extends BaseParser
 		$block = $this->factory->create_while_block($test);
 		$block->label = $label;
 
-		$this->read_block_body_for($block);
+		$this->read_body_for_control_block($block);
 
 		return $block;
 	}
@@ -814,7 +837,7 @@ class PHPParser extends BaseParser
 		$block = $this->factory->create_do_while_block($test);
 		$block->label = $label;
 
-		$this->read_block_body_for($block);
+		$this->read_body_for_control_block($block);
 
 		$this->expect_typed_token_ignore_empty(T_WHILE);
 
@@ -831,6 +854,10 @@ class PHPParser extends BaseParser
 	{
 		$this->skip_comments();
 		$token = $this->read_expr_token_ignore_empty();
+		if ($token === null) {
+			throw $this->new_unexpected_error();
+		}
+
 		$expr = $this->read_expression_with_token($token, $prev_operator);
 		return $expr;
 	}
@@ -890,14 +917,36 @@ class PHPParser extends BaseParser
 				$expr = new LiteralFloat($token_content);
 				$expr->pos = $this->pos;
 				break;
+			case _PAREN_OPEN:
+				$expr = $this->read_expression();
+				$expr = new Parentheses($expr);
+				$this->expect_char_token(_PAREN_CLOSE);
+				$expr->pos = $this->pos;
+				break;
+			case T_ARRAY:
 			case _BRACKET_OPEN:
-				$expr = $this->read_bracket_expression(true);
+				$expr = $this->read_bracket_expression_with_token($token);
 				break;
 			case T_NEW:
-				$expr = $this->read_new_expression();
+				$expr = $this->read_instancing_expression();
 				break;
 			case T_FN:
-				$expr = $this->expect_lambda_expression();
+				$expr = $this->read_lambda_expression();
+				break;
+			case T_FUNCTION:
+				$expr = $this->read_anonymous_function_expression();
+				break;
+			case T_STRING_CAST:
+			case T_INT_CAST:
+			case T_DOUBLE_CAST:
+			case T_BOOL_CAST:
+			case T_ARRAY_CAST:
+			case T_OBJECT_CAST:
+			case T_UNSET_CAST:
+				$expr = $this->read_as_operation_with_token($token);
+				break;
+			case T_LIST:
+				$expr = $this->read_list_destructuring_assignment($token);
 				break;
 			case T_INCLUDE_ONCE:
 			case T_INCLUDE:
@@ -923,7 +972,34 @@ class PHPParser extends BaseParser
 		return $expr;
 	}
 
-	protected function read_new_expression()
+	private function read_as_operation_with_token(array $token)
+	{
+		$type = TypeFactory::get_for_casting_token_id($token[0]);
+		$expr = $this->read_expression(OperatorFactory::$as);
+		$expr = new AsOperation($expr, $type);
+		$expr->pos = $this->pos;
+		return $expr;
+	}
+
+	private function read_list_destructuring_assignment(array $token)
+	{
+		$this->expect_char_token(_PAREN_OPEN);
+
+		$items = $this->read_arguments();
+		$left = new Destructuring($items);
+		$left->pos = $this->pos;
+
+		$this->expect_char_token(_PAREN_CLOSE);
+		$this->expect_char_token(_ASSIGN);
+
+		$right = $this->read_expression();
+		$expr = $this->factory->create_assignment($left, $right, OperatorFactory::$assignment);
+		$expr->pos = $this->pos;
+
+		return $expr;
+	}
+
+	protected function read_instancing_expression()
 	{
 		$token = $this->read_expr_token_ignore_empty();
 		$identifiable = $this->scan_identifiable_expression_with_token($token);
@@ -931,15 +1007,48 @@ class PHPParser extends BaseParser
 			throw $this->new_unexpected_error();
 		}
 
-		$args = [];
-		if ($this->skip_char_token(_PAREN_OPEN)) {
-			$args = $this->read_call_expression_arguments();
-			$this->expect_char_token(_PAREN_CLOSE);
-		}
-
-		$expr = new NewExpression($identifiable, $args);
+		$args = $this->scan_instancing_arguments();
+		$expr = new InstancingExpression($identifiable, $args);
 		$expr->pos = $this->pos;
 		return $expr;
+	}
+
+	protected function scan_instancing_arguments()
+	{
+		if ($this->skip_char_token(_PAREN_OPEN)) {
+			$args = $this->scan_arguments();
+			$this->expect_char_token(_PAREN_CLOSE);
+		}
+		else {
+			$args = [];
+		}
+
+		return $args;
+	}
+
+	protected function scan_arguments()
+	{
+		$items = [];
+
+		$item = $this->scan_expression();
+		if ($item) {
+			$items[] = $item;
+			while ($this->skip_comma()) {
+				$items[] = $this->read_expression();
+			}
+		}
+
+		return $items;
+	}
+
+	protected function read_arguments()
+	{
+		$args = $this->scan_arguments();
+		if (!$args) {
+			throw $this->new_unexpected_error();
+		}
+
+		return $args;
 	}
 
 	protected function read_include_expression_with_token(array $token)
@@ -1074,20 +1183,18 @@ class PHPParser extends BaseParser
 				break;
 
 			case _BRACKET_OPEN:
-				$expr = $this->read_bracket_expression();
+				$expr = $this->read_key_accessing($expr);
 				break;
 
 			case T_OBJECT_OPERATOR:
-				$this->scan_token_ignore_empty();
-				$name = $this->expect_member_identifier_name();
-				$expr = $this->factory->create_accessing_identifier($expr, $name);
-				$expr->pos = $this->pos;
+				$expr = $this->read_object_member_accessing($expr);
 				break;
 
 			case T_DOUBLE_COLON:
 				$this->scan_token_ignore_empty();
 				$name = $this->expect_member_identifier_name();
 				$expr = $this->factory->create_accessing_identifier($expr, $name);
+				$expr->is_static = true;
 				$expr->pos = $this->pos;
 				break;
 
@@ -1098,29 +1205,61 @@ class PHPParser extends BaseParser
 		return $this->read_expression_combination($expr, $prev_operator);
 	}
 
+	protected function read_object_member_accessing(BaseExpression $basing)
+	{
+		$this->scan_token_ignore_empty(); // skip ->
+
+		$next = $this->get_token_ignore_empty();
+		if ($next[0] === T_VARIABLE) {
+			$this->scan_token_ignore_empty();
+			$var_name = $this->get_var_name($next);
+			$expr = $this->create_variable_identifier($var_name);
+			$expr = $this->factory->create_binary_operation($basing, $expr, OperatorFactory::$member_accessing);
+		}
+		elseif ($next === _BRACE_OPEN) {
+			$this->scan_token_ignore_empty();
+			$expr = $this->read_expression();
+			$this->expect_char_token(_BRACE_CLOSE);
+			$expr = $this->factory->create_binary_operation($basing, $expr, OperatorFactory::$member_accessing);
+		}
+		else {
+			$name = $this->expect_member_identifier_name();
+			$expr = $this->factory->create_accessing_identifier($basing, $name);
+		}
+
+		$expr->pos = $this->pos;
+		return $expr;
+	}
+
+	protected function read_key_accessing(BaseExpression $basing)
+	{
+		// array key accessing
+
+		$this->skip_char_token(_BRACKET_OPEN);
+		$key = $this->scan_expression();
+		$this->skip_char_token(_BRACKET_CLOSE);
+
+		if ($key === null) {
+			$expression = new SquareAccessing($basing, false);
+		}
+		else {
+			$expression = new KeyAccessing($basing, $key);
+		}
+
+		$expression->pos = $this->pos;
+		return $expression;
+	}
+
 	protected function read_call_expression(BaseExpression $handler)
 	{
 		$this->expect_char_token(_PAREN_OPEN);
-		$args = $this->read_call_expression_arguments();
+		$args = $this->scan_arguments();
 		$this->expect_char_token(_PAREN_CLOSE);
 
 		$call = new CallExpression($handler, $args);
 		$call->pos = $this->pos;
 
 		return $call;
-	}
-
-	protected function read_call_expression_arguments()
-	{
-		$items = [];
-		while ($item = $this->scan_expression()) {
-			$items[] = $item;
-			if (!$this->skip_char_token(_COMMA)) {
-				break;
-			}
-		}
-
-		return $items;
 	}
 
 	protected function read_operation_for(BaseExpression $expr, Operator $prev_operator = null)
@@ -1141,12 +1280,26 @@ class PHPParser extends BaseParser
 		$this->scan_token_ignore_empty();
 
 		if ($operator->is(OPID::TERNARY)) {
-			$expr2 = $this->read_expression($operator);
-			$this->expect_char_token(_COLON);
-			$expr3 = $this->read_expression($operator);
-			$expr = new TernaryExpression($expr, $expr2, $expr3);
+			// ? [then] : else
+
+			if ($this->skip_char_token(_COLON)) {
+				$then = null;
+			}
+			else {
+				$then = $this->read_expression($operator);
+				$this->expect_char_token(_COLON);
+			}
+
+			$else = $this->read_expression($operator);
+			$expr = new TernaryExpression($expr, $then, $else);
 		}
-		elseif ($operator->is_assignment()) {
+		elseif ($operator->is_type(OP_ASSIGN)) {
+			if ($expr instanceof IArrayLikeExpression) {
+				$expr_pos = $expr->pos;
+				$expr = new Destructuring($expr->items);
+				$expr->pos = $expr_pos;
+			}
+
 			$expr2 = $this->read_expression($operator);
 			$expr = $this->factory->create_assignment($expr, $expr2, $operator);
 		}
@@ -1154,6 +1307,9 @@ class PHPParser extends BaseParser
 		// 	$name = $this->expect_identifier_name();
 		// 	$expr = $this->factory->create_accessing_identifier($expr, $name);
 		// }
+		elseif ($operator->is_type(OP_POST)) {
+			$expr = $this->factory->create_postfix_operation($expr, $operator);
+		}
 		else {
 			$expr2 = $this->read_expression($operator);
 			$expr = $this->factory->create_binary_operation($expr, $expr2, $operator);
@@ -1171,9 +1327,12 @@ class PHPParser extends BaseParser
 		return ($prev_prec < $curr_prec) || ($prev_prec === $curr_prec && $curr_op->php_assoc !== OP_R);
 	}
 
-	private function read_bracket_expression(bool $opened = false)
+	private function read_bracket_expression_with_token(string|array $token = null)
 	{
-		$opened || $this->expect_char_token(_BRACKET_OPEN);
+		$is_bracket = $token === _BRACKET_OPEN;
+		if (!$is_bracket) {
+			$this->expect_char_token(_PAREN_OPEN);
+		}
 
 		$is_const_value = true;
 		$is_dict = false;
@@ -1205,7 +1364,12 @@ class PHPParser extends BaseParser
 			}
 		}
 
-		$this->expect_char_token(_BRACKET_CLOSE);
+		if ($is_bracket) {
+			$this->expect_char_token(_BRACKET_CLOSE);
+		}
+		else {
+			$this->expect_char_token(_PAREN_CLOSE);
+		}
 
 		$expr = $is_dict ? new DictExpression($members) : new ArrayExpression($members);
 		$expr->is_const_value = $is_const_value;
@@ -1252,13 +1416,12 @@ class PHPParser extends BaseParser
 		return $declaration;
 	}
 
-	private function read_class_declaration(bool $is_abstract = false)
+	private function read_class_declaration(array $attributes)
 	{
 		$name = $this->expect_identifier_name();
 
 		$declaration = $this->factory->create_class_declaration($name, _PUBLIC, $this->namespace);
 		$declaration->pos = $this->pos;
-		$declaration->is_abstract = $is_abstract;
 
 		if ($this->skip_typed_token(T_EXTENDS)) {
 			$declaration->inherits = $this->read_classkindred_identifier();
@@ -1382,7 +1545,8 @@ class PHPParser extends BaseParser
 				$token = $this->expect_typed_token_ignore_empty();
 				// unbreak
 			case T_VARIABLE:
-				$declaration = $this->read_property_declaration($token, $modifier, $doc);
+				$member = $this->read_property_declaration($token, $modifier, $doc);
+				$member->is_static = $is_static;
 				$this->expect_statement_end();
 				break;
 
@@ -1393,51 +1557,50 @@ class PHPParser extends BaseParser
 				$declared_type = $this->read_declared_type_with_name($name, $nullable);
 				$noted_type = $this->read_noted_type();
 				$token = $this->expect_typed_token_ignore_empty();
-				$declaration = $this->read_property_declaration($token, $modifier, $doc, $declared_type);
-				$declaration->noted_type = $noted_type;
+				$member = $this->read_property_declaration($token, $modifier, $doc, $declared_type);
+				$member->is_static = $is_static;
+				$member->noted_type = $noted_type;
 				$this->expect_statement_end();
 				break;
 
 			case T_CONST:
-				$declaration = $this->read_class_constant_declaration($modifier, $doc);
+				$member = $this->read_class_constant_declaration($modifier, $doc);
 				$this->expect_statement_end();
 				break;
 
 			case T_FUNCTION:
-				$declaration = $this->read_method_declaration($modifier, $doc);
+				$member = $this->read_method_declaration($modifier, $doc);
+				$member->is_static = $is_static;
 				break;
 
 			case T_COMMENT:
 				return $this->read_class_member();
 
 			case T_USE:
-				$declaration = $this->read_trait_use_declaration();
+				$member = $this->read_traits_using_statement();
 				break;
 
 			default:
 				throw $this->new_unexpected_error();
 		}
 
-		if ($is_static) {
-			$declaration->is_static = $is_static;
-		}
-
-		$this->factory->end_class_member();
-
-		return $declaration;
+		return $member;
 	}
 
-	private function read_trait_use_declaration()
+	private function read_traits_using_statement()
 	{
-		$used_traits = [];
+		$items = [];
 		do {
-			$used_traits[] = $this->read_classkindred_identifier();
+			$items[] = $this->read_classkindred_identifier();
 		}
 		while ($this->skip_char_token(_COMMA));
 
 		$this->expect_statement_end();
 
-		return new ClassUseTraitsDeclaration($used_traits);
+		$node = $this->factory->create_traits_using_statement($items);
+		$node->pos = $this->pos;
+
+		return $node;
 	}
 
 	private function read_const_statement()
@@ -1475,6 +1638,8 @@ class PHPParser extends BaseParser
 		$declaration->pos = $this->pos;
 
 		$this->continue_reading_constant_decl($declaration, $doc);
+
+		$this->factory->end_class_member();
 
 		return $declaration;
 	}
@@ -1524,6 +1689,8 @@ class PHPParser extends BaseParser
 			$declaration->value = $this->read_expression();
 		}
 
+		$this->factory->end_class_member();
+
 		return $declaration;
 	}
 
@@ -1546,31 +1713,49 @@ class PHPParser extends BaseParser
 			$this->expect_statement_end();
 		}
 		else {
-			$this->read_body_statements_for($declaration);
+			$this->read_body_for_decl($declaration);
 			$this->factory->end_class_member();
 		}
 
 		return $declaration;
 	}
 
-	private function expect_lambda_expression()
+	private function read_lambda_expression()
 	{
-		$lambda = $this->factory->create_anonymous_function();
+		$decl = $this->factory->create_anonymous_function();
 		$parameters = $this->read_parameters();
 		$this->factory->set_scope_parameters($parameters);
+		$decl->pos = $this->pos;
 
-		$lambda->pos = $this->pos;
 		$this->expect_typed_token_ignore_empty(T_DOUBLE_ARROW);
 
 		$expr = $this->read_expression();
-		$lambda->set_body_with_expression($expr);
+		$decl->set_body_with_expression($expr);
 
 		$this->factory->end_block();
 
-		return $lambda;
+		return $decl;
 	}
 
-	private function read_function_declaration(?string $doc)
+	private function read_anonymous_function_expression()
+	{
+		$decl = $this->factory->create_anonymous_function();
+		$parameters = $this->read_parameters();
+		$this->factory->set_scope_parameters($parameters);
+		$decl->pos = $this->pos;
+
+		if ($this->skip_typed_token(T_USE)) {
+			$use_params = $this->read_parameters();
+		}
+
+		$this->read_body_for_decl($decl);
+
+		$this->factory->end_block();
+
+		return $decl;
+	}
+
+	private function read_function_declaration()
 	{
 		$name = $this->expect_identifier_name();
 
@@ -1582,7 +1767,7 @@ class PHPParser extends BaseParser
 
 		$this->read_function_return_types_for($declaration);
 
-		$this->read_body_statements_for($declaration);
+		$this->read_body_for_decl($declaration);
 		$this->factory->end_root_declaration();
 
 		return $declaration;
@@ -1627,11 +1812,10 @@ class PHPParser extends BaseParser
 		}
 
 		$this->scan_token_ignore_empty();
-		$token_type = $token[0];
 
 		// parameters at __construct maybe has modifiers
 		$modifier = null;
-		if (in_array($token_type, [T_PUBLIC, T_PROTECTED, T_PRIVATE])) {
+		if (in_array($token[0], [T_PUBLIC, T_PROTECTED, T_PRIVATE])) {
 			$modifier = $token[1];
 			$token = $this->scan_token_ignore_empty();
 		}
@@ -1640,7 +1824,7 @@ class PHPParser extends BaseParser
 		$noted_type = $this->read_noted_type();
 
 		if ($declared_type or $noted_type) {
-			$token = $this->scan_token_ignore_empty();
+			$token = $this->expect_typed_token_ignore_empty();
 		}
 
 		// variadic feature, the '...' operator
@@ -1650,29 +1834,34 @@ class PHPParser extends BaseParser
 			$token = $this->expect_typed_token_ignore_empty();
 		}
 
+		$declar = $this->read_lite_parameter_with_token($token);
+
+		if ($this->skip_char_token(_ASSIGN)) {
+			$declar->value = $this->read_expression();
+		}
+
+		$declar->declared_type = $declared_type;
+		$declar->noted_type = $noted_type;
+		$declar->is_variadic = $is_variadic;
+
+		return $declar;
+	}
+
+	private function read_lite_parameter_with_token(array|string $token)
+	{
 		// &
-		$inout_mode = $token === _REFERENCE
-			|| $token[0] === T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG;
+		$inout_mode = $token[0] === T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG;
 		if ($inout_mode) {
 			$token = $this->expect_typed_token_ignore_empty();
 		}
 
 		$name = $this->get_var_name($token);
+		$declar = $this->create_parameter($name);
 
-		$value = null;
-		if ($this->skip_char_token(_ASSIGN)) {
-			$value = $this->read_expression();
-		}
-
-		$declar = new ParameterDeclaration($name, $declared_type, $value);
 		if ($inout_mode) {
 			$declar->is_inout = true;
 			$declar->is_mutable = true;
 		}
-
-		$declar->noted_type = $noted_type;
-		$declar->is_variadic = $is_variadic;
-		$declar->pos = $this->pos;
 
 		return $declar;
 	}
@@ -1768,17 +1957,18 @@ class PHPParser extends BaseParser
 	// 	return $value;
 	// }
 
-	private function read_classkindred_identifier($token = null)
+	private function read_classkindred_identifier(?array $token = null)
 	{
 		// NS1\NS2\Target
 		// \NS1\NS2\Target
 
 		if ($token === null) {
-			$token = $this->scan_token_ignore_empty();
+			$token = $this->expect_typed_token_ignore_empty();
 		}
 
 		$components = $this->read_qualified_name_with($token);
 		$identifier = $this->create_classkindred_identifier(array_pop($components), $components);
+
 		$identifier->pos = $this->pos;
 
 		return $identifier;
@@ -1937,6 +2127,11 @@ class PHPParser extends BaseParser
 		return $this->expect_char_token(_SEMICOLON);
 	}
 
+	protected function skip_block_begin()
+	{
+		return $this->skip_char_token(_BLOCK_BEGIN);
+	}
+
 	protected function expect_block_begin()
 	{
 		return $this->expect_char_token(_BLOCK_BEGIN);
@@ -1967,7 +2162,7 @@ class PHPParser extends BaseParser
 		return $token;
 	}
 
-	private function read_qualified_name_with($token)
+	private function read_qualified_name_with(array|string $token)
 	{
 		switch ($token[0]) {
 			case T_NS_SEPARATOR:
@@ -2045,7 +2240,12 @@ class PHPParser extends BaseParser
 	{
 		$token = $this->scan_token_ignore_empty();
 		$this->assert_member_identifier_token($token);
-		return $token[1];
+
+		$name = $token[0] === T_VARIABLE
+			? $this->get_var_name($token)
+			: $token[1];
+
+		return $name;
 	}
 
 	private function skip_to_char_token(string $char)
@@ -2057,6 +2257,11 @@ class PHPParser extends BaseParser
 		}
 
 		throw $this->new_parse_error("Expected token \"$char\".");
+	}
+
+	private function skip_comma()
+	{
+		return $this->skip_char_token(_COMMA);
 	}
 
 	private function skip_char_token(string $char)

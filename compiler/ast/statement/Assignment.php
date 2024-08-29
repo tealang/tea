@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -17,13 +15,13 @@ interface IAssignable {}
 // {
 // 	const KIND = 'assignment';
 
-// 	public $master;
+// 	public $basing;
 // 	public $value;
 // 	public $operator;
 
-// 	public function __construct(IAssignable $master, BaseExpression $value, string $operator)
+// 	public function __construct(IAssignable $basing, BaseExpression $value, string $operator)
 // 	{
-// 		$this->master = $master;
+// 		$this->basing = $basing;
 // 		$this->value = $value;
 // 		$this->operator = $operator;
 // 	}
@@ -33,13 +31,13 @@ interface IAssignable {}
 // {
 // 	const KIND = 'array_element_assignment';
 
-// 	public $master;
+// 	public $basing;
 // 	public $key;
 // 	public $value;
 
-// 	public function __construct(BaseExpression $master, ?BaseExpression $key, BaseExpression $value)
+// 	public function __construct(BaseExpression $basing, ?BaseExpression $key, BaseExpression $value)
 // 	{
-// 		$this->master = $master;
+// 		$this->basing = $basing;
 // 		$this->key = $key;
 // 		$this->value = $value;
 // 	}

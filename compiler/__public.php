@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -43,7 +41,7 @@ function println(string ...$contents) {
 
 function dump(...$args) {
 	echo LF;
-	$dumper = new Dumper(['unit', 'program']);
+	$dumper = new Dumper(['unit', 'program'], 3);
 	foreach ($args as $arg) {
 		$str = $dumper->stringify($arg, 0);
 		$str = str_replace('Tea\\', '', $str);
@@ -169,6 +167,7 @@ const __AUTOLOADS = [
 	'Tea\IBlock' => 'ast/block/BaseBlock.php',
 	'Tea\IBlockTrait' => 'ast/block/BaseBlock.php',
 	'Tea\ControlBlock' => 'ast/block/BaseBlock.php',
+	'Tea\ForBlock' => 'ast/block/ForBlock.php',
 	'Tea\ForInBlock' => 'ast/block/ForBlock.php',
 	'Tea\ForToBlock' => 'ast/block/ForBlock.php',
 	'Tea\IElseAble' => 'ast/block/IfElseBlock.php',
@@ -200,7 +199,6 @@ const __AUTOLOADS = [
 	'Tea\InterfaceDeclaration' => 'ast/declaration/ClassKindredDeclaration.php',
 	'Tea\TraitDeclaration' => 'ast/declaration/ClassKindredDeclaration.php',
 	'Tea\IntertraitDeclaration' => 'ast/declaration/ClassKindredDeclaration.php',
-	'Tea\ClassUseTraitsDeclaration' => 'ast/declaration/ClassUseTraitsDeclaration.php',
 	'Tea\IConstantDeclaration' => 'ast/declaration/ConstantDeclaration.php',
 	'Tea\ConstantDeclarationTrait' => 'ast/declaration/ConstantDeclaration.php',
 	'Tea\ConstantDeclaration' => 'ast/declaration/ConstantDeclaration.php',
@@ -211,12 +209,14 @@ const __AUTOLOADS = [
 	'Tea\FunctionDeclaration' => 'ast/declaration/FunctionDeclaration.php',
 	'Tea\MethodDeclaration' => 'ast/declaration/FunctionDeclaration.php',
 	'Tea\MaskedDeclaration' => 'ast/declaration/MaskedDeclaration.php',
+	'Tea\MetaAttribute' => 'ast/declaration/MetaAttribute.php',
 	'Tea\NamespaceDeclaration' => 'ast/declaration/NamespaceDeclaration.php',
 	'Tea\IClassMemberDeclaration' => 'ast/declaration/PropertyDeclaration.php',
 	'Tea\ClassMemberDeclarationTrait' => 'ast/declaration/PropertyDeclaration.php',
 	'Tea\PropertyDeclaration' => 'ast/declaration/PropertyDeclaration.php',
 	'Tea\IRootDeclaration' => 'ast/declaration/RootDeclaration.php',
 	'Tea\RootDeclaration' => 'ast/declaration/RootDeclaration.php',
+	'Tea\TraitsUsingStatement' => 'ast/declaration/TraitsUsingDeclaration.php',
 	'Tea\UseDeclaration' => 'ast/declaration/UseDeclaration.php',
 	'Tea\IVariableDeclaration' => 'ast/declaration/VariableDeclaration.php',
 	'Tea\BaseVariableDeclaration' => 'ast/declaration/VariableDeclaration.php',
@@ -226,6 +226,7 @@ const __AUTOLOADS = [
 	'Tea\SuperVariableDeclaration' => 'ast/declaration/VariableDeclaration.php',
 	'Tea\RuleOptions' => 'ast/declaration/VariableDeclaration.php',
 	'Tea\ParameterDeclaration' => 'ast/declaration/VariableDeclaration.php',
+	'Tea\BracketAccessing' => 'ast/expression/Accessing.php',
 	'Tea\SquareAccessing' => 'ast/expression/Accessing.php',
 	'Tea\KeyAccessing' => 'ast/expression/Accessing.php',
 	'Tea\AnonymousFunction' => 'ast/expression/AnonymousFunction.php',
@@ -236,7 +237,7 @@ const __AUTOLOADS = [
 	'Tea\DictMember' => 'ast/expression/ArrayDictExpression.php',
 	'Tea\BaseExpression' => 'ast/expression/BaseExpression.php',
 	'Tea\BaseCallExpression' => 'ast/expression/CallExpression.php',
-	'Tea\NewExpression' => 'ast/expression/CallExpression.php',
+	'Tea\InstancingExpression' => 'ast/expression/CallExpression.php',
 	'Tea\PipeCallExpression' => 'ast/expression/CallExpression.php',
 	'Tea\CallExpression' => 'ast/expression/CallExpression.php',
 	'Tea\CallbackArgument' => 'ast/expression/CallExpression.php',
@@ -287,6 +288,7 @@ const __AUTOLOADS = [
 	'Tea\IBreakAble' => 'ast/statement/ControlStatement.php',
 	'Tea\IContinueAble' => 'ast/statement/ControlStatement.php',
 	'Tea\ControlStatement' => 'ast/statement/ControlStatement.php',
+	'Tea\FunctionEndingStatement' => 'ast/statement/ControlStatement.php',
 	'Tea\LabeledControlStatement' => 'ast/statement/ControlStatement.php',
 	'Tea\BreakStatement' => 'ast/statement/ControlStatement.php',
 	'Tea\ContinueStatement' => 'ast/statement/ControlStatement.php',
@@ -321,6 +323,7 @@ const __AUTOLOADS = [
 	'Tea\TypeHelper' => 'helper/TypeHelper.php',
 	'Tea\UsageTracer' => 'helper/UsageTracer.php',
 	'Tea\BaseParser' => 'parser/BaseParser.php',
+	'Tea\Destructuring' => 'parser/Destructuring.php',
 	'Tea\HeaderParser' => 'parser/HeaderParser.php',
 	'Tea\PHPParser' => 'parser/PHPParser.php',
 	'Tea\TeaDocTrait' => 'parser/TeaDocTrait.php',

@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -91,7 +89,7 @@ trait TeaStringTrait
 				return $items;
 			}
 			elseif ($token === _DOLLAR) {
-				$expression = $this->try_read_normal_interpolation();
+				$expression = $this->scan_normal_interpolation();
 				if ($expression === null) {
 					$string .= $token;
 					continue;
@@ -118,7 +116,7 @@ trait TeaStringTrait
 		throw $this->new_parse_error("Missed the quote close mark ($quote_mark).");
 	}
 
-	protected function try_read_normal_interpolation(): ?BaseExpression
+	protected function scan_normal_interpolation(): ?BaseExpression
 	{
 		if ($this->get_token() === _BLOCK_BEGIN) {
 			// ${ ... } style
@@ -132,7 +130,7 @@ trait TeaStringTrait
 			$this->expect_block_end();
 		}
 		else {
-			$expr = $this->try_read_dollar_identifier();
+			$expr = $this->read_dollar_identifier();
 		}
 
 		$expr = new StringInterpolation($expr);
@@ -141,13 +139,13 @@ trait TeaStringTrait
 		return $expr;
 	}
 
-	protected function try_read_dollar_identifier(): ?Identifiable
+	private function read_dollar_identifier(): Identifiable
 	{
 		// $xxx style
 
 		$token = $this->get_token();
 		if (!TeaHelper::is_identifier_name($token)) {
-			return null;
+			throw $this->new_unexpected_error();
 		}
 
 		$this->scan_token();

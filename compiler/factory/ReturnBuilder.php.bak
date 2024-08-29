@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -72,7 +70,7 @@ class ReturnBuilder
 			}
 			elseif ($subnode instanceof IAssignment) {
 				// e.g. View().text = 'abc'
-				if ($subnode->master instanceof AccessingIdentifier) {
+				if ($subnode->basing instanceof AccessingIdentifier) {
 					$this->collect_accessing_master_assignment($subnode, $fixeds);
 					continue;
 				}
@@ -94,8 +92,8 @@ class ReturnBuilder
 	{
 		$expr = $stmt->expression;
 		if ($expr->callee instanceof PlainIdentifier) {
-			// if ($expr->is_class_new() && $expr->callee->is_same_or_based_with($this->collect_type)) {
-			if ($expr->is_class_new()) {
+			// if ($expr->is_instancing && $expr->callee->is_same_or_based_with($this->collect_type)) {
+			if ($expr->is_instancing) {
 				if ($this->collect_type->is_accept_type($expr->callee)) {
 					$this->collecteds++;
 					$fixeds[] = new ArrayElementAssignment($this->vector_identifier, null, $expr);
@@ -132,11 +130,11 @@ class ReturnBuilder
 
 	private function collect_accessing_master_assignment(IAssignment $assignment, array &$fixeds)
 	{
-		$hit = $this->find_and_collect_for_accessing($assignment->master, $fixeds);
+		$hit = $this->find_and_collect_for_accessing($assignment->basing, $fixeds);
 		if ($hit) {
 			$this->collecteds++;
 			$new_assignment = clone $assignment;
-			$new_assignment->master = $hit;
+			$new_assignment->basing = $hit;
 
 			$fixeds_count = count($fixeds);
 			if ($new_assignment->leading) {
@@ -189,19 +187,19 @@ class ReturnBuilder
 
 	private function find_and_collect_for_accessing(AccessingIdentifier $accessing, array &$fixeds): ?Node
 	{
-		$master = $accessing->master;
+		$basing = $accessing->basing;
 
 		$hit = null;
-		if ($master instanceof CallExpression) {
-			$hit = $this->find_and_collect_for_call($master, $fixeds);
+		if ($basing instanceof CallExpression) {
+			$hit = $this->find_and_collect_for_call($basing, $fixeds);
 		}
-		elseif ($master instanceof AccessingIdentifier) {
-			$hit = $this->find_and_collect_for_accessing($master, $fixeds);
+		elseif ($basing instanceof AccessingIdentifier) {
+			$hit = $this->find_and_collect_for_accessing($basing, $fixeds);
 		}
 
 		if ($hit) {
 			$new_accessing = clone $accessing;
-			$new_accessing->master = $hit;
+			$new_accessing->basing = $hit;
 			return $new_accessing;
 		}
 

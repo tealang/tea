@@ -1,8 +1,6 @@
 ---
 The builtin libs for Tea
-
-@created 2019/02 by Benny
-@copyright YJ Technology Ltd. All rights reserved.
+copyright: (c)2019 tealang.org
 ---
 
 public LF = "\n"
@@ -22,11 +20,11 @@ public uint_ensure(num Int) {
 }
 
 public html_escape(str String?) String {
-	return str === none ? '' : htmlspecialchars(str)
+	return str is None ? '' : htmlspecialchars(str)
 }
 
 public html_unescape(str String?) String {
-	return str === none ? '' : htmlspecialchars_decode(str)
+	return str is None ? '' : htmlspecialchars_decode(str)
 }
 
 // public interface Sharable {

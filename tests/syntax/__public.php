@@ -6,7 +6,6 @@ use tests\phpdemo\{ const PHP_CONST_DEMO };
 const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
 $super_path = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR;
-require_once $super_path . 'tea-modules/tea/builtin/__public.php';
 require_once $super_path . 'tests/xview/__public.php';
 require_once $super_path . 'tests/phpdemo/__public.php';
 
@@ -20,7 +19,7 @@ function fn0($str) {
 
 // autoloads
 const __AUTOLOADS = [
-	'tests\syntax\PHPClassInMixed1' => '_mixed1.php',
+	'tests\syntax\PHPClassInMixed1' => 'php/_mixed1.php',
 	'tests\syntax\IDemo' => 'dist/class.php',
 	'tests\syntax\IDemoTrait' => 'dist/class.php',
 	'tests\syntax\IterableObject' => 'dist/class.php',
@@ -43,7 +42,7 @@ spl_autoload_register(function ($class) {
 	isset(__AUTOLOADS[$class]) && require UNIT_PATH . __AUTOLOADS[$class];
 });
 
-require_once UNIT_PATH . '_mixed2.php';
+require_once UNIT_PATH . 'php/_mixed2.php';
 require_once UNIT_PATH . 'dist/function.php';
 
 // end

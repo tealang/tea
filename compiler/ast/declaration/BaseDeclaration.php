@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -41,6 +39,19 @@ trait TypingTrait {
 	{
 		return $this->noted_type ?? $this->declared_type ?? $this->infered_type;
 	}
+
+	public function set_type(IType $type)
+	{
+		if ($this->noted_type) {
+			$this->noted_type = $type;
+		}
+		elseif ($this->declared_type) {
+			$this->declared_type = $type;
+		}
+		else {
+			$this->infered_type = $type;
+		}
+	}
 }
 
 trait DeclarationTrait {
@@ -71,6 +82,8 @@ trait DeclarationTrait {
 	public $uses = [];
 
 	public $defer_check_identifiers = [];
+
+	public $tailing_newlines;
 
 	public function set_depends_to_unit_level()
 	{

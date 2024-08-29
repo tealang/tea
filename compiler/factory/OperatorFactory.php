@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -18,6 +16,8 @@ class OperatorFactory
 	public static $as;
 	public static $pipe;
 
+	public static $error_control;
+	public static $reference;
 	public static $identity;
 	public static $negation;
 	public static $pre_increment;
@@ -63,9 +63,13 @@ class OperatorFactory
 	public static $none_coalescing;
 	public static $ternary; 		// exp0 ? exp1 : exp2, or exp0 ?: exp1
 
+	public static $assignment;
+
 	public static $low_bool_and;
 	public static $low_bool_xor;
 	public static $low_bool_or;
+
+	public static $spread;
 
 // ---
 
@@ -76,7 +80,6 @@ class OperatorFactory
 	private static $tea_normal_map = [];
 
 	private static $php_prefix_map = [];
-	private static $php_postfix_map = [];
 	private static $php_normal_map = [];
 
 	private static $number_operators;
@@ -94,15 +97,16 @@ class OperatorFactory
 		self::$as = self::create_operator(OPID::AS);
 		self::$pipe = self::create_operator(OPID::PIPE);
 
-		self::create_operator(OPID::REFERENCE);
+		self::$error_control = self::create_operator(OPID::ERROR_CONTROL);
+		self::$reference = self::create_operator(OPID::REFERENCE);
 		self::$identity = self::create_operator(OPID::IDENTITY);
 		self::$negation = self::create_operator(OPID::NEGATION);
 		self::$bitwise_not = self::create_operator(OPID::BITWISE_NOT);
 		self::$bool_not = self::create_operator(OPID::BOOL_NOT);
 
 		self::$pre_increment = self::create_operator(OPID::PRE_INCREMENT);
-		self::$post_increment = self::create_operator(OPID::PRE_DECREMENT);
-		self::$pre_decrement = self::create_operator(OPID::POST_INCREMENT);
+		self::$pre_decrement = self::create_operator(OPID::PRE_DECREMENT);
+		self::$post_increment = self::create_operator(OPID::POST_INCREMENT);
 		self::$post_decrement = self::create_operator(OPID::POST_DECREMENT);
 
 		self::$exponentiation = self::create_operator(OPID::EXPONENTIATION);
@@ -143,7 +147,7 @@ class OperatorFactory
 		self::$none_coalescing = self::create_operator(OPID::NONE_COALESCING);
 		self::$ternary = self::create_operator(OPID::TERNARY);
 
-		self::create_operator(OPID::ASSIGNMENT);
+		self::$assignment = self::create_operator(OPID::ASSIGNMENT);
 		self::create_operator(OPID::ADD_ASSIGNMENT);
 		self::create_operator(OPID::SUB_ASSIGNMENT);
 		self::create_operator(OPID::MUL_ASSIGNMENT);
@@ -165,6 +169,8 @@ class OperatorFactory
 		self::$low_bool_and = self::create_operator(OPID::LOW_BOOL_AND);
 		self::$low_bool_xor = self::create_operator(OPID::LOW_BOOL_XOR);
 		self::$low_bool_or = self::create_operator(OPID::LOW_BOOL_OR);
+
+		self::$spread = self::create_operator(OPID::SPREAD);
 
 		self::make_groups();
 		self::prepare_for_tea();
@@ -258,11 +264,6 @@ class OperatorFactory
 		return self::$php_prefix_map[$sign] ?? null;
 	}
 
-	public static function get_php_postfix_operator(?string $sign)
-	{
-		return self::$php_postfix_map[$sign] ?? null;
-	}
-
 	public static function get_php_normal_operator(?string $sign)
 	{
 		return self::$php_normal_map[$sign] ?? null;
@@ -289,8 +290,6 @@ class OperatorFactory
 						self::$tea_prefix_map[$sign] = $operator;
 						break;
 					case OP_POST:
-						self::$tea_postfix_map[$sign] = $operator;
-						break;
 					case OP_ASSIGN:
 					case OP_BIN:
 					case OP_TERNARY:
@@ -314,6 +313,7 @@ class OperatorFactory
 
 				$sign = $opt[0];
 				$type = $opt[1];
+				$operator->type = $type;
 				$operator->php_sign = $sign;
 				$operator->php_assoc = $opt[2];
 				$operator->php_prec = $prec;
@@ -323,8 +323,6 @@ class OperatorFactory
 						self::$php_prefix_map[$sign] = $operator;
 						break;
 					case OP_POST:
-						self::$php_postfix_map[$sign] = $operator;
-						break;
 					case OP_ASSIGN:
 					case OP_BIN:
 					case OP_TERNARY:

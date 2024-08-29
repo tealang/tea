@@ -1,9 +1,7 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
@@ -81,15 +79,16 @@ class PHPLoaderCoder extends PHPCoder
 			}
 
 			// super path
-			if ($unit->as_main or self::check_used_path_type(Compiler::BASED_WORKSPACE, $loaders)) {
+			// if ($unit->as_main or self::check_used_path_type(Compiler::BASED_WORKSPACE, $loaders)) {
+			if (self::check_used_path_type(Compiler::BASED_WORKSPACE, $loaders)) {
 				$based_level += 1;
 				$items[] = "\$super_path = dirname(__DIR__, {$based_level}) . DIRECTORY_SEPARATOR;";
 			}
 
-			// load the builtins
-			if ($unit->as_main) {
-				$items[] = sprintf("require_once \$super_path . 'tea-modules/%s';", BUILTIN_LOADER_FILE);
-			}
+			// // load the builtins
+			// if ($unit->as_main) {
+			// 	$items[] = sprintf("require_once \$super_path . 'packages/%s';", BUILTIN_LOADER_FILE);
+			// }
 
 			// load the foriegn units
 			foreach ($loaders as $loader) {

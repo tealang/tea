@@ -1,18 +1,14 @@
 <?php
 /**
  * This file is part of the Tea programming language project
- *
- * @author 		Benny <benny@meetdreams.com>
- * @copyright 	(c)2019 YJ Technology Ltd. [http://tealang.org]
+ * @copyright 	(c)2019 tealang.org
  * For the full copyright and license information, please view the LICENSE file that was distributed with this source code.
  */
 
 namespace Tea;
 
-const
-	BUILTIN_NS_URI = 'tea/builtin',
-	BUILTIN_PATH = TEA_BASE_PATH . 'tea-modules/tea/builtin/',
-	BUILTIN_PROGRAM = BUILTIN_PATH . 'core.tea';
+const BUILTIN_PATH = TEA_BASE_PATH . 'packages/builtin/';
+const BUILTIN_CORE_PROGRAM = BUILTIN_PATH . 'src/core.tea';
 
 class Compiler
 {
@@ -77,7 +73,7 @@ class Compiler
 	 */
 	private $native_program_files = [];
 
-	private $is_src_dir = false;
+	private $is_src_dir = true;
 
 	/**
 	 * the instance of current Unit
@@ -115,7 +111,7 @@ class Compiler
 
 		$this->header_file_path = $unit_path . UNIT_HEADER_FILE_NAME;
 		if (!file_exists($this->header_file_path)) {
-			throw new Exception("The Unit header file '{$this->header_file_path}' not found.");
+			$this->end_error("The header file '{$this->header_file_path}' not found");
 		}
 
 		// init unit
@@ -124,13 +120,19 @@ class Compiler
 
 		$this->unit_path = $unit_path;
 
-		// when not on build the builtins unit
-		if (!self::check_is_builtin_unit($unit_path)) {
-			$this->load_builtin_unit();
+		if (!self::is_builtin_package($unit_path)) {
+			$this->load_builtin_package();
 		}
+
+		return $unit_path;
 	}
 
-	private function load_builtin_unit(string $unit_path = BUILTIN_PATH)
+	private static function is_builtin_package(string $unit_path)
+	{
+		return strtolower(BUILTIN_PATH) === strtolower($unit_path);
+	}
+
+	private function load_builtin_package(string $unit_path = BUILTIN_PATH)
 	{
 		$this->builtin_unit = new Unit($unit_path);
 
@@ -141,40 +143,20 @@ class Compiler
 		// lets render namespace as root
 		$program->unit = null;
 
-		$program = $this->parse_tea_program(BUILTIN_PROGRAM, $ast_factory);
+		$program = $this->parse_tea_program(BUILTIN_CORE_PROGRAM, $ast_factory);
 		// lets render namespace as root
 		$program->unit = null;
 	}
 
-	private static function check_is_builtin_unit(string $unit_path)
-	{
-		// some Operation Systems are Case regardless
-		if (in_array(PHP_OS, ['Darwin', 'Windows', 'WINNT', 'WIN32'])) {
-			$result = strtolower(BUILTIN_PATH) === strtolower($unit_path);
-		}
-		else {
-			$result = BUILTIN_PATH === $unit_path;
-		}
-
-		return $result;
-	}
-
 	public function make(string $unit_path)
 	{
-		$this->init_unit($unit_path);
+		$unit_path = $this->init_unit($unit_path);
 
 		// for generate the autoload maps
-		$this->unit_path_prefix_len = strlen($this->unit_path);
+		$this->unit_path_prefix_len = strlen($unit_path);
 
-		$scan_path = $this->unit_path;
-
-		// if has "src" directory, ignore others
-		if (file_exists($scan_path . SRC_DIR_NAME)) {
-			$scan_path .= SRC_DIR_NAME . DS;
-			$this->is_src_dir = true;
-		}
-
-		$this->scan_program_files($scan_path);
+		$this->native_program_files = $this->scan_program_files($unit_path, PHP_EXT_NAME);
+		$this->normal_program_files = $this->scan_program_files($unit_path . SRC_DIR_NAME . DS, TEA_EXT_NAME);
 
 		$this->parse_unit_header();
 		$this->parse_programs();
@@ -218,7 +200,7 @@ class Compiler
 			$this->normal_programs[] = $this->parse_tea_program($file, $this->ast_factory);
 		}
 
-		self::echo_success(count($this->normal_programs) . ' Tea programs parsed.' . LF);
+		self::echo_success(count($this->normal_programs) . " Tea programs parsed.\n");
 	}
 
 	private function parse_unit_header()
@@ -228,7 +210,7 @@ class Compiler
 
 		// check the package is defined
 		if (!$this->unit->ns) {
-			throw new Exception("'namespace' declaration not found in the header file: {$this->header_file_path}");
+			$this->end_error("'namespace' declaration not found in the header file: {$this->header_file_path}");
 		}
 
 		$this->prepare_unit_paths();
@@ -282,34 +264,46 @@ class Compiler
 
 	private function check_ast_for_unit(Unit $unit, ASTChecker $normal_checker)
 	{
-		// collect uses targets for Tea programs
-		foreach ($unit->programs as $program) {
-			// if (!$program->is_native) {
-				$normal_checker->collect_program_uses($program);
-			// }
-		}
-
 		$native_checker = ASTChecker::get_native_checker();
-		// // the native programs
-		// foreach ($this->native_programs as $program) {
-		// 	self::echo_start(" - {$program->file}", LF);
-		// 	$native_checker->check_program($program);
-		// }
 
-		// the Native programs
 		foreach ($unit->programs as $program) {
 			if ($program->is_native) {
-				self::echo_start(" - {$program->file}", LF);
-				$native_checker->check_program($program);
+				$native_checker->collect_program_uses($program);
+			}
+			else {
+				$normal_checker->collect_program_uses($program);
 			}
 		}
 
-		// the Tea programs
+		$native_programs = [];
+		$normal_programs = [];
 		foreach ($unit->programs as $program) {
-			if (!$program->is_native) {
+			if ($program->is_native) {
+				$native_programs[] = $program;
+			}
+			elseif ($program->name === '__package') {
 				self::echo_start(" - {$program->file}", LF);
 				$normal_checker->check_program($program);
 			}
+			else {
+				$normal_programs[] = $program;
+			}
+		}
+
+		// the Native programs
+		foreach ($native_programs as $program) {
+			$native_checker->check_all_usings($program);
+		}
+
+		foreach ($native_programs as $program) {
+			self::echo_start(" - {$program->file}", LF);
+			$native_checker->check_all_declarations($program);
+		}
+
+		// the Tea programs
+		foreach ($normal_programs as $program) {
+			self::echo_start(" - {$program->file}", LF);
+			$normal_checker->check_program($program);
 		}
 	}
 
@@ -354,7 +348,7 @@ class Compiler
 		// check public file
 		$unit_public_file = $unit_path . PUBLIC_HEADER_FILE_NAME;
 		// if (!file_exists($unit_public_file)) {
-		// 	throw new Exception("The public file of module '{$ns->uri}' not found at: $unit_public_file");
+		// 	$this->end_error("The public file of module '{$ns->uri}' not found at: $unit_public_file");
 		// }
 
 		$unit = new Unit($unit_path);
@@ -393,7 +387,7 @@ class Compiler
 
 		if ($relative_path === false) {
 			$dirs = $this->work_path . join("', '{$this->work_path}", $this->search_dirs);
-			throw new Exception("The depends module '{$ns->uri}' not found in ('{$dirs}')");
+			$this->end_error("The depends module '{$ns->uri}' not found in ('{$dirs}')");
 		}
 
 		return [$path_based_type, $relative_path];
@@ -593,26 +587,27 @@ class Compiler
 		}
 	}
 
-	private function scan_program_files(string $path, int $levels = 0)
+	private function scan_program_files(string $dir_path, string $catching_ext)
 	{
-		$items = scandir($path);
+		$items = scandir($dir_path);
 
-		// check is a sub-unit
-		if ($levels > 0 && (in_array(UNIT_HEADER_FILE_NAME, $items) || in_array(PUBLIC_HEADER_FILE_NAME, $items)) ) {
-			echo "\nWarring: The sub-diretory '$path' is ignored, because of it has '__package.th' or '__public.th'.\n\n";
-			return; // ignore these sub-unit
-		}
-
+		$files = [];
+		$subdirs = [];
 		foreach ($items as $item) {
 			if (in_array($item, DIR_SCAN_SKIP_ITEMS, true)) {
 				continue;
 			}
 
-			$item = $path . $item;
-
-			// scan the sub-diretories
+			$item = $dir_path . $item;
 			if (is_dir($item)) {
-				$this->scan_program_files($item . DS, $levels++);
+				if ($this->is_package_dir($item)) {
+					// ignore the sub package
+					$this->echo_warring("Folder '$item' seems a subpackage, ignored...");
+				}
+				else {
+					$subdirs[] = $item;
+				}
+
 				continue;
 			}
 
@@ -621,20 +616,28 @@ class Compiler
 				continue;
 			}
 
-			$ext_name = substr($item, $ext_pos + 1);
-
-			// the valid ext-names must be named in lower-case
-			// ignore the upper-case ext-names
-			if ($ext_name === TEA_EXT_NAME) {
-				$this->normal_program_files[] = $item;
+			$current_ext = substr($item, $ext_pos + 1);
+			if ($current_ext === $catching_ext) {
+				$files[] = $item;
 			}
-			elseif ($ext_name === PHP_EXT_NAME) {
-				$this->native_program_files[] = $item;
-			}
-			else {
-				// ignore other files ...
+			elseif (strtolower($current_ext) === $catching_ext) {
+				// the valid ext-names must be named in lower case
+				$this->end_error("Please use a lower case extension name for file '{$item}'");
 			}
 		}
+
+		// scan the sub-folders
+		foreach ($subdirs as $item) {
+			$sub_files = $this->scan_program_files($item . DS, $catching_ext);
+			$files = array_merge($files, $sub_files);
+		}
+
+		return $files;
+	}
+
+	private function is_package_dir(string $path)
+	{
+		return file_exists($path . UNIT_HEADER_FILE_NAME) || file_exists($path . PUBLIC_HEADER_FILE_NAME);
 	}
 
 	private function parse_tea_header(string $file, ASTFactory $ast_factory)
@@ -662,7 +665,18 @@ class Compiler
 
 	private static function echo_success(string $message = 'success.')
 	{
-		echo $message, LF;
+		echo $message, "\n";
+	}
+
+	private static function echo_warring(string $message)
+	{
+		echo "\nWarring: ", $message, "\n\n";
+	}
+
+	private static function end_error(string $message)
+	{
+		echo "\nError: ", $message, "\n\n";
+		exit;
 	}
 }
 

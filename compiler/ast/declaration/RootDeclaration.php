@@ -19,6 +19,8 @@ abstract class RootDeclaration extends Node implements IRootDeclaration, IStatem
 	 */
 	public $program;
 
+	public $is_dynamic;
+
 	public function set_namespace(NamespaceIdentifier $ns)
 	{
 		$this->ns = $ns;
