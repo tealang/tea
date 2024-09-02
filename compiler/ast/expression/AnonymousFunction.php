@@ -14,7 +14,7 @@ class AnonymousFunction extends BaseExpression implements IScopeBlock
 	const KIND = 'anonymous_function';
 
 	/**
-	 * @var ParameterDeclaration|PlainIdentifier[]
+	 * @var ParameterDeclaration[]
 	 */
 	public $using_params = [];
 

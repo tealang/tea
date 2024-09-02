@@ -32,7 +32,7 @@ class Program extends Node
 
 	/**
 	 * targets of use statements in current program
-	 * @var UseDeclcaration[]
+	 * @var UseDeclaration[]
 	 */
 	public $use_targets = [];
 

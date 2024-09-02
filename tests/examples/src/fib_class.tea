@@ -38,8 +38,10 @@ internal Fib: IFib {
 }
 
 var fib = Fib(9)
-while fib.has_next() {
-	echo fib.get_next()
+try {
+	while fib.has_next() {
+		echo fib.get_next()
+	}
 }
 catch ex {
 	echo ex.getMessage()

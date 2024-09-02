@@ -607,7 +607,7 @@ class TeaParser extends BaseParser
 		$this->read_body_for_control_block($block);
 
 		$this->scan_else_block_for($block);
-		$this->scan_catching_block_for($block);
+		// $this->scan_catching_block_for($block);
 
 		$this->factory->end_branches($block);
 
@@ -704,7 +704,7 @@ class TeaParser extends BaseParser
 		$block->set_branches($branches);
 
 		$this->scan_else_block_for($block);
-		$this->scan_catching_block_for($block);
+		// $this->scan_catching_block_for($block);
 
 		return $block;
 	}
@@ -773,7 +773,7 @@ class TeaParser extends BaseParser
 		// so need assign to a temp variable on render the target code
 		$this->scan_else_block_for($block);
 
-		$this->scan_catching_block_for($block);
+		// $this->scan_catching_block_for($block);
 
 		return $block;
 	}
@@ -845,7 +845,7 @@ class TeaParser extends BaseParser
 
 		$this->read_body_for_control_block($block);
 
-		$this->scan_catching_block_for($block);
+		// $this->scan_catching_block_for($block);
 
 		return $block;
 	}
@@ -1246,11 +1246,11 @@ class TeaParser extends BaseParser
 		return $expression;
 	}
 
-	protected function read_object_expression()
+	private function read_object_expression()
 	{
-		$class = $this->factory->create_virtual_class();
+		[$class_decl, $class_symbol] = $this->factory->create_virtual_class();
 
-		while ($key = $this->read_object_key()) {
+		while ($key = $this->scan_object_key()) {
 			$this->expect_token_ignore_space(_COLON);
 
 			$quote_mark = null;
@@ -1259,10 +1259,9 @@ class TeaParser extends BaseParser
 				$key = $key->value;
 			}
 
-			$member = $this->factory->create_object_member($quote_mark, $key);
-
-			if (!$class->append_member($member)) {
-				throw $this->parser->new_parse_error("The object member '{$member->name}' is duplicated");
+			[$member_decl, $member_symbol] = $this->factory->create_object_member($quote_mark, $key);
+			if (!$class_decl->append_member_symbol($member_symbol)) {
+				throw $this->parser->new_parse_error("Duplicated object member '{$member_decl->name}'");
 			}
 
 			$val = $this->read_expression();
@@ -1270,8 +1269,8 @@ class TeaParser extends BaseParser
 				throw $this->new_unexpected_error();
 			}
 
-			$member->value = $val;
-			$member->pos = $val->pos;
+			$member_decl->value = $val;
+			$member_decl->pos = $val->pos;
 
 			if (!$this->skip_comma()) {
 				break;
@@ -1285,12 +1284,12 @@ class TeaParser extends BaseParser
 		// if support literal mode, then would be need to support compile-value
 		// example as value for constants, thats a troublesome
 		$object = new ObjectExpression();
-		$object->class_declaration = $class;
+		$object->symbol = $class_symbol;
 
 		return $object;
 	}
 
-	protected function read_object_key()
+	private function scan_object_key()
 	{
 		$token = $this->get_token_ignore_empty();
 		if ($token === null || $token === _BRACE_CLOSE) {
@@ -1387,8 +1386,6 @@ class TeaParser extends BaseParser
 		$expr = new ArrayExpression($items);
 		$expr->is_const_value = $is_const_value;
 		return $expr;
-
-		// return $is_const_value ? new ArrayExpression($items) : new LiteralArray($items);
 	}
 
 	protected function read_dict_with_first_item(BaseExpression $key)
@@ -1426,8 +1423,6 @@ class TeaParser extends BaseParser
 		$expr = new DictExpression($items);
 		$expr->is_const_value = $is_const_value;
 		return $expr;
-
-		// return $is_const_value ? new DictExpression($items) : new LiteralDict($items);
 	}
 
 	protected function read_lambda_combination(array $parameters, $arrow_is_optional = false)

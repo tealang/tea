@@ -10,14 +10,6 @@ namespace Tea;
 interface IBreakAble {}
 interface IContinueAble {}
 
-// abstract class PostConditionAbleStatement extends BaseStatement
-// {
-// 	/**
-// 	 * @BaseExpression
-// 	 */
-// 	public $condition;
-// }
-
 abstract class ControlStatement extends BaseStatement
 {
 	public ?BaseExpression $argument;
@@ -26,23 +18,14 @@ abstract class ControlStatement extends BaseStatement
 	{
 		$this->argument = $argument;
 		$this->belong_block = $belong_block;
-	}
-}
-
-abstract class FunctionEndingStatement extends ControlStatement
-{
-	public function __construct(?BaseExpression $argument, IBlock $belong_block)
-	{
-		$this->argument = $argument;
-		$this->belong_block = $belong_block;
-		$belong_block->is_ended_function = true;
+		$belong_block->is_transfered = true;
 	}
 }
 
 abstract class LabeledControlStatement extends ControlStatement
 {
 	public $target_label;
-	public $target_layers = 0;
+	public $target_layers;
 	public $switch_layers;
 }
 
@@ -56,17 +39,17 @@ class ContinueStatement extends LabeledControlStatement
 	const KIND = 'continue_statement';
 }
 
-class ReturnStatement extends FunctionEndingStatement
+class ReturnStatement extends ControlStatement
 {
 	const KIND = 'return_statement';
 }
 
-class ThrowStatement extends FunctionEndingStatement
+class ThrowStatement extends ControlStatement
 {
 	const KIND = 'throw_statement';
 }
 
-class ExitStatement extends FunctionEndingStatement
+class ExitStatement extends ControlStatement
 {
 	const KIND = 'exit_statement';
 }

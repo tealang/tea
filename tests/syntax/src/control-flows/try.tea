@@ -11,27 +11,27 @@ finally {
 	echo 'do finally'
 }
 
-// if with catch-finally
-if 1 {
-	//
-}
-else {
-	//
-}
-catch ex {
-	echo ex.getMessage()
-}
-finally {}
+// // if with catch-finally
+// if 1 {
+// 	//
+// }
+// else {
+// 	//
+// }
+// catch ex {
+// 	echo ex.getMessage()
+// }
+// finally {}
 
-// for with catch-finally
-for v in [0, 1, 2, 3] {
-	if v == 2 {
-		throw ErrorException('some message')
-	}
-}
-catch ex ErrorException {
-	echo ex.getMessage()
-}
-finally {}
+// // for with catch-finally
+// for v in [0, 1, 2, 3] {
+// 	if v == 2 {
+// 		throw ErrorException('some message')
+// 	}
+// }
+// catch ex ErrorException {
+// 	echo ex.getMessage()
+// }
+// finally {}
 
 // also supported in while

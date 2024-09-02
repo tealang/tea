@@ -39,23 +39,15 @@ else {
 
 echo LF;
 
-try {
-	$__tmp0 = 9 * 2;
-	$__tmp1 = 0 + 5;
-	if ($__tmp0 >= $__tmp1) {
-		foreach (\range($__tmp0, $__tmp1, -2) as $i) {
-			echo $i, ',', LF;
-		}
-	}
-	elseif ($list) {
-		echo 'oh!', LF;
+$__tmp0 = 9 * 2;
+$__tmp1 = 0 + 5;
+if ($__tmp0 >= $__tmp1) {
+	foreach (\range($__tmp0, $__tmp1, -2) as $i) {
+		echo $i, ',', LF;
 	}
 }
-catch (\Exception $ex) {
-	// no any
-}
-finally {
-	// no any
+elseif ($list) {
+	echo 'oh!', LF;
 }
 
 echo LF;

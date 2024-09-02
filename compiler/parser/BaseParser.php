@@ -30,7 +30,7 @@ abstract class BaseParser
 	protected $pos_before_skiped_comments = 0;
 
 	/**
-	 * @var int[:]
+	 * @var UInt.Dict
 	 */
 	protected $line2pos = [];
 
@@ -42,6 +42,9 @@ abstract class BaseParser
 	// the total tokens
 	protected $tokens_count = 0;
 
+	/**
+	 * @var ASTFactory
+	 */
 	protected $factory;
 
 	public function __construct(ASTFactory $factory, string $file)

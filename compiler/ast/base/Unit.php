@@ -24,24 +24,29 @@ class Unit implements IRootDeclaration
 	public $as_main = false;
 
 	/**
-	 * @var array <string: NamespaceDeclaration>
+	 * @var NamespaceDeclaration.Dict
 	 */
 	public $namespaces = [];
 
 	/**
-	 * @var array<Program>
+	 * @var Program[]
 	 */
 	public $programs = [];
 
 	/**
-	 * @var array<string: TopSymbol>
+	 * @var TopSymbol.Dict
 	 */
 	public $symbols = [];
 
 	/**
-	 * @var array<string: Unit>
+	 * @var Unit.Dict
 	 */
 	public $use_units = []; // units that used in programs
+
+	/**
+	 * @var ASTFactory
+	 */
+	public $factory;
 
 	public function __construct(string $path)
 	{

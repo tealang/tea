@@ -47,6 +47,8 @@ class TypeFactory
 	public static $_iterator;
 	public static $_generator;
 
+	public static $_exception_symbol;
+
 	// for check accepts
 	public static $_iview_symbol;
 
@@ -131,10 +133,19 @@ class TypeFactory
 			}
 		}
 
+		self::$_exception_symbol = $unit->symbols[_BASE_EXCEPTION] ?? null;
 		self::$_iview_symbol = $unit->symbols['IView'] ?? null;
 		self::$_iterator_symbol = $unit->symbols['Iterator'] ?? null;
 		// self::$_generator_symbol = $unit->symbols['Generator'] ?? null;
 		self::$_generator_symbol = self::$_iterator_symbol;
+	}
+
+	// only valid after set_symbols
+	public static function get_base_exception_type()
+	{
+		static $identifier = new ClassKindredIdentifier(_BASE_EXCEPTION);
+		$identifier->symbol = self::$_exception_symbol;
+		return $identifier;
 	}
 
 	public static function get_for_casting_token_id(int $id)

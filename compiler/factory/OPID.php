@@ -12,8 +12,9 @@ class OPID
 	const NEW = 1;
 	const CLONE = 2;
 
-	const MEMBER_ACCESSING = 5;
-	const STATIC_ACCESSING = 6; // static member accessing
+	const STATIC_ACCESSING = 5; // static member accessing
+	const MEMBER_ACCESSING = 6;
+	const NULLSAFE_MEMBER_ACCESSING = 7;
 
 	const REFERENCE = 20;
 	const IDENTITY = 21;  		// conversion of string to int/float, eg. +"123" to 123

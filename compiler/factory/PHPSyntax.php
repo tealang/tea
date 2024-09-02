@@ -13,8 +13,9 @@ class PHPSyntax
 		[
 			OPID::NEW => ['new', OP_PRE, OP_NA],
 			OPID::CLONE => ['clone', OP_PRE, OP_NA],
-			OPID::MEMBER_ACCESSING => ['->', OP_BIN, OP_L, OP_NA],
 			OPID::STATIC_ACCESSING => ['::', OP_BIN, OP_L, OP_NA],
+			OPID::MEMBER_ACCESSING => ['->', OP_BIN, OP_L, OP_NA],
+			OPID::NULLSAFE_MEMBER_ACCESSING => ['?->', OP_BIN, OP_L, OP_NA],
 		],
 		[
 			OPID::EXPONENTIATION => ['**', OP_BIN, OP_R],

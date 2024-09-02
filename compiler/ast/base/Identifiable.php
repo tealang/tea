@@ -50,7 +50,9 @@ class AccessingIdentifier extends Identifiable implements IType
 	 */
 	public $is_static;
 
-	public function __construct(BaseExpression $basing, string $name)
+	public $is_nullsafe;
+
+	public function __construct(BaseExpression $basing, string $name, bool $nullsafe = false)
 	{
 		if ($basing instanceof PlainIdentifier) {
 			$basing->is_accessing = true;
@@ -58,6 +60,7 @@ class AccessingIdentifier extends Identifiable implements IType
 
 		$this->basing = $basing;
 		$this->name = $name;
+		$this->is_nullsafe = $nullsafe;
 	}
 }
 
@@ -76,8 +79,6 @@ class PlainIdentifier extends Identifiable implements IType
 	public $ns;
 
 	public $generic_types;
-
-	// public $lambda;
 
 	public static function create_with_symbol(Symbol $symbol)
 	{

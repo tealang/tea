@@ -13,7 +13,7 @@ class ObjectExpression extends BaseExpression
 
 	const KIND = 'object_expression';
 
-	public $class_declaration;
+	public $symbol;
 }
 
 class ObjectMember extends PropertyDeclaration

@@ -17,9 +17,6 @@ class ASTFactory
 
 	public $root_namespace;
 
-	// use for untyped catch
-	public $base_exception_identifier;
-
 	public $parser;
 
 	private $ns;
@@ -28,11 +25,14 @@ class ASTFactory
 
 	private $program;
 
+	/**
+	 * @var IDeclaration
+	 */
 	private $declaration;
 
 	/**
 	 * current classkindred
-	 * @var ClasskindredDeclaration
+	 * @var ClassKindredDeclaration
 	 */
 	private $class;
 
@@ -43,7 +43,7 @@ class ASTFactory
 	// private $function;
 
 	/**
-	 * current function or lambda
+	 * current function or closure
 	 * @var IScopeBlock
 	 */
 	private $scope;
@@ -65,16 +65,13 @@ class ASTFactory
 
 	public function __construct(Unit $unit)
 	{
+		$unit->factory = $this;
 		$this->unit = $unit;
 		$this->root_namespace = $this->create_namespace_identifier(['']);
 
 		// the constant 'UNIT_PATH'
 		$declaration = new ConstantDeclaration(_PUBLIC, _UNIT_PATH, TypeFactory::$_string, null);
 		$this->unit_path_symbol = new Symbol($declaration);
-
-
-		// use for untyped catch
-		$this->base_exception_identifier = new ClassKindredIdentifier(_BASE_EXCEPTION);
 	}
 
 	public function set_as_main()
@@ -163,9 +160,9 @@ class ASTFactory
 		return new ExitStatement($argument, $this->block);
 	}
 
-	public function create_accessing_identifier(BaseExpression $basing, string $name)
+	public function create_accessing_identifier(BaseExpression $basing, string $name, bool $nullsafe = false)
 	{
-		return new AccessingIdentifier($basing, $name);
+		return new AccessingIdentifier($basing, $name, $nullsafe);
 	}
 
 	public function create_classkindred_identifier(string $name)
@@ -393,62 +390,76 @@ class ASTFactory
 		return $program;
 	}
 
-	public static function create_virtual_function(string $name)
+	public function create_virtual_function(string $name, Program $program = null)
 	{
+		// $program and $program = $this->switch_program($program);
+
 		$decl = new FunctionDeclaration(_INTERNAL, $name, null, []);
 		$decl->is_dynamic = true;
 
+		// $symbol = $this->create_symbol_for_top_declaration($decl, null);
 		$symbol = new Symbol($decl);
 
-		return $decl;
+		// $program and $program = $this->switch_program($program);
+
+		return [$decl, $symbol];
 	}
 
-	public static function create_virtual_class(string $name = '__object_class')
+	public function create_virtual_class(string $name = '__object_class', Program $program = null)
 	{
+		// $program and $program = $this->switch_program($program);
+
 		$decl = new ClassDeclaration(null, $name);
 		$decl->is_dynamic = true;
 
+		// $symbol = $this->create_symbol_for_top_declaration($decl, null);
 		$symbol = new Symbol($decl);
+
 		self::bind_class_symbol($decl, $symbol);
 
-		// do not need other context, it's just for ast-check
+		// $program and $program = $this->switch_program($program);
 
-		return $decl;
+		return [$decl, $symbol];
 	}
 
-	public static function create_virtual_method(string $name, ClassDeclaration $class)
+	private function switch_program(Program $program)
+	{
+		$temp = $this->program;
+		$this->program = $program;
+		return $temp;
+	}
+
+	public function create_virtual_method(string $name, ClassDeclaration $class)
 	{
 		$decl = new MethodDeclaration(null, $name);
 		$decl->is_dynamic = true;
 		$decl->infered_type = TypeFactory::$_any;
 		$decl->parameters = [];
 
-		new Symbol($decl);
-		$class->append_member($decl);
+		$symbol = new Symbol($decl);
+		$class->append_member_symbol($symbol);
 
-		return $decl;
+		return [$decl, $symbol];
 	}
 
-	public static function create_virtual_property(string $name, ClassDeclaration $class)
+	public function create_virtual_property(string $name, ClassDeclaration $class)
 	{
 		$decl = new PropertyDeclaration(null, $name, TypeFactory::$_any);
 		$decl->is_dynamic = true;
 		$decl->infered_type = TypeFactory::$_any;
 
-		new Symbol($decl);
-		$class->append_member($decl);
+		$symbol = new Symbol($decl);
+		$class->append_member_symbol($symbol);
 
-		return $decl;
+		return [$decl, $symbol];
 	}
 
 	public function create_object_member(?string $quote_mark, string $name)
 	{
-		$declaration = new ObjectMember($name, $quote_mark);
-		new Symbol($declaration);
+		$decl = new ObjectMember($name, $quote_mark);
+		$symbol = new Symbol($decl);
 
-		// $this->begin_class_member($declaration);
-
-		return $declaration;
+		return [$decl, $symbol];
 	}
 
 	public function create_builtin_type_class_declaration(string $name)
@@ -529,16 +540,16 @@ class ASTFactory
 
 	private static function bind_class_symbol(ClassKindredDeclaration $declaration, Symbol $symbol)
 	{
-		// create 'this' symbol
-		$class_identifier = new ClassKindredIdentifier($declaration->name); // as a Type for 'this'
-		$class_identifier->symbol = $symbol;
-		// $declaration->symbols[_THIS] = self::create_symbol_this($class_identifier);
+		// identifier for 'this'
+		$identifier = new ClassKindredIdentifier($declaration->name); // as a Type for 'this'
+		$identifier->symbol = $symbol;
 
+		$declaration->typing_identifier = $identifier;
 		$declaration->this_class_symbol = $symbol;
-		$declaration->this_object_symbol = self::create_symbol_this($class_identifier);
+		$declaration->this_object_symbol = self::create_symbol_this($identifier);
 
-		// create the MetaType
-		$declaration->declared_type = TypeFactory::create_meta_type($class_identifier);
+		// the MetaType
+		$declaration->declared_type = TypeFactory::create_meta_type($identifier);
 	}
 
 	private static function create_symbol_this(ClassKindredIdentifier $class)
@@ -561,15 +572,7 @@ class ASTFactory
 	public function create_masked_declaration(string $name)
 	{
 		$declaration = new MaskedDeclaration(_PUBLIC, $name);
-		$this->new_top_symbol($declaration);
-
 		$this->begin_class_member($declaration);
-
-		$this->declaration = $declaration;
-		$this->scope = $declaration;
-		// $this->function = $declaration;
-		$this->block = $declaration;
-
 		return $declaration;
 	}
 
@@ -584,10 +587,7 @@ class ASTFactory
 	public function create_method_declaration(?string $modifier, string $name)
 	{
 		$declaration = new MethodDeclaration($modifier, $name);
-		new Symbol($declaration);
-
 		$this->begin_class_member($declaration);
-
 		return $declaration;
 	}
 
@@ -606,20 +606,14 @@ class ASTFactory
 	public function create_property_declaration(?string $modifier, string $name)
 	{
 		$declaration = new PropertyDeclaration($modifier, $name);
-		new Symbol($declaration);
-
 		$this->begin_class_member($declaration);
-
 		return $declaration;
 	}
 
 	public function create_class_constant_declaration(?string $modifier, string $name)
 	{
 		$declaration = new ClassConstantDeclaration($modifier, $name);
-		new Symbol($declaration);
-
 		$this->begin_class_member($declaration);
-
 		return $declaration;
 	}
 
@@ -704,14 +698,13 @@ class ASTFactory
 		return $block;
 	}
 
-	public function create_catch_block(string $var_name, ?ClassKindredIdentifier $type)
+	public function create_catch_block(string $var_name, ?ClassKindredIdentifier $type = null)
 	{
-		$var_declaration = new VariableDeclaration($var_name, $type ?? $this->base_exception_identifier);
-
-		$block = new CatchBlock($var_declaration);
-		$block->symbols[$var_name] = new Symbol($var_declaration);
-
+		$var = new VariableDeclaration($var_name, $type);
+		$block = new CatchBlock($var);
+		$block->symbols[$var_name] = new Symbol($var);
 		$this->begin_block($block);
+
 		return $block;
 	}
 
@@ -807,6 +800,33 @@ class ASTFactory
 		return $block;
 	}
 
+	public function create_foreach_block(BaseExpression $iterable, ?BaseExpression $key, BaseExpression $val)
+	{
+		$block = new ForEachBlock($iterable, $key, $val);
+		$this->begin_block($block);
+
+		if ($key instanceof PlainIdentifier) {
+			$this->create_variable_declaration_for_identifier($key, $block);
+		}
+
+		if ($val instanceof PlainIdentifier) {
+			$this->create_variable_declaration_for_identifier($val, $block);
+		}
+
+		return $block;
+	}
+
+	private function create_variable_declaration_for_identifier(PlainIdentifier $identifier, IBlock $block)
+	{
+		$name = $identifier->name;
+		$decl = new VariableDeclaration($name);
+
+		$identifier->symbol = new Symbol($decl);
+		$block->symbols[$name] = $identifier->symbol;
+
+		$this->remove_defer_check($identifier);
+	}
+
 	public function create_forin_block(?ParameterDeclaration $key, ParameterDeclaration $val, BaseExpression $iterable)
 	{
 		$block = new ForInBlock($key, $val, $iterable);
@@ -830,17 +850,24 @@ class ASTFactory
 	private function prepare_forin_vars(?ParameterDeclaration $key, ParameterDeclaration $val, ControlBlock $block)
 	{
 		if ($key) {
-			// use String as the default type, because String can be compatible with Int/UInt
-			$key_declar = new VariableDeclaration($key->name);
-			$block->symbols[$key->name] = $key->symbol = new Symbol($key_declar);
+			// $key = new VariableDeclaration($key->name);
+			$symbol = new Symbol($key);
+			$block->symbols[$key->name] = $symbol;
+			// $key->symbol = $symbol;
 		}
 
-		$val_declar = new VariableDeclaration($val->name);
-		$block->symbols[$val->name] = $val->symbol = new Symbol($val_declar);
+		// $val = new VariableDeclaration($val->name);
+		$symbol = new Symbol($val);
+		$block->symbols[$val->name] = $symbol;
+		// $val->symbol = $symbol;
 	}
 
 	public function create_while_block($condition)
 	{
+		if ($condition instanceof Parentheses) {
+			$condition = $condition->expression;
+		}
+
 		$block = new WhileBlock($condition);
 		$this->begin_block($block);
 		return $block;
@@ -893,7 +920,7 @@ class ASTFactory
 	{
 		$symbols = $block->symbols;
 		foreach ($branches as $branch) {
-			if (!$branch->is_ended_function) {
+			if (!$branch->is_transfered) {
 				$symbols = array_intersect_key($symbols, $branch->symbols);
 			}
 		}
@@ -935,19 +962,20 @@ class ASTFactory
 		$this->switch_to_initializer();
 	}
 
-	public function begin_class_member(IClassMemberDeclaration $declaration)
+	public function begin_class_member(IClassMemberDeclaration $member)
 	{
-		if (!$this->class->append_member($declaration)) {
-			throw $this->parser->new_parse_error("Class member '{$declaration->name}' of '{$this->class->name}' has duplicated");
+		$symbol = new Symbol($member);
+		if (!$this->class->append_member_symbol($symbol)) {
+			throw $this->parser->new_parse_error("Duplicated class member '{$member->name}'");
 		}
 
-		if ($declaration instanceof MethodDeclaration) {
-			$this->scope = $declaration;
-			// $this->function = $declaration;
-		}
+		// if ($member instanceof MethodDeclaration) {
+			$this->scope = $member;
+			// $this->function = $member;
+		// }
 
-		$this->block = $declaration;
-		$this->declaration = $declaration;
+		$this->block = $member;
+		$this->declaration = $member;
 	}
 
 	public function end_class_member()
@@ -1214,20 +1242,22 @@ class ASTFactory
 
 	private function add_scope_symbol(Symbol $symbol)
 	{
-		if (isset($this->scope->symbols[$symbol->name])) {
+		$scope = $this->scope;
+		if (isset($scope->symbols[$symbol->name])) {
 			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in current scope");
 		}
 
-		$this->scope->symbols[$symbol->name] = $symbol;
+		$scope->symbols[$symbol->name] = $symbol;
 	}
 
 	private function add_block_symbol(Symbol $symbol)
 	{
-		if (isset($this->block->symbols[$symbol->name])) {
-			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in local block");
+		$name = $symbol->name;
+		if (isset($this->block->symbols[$name])) {
+			throw $this->parser->new_parse_error("Symbol '{$name}' is already in use in local block");
 		}
 
-		$this->block->symbols[$symbol->name] = $symbol;
+		$this->block->symbols[$name] = $symbol;
 	}
 }
 

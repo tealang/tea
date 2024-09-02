@@ -15,7 +15,7 @@ abstract class BaseCallExpression extends BaseExpression
 	public $callee;
 
 	/**
-	 * @var []BaseExpression
+	 * @var BaseExpression[]
 	 */
 	public $arguments;
 

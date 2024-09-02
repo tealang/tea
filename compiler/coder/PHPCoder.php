@@ -162,10 +162,6 @@ class PHPCoder extends BaseCoder
 		}
 
 		foreach ($declaration->defer_check_identifiers as $identifier) {
-			if ($identifier->symbol === null) {
-				dump($identifier, $this->program->file);
-				exit;
-			}
 			$dependence = $identifier->symbol->declaration;
 			if ($dependence instanceof FunctionDeclaration && $dependence->program->is_native) {
 				$this->program->append_depends_native_program($dependence->program);
@@ -407,14 +403,9 @@ class PHPCoder extends BaseCoder
 
 	protected function render_anonymous_using_parameters(array $using_params)
 	{
+		$items = [];
 		foreach ($using_params as $param) {
 			$item = $param->render($this);
-			// in some cases, it is not possible to detect whether there has been a change,
-			// such as when an external implementation is called.
-			// unified processing into references, as the scope of these variables should belong to extensions,
-			// it is also unreasonable to process them as copy semantics.
-			$item = '&' . $item;
-
 			$items[] = $item;
 		}
 
@@ -701,6 +692,7 @@ class PHPCoder extends BaseCoder
 	protected function render_case_branch_body(array $nodes)
 	{
 		$items = [];
+		$node = null;
 		foreach ($nodes as $node) {
 			$item = $node->render($this);
 			$items[] = $item === LF ? $item : $item . LF;
@@ -717,9 +709,9 @@ class PHPCoder extends BaseCoder
 	{
 		$iterable = $node->iterable->render($this);
 
+		$temp_assignment = null;
 		if ($node->else) {
 			// create temp assignment to avoid duplicate computation
-			$temp_assignment = '';
 			if (!$node->iterable instanceof PlainIdentifier && !$node->iterable->is_const_value) {
 				$temp_name = $this->generate_temp_variable_name();
 				$temp_assignment = "$temp_name = $iterable;\n";
@@ -1495,7 +1487,6 @@ class PHPCoder extends BaseCoder
 	private function get_identifier_name_for_root_namespace_declaration(ClassKindredDeclaration $declaration)
 	{
 		$name = $declaration->name;
-
 		if ($declaration->origin_name !== null) {
 			$name = $declaration->origin_name;
 		}
@@ -1668,6 +1659,7 @@ class PHPCoder extends BaseCoder
 
 	public function render_plain_interpolated_string(PlainInterpolatedString $node)
 	{
+		$pieces = [];
 		foreach ($node->items as $item) {
 			if ($item instanceof StringInterpolation) {
 				$item = $this->render_string_interpolation($item);
@@ -1753,7 +1745,7 @@ class PHPCoder extends BaseCoder
 
 	// public function render_object_expression(BaseExpression $node)
 	// {
-	// 	$members = $node->class_declaration->members;
+	// 	$members = $node->symbol->declaration->members;
 
 	// 	$items = [];
 	// 	foreach ($members as $subnode) {
@@ -1950,11 +1942,6 @@ class PHPCoder extends BaseCoder
 
 		return $expr;
 	}
-
-	// protected function render_with_post_condition(PostConditionAbleStatement $node, string $code)
-	// {
-	// 	return sprintf("if (%s) {\n\t%s\n}", $node->condition->render($this), $code);
-	// }
 
 	public function render_break_statement(Node $node)
 	{

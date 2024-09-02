@@ -38,7 +38,7 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 	 * the aggregated, actually available members,
 	 * including those that inherit from the parent class,
 	 * those implemented by default in the interface, and those defined in this class
-	 * @var array  [name => IClassMemberDeclaration]
+	 * @var array  [name => Symbol]
 	 */
 	public $aggregated_members = [];
 
@@ -46,9 +46,12 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 	 * The symbols for current class instance
 	 * used for this, super
 	 */
-	// public $symbols = [];
+	public $symbols = [];
 
 	public $belong_block; // aways none
+
+	// the instance type for type Self
+	public $typing_identifier;
 
 	public $this_class_symbol;
 
@@ -72,21 +75,26 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 		$this->usings[] = $using;
 	}
 
-	public function append_member(IClassMemberDeclaration $member)
+	public function append_member_symbol(Symbol $symbol)
 	{
-		if (isset($this->members[$member->name])) {
+		$name = $symbol->name;
+		if (isset($this->symbols[$name])) {
 			return false;
 		}
 
+		$member = $symbol->declaration;
 		$member->belong_block = $this;
-		$this->members[$member->name] = $member;
+
+		$this->members[$name] = $member;
+		$this->symbols[$name] = $symbol;
 
 		return true;
 	}
 
 	public function is_same_or_based_with_symbol(Symbol $symbol)
 	{
-		return $this->symbol === $symbol || $this->find_based_with_symbol($symbol) !== null;
+		$symbol_decl = $symbol->declaration;
+		return $this === $symbol_decl || $this->find_based_with_symbol($symbol) !== null;
 	}
 
 	public function find_based_with_symbol(Symbol $symbol)

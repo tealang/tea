@@ -5,21 +5,13 @@ namespace tests\syntax;
 $a = 0;
 $b = 1;
 
-try {
-	if ($a) {
-		// no any
-	}
-	elseif ($b) {
-		// no any
-	}
-	else {
-		// no any
-	}
-}
-catch (\Exception $ex) {
+if ($a) {
 	// no any
 }
-finally {
+elseif ($b) {
+	// no any
+}
+else {
 	// no any
 }
 // ---------

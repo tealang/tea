@@ -13,6 +13,7 @@ class TeaSyntax
 		[
 			OPID::CLONE => ['clone', OP_PRE, OP_NA],
 			OPID::MEMBER_ACCESSING => ['.', OP_BIN, OP_L, OP_NA],
+			OPID::NULLSAFE_MEMBER_ACCESSING => ['?.', OP_BIN, OP_L, OP_NA],
 			OPID::PIPE => ['::', OP_BIN, OP_L, OP_NA],
 			OPID::AS => ['#', OP_BIN, OP_L, OP_NA],
 		],

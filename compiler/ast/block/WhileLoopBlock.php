@@ -7,25 +7,31 @@
 
 namespace Tea;
 
-class WhileBlock extends ControlBlock implements IExceptAble, IBreakAble, IContinueAble
+class WhileLikeBlock extends ControlBlock implements IExceptAble, IBreakAble, IContinueAble
 {
 	use ExceptTrait;
 
-	const KIND = 'while_block';
-
 	public $condition;
-
-	// public $do_the_first;
-
-	public function __construct(BaseExpression $condition)
-	{
-		$this->condition = $condition instanceof Parentheses ? $condition->expression : $condition;
-	}
 
 	public function set_else_block(IElseBlock $else)
 	{
 		$this->else = $else;
 	}
+}
+
+class WhileBlock extends WhileLikeBlock
+{
+	const KIND = 'while_block';
+
+	public function __construct(BaseExpression $condition)
+	{
+		$this->condition = $condition;
+	}
+}
+
+class DoWhileBlock extends WhileLikeBlock
+{
+	const KIND = 'do_while_block';
 }
 
 class LoopBlock extends ControlBlock implements IExceptAble, IBreakAble, IContinueAble

@@ -9,5 +9,5 @@ namespace Tea;
 
 class WhiteSpaceNode extends Node
 {
-	const KIND = 'white_space_node'
+	const KIND = 'white_space_node';
 }

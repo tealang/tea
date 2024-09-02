@@ -77,6 +77,7 @@ abstract class BaseCoder
 			$items[] = $this->render_uses($program->uses) . LF;
 		}
 
+		$simple_item = null;
 		foreach ($program->declarations as $node) {
 			if (!($node instanceof ClassKindredDeclaration) && !($node instanceof FunctionDeclaration)) {
 				$simple_item = $node->render($this);
@@ -84,7 +85,7 @@ abstract class BaseCoder
 			}
 		}
 
-		if (!empty($simple_item)) {
+		if ($simple_item) {
 			$items[] = ''; // empty line
 		}
 
@@ -262,6 +263,7 @@ abstract class BaseCoder
 	{
 		if (!$nodes) return '';
 
+		$items = [];
 		foreach ($nodes as $node) {
 			$items[] = $this->render_parameter_declaration($node);
 		}
@@ -931,25 +933,6 @@ abstract class BaseCoder
 		return $this->new_string_placeholder($code);
 	}
 
-	// public function render_literal_object(LiteralObject $node)
-	// {
-	// 	return $this->render_object_expression($node);
-	// }
-
-	// public function render_literal_array(LiteralArray $node)
-	// {
-	// 	return $this->render_array_expression($node);
-	// }
-
-	// public function render_literal_dict(LiteralDict $node)
-	// {
-	// 	if (!$node->items) {
-	// 		return static::DICT_EMPTY_VALUE;
-	// 	}
-
-	// 	return $this->render_dict_expression($node);
-	// }
-
 	public function render_array_expression(ArrayExpression $node)
 	{
 		$items = [];
@@ -1026,7 +1009,8 @@ abstract class BaseCoder
 
 	public function render_object_expression(BaseExpression $node)
 	{
-		$body = $this->render_object_members($node->class_declaration->members, $node->is_vertical_layout);
+		$decl = $node->symbol->declaration;
+		$body = $this->render_object_members($decl->members, $node->is_vertical_layout);
 		return $this->wrap_object($body);
 	}
 
@@ -1284,10 +1268,12 @@ abstract class BaseCoder
 
 	public function render_catch_block(CatchBlock $node)
 	{
-		$var = static::VAR_DECLARE_PREFIX . $node->var->name;
-		$type = $node->var->declared_type->render($this);
+		$var = $node->var;
+		$var_code = static::VAR_DECLARE_PREFIX . $var->name;
+		$type_code = $var->declared_type->render($this);
+		$body_code = $this->render_control_structure_body($node);
 
-		return "catch ($type $var) " . $this->render_control_structure_body($node);
+		return "catch ($type_code $var_code) " . $body_code;
 	}
 
 	public function render_finally_block(FinallyBlock $node)
@@ -1307,11 +1293,6 @@ abstract class BaseCoder
 			return '$fn';
 		}
 	}
-
-	// protected function render_with_post_condition(PostConditionAbleStatement $node, string $code)
-	// {
-	// 	return $code . ' when ' . $node->condition->render($this);
-	// }
 
 	public function render_break_statement(Node $node)
 	{

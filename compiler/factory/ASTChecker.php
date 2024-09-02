@@ -14,6 +14,11 @@ class ASTChecker
 	protected $is_weakly_checking = false;
 
 	/**
+	 * @var ASTFactory
+	 */
+	protected $factory;
+
+	/**
 	 * the builtin unit
 	 * @var Unit
 	 */
@@ -94,6 +99,7 @@ class ASTChecker
 	{
 		$this->unit = $unit;
 		$this->builtin_unit = $builtin_unit;
+		$this->factory = $unit->factory;
 	}
 
 	public function collect_program_uses(Program $program)
@@ -111,12 +117,14 @@ class ASTChecker
 	{
 		foreach ($declaration->defer_check_identifiers as $identifier) {
 			if ($identifier->symbol !== null) {
-				throw $this->new_syntax_error("Unexpected error", $identifier);
+				// eg. identifiers that in foreach arguments
+				continue;
+				// throw $this->new_syntax_error("Unexpected error", $identifier);
 			}
 
 			$symbol = $this->find_symbol_for_plain_identifier($identifier);
 			if ($symbol === null) {
-				throw $this->new_syntax_error("Symbol of '{$identifier->name}' not found when check declaration uses", $identifier);
+				throw $this->new_syntax_error("Symbol of '{$identifier->name}' not found when check declaration used identifiers", $identifier);
 			}
 
 			// $identifier->symbol = $symbol;
@@ -490,35 +498,6 @@ class ASTChecker
 		}
 	}
 
-	// private function check_expect_declaration(ExpectDeclaration $node)
-	// {
-	// 	$this->is_checked = true;
-	// 	$this->check_parameters_for_node($node);
-	// }
-
-	// private function check_coroutine_block(CoroutineBlock $node)
-	// {
-	// 	// check for use variables
-	// 	foreach ($node->defer_check_identifiers as $identifier) {
-	// 		if (!$identifier->symbol) {
-	// 			$this->infer_plain_identifier($identifier);
-	// 		}
-
-	// 		if ($identifier->symbol->declaration instanceof IVariableDeclaration) {
-	// 			if ($identifier->name === _THIS || $identifier->name === _SUPER) {
-	// 				throw $this->new_syntax_error("'{$identifier->name}' cannot use in coroutine block", $node);
-	// 			}
-
-	// 			// for lambda use in php
-	// 			$node->using_params[$identifier->name] = $identifier;
-	// 		}
-	// 	}
-
-	// 	$this->check_parameters_for_callable_declaration($node);
-
-	// 	$infered = $this->infer_scope_block_body($node);
-	// }
-
 	private function infer_anonymous_function(AnonymousFunction $node)
 	{
 		// check for use variables
@@ -532,23 +511,32 @@ class ASTChecker
 					throw $this->new_syntax_error("'{$identifier->name}' cannot use in lambda functions", $node);
 				}
 
-				// for lambda use in php
-				$node->using_params[$identifier->name] = $identifier;
+				// for lambda 'use' in php
+				$name = $identifier->name;
+				$param = new ParameterDeclaration($name);
+				$param->is_inout = true;
+				$node->using_params[$name] = $param;
 			}
 		}
 
 		$this->check_parameters_for_callable_declaration($node);
 
 		$hinted = $this->get_and_check_hinted_type($node);
-		$infered = $this->infer_scope_block_body($node);
+		$infered = $this->infer_function_body($node);
 
 		$node->infered_type = $infered ?? $hinted ?? TypeFactory::$_void;
 
 		return TypeFactory::create_callable_type($node->get_type(), $node->parameters);
 	}
 
-	private function infer_scope_block_body(IScopeBlock $node)
+	private function infer_function_body(IScopeBlock $node)
 	{
+		if (!$node->body) {
+			return null;
+		}
+
+		$this->current_function = $node; // for find 'super' in methods
+
 		if (is_array($node->body)) {
 			$infered = $this->infer_block($node);
 		}
@@ -561,9 +549,7 @@ class ASTChecker
 			if ($infered !== null) {
 				if ($hinted === TypeFactory::$_self) {
 					$declar = $node->belong_block;
-					$actual_type = new ClassKindredIdentifier($declar->name);
-					$actual_type->symbol = $declar->symbol;
-					$hinted = $actual_type;
+					$hinted = $declar->typing_identifier;
 				}
 
 				if (!$hinted->is_accept_type($infered) && !$this->is_weakly_checking) {
@@ -588,10 +574,7 @@ class ASTChecker
 		$this->check_parameters_for_callable_declaration($node);
 
 		$hinted = $this->get_and_check_hinted_type($node);
-
-		if ($node->body !== null) {
-			$infered = $this->infer_scope_block_body($node);
-		}
+		$infered = $this->infer_function_body($node);
 
 		$node->infered_type = $infered ?? $hinted ?? TypeFactory::$_void;
 	}
@@ -605,11 +588,7 @@ class ASTChecker
 		$this->check_parameters_for_callable_declaration($node);
 
 		$hinted = $this->get_and_check_hinted_type($node);
-
-		if ($node->body !== null) {
-			$this->current_function = $node; // for find super
-			$infered = $this->infer_scope_block_body($node);
-		}
+		$infered = $this->infer_function_body($node);
 
 		$node->infered_type = $infered ?? $hinted ?? TypeFactory::$_void;
 	}
@@ -678,8 +657,8 @@ class ASTChecker
 		}
 
 		// the members in this class have the highest priority
-		if ($node->members) {
-			$node->aggregated_members = array_merge($node->aggregated_members, $node->members);
+		if ($node->symbols) {
+			$node->aggregated_members = array_merge($node->aggregated_members, $node->symbols);
 		}
 	}
 
@@ -729,8 +708,8 @@ class ASTChecker
 					throw $this->new_syntax_error("Invalid using trait of '{$identifier->name}'", $identifier);
 				}
 
-				foreach ($declaration->aggregated_members as $name => $member) {
-					$node->trait_members[$name] = $member;
+				foreach ($declaration->aggregated_members as $name => $member_symbol) {
+					$node->trait_members[$name] = $member_symbol;
 				}
 			}
 		}
@@ -743,15 +722,15 @@ class ASTChecker
 			$this->get_classkindred_declaration($node->inherits, true);
 		}
 
-		// Added to the actual members of this class
+		// add to the actual members of this class
 		// inherited members belong to super and have the lowest priority
 		$node->aggregated_members = $node->inherits->symbol->declaration->aggregated_members ?? [];
 
 		// check if there are overridden members in this class that match the parent class members
-		foreach ($node->aggregated_members as $name => $super_member) {
+		foreach ($node->aggregated_members as $name => $super_member_symbol) {
 			if (isset($node->members[$name])) {
 				// check super class member declared in current class
-				$this->check_overrided_member($node->members[$name], $super_member);
+				$this->check_overrided_member($node->members[$name], $super_member_symbol->declaration);
 			}
 		}
 	}
@@ -762,29 +741,32 @@ class ASTChecker
 		// The default implementation of subsequent interfaces will override the previous ones
 		foreach ($node->bases as $identifier) {
 			$interface = $identifier->symbol->declaration;
-			foreach ($interface->aggregated_members as $name => $member) {
+			foreach ($interface->aggregated_members as $name => $i_member_symbol) {
+				$i_member_decl = $i_member_symbol->declaration;
 				if (isset($node->members[$name])) {
 					// check member declared in current class/interface
-					$this->check_overrided_member($node->members[$name], $member, true);
+					$this->check_overrided_member($node->members[$name], $i_member_decl, true);
 				}
 				elseif (isset($node->aggregated_members[$name])) {
 					// check member declared in bases class/interfaces
-					$this->check_overrided_member($node->aggregated_members[$name], $member, true);
+					$node_member = $node->aggregated_members[$name]->declaration;
+					$this->check_overrided_member($node_member, $i_member_decl, true);
 
 					// replace to the default method implementation in interface
-					if ($member instanceof MethodDeclaration && $member->body !== null) {
-						$node->aggregated_members[$name] = $member;
+					if ($i_member_decl instanceof MethodDeclaration && $i_member_decl->body !== null) {
+						$node->aggregated_members[$name] = $i_member_symbol;
 					}
 				}
 				else {
-					$node->aggregated_members[$name] = $member;
+					$node->aggregated_members[$name] = $i_member_symbol;
 				}
 			}
 		}
 
 		// If it is a class definition, finally check if there are any unimplemented interface members
 		if ($node instanceof ClassDeclaration && $node->define_mode) {
-			foreach ($node->aggregated_members as $name => $member) {
+			foreach ($node->aggregated_members as $name => $member_symbol) {
+				$member = $member_symbol->declaration;
 				if ($member instanceof MethodDeclaration && $member->body === null) {
 					$interface = $member->belong_block;
 					throw $this->new_syntax_error("Method protocol '{$interface->name}.{$name}' required an implementation in class '{$node->name}'", $node);
@@ -899,9 +881,9 @@ class ASTChecker
 	{
 		$result_type = $this->infer_base_if_block($node);
 
-		if ($node->has_exceptional()) {
-			$result_type = $this->reduce_types_with_except_block($node, $result_type);
-		}
+		// if ($node->has_exceptional()) {
+		// 	$result_type = $this->reduce_types_with_except_block($node, $result_type);
+		// }
 
 		return $result_type;
 	}
@@ -971,7 +953,7 @@ class ASTChecker
 		$result_type = $this->infer_block($node);
 
 		// if assert none, and returned, means removed null
-		if ($node->is_ended_function and $asserted_then_type instanceof NoneType and $left_original_type->has_null) {
+		if ($node->is_transfered and $asserted_then_type instanceof NoneType and $left_original_type->has_null) {
 			$left_original_type->has_null = false;
 		}
 
@@ -1015,8 +997,7 @@ class ASTChecker
 		}
 
 		foreach ($node->catchings as $sub_block) {
-			$this->check_variable_declaration($sub_block->var);
-			$types[] = $this->infer_block($sub_block);
+			$types[] = $this->infer_catch_block($sub_block);
 		}
 
 		if ($node->finally) {
@@ -1024,8 +1005,20 @@ class ASTChecker
 		}
 
 		$reduced = $this->reduce_types($types);
-
 		return $reduced;
+	}
+
+	private function infer_catch_block(CatchBlock $node)
+	{
+		$var = $node->var;
+		if ($var->declared_type === null) {
+			$var->declared_type = TypeFactory::get_base_exception_type();
+		}
+
+		$this->check_variable_declaration($var);
+		$infered = $this->infer_block($node);
+
+		return $infered;
 	}
 
 	private function infer_switch_block(SwitchBlock $node): ?IType
@@ -1056,8 +1049,35 @@ class ASTChecker
 			$result_type = $this->reduce_types_with_else_block($node, $result_type);
 		}
 
-		if ($node->has_exceptional()) {
-			$result_type = $this->reduce_types_with_except_block($node, $result_type);
+		// if ($node->has_exceptional()) {
+		// 	$result_type = $this->reduce_types_with_except_block($node, $result_type);
+		// }
+
+		return $result_type;
+	}
+
+	private function infer_foreach_block(ForEachBlock $node): ?IType
+	{
+		$iter_infered = $this->infer_expression($node->iterable);
+		$element_types = $this->infer_iter_element_types($iter_infered);
+		if ($element_types === null) {
+			$type_name = self::get_type_name($iter_infered);
+			throw $this->new_syntax_error("Expect scalar type value, {$type_name} given", $node->iterable);
+		}
+
+		[$key_type, $val_type] = $element_types;
+		$key = $node->key;
+		$val = $node->val;
+		if ($key instanceof PlainIdentifier) {
+			$key->symbol->declaration->infered_type = $key_type;
+		}
+		if ($val instanceof PlainIdentifier) {
+			$val->symbol->declaration->infered_type = $val_type;
+		}
+
+		$result_type = $this->infer_block($node);
+		if ($node->else) {
+			$result_type = $this->reduce_types_with_else_block($node, $result_type);
 		}
 
 		return $result_type;
@@ -1065,32 +1085,29 @@ class ASTChecker
 
 	private function infer_forin_block(ForInBlock $node): ?IType
 	{
-		$expr_type = $this->infer_expression($node->iterable);
-		$element_types = $this->infer_iter_element_types($expr_type);
+		$iter_infered = $this->infer_expression($node->iterable);
+		$element_types = $this->infer_iter_element_types($iter_infered);
 		if ($element_types === null) {
-			$type_name = self::get_type_name($expr_type);
+			$type_name = self::get_type_name($iter_infered);
 			throw $this->new_syntax_error("Expect scalar type value, {$type_name} given", $node->iterable);
 		}
 
-		[$key_type, $val_type] = $element_types;
+		$key = $node->key;
+		$val = $node->val;
 
-		if ($node->key) {
-			$node->key->symbol->declaration->infered_type = $key_type;
+		[$key_type, $val->infered_type] = $element_types;
+		if ($key) {
+			$key->infered_type = $key_type;
 		}
 
-		$node->val->symbol->declaration->infered_type = $val_type;
-
-		/// ---
-
 		$result_type = $this->infer_block($node);
-
 		if ($node->else) {
 			$result_type = $this->reduce_types_with_else_block($node, $result_type);
 		}
 
-		if ($node->has_exceptional()) {
-			$result_type = $this->reduce_types_with_except_block($node, $result_type);
-		}
+		// if ($node->has_exceptional()) {
+		// 	$result_type = $this->reduce_types_with_except_block($node, $result_type);
+		// }
 
 		return $result_type;
 	}
@@ -1143,24 +1160,25 @@ class ASTChecker
 		$start_type = $this->expect_infered_type($node->start, TypeFactory::$_uint, TypeFactory::$_int);
 		$end_type = $this->expect_infered_type($node->end, TypeFactory::$_uint, TypeFactory::$_int);
 
-		if ($node->key) {
-			$node->key->symbol->declaration->infered_type = TypeFactory::$_int;
+		$key = $node->key;
+		$val = $node->val;
+		if ($key) {
+			$key->infered_type = TypeFactory::$_uint;
 		}
 
-		// infer the variable type
-		$node->val->symbol->declaration->infered_type = ($start_type === TypeFactory::$_int || $end_type === TypeFactory::$_int)
+		// infer the val type
+		$val->infered_type = ($start_type === TypeFactory::$_int || $end_type === TypeFactory::$_int)
 			? TypeFactory::$_int
 			: TypeFactory::$_uint;
 
 		$result_type = $this->infer_block($node);
-
 		if ($node->else) {
 			$result_type = $this->reduce_types_with_else_block($node, $result_type);
 		}
 
-		if ($node->has_exceptional()) {
-			$result_type = $this->reduce_types_with_except_block($node, $result_type);
-		}
+		// if ($node->has_exceptional()) {
+		// 	$result_type = $this->reduce_types_with_except_block($node, $result_type);
+		// }
 
 		return $result_type;
 	}
@@ -1170,9 +1188,9 @@ class ASTChecker
 		$this->infer_expression($node->condition);
 		$result_type = $this->infer_block($node);
 
-		if ($node->has_exceptional()) {
-			$result_type = $this->reduce_types_with_except_block($node, $result_type);
-		}
+		// if ($node->has_exceptional()) {
+		// 	$result_type = $this->reduce_types_with_except_block($node, $result_type);
+		// }
 
 		return $result_type;
 	}
@@ -1181,9 +1199,9 @@ class ASTChecker
 	{
 		$result_type = $this->infer_block($node);
 
-		if ($node->has_exceptional()) {
-			$result_type = $this->reduce_types_with_except_block($node, $result_type);
-		}
+		// if ($node->has_exceptional()) {
+		// 	$result_type = $this->reduce_types_with_except_block($node, $result_type);
+		// }
 
 		return $result_type;
 	}
@@ -1272,7 +1290,6 @@ class ASTChecker
 				$this->check_exit_statement($node);
 			case BreakStatement::KIND:
 			case ContinueStatement::KIND:
-				// $node->condition && $this->check_condition_clause($node);
 				break;
 
 			case UnsetStatement::KIND:
@@ -1281,6 +1298,9 @@ class ASTChecker
 
 			case IfBlock::KIND:
 				return $this->infer_if_block($node);
+
+			case ForEachBlock::KIND:
+				return $this->infer_foreach_block($node);
 
 			case ForInBlock::KIND:
 				return $this->infer_forin_block($node);
@@ -1302,10 +1322,6 @@ class ASTChecker
 
 			case UseStatement::KIND:
 				break;
-
-			// case CoroutineBlock::KIND:
-			// 	$this->check_coroutine_block($node);
-			// 	break;
 
 			case LineComment::KIND:
 			case BlockComment::KIND:
@@ -1336,21 +1352,17 @@ class ASTChecker
 	private function check_throw_statement(ThrowStatement $node)
 	{
 		$this->infer_expression($node->argument);
-		// $node->condition && $this->check_condition_clause($node);
 	}
 
 	private function infer_return_statement(ReturnStatement $node)
 	{
 		$infered = $node->argument ? $this->infer_expression($node->argument) : null;
-		// $node->condition && $this->check_condition_clause($node);
-
 		return $infered;
 	}
 
 	private function check_exit_statement(ExitStatement $node)
 	{
 		$node->argument === null || $this->expect_infered_type($node->argument, TypeFactory::$_uint, TypeFactory::$_int);
-		// $node->condition && $this->check_condition_clause($node);
 	}
 
 	private function check_unset_statement(UnsetStatement $node)
@@ -1362,11 +1374,6 @@ class ASTChecker
 			throw $this->new_syntax_error("The unset target must be a KeyAccessing", $argument);
 		}
 	}
-
-	// private function check_condition_clause(PostConditionAbleStatement $node)
-	// {
-	// 	$this->infer_expression($node->condition);
-	// }
 
 	private function check_var_statement(VarStatement $node)
 	{
@@ -1440,15 +1447,6 @@ class ASTChecker
 			case LiteralBoolean::KIND:
 				$infered = TypeFactory::$_bool;
 				break;
-			// case LiteralArray::KIND:
-			// 	$infered = $this->infer_array_expression($node);
-			// 	break;
-			// case LiteralDict::KIND:
-			// 	$infered = $this->infer_dict_expression($node);
-			// 	break;
-			// case LiteralObject::KIND:
-			// 	$infered = $this->infer_object_expression($node);
-			// 	break;
 
 			//----
 			case PlainInterpolatedString::KIND:
@@ -1600,7 +1598,7 @@ class ASTChecker
 				throw $this->new_syntax_error("Index type for Array accessing should be UInt, {$type_name} given", $key_expr);
 			}
 
-			$infered = $basing_type->generic_type;
+			$infered = $basing_type->generic_type ?? TypeFactory::$_any;
 		}
 		elseif ($basing_type instanceof DictType) {
 			if ($key_expr === null) {
@@ -1615,7 +1613,7 @@ class ASTChecker
 				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, {$type_name} given", $key_expr);
 			}
 
-			$infered = $basing_type->generic_type;
+			$infered = $basing_type->generic_type ?? TypeFactory::$_any;
 		}
 		elseif ($basing_type instanceof AnyType) {
 			// if non key, that's Array access, else just allow Dict as the actual type
@@ -1623,6 +1621,8 @@ class ASTChecker
 				$type_name = $this->get_type_name($key_type);
 				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, {$type_name} given", $key_expr);
 			}
+
+			$infered = TypeFactory::$_any;
 		}
 		elseif ($basing_type instanceof StringType) {
 			if ($key_type !== TypeFactory::$_uint && $key_type !== TypeFactory::$_int) {
@@ -1653,7 +1653,7 @@ class ASTChecker
 
 			$member_value_types = [];
 			foreach ($basing_type->get_members() as $member) {
-				$member_value_types[] = $member->generic_type ?: TypeFactory::$_any;
+				$member_value_types[] = $member->generic_type ?? TypeFactory::$_any;
 			}
 
 			$infered = $this->reduce_expr_types(...$member_value_types);
@@ -1663,7 +1663,7 @@ class ASTChecker
 			throw $this->new_syntax_error("Cannot use key accessing for type {$type_name}", $node);
 		}
 
-		return $infered ?? TypeFactory::$_any;
+		return $infered;
 	}
 
 	private function infer_assignment_operation(AssignmentOperation $node)
@@ -1926,6 +1926,7 @@ class ASTChecker
 
 	private function infer_none_coalescing_expression(NoneCoalescingOperation $node): IType
 	{
+		$infered = null;
 		$types = [];
 		foreach ($node->items as $item) {
 			$infered = $this->infer_expression($item);
@@ -2074,10 +2075,10 @@ class ASTChecker
 
 	private function infer_object_expression(ObjectExpression $node): IType
 	{
-		$this->check_local_classkindred_declaration($node->class_declaration);
+		$this->check_local_classkindred_declaration($node->symbol->declaration);
 
 		$infered = clone TypeFactory::$_object;
-		$infered->symbol = $node->class_declaration->symbol;
+		$infered->symbol = $node->symbol;
 
 		// $node->infered_type = $infered;
 		return $infered;
@@ -2323,11 +2324,12 @@ class ASTChecker
 
 		// if is a class, use it's construct declaration
 		if ($callee_declar instanceof ClassDeclaration) {
-			$callee_declar = $this->get_construct_declaration_for_class($callee_declar, $node);
-			if ($callee_declar === null) {
+			$constructor_declar = $this->get_construct_declaration_for_class($callee_declar, $node);
+			if ($constructor_declar === null) {
 				if ($arguments) {
 					if (!$this->is_weakly_checking) {
-						throw $this->new_syntax_error("Cannot use arguments to create a non-construct class instance", $argument);
+						dump($callee_declar->symbols);
+						throw $this->new_syntax_error("Cannot use arguments to create a non-construct class instance", $node);
 					}
 
 					foreach ($arguments as $argument) {
@@ -2337,6 +2339,8 @@ class ASTChecker
 
 				return;
 			}
+
+			$callee_declar = $constructor_declar;
 		}
 
 		$parameters = $callee_declar->parameters;
@@ -2699,12 +2703,10 @@ class ASTChecker
 		$symbol = $this->find_plain_symbol_and_check_declaration($identifier);
 		if ($symbol === null) {
 			if ($identifier->is_calling) {
-				$decl = ASTFactory::create_virtual_function($identifier->name);
-				$symbol = $decl->symbol;
+				[$decl, $symbol] = $this->factory->create_virtual_function($identifier->name, $this->program);
 			}
 			elseif ($identifier->is_accessing) {
-				$decl = ASTFactory::create_virtual_class($identifier->name);
-				$symbol = $decl->symbol;
+				[$decl, $symbol] = $this->factory->create_virtual_class($identifier->name, $this->program);
 			}
 			else {
 				throw $this->new_syntax_error("Symbol of '{$identifier->name}' not found", $identifier);
@@ -2855,8 +2857,8 @@ class ASTChecker
 
 	private function find_symbol_in_namespace(NamespaceIdentifier $ns, string $name, Unit $unit)
 	{
-		$ns_decl = $this->find_namespace_declaration_in_unit($unit, $ns);
-		return $ns_decl->symbols[$name] ?? null;
+		$decl = $this->find_namespace_declaration_in_unit($unit, $ns);
+		return $decl->symbols[$name] ?? null;
 	}
 
 	private function find_namespace_declaration_in_unit(Unit $unit, NamespaceIdentifier $ns)
@@ -2864,17 +2866,17 @@ class ASTChecker
 		$namepath = $ns->get_namepath();
 		$ns_name = array_shift($namepath);
 
-		$ns_decl = $unit->namespaces[$ns_name] ?? null;
-		if ($ns_decl !== null) {
+		$decl = $unit->namespaces[$ns_name] ?? null;
+		if ($decl !== null) {
 			foreach ($namepath as $ns_name) {
-				$ns_decl = $ns_decl->namespaces[$ns_name] ?? null;
-				if ($ns_decl === null) {
+				$decl = $decl->namespaces[$ns_name] ?? null;
+				if ($decl === null) {
 					break;
 				}
 			}
 		}
 
-		return $ns_decl;
+		return $decl;
 	}
 
 	private function require_callee_declaration(BaseExpression $node): IDeclaration
@@ -3010,8 +3012,7 @@ class ASTChecker
 			$symbol = $this->find_member_symbol_in_class_declaration($basing_decl, $node->name);
 			if ($symbol === null) {
 				if ($basing_decl->is_dynamic || ($basing_type instanceof AnyType && $this->is_weakly_checking)) {
-					$property = ASTFactory::create_virtual_property($node->name, $basing_decl);
-					$symbol = $property->symbol;
+					[$decl, $symbol] = $this->factory->create_virtual_property($node->name, $basing_decl);
 				}
 				else {
 					throw $this->new_syntax_error("Member '{$node->name}' not found in '{$basing_decl->name}'", $node);
@@ -3032,9 +3033,8 @@ class ASTChecker
 		$symbol = $this->find_member_symbol_in_class_declaration($declaration, $node->name);
 		if ($symbol === null) {
 			if ($this->is_weakly_checking) {
-				$method = ASTFactory::create_virtual_method($node->name, $declaration);
-				$method->is_static = $node->is_static;
-				$symbol = $method->symbol;
+				[$decl, $symbol] = $this->factory->create_virtual_method($node->name, $declaration);
+				$decl->is_static = $node->is_static;
 			}
 			else {
 				throw $this->new_syntax_error("Member '{$node->name}' not found in '{$declaration->name}'", $node);
@@ -3090,28 +3090,29 @@ class ASTChecker
 	private function find_member_symbol_in_class_declaration(ClassKindredDeclaration $classkindred, string $name): ?Symbol
 	{
 		// when is super member
-		$declaration = $classkindred->aggregated_members[$name] ?? null;
-		if ($declaration) {
-			return $declaration->symbol;
+		$symbol = $classkindred->aggregated_members[$name] ?? null;
+		if ($symbol) {
+			return $symbol;
 		}
 
 		// when is self member
 
 		// find in self
-		$declaration = $classkindred->members[$name] ?? $classkindred->trait_members[$name] ?? null;
-		if ($declaration) {
-			if (!$declaration->is_checked) {
+		$symbol = $classkindred->symbols[$name] ?? $classkindred->trait_members[$name] ?? null;
+		if ($symbol) {
+			$decl = $symbol->declaration;
+			if (!$decl->is_checked) {
 				// switch to target program
 				$temp_program = $this->program;
 				$this->program = $classkindred->program;
 
-				$this->check_class_member_declaration($declaration);
+				$this->check_class_member_declaration($decl);
 
 				// switch back
 				$this->program = $temp_program;
 			}
 
-			return $declaration->symbol;
+			return $symbol;
 		}
 
 		// find in extends class
@@ -3156,10 +3157,9 @@ class ASTChecker
 		$symbol = $this->find_member_symbol_in_class_declaration($classkindred, $node->name);
 		if ($symbol === null) {
 			if ($classkindred->is_dynamic) {
-				$member = $node->is_calling
-					? ASTFactory::create_virtual_method($node->name, $classkindred)
-					: ASTFactory::create_virtual_property($node->name, $classkindred);
-				$symbol = $member->symbol;
+				[$decl, $symbol] = $node->is_calling
+					? $this->factory->create_virtual_method($node->name, $classkindred)
+					: $this->factory->create_virtual_property($node->name, $classkindred);
 			}
 			else {
 				throw $this->new_syntax_error("Member '{$node->name}' not found in '{$classkindred->name}'", $node);
@@ -3213,7 +3213,7 @@ class ASTChecker
 
 		$decl = $symbol->declaration;
 		if (($decl === null || $decl->infered_type instanceof StringType) and $this->is_weakly_checking) {
-			$decl = ASTFactory::create_virtual_class($symbol->name);
+			[$decl, ] = $this->factory->create_virtual_class($symbol->name, $this->program);
 			$symbol->declaration = $decl;
 		}
 		elseif ($decl instanceof ClassKindredDeclaration) {
@@ -3256,13 +3256,13 @@ class ASTChecker
 
 	// private function require_namespace_declaration_in_unit(NamespaceIdentifier $identifier)
 	// {
-	// 	$ns_decl = $this->find_namespace_declaration_in_unit($this->unit, $identifier)
+	// 	$decl = $this->find_namespace_declaration_in_unit($this->unit, $identifier)
 	// 		?? $this->find_namespace_declaration_in_unit($this->builtin_unit, $identifier);
-	// 	if ($ns_decl === null) {
+	// 	if ($decl === null) {
 	// 		throw $this->new_syntax_error("Namespace '{$identifier->uri}' not found in package '{$this->unit->uri}'", $identifier);
 	// 	}
 
-	// 	return $ns_decl;
+	// 	return $decl;
 	// }
 
 	// private function get_source_declaration_for_use(UseDeclaration $use): ?IRootDeclaration
@@ -3329,6 +3329,7 @@ class ASTChecker
 		$count = count($types);
 
 		$nullable = false;
+		$result_type = null;
 		for ($i = 0; $i < $count; $i++) {
 			$result_type = $types[$i];
 			if ($result_type === null || $result_type === TypeFactory::$_none) {

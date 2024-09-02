@@ -20,7 +20,7 @@ class Symbol
 	{
 		$this->name = $declaration->name;
 		$this->declaration = $declaration;
-		$declaration->symbol = $this;
+		// $declaration->symbol = $this;
 	}
 }
 

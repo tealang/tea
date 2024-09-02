@@ -22,7 +22,7 @@ trait IBlockTrait {
 
 	public $belong_block;
 
-	public $is_ended_function = false;
+	public $is_transfered = false;
 
 	public function set_body_with_statements(array $statements)
 	{

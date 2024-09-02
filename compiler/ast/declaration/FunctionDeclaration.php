@@ -56,6 +56,8 @@ class MethodDeclaration extends Node implements IFunctionDeclaration, IClassMemb
 	use ClassMemberDeclarationTrait, IScopeBlockTrait;
 
 	const KIND = 'method_declaration';
+
+	public $is_abstract;
 }
 
 // end

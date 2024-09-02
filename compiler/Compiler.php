@@ -54,12 +54,12 @@ class Compiler
 	private $header_program;
 
 	/**
-	 * @var Program[]
+	 * @var Program.Array
 	 */
 	private $normal_programs = [];
 
 	/**
-	 * @var Program[]
+	 * @var Program.Array
 	 */
 	private $native_programs = [];
 
@@ -156,7 +156,11 @@ class Compiler
 		$this->unit_path_prefix_len = strlen($unit_path);
 
 		$this->native_program_files = $this->scan_program_files($unit_path, PHP_EXT_NAME);
-		$this->normal_program_files = $this->scan_program_files($unit_path . SRC_DIR_NAME . DS, TEA_EXT_NAME);
+
+		$src_path = $unit_path . SRC_DIR_NAME . DS;
+		if (is_dir($src_path)) {
+			$this->normal_program_files = $this->scan_program_files($src_path, TEA_EXT_NAME);
+		}
 
 		$this->parse_unit_header();
 		$this->parse_programs();
@@ -399,6 +403,7 @@ class Compiler
 			array_shift($names);
 		}
 
+		$relative_path = null;
 		foreach ($this->search_dirs as $dir) {
 			$relative_path = $this->try_look_in_dir($dir, $names, $searching_path);
 			if ($relative_path) {

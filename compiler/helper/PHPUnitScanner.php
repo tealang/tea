@@ -43,8 +43,8 @@ class PHPUnitScanner
 			$code = file_get_contents($file);
 			$file = str_replace($this->path, '', $file);
 
-			preg_match('/namespace\s+([a-z0-9_\\\\]+)/i', $code, $match);
-			$namespace = $match[1] ?? null;
+			preg_match('/namespace\s+([a-z0-9_\\\\]+)/i', $code, $matches);
+			$namespace = $matches[1] ?? null;
 
 			preg_match_all('/\n\s?(?:(?:abstract\s+|final\s+)?class|interface|trait)\s+([a-z0-9_]+)/i',
 				$code,

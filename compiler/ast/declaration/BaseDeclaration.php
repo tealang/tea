@@ -69,10 +69,10 @@ trait DeclarationTrait {
 
 	public $origin_name;
 
-	/**
-	 * @var Symbol
-	 */
-	public $symbol;
+	// /**
+	//  * @var Symbol
+	//  */
+	// public $symbol;
 
 	public $is_checked = false; // set true when checked by ASTChecker
 

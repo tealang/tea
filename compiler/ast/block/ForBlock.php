@@ -25,21 +25,39 @@ class ForBlock extends ControlBlock implements IElseAble, IExceptAble, IBreakAbl
 	}
 }
 
+class ForEachBlock extends ControlBlock implements IElseAble, IExceptAble, IBreakAble, IContinueAble
+{
+	use ElseTrait, ExceptTrait;
+
+	const KIND = 'foreach_block';
+
+	public $iterable;
+	public $key;
+	public $val;
+
+	public function __construct(BaseExpression $iterable, ?BaseExpression $key, BaseExpression $val)
+	{
+		$this->iterable = $iterable;
+		$this->key = $key;
+		$this->val = $val;
+	}
+}
+
 class ForInBlock extends ControlBlock implements IElseAble, IExceptAble, IBreakAble, IContinueAble
 {
 	use ElseTrait, ExceptTrait;
 
 	const KIND = 'forin_block';
 
-	public $iterable;
 	public $key;
 	public $val;
+	public $iterable;
 
 	public function __construct(?ParameterDeclaration $key, ParameterDeclaration $val, BaseExpression $iterable)
 	{
-		$this->iterable = $iterable;
 		$this->key = $key;
 		$this->val = $val;
+		$this->iterable = $iterable;
 	}
 }
 

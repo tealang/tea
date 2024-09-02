@@ -11,8 +11,9 @@ class OperatorFactory
 {
 	public static $new;
 	public static $clone;
-	public static $member_accessing;
 	public static $static_accessing;
+	public static $member_accessing;
+	public static $nullsafe_member_accessing;
 	public static $as;
 	public static $pipe;
 
@@ -91,8 +92,9 @@ class OperatorFactory
 		self::$new = self::create_operator(OPID::NEW);
 		self::$clone = self::create_operator(OPID::CLONE);
 
-		self::$member_accessing = self::create_operator(OPID::MEMBER_ACCESSING);
 		self::$static_accessing = self::create_operator(OPID::STATIC_ACCESSING);
+		self::$member_accessing = self::create_operator(OPID::MEMBER_ACCESSING);
+		self::$nullsafe_member_accessing = self::create_operator(OPID::NULLSAFE_MEMBER_ACCESSING);
 
 		self::$as = self::create_operator(OPID::AS);
 		self::$pipe = self::create_operator(OPID::PIPE);
