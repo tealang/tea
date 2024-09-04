@@ -84,7 +84,7 @@ public DemoList: BaseView {
 		var js_code = 'if (a < 1 || a >= 5) {}'
 
 		return <view id={this.name}>
-			{this.title == "abc" ? <h1>{this.title concat 123}</h1> : none}
+			{this.title == "abc" ? <h1>{this.title .+ 123}</h1> : none}
 			<i></i>
 			<cells>
 				{cells}

@@ -7,6 +7,8 @@ require_once dirname(__DIR__, 1) . '/__public.php';
 const PI = 3.1415926;
 
 // ---------
+$some = 'Hello' . \str_repeat('!', 3);
+
 $some = 'abc' . (1 + 2 & 2 * pow(2, 3) / 5);
 
 $rem = 10 % 3;

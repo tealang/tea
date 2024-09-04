@@ -36,13 +36,13 @@ echo "dict['num'] mutated by fn2: ${dict['num']}"
 
 // callbacks
 internal fn3(some Any, done (caller String) String, error (message) Void = none) String {
-	return done('A cool man') concat ' with $some'
+	return done('A cool man') .+ ' with $some'
 }
 
 var out_num = 1
 echo fn3(123, (a) => {
 		out_num += 1
-		return a#String concat ' has called'
+		return a#String .+ ' has called'
 	},
 	(error) => {}
 )

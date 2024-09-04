@@ -39,10 +39,11 @@ class OPID
 	const ADDITION = 54;
 	const SUBTRACTION = 55;
 
-	const CONCAT = 60;
-	const ARRAY_CONCAT = 61;
-	// const PHP_ARRAY_UNION = 62;
-	const MERGE = 63; // for dicts in tea
+	const REPEAT = 60;
+	const CONCAT = 61;
+	const ARRAY_CONCAT = 62;
+	// const PHP_ARRAY_UNION = 65;
+	// const MERGE = 66; // for dicts
 
 	const IS = 70; // is, is not
 	const EQUAL = 71;

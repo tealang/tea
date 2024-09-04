@@ -1853,10 +1853,13 @@ class PHPCoder extends BaseCoder
 			// $code = sprintf('\array_merge(%s, array_values(%s))', $left, $right);
 			$code = sprintf('\array_merge(%s, %s)', $left, $right);
 		}
-		elseif ($operator->is(OPID::MERGE)) {
-			// merge Dicts
-			$code = sprintf('\array_merge(%s, %s)', $left, $right);
+		elseif ($operator->is(OPID::REPEAT)) {
+			$code = sprintf('\str_repeat(%s, %s)', $left, $right);
 		}
+		// elseif ($operator->is(OPID::MERGE)) {
+		// 	// merge Dicts
+		// 	$code = sprintf('\array_merge(%s, %s)', $left, $right);
+		// }
 		// elseif ($operator->is(OPID::REMAINDER) && $node->expressed_type === TypeFactory::$_float) {
 		// 	// use the 'fmod' function for the float arguments
 		// 	$code = sprintf('fmod(%s, %s)', $left, $right);

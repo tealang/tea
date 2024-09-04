@@ -23,8 +23,8 @@ internal draw_text(image, text String, size UInt, color Int, fontfile String, h_
 
 internal BOX_WIDTH = 629
 
-var tmp_path = dirname(__DIR__, 2) concat '/tmp/'
-var fontfile = tmp_path concat 'SourceHanSansSC-Regular.otf'
+var tmp_path = dirname(__DIR__, 2) .+ '/tmp/'
+var fontfile = tmp_path .+ 'SourceHanSansSC-Regular.otf'
 if not file_exists(fontfile) {
 	echo "The font file '$fontfile' not found.\nPlease download it and put to path $fontfile"
 	exit
@@ -48,7 +48,7 @@ draw_text(image, '新春快乐', 30, black, fontfile, 270)
 draw_text(image, 'Tea语言', 12, black, fontfile, 330)
 
 // save the target image
-var target_image_file = tmp_path concat 'chun.png'
+var target_image_file = tmp_path .+ 'chun.png'
 result = imagepng(image, target_image_file)
 imagedestroy(image)
 

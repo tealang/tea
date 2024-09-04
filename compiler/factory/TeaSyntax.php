@@ -45,7 +45,10 @@ class TeaSyntax
 			OPID::BITWISE_OR => ['|', OP_BIN, OP_L],
 		],
 		[
-			OPID::CONCAT => ['concat', OP_BIN, OP_L],
+			OPID::REPEAT => ['.*', OP_BIN, OP_L],
+		],
+		[
+			OPID::CONCAT => ['.+', OP_BIN, OP_L],
 		],
 		[
 			OPID::LESSTHAN => ['<', OP_BIN, OP_NON],

@@ -12,8 +12,8 @@ for key, value in dict {
 	var result = value is Int
 		? value + 2				// 3
 		: (value is String
-			? value concat 2 	// 12
-			: value concat [2]	// [1, 2]
+			? value .+ 2 	// 12
+			: value .+ [2]	// [1, 2]
 		)
 
 	echo "Operation result for key '$key' is: "
@@ -28,10 +28,10 @@ for key, value in dict {
 		result = value + 2			// 3
 	}
 	elseif value is String {
-		result = value concat 2		// 12
+		result = value .+ 2		// 12
 	}
 	elseif value is Array {
-		result = value concat [2]		// [1, 2]
+		result = value .+ [2]		// [1, 2]
 	}
 	else {
 		// would not be happened

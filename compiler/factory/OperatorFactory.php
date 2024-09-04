@@ -35,6 +35,7 @@ class OperatorFactory
 	public static $remainder;
 	public static $spaceship;
 
+	public static $repeat;
 	public static $concat;
 	public static $array_concat;
 	// public static $merge;
@@ -120,6 +121,7 @@ class OperatorFactory
 		self::$addition = self::create_operator(OPID::ADDITION);
 		self::$subtraction = self::create_operator(OPID::SUBTRACTION);
 
+		self::$repeat = self::create_operator(OPID::REPEAT);
 		self::$concat = self::create_operator(OPID::CONCAT);
 		self::$array_concat = self::create_operator(OPID::ARRAY_CONCAT);
 		// self::$merge = self::create_operator(OPID::MERGE);

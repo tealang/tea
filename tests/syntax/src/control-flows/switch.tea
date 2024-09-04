@@ -6,7 +6,7 @@ str = 'abc'
 outer: switch num {
 	case num * 3:
 		switch str {
-			case 'some${num}', 'hello', ('a' concat 123):
+			case 'some${num}', 'hello', ('a' .+ 123):
 				str = num * 5
 				echo str
 			case 'a':

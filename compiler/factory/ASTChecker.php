@@ -320,9 +320,9 @@ class ASTChecker
 					throw $this->new_syntax_error("Array concat operation cannot use as a compile-time value", $value);
 				}
 			}
-			elseif ($value->operator->is(OPID::MERGE)) {
-				throw $this->new_syntax_error("Dict merge operation cannot use for constant value", $value);
-			}
+			// elseif ($value->operator->is(OPID::MERGE)) {
+			// 	throw $this->new_syntax_error("Dict merge operation cannot use for constant value", $value);
+			// }
 		}
 	}
 
@@ -1785,7 +1785,7 @@ class ASTChecker
 			}
 			elseif (!TypeHelper::is_stringable_type($left_type) and !$this->is_weakly_checking) {
 				$type_name = $this->get_type_name($left_type);
-				throw $this->new_syntax_error("'concat' operation cannot use for '$type_name' type targets", $left_expr);
+				throw $this->new_syntax_error("The concat operation cannot use for '$type_name' type targets", $left_expr);
 			}
 			else {
 				// string
@@ -1793,15 +1793,29 @@ class ASTChecker
 				$infered = $is_pure ? TypeFactory::$_pure_string : TypeFactory::$_string;
 			}
 		}
-		elseif ($operator->is(OPID::MERGE)) {
-			// Array or Dict
-			if (!$left_type instanceof DictType) {
-				throw $this->new_syntax_error("'merge' operation just support Dict type targets", $node);
+		elseif ($operator->is(OPID::REPEAT)) {
+			if (!TypeHelper::is_stringable_type($left_type)) {
+				$type_name = $this->get_type_name($left_type);
+				throw $this->new_syntax_error("Expected Stringable, {$type_name} given", $left_expr);
+			}
+			elseif (!$right_type instanceof UIntType) {
+				$type_name = $this->get_type_name($right_type);
+				throw $this->new_syntax_error("Expected UInt, {$type_name} given", $right_expr);
 			}
 
-			$this->assert_type_compatible($left_type, $right_type, $right_expr, 'merge');
-			$infered = $left_type;
+			// string
+			$is_pure = $left_type instanceof IPureType;
+			$infered = $is_pure ? TypeFactory::$_pure_string : TypeFactory::$_string;
 		}
+		// elseif ($operator->is(OPID::MERGE)) {
+		// 	// Array or Dict
+		// 	if (!$left_type instanceof DictType) {
+		// 		throw $this->new_syntax_error("'merge' operation just support Dict type targets", $node);
+		// 	}
+
+		// 	$this->assert_type_compatible($left_type, $right_type, $right_expr, 'merge');
+		// 	$infered = $left_type;
+		// }
 		elseif ($operator->is(OPID::NONE_COALESCING)) {
 			$infered = $this->reduce_expr_types($left_type, $right_type);
 		}
@@ -1810,7 +1824,7 @@ class ASTChecker
 		}
 		else {
 			$sign = $node->operator->get_debug_sign();
-			throw $this->new_syntax_error("Unknow operator: {$sign}", $node);
+			throw $this->new_syntax_error("Unknow binary operator: {$sign}", $node);
 		}
 
 		// $node->infered_type = $infered;
@@ -1891,7 +1905,7 @@ class ASTChecker
 		}
 		else {
 			$sign = $operator->get_debug_sign();
-			throw $this->new_syntax_error("Unknow operator: {$sign}", $node);
+			throw $this->new_syntax_error("Unknow prefix operator: {$sign}", $node);
 		}
 
 		return $infered;

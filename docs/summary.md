@@ -191,7 +191,8 @@ var var_without_decared = 123
 |	&  									|	Bitwise And	|
 |	^  									|	Bitwise Xor	|
 |	\| 		  							|	Bitwise Or	|
-|	concat 								|	String Concat	|
+|	.* 									|	String Repeat	|
+|	.+ 									|	String Concat	|
 |	<=> < <= > >= != !== == === is  	|	Comparisons	|
 |	not 								|	Logical Not	|
 |	and 								|	Logical And	|
