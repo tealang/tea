@@ -103,14 +103,22 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 
 		// check the implements interfaces
 		foreach ($this->bases as $based) {
-			$based_symbol = $based->symbol;
-			if ($based_symbol === $symbol || $based_symbol->declaration->find_based_with_symbol($symbol) ) {
+			if ($this->is_identifier_based_with_symbol($based, $symbol)) {
 				$result = $based;
 				break;
 			}
 		}
 
 		return $result;
+	}
+
+	private static function is_identifier_based_with_symbol(PlainIdentifier $based, Symbol $symbol)
+	{
+		$based_symbol = $based->symbol;
+		$is = $based_symbol === $symbol
+			|| $based_symbol->declaration->find_based_with_symbol($symbol);
+
+		return $is;
 	}
 }
 
@@ -127,7 +135,7 @@ class ClassDeclaration extends ClassKindredDeclaration implements ICallableDecla
 	public function find_based_with_symbol(Symbol $symbol)
 	{
 		// check the extends class first
-		if ($this->inherits !== null and $result = $this->find_based_with_symbol_in_inherits($this->inherits, $symbol)) {
+		if ($this->inherits and $result = $this->find_based_with_symbol_in_inherits($this->inherits, $symbol)) {
 			// no any
 		}
 		else {
@@ -137,12 +145,12 @@ class ClassDeclaration extends ClassKindredDeclaration implements ICallableDecla
 		return $result;
 	}
 
-	private function find_based_with_symbol_in_inherits($inherits, $symbol)
+	private function find_based_with_symbol_in_inherits(PlainIdentifier $inherits, Symbol $symbol)
 	{
 		$inherits_symbol = $inherits->symbol;
 		$result = null;
 
-		// 当引用的unit中类所继承类 和 当前引用的类 为同一个第三方unit的类时，symbol会有所不同，这时需比较declaration
+		// symbol in difference packages would be not same, but declaration is
 		if ($inherits_symbol === $symbol || $inherits_symbol->declaration === $symbol->declaration) {
 			$result = $inherits;
 		}

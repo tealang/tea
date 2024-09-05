@@ -1107,7 +1107,7 @@ class PHPParser extends BaseParser
 			$expr = $this->factory->create_builtin_identifier($mapped_name);
 		}
 		else {
-			$expr = new PlainIdentifier($name);
+			$expr = $this->factory->create_plain_identifier($name);
 		}
 
 		$expr->pos = $this->pos;
@@ -1441,8 +1441,8 @@ class PHPParser extends BaseParser
 	{
 		$name = $this->expect_identifier_name();
 
-		$declaration = $this->factory->create_interface_declaration($name, _PUBLIC, $this->namespace);
-		$declaration->pos = $this->pos;
+		$decl = $this->factory->create_interface_declaration($name, _PUBLIC, $this->namespace);
+		$decl->pos = $this->pos;
 
 		if ($this->skip_typed_token(T_EXTENDS)) {
 			do {
@@ -1450,7 +1450,7 @@ class PHPParser extends BaseParser
 			}
 			while ($this->skip_char_token(_COMMA));
 
-			$declaration->bases = $bases;
+			$decl->bases = $bases;
 		}
 
 		$this->expect_block_begin();
@@ -1460,15 +1460,15 @@ class PHPParser extends BaseParser
 		$this->expect_block_end();
 		$this->factory->end_class();
 
-		return $declaration;
+		return $decl;
 	}
 
 	private function read_trait_declaration()
 	{
 		$name = $this->expect_identifier_name();
 
-		$declaration = $this->factory->create_trait_declaration($name, _PUBLIC, $this->namespace);
-		$declaration->pos = $this->pos;
+		$decl = $this->factory->create_trait_declaration($name, _PUBLIC, $this->namespace);
+		$decl->pos = $this->pos;
 
 		$this->expect_block_begin();
 
@@ -1477,18 +1477,18 @@ class PHPParser extends BaseParser
 		$this->expect_block_end();
 		$this->factory->end_class();
 
-		return $declaration;
+		return $decl;
 	}
 
 	private function read_class_declaration(array $attributes)
 	{
 		$name = $this->expect_identifier_name();
 
-		$declaration = $this->factory->create_class_declaration($name, _PUBLIC, $this->namespace);
-		$declaration->pos = $this->pos;
+		$decl = $this->factory->create_class_declaration($name, _PUBLIC, $this->namespace);
+		$decl->pos = $this->pos;
 
 		if ($this->skip_typed_token(T_EXTENDS)) {
-			$declaration->inherits = $this->read_classkindred_identifier();
+			$decl->inherits = $this->read_classkindred_identifier();
 		}
 
 		if ($this->skip_typed_token(T_IMPLEMENTS)) {
@@ -1497,7 +1497,7 @@ class PHPParser extends BaseParser
 			}
 			while ($this->skip_char_token(_COMMA));
 
-			$declaration->bases = $implements;
+			$decl->bases = $implements;
 		}
 
 		$this->expect_block_begin();
@@ -1507,7 +1507,7 @@ class PHPParser extends BaseParser
 		$this->expect_block_end();
 		$this->factory->end_class();
 
-		return $declaration;
+		return $decl;
 	}
 
 	private function read_interface_member()
@@ -1543,11 +1543,11 @@ class PHPParser extends BaseParser
 
 		switch ($token[0]) {
 			case T_CONST:
-				$declaration = $this->read_class_constant_declaration($modifier, $doc);
+				$decl = $this->read_class_constant_declaration($modifier, $doc);
 				$this->expect_statement_end();
 				break;
 			case T_FUNCTION:
-				$declaration = $this->read_method_declaration($modifier, $doc, true);
+				$decl = $this->read_method_declaration($modifier, $doc, true);
 				break;
 			case T_COMMENT:
 				return $this->read_interface_member();
@@ -1555,9 +1555,9 @@ class PHPParser extends BaseParser
 				throw $this->new_unexpected_error();
 		}
 
-		$declaration->is_static = $is_static;
+		$decl->is_static = $is_static;
 
-		return $declaration;
+		return $decl;
 	}
 
 	private function read_class_member()
@@ -1693,35 +1693,35 @@ class PHPParser extends BaseParser
 	private function read_normal_constant_declaration(?string $doc = null)
 	{
 		$name = $this->expect_identifier_name();
-		$declaration = $this->factory->create_constant_declaration(_PUBLIC, $name, $this->namespace);
-		$declaration->pos = $this->pos;
+		$decl = $this->factory->create_constant_declaration(_PUBLIC, $name, $this->namespace);
+		$decl->pos = $this->pos;
 
-		$this->continue_reading_constant_decl($declaration, $doc);
+		$this->continue_reading_constant_decl($decl, $doc);
 
-		return $declaration;
+		return $decl;
 	}
 
 	private function read_class_constant_declaration(?string $modifier, ?string $doc)
 	{
 		$name = $this->expect_member_identifier_name();
-		$declaration = $this->factory->create_class_constant_declaration($modifier ?? _PUBLIC, $name);
-		$declaration->pos = $this->pos;
+		$decl = $this->factory->create_class_constant_declaration($modifier ?? _PUBLIC, $name);
+		$decl->pos = $this->pos;
 
-		$this->continue_reading_constant_decl($declaration, $doc);
+		$this->continue_reading_constant_decl($decl, $doc);
 
 		$this->factory->end_class_member();
 
-		return $declaration;
+		return $decl;
 	}
 
-	private function continue_reading_constant_decl(IConstantDeclaration $declaration, ?string $doc)
+	private function continue_reading_constant_decl(IConstantDeclaration $decl, ?string $doc)
 	{
 		if ($doc) {
-			$declaration->noted_type = $this->get_type_in_doc($doc, 'var');
+			$decl->noted_type = $this->get_type_in_doc($doc, 'var');
 		}
 
 		$this->expect_char_token(_ASSIGN);
-		$declaration->value = $this->read_expression();
+		$decl->value = $this->read_expression();
 	}
 
 	private function get_type_in_doc(?string $doc, string $kind)
@@ -1740,24 +1740,24 @@ class PHPParser extends BaseParser
 	private function read_property_declaration(array $token, string $modifier, ?string $doc, IType $type = null)
 	{
 		$name = $this->get_var_name($token);
-		$declaration = $this->factory->create_property_declaration($modifier, $name);
-		$declaration->pos = $this->pos;
+		$decl = $this->factory->create_property_declaration($modifier, $name);
+		$decl->pos = $this->pos;
 
 		if ($doc) {
-			$declaration->noted_type = $this->get_type_in_doc($doc, 'var');
+			$decl->noted_type = $this->get_type_in_doc($doc, 'var');
 		}
 
 		if ($type) {
-			$declaration->declared_type = $type;
+			$decl->declared_type = $type;
 		}
 
 		if ($this->skip_char_token(_ASSIGN)) {
-			$declaration->value = $this->read_expression();
+			$decl->value = $this->read_expression();
 		}
 
 		$this->factory->end_class_member();
 
-		return $declaration;
+		return $decl;
 	}
 
 	private function read_method_declaration(string $modifier = null, ?string $doc, bool $is_abstract = false)
@@ -1767,30 +1767,30 @@ class PHPParser extends BaseParser
 			$name = static::METHOD_MAP[$name];
 		}
 
-		$declaration = $this->factory->create_method_declaration($modifier ?? _PUBLIC, $name);
-		$declaration->pos = $this->pos;
+		$decl = $this->factory->create_method_declaration($modifier ?? _PUBLIC, $name);
+		$decl->pos = $this->pos;
 
-		$parameters = $this->read_parameters();
-		$this->factory->set_scope_parameters($parameters);
+		$params = $this->read_parameters();
+		$this->factory->set_scope_parameters($params);
 
-		$this->read_function_return_types_for($declaration);
+		$this->read_function_return_types_for($decl);
 
 		if ($is_abstract) {
 			$this->expect_statement_end();
 		}
 		else {
-			$this->read_body_for_decl($declaration);
-			$this->factory->end_class_member();
+			$this->read_body_for_decl($decl);
 		}
 
-		return $declaration;
+		$this->factory->end_class_member();
+		return $decl;
 	}
 
 	private function read_lambda_expression()
 	{
 		$decl = $this->factory->create_anonymous_function();
-		$parameters = $this->read_parameters();
-		$this->factory->set_scope_parameters($parameters);
+		$params = $this->read_parameters();
+		$this->factory->set_scope_parameters($params);
 		$decl->pos = $this->pos;
 
 		$this->expect_typed_token_ignore_empty(T_DOUBLE_ARROW);
@@ -1806,8 +1806,8 @@ class PHPParser extends BaseParser
 	private function read_anonymous_function_expression()
 	{
 		$decl = $this->factory->create_anonymous_function();
-		$parameters = $this->read_parameters();
-		$this->factory->set_scope_parameters($parameters);
+		$params = $this->read_parameters();
+		$this->factory->set_scope_parameters($params);
 		$decl->pos = $this->pos;
 
 		if ($this->skip_typed_token(T_USE)) {
@@ -1825,31 +1825,31 @@ class PHPParser extends BaseParser
 	{
 		$name = $this->expect_identifier_name();
 
-		$declaration = $this->factory->create_function_declaration(_PUBLIC, $name, $this->namespace);
-		$declaration->pos = $this->pos;
+		$decl = $this->factory->create_function_declaration(_PUBLIC, $name, $this->namespace);
+		$decl->pos = $this->pos;
 
-		$parameters = $this->read_parameters();
-		$this->factory->set_scope_parameters($parameters);
+		$params = $this->read_parameters();
+		$this->factory->set_scope_parameters($params);
 
-		$this->read_function_return_types_for($declaration);
+		$this->read_function_return_types_for($decl);
 
-		$this->read_body_for_decl($declaration);
+		$this->read_body_for_decl($decl);
 		$this->factory->end_root_declaration();
 
-		return $declaration;
+		return $decl;
 	}
 
-	private function read_function_return_types_for(IFunctionDeclaration $declaration)
+	private function read_function_return_types_for(IFunctionDeclaration $decl)
 	{
 		if ($this->skip_char_token(_COLON)) {
 			$nullable = $this->skip_char_token('?');
 			$name = $this->expect_identifier_name();
-			$declaration->declared_type = $this->read_declared_type_with_name($name, $nullable);
+			$decl->declared_type = $this->read_declared_type_with_name($name, $nullable);
 		}
 
 		$noted_type = $this->read_noted_type();
 		if ($noted_type) {
-			$declaration->noted_type = $noted_type;
+			$decl->noted_type = $noted_type;
 		}
 	}
 
@@ -1900,17 +1900,17 @@ class PHPParser extends BaseParser
 			$token = $this->expect_typed_token_ignore_empty();
 		}
 
-		$declar = $this->read_parameter_header_with_token($token);
+		$decl = $this->read_parameter_header_with_token($token);
 
 		if ($this->skip_char_token(_ASSIGN)) {
-			$declar->value = $this->read_expression();
+			$decl->value = $this->read_expression();
 		}
 
-		$declar->declared_type = $declared_type;
-		$declar->noted_type = $noted_type;
-		$declar->is_variadic = $is_variadic;
+		$decl->declared_type = $declared_type;
+		$decl->noted_type = $noted_type;
+		$decl->is_variadic = $is_variadic;
 
-		return $declar;
+		return $decl;
 	}
 
 	private function read_parameter_header_with_token(array|string $token)
@@ -1922,14 +1922,14 @@ class PHPParser extends BaseParser
 		}
 
 		$name = $this->get_var_name($token);
-		$declar = $this->create_parameter($name);
+		$decl = $this->create_parameter($name);
 
 		if ($inout_mode) {
-			$declar->is_inout = true;
-			$declar->is_mutable = true;
+			$decl->is_inout = true;
+			$decl->is_mutable = true;
 		}
 
-		return $declar;
+		return $decl;
 	}
 
 	private function read_type_expression()
@@ -2053,8 +2053,7 @@ class PHPParser extends BaseParser
 			// $statement = $this->create_use_statement_when_not_exists($ns, [$target]);
 		}
 
-		$this->program->set_defer_check_identifier($identifier);
-
+		$this->program->append_unknow_identifier($identifier);
 		return $identifier;
 	}
 

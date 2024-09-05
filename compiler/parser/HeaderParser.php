@@ -70,40 +70,40 @@ class HeaderParser extends TeaParser
 		switch ($token) {
 			case _CLASS:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_class_declaration_with($name, $modifier);
+				$decl = $this->read_class_declaration_with($name, $modifier);
 				break;
 			case _ABSTRACT:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_class_declaration_with($name, $modifier);
-				$declaration->is_abstract = true;
+				$decl = $this->read_class_declaration_with($name, $modifier);
+				$decl->is_abstract = true;
 				break;
 			case _INTERTRAIT:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_intertrait_declaration($name, $modifier);
+				$decl = $this->read_intertrait_declaration($name, $modifier);
 				break;
 			case _INTERFACE:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_interface_declaration($name, $modifier);
+				$decl = $this->read_interface_declaration($name, $modifier);
 				break;
 			case _TRAIT:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_trait_declaration($name, $modifier);
+				$decl = $this->read_trait_declaration($name, $modifier);
 				break;
 			case _FUNC:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_function_declaration_with($name, $modifier);
+				$decl = $this->read_function_declaration_with($name, $modifier);
 				break;
 			case _CONST:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_constant_declaration_without_value($name, $modifier);
+				$decl = $this->read_constant_declaration_without_value($name, $modifier);
 				break;
 			default:
 				throw $this->new_parse_error("Unknow declaration type '$token'");
 		}
 
-		$declaration->origin_name = $origin_name;
+		$decl->origin_name = $origin_name;
 
-		return $declaration;
+		return $decl;
 	}
 
 	protected function read_dot_name_components(string $first_name)
@@ -118,38 +118,38 @@ class HeaderParser extends TeaParser
 
 	protected function read_class_constant_declaration(string $name, ?string $modifier)
 	{
-		$declaration = $this->factory->create_class_constant_declaration($modifier, $name);
+		$decl = $this->factory->create_class_constant_declaration($modifier, $name);
 
-		$this->read_type_hints_for_declaration($declaration);
+		$this->read_type_hints_for_declaration($decl);
 
 		if ($this->skip_token_ignore_space(_ASSIGN)) {
-			$declaration->value = $this->read_compile_time_value();
+			$decl->value = $this->read_compile_time_value();
 		}
-		elseif (!$declaration->declared_type and !$declaration->noted_type) {
+		elseif (!$decl->declared_type and !$decl->noted_type) {
 			throw $this->new_parse_error('Expected type or value assign expression for define constant.');
 		}
 
 		$this->factory->end_class_member();
 		$this->expect_statement_end();
 
-		return $declaration;
+		return $decl;
 	}
 
 	protected function read_method_declaration(string $name, ?string $modifier, bool $static)
 	{
-		$declaration = $this->factory->create_method_declaration($modifier, $name);
-		$declaration->pos = $this->pos;
-		$declaration->is_static = $static;
+		$decl = $this->factory->create_method_declaration($modifier, $name);
+		$decl->pos = $this->pos;
+		$decl->is_static = $static;
 
 		$parameters = $this->read_parameters_with_parentheses();
 		$this->factory->set_scope_parameters($parameters);
 
-		$this->read_type_hints_for_declaration($declaration);
+		$this->read_type_hints_for_declaration($decl);
 
 		$this->factory->end_class_member();
 		$this->expect_statement_end();
 
-		return $declaration;
+		return $decl;
 	}
 
 // ---
@@ -164,41 +164,41 @@ class HeaderParser extends TeaParser
 		switch ($token) {
 			case _CLASS:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_class_declaration_with($name, $modifier, $root_namespace);
+				$decl = $this->read_class_declaration_with($name, $modifier, $root_namespace);
 				break;
 			case _ABSTRACT:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_class_declaration_with($name, $modifier, $root_namespace);
-				$declaration->is_abstract = true;
+				$decl = $this->read_class_declaration_with($name, $modifier, $root_namespace);
+				$decl->is_abstract = true;
 				break;
 			case _INTERFACE:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_interface_declaration($name, $modifier, $root_namespace);
+				$decl = $this->read_interface_declaration($name, $modifier, $root_namespace);
 				break;
 			case _TRAIT:
 				[$origin_name, $name] = $this->read_header_declaration_names();
 				break;
 			case _FUNC:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_function_declaration_with($name, $modifier, $root_namespace);
+				$decl = $this->read_function_declaration_with($name, $modifier, $root_namespace);
 				break;
 			case _CONST:
 				[$origin_name, $name] = $this->read_header_declaration_names();
-				$declaration = $this->read_constant_declaration_without_value($name, $modifier, $root_namespace);
+				$decl = $this->read_constant_declaration_without_value($name, $modifier, $root_namespace);
 				break;
 			case _VAR:
 				$origin_name = null;
 				$name = $this->expect_identifier_token_ignore_space();
-				$declaration = $this->read_super_var_declaration($name);
+				$decl = $this->read_super_var_declaration($name);
 				break;
 			default:
 				throw $this->new_parse_error("Unknow declaration type '$token'");
 		}
 
-		$declaration->origin_name = $origin_name;
-		$declaration->is_runtime = true;
+		$decl->origin_name = $origin_name;
+		$decl->is_runtime = true;
 
-		return $declaration;
+		return $decl;
 	}
 
 	protected function read_header_declaration_names()
@@ -237,10 +237,10 @@ class HeaderParser extends TeaParser
 			throw $this->new_parse_error("Expected type for declared super variable '$name'.");
 		}
 
-		$declaration = $this->factory->create_super_variable_declaration($name, $type);
-		$declaration->pos = $this->pos;
+		$decl = $this->factory->create_super_variable_declaration($name, $type);
+		$decl->pos = $this->pos;
 
-		return $declaration;
+		return $decl;
 	}
 
 	private function read_module_declaration()

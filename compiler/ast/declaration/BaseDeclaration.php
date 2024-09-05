@@ -81,17 +81,17 @@ trait DeclarationTrait {
 
 	public $uses = [];
 
-	public $defer_check_identifiers = [];
+	public $unknow_identifiers = [];
 
 	public $tailing_newlines;
 
 	public function set_depends_to_unit_level()
 	{
-		foreach ($this->defer_check_identifiers as $identifier) {
-			$declaration = $identifier->symbol->declaration;
-			if (!$declaration->is_unit_level) {
-				$declaration->is_unit_level = true;
-				$declaration->set_depends_to_unit_level();
+		foreach ($this->unknow_identifiers as $identifier) {
+			$decl = $identifier->symbol->declaration;
+			if (!$decl->is_unit_level) {
+				$decl->is_unit_level = true;
+				$decl->set_depends_to_unit_level();
 			}
 		}
 	}
@@ -103,27 +103,28 @@ trait DeclarationTrait {
 		}
 	}
 
-	public function set_defer_check_identifier(Identifiable $identifier)
+	public function append_unknow_identifier(PlainIdentifier $identifier)
 	{
-		$this->defer_check_identifiers[$identifier->name] = $identifier;
+		$this->unknow_identifiers[] = $identifier;
 	}
 
-	public function remove_defer_check_for_key(string $key)
+	public function remove_unknow_identifier(PlainIdentifier $identifier)
 	{
-		if (isset($this->defer_check_identifiers[$key])) {
-			unset($this->defer_check_identifiers[$key]);
+		$idx = array_search($identifier, $this->unknow_identifiers, true);
+		if ($idx !== false) {
+			unset($this->unknow_identifiers[$idx]);
 		}
 	}
 
-	public function append_defer_check_identifiers(IDeclaration $declaration)
+	public function append_unknow_identifiers_from_declaration(IDeclaration $decl)
 	{
-		if (!$declaration->defer_check_identifiers) {
+		if (!$decl->unknow_identifiers) {
 			return;
 		}
 
-		$this->defer_check_identifiers = array_merge(
-			$this->defer_check_identifiers,
-			$declaration->defer_check_identifiers
+		$this->unknow_identifiers = array_merge(
+			$this->unknow_identifiers,
+			$decl->unknow_identifiers
 		);
 	}
 }

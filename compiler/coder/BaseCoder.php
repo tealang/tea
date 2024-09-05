@@ -347,10 +347,10 @@ abstract class BaseCoder
 
 	// public function render_function_block(FunctionBlock $node)
 	// {
-	// 	$declaration = $this->generate_function_header($node);
+	// 	$decl = $this->generate_function_header($node);
 	// 	$body = $this->render_function_body($node);
 
-	// 	return "{$declaration} $body";
+	// 	return "{$decl} $body";
 	// }
 
 	public function render_anonymous_function(AnonymousFunction $node)

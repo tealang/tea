@@ -66,9 +66,9 @@ class Program extends Node
 		$this->name = $this->generate_name();
 	}
 
-	public function append_declaration(IDeclaration $declaration)
+	public function append_declaration(IDeclaration $decl)
 	{
-		$this->declarations[(string)$declaration->name] = $declaration;
+		$this->declarations[(string)$decl->name] = $decl;
 	}
 
 	public function append_depends_native_program(Program $program)

@@ -16,11 +16,16 @@ class Symbol
 	 */
 	public $declaration;
 
-	public function __construct(IDeclaration $declaration)
+	/**
+	 * @var ?UseDeclaration
+	 */
+	public $using;
+
+	public function __construct(IDeclaration $decl)
 	{
-		$this->name = $declaration->name;
-		$this->declaration = $declaration;
-		// $declaration->symbol = $this;
+		$this->name = $decl->name;
+		$this->declaration = $decl;
+		// $decl->symbol = $this;
 	}
 }
 

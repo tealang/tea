@@ -148,36 +148,33 @@ abstract class SingleGenericType extends BaseType
 
 	public function is_accept_single_type(IType $target) {
 		if ($target->has_null and !$this->nullable and !$this->has_null) {
-			return false;
+			$is = false;
 		}
-
-		if ($target instanceof NoneType) {
-			return $this->nullable;
+		elseif ($target instanceof NoneType) {
+			$is = $this->nullable;
 		}
-
-		if ($target === $this) {
-			return true;
+		elseif ($target === $this) {
+			$is = true;
 		}
-
 		// for the builtin classes
-		if ($target instanceof ClassKindredIdentifier && $this->symbol === $target->symbol) {
-			return true;
+		elseif ($target instanceof ClassKindredIdentifier && $this->symbol === $target->symbol) {
+			$is = true;
 		}
-
-		if (!$target instanceof static) {
-			return false;
+		elseif (!$target instanceof static) {
+			$is = false;
 		}
-
 		// if current value type is Any, then accept any types
-		if ($this->generic_type === null || $this->generic_type === TypeFactory::$_any) {
-			return true;
+		elseif ($this->generic_type === null || $this->generic_type === TypeFactory::$_any) {
+			$is = true;
+		}
+		elseif ($target->generic_type === null) {
+			$is = false;
+		}
+		else {
+			$is = $this->generic_type->is_accept_type($target->generic_type);
 		}
 
-		if ($target->generic_type === null) {
-			return false;
-		}
-
-		return $this->generic_type->is_accept_type($target->generic_type);
+		return $is;
 	}
 
 	public function is_same_with(IType $target) {
@@ -504,15 +501,17 @@ class IterableType extends SingleGenericType {
 
 	public function is_same_or_based_with(IType $target) {
 		if ($this->symbol !== $target->symbol and $target->symbol !== TypeFactory::$_iterable->symbol) {
-			return false;
+			$is = false;
 		}
-
-		if ($this->generic_type === null or $target->generic_type === null) {
-			return $this->generic_type === $target->generic_type
+		elseif ($this->generic_type === null or $target->generic_type === null) {
+			$is = $this->generic_type === $target->generic_type
 				|| ($this->generic_type ?? $target->generic_type) instanceof AnyType;
 		}
+		else {
+			$is = $this->generic_type->is_same_or_based_with($target->generic_type);
+		}
 
-		return $this->generic_type->is_same_or_based_with($target->generic_type);
+		return $is;
 	}
 }
 

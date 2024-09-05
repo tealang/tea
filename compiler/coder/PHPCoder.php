@@ -86,15 +86,15 @@ class PHPCoder extends BaseCoder
 
 	protected function render_program_statements(Program $program)
 	{
-		$declarations = [];
+		$decls = [];
 		foreach ($program->declarations as $node) {
 			// the common consts and functions would be render to the loader file
 			if (!$node->is_unit_level || $node instanceof ClassKindredDeclaration) {
-				$declarations[] = $node;
+				$decls[] = $node;
 			}
 		}
 
-		$this->process_use_statments($declarations);
+		$this->process_use_statments($decls);
 
 		$items = $this->render_heading_statements($program);
 
@@ -117,7 +117,7 @@ class PHPCoder extends BaseCoder
 
 		// classes that use traits must be placed at the beginning of the file
 		// otherwise the runtime will prompt that they cannot be found
-		foreach ($declarations as $node) {
+		foreach ($decls as $node) {
 			$item = $node->render($this);
 			$item === null || $items[] = $item . LF;
 		}
@@ -134,18 +134,18 @@ class PHPCoder extends BaseCoder
 		return $items;
 	}
 
-	protected function process_use_statments(array $declarations)
+	protected function process_use_statments(array $decls)
 	{
-		foreach ($declarations as $node) {
+		foreach ($decls as $node) {
 			$this->collect_use_statements($node);
 		}
 
 		$this->program->initializer and $this->collect_use_statements($this->program->initializer);
 	}
 
-	protected function collect_use_statements(IDeclaration $declaration)
+	protected function collect_use_statements(IDeclaration $decl)
 	{
-		foreach ($declaration->uses as $use) {
+		foreach ($decl->uses as $use) {
 			// it should be a use statement in __package
 
 			$uri = $use->ns->uri;
@@ -161,7 +161,7 @@ class PHPCoder extends BaseCoder
 			$this->uses[$uri]->append_target($use);
 		}
 
-		foreach ($declaration->defer_check_identifiers as $identifier) {
+		foreach ($decl->unknow_identifiers as $identifier) {
 			$dependence = $identifier->symbol->declaration;
 			if ($dependence instanceof FunctionDeclaration && $dependence->program->is_native) {
 				$this->program->append_depends_native_program($dependence->program);
@@ -202,14 +202,14 @@ class PHPCoder extends BaseCoder
 				$item = $target->target_name;
 			}
 
-			$declaration = $target->source_declaration;
-			if ($declaration instanceof ClassKindredDeclaration) {
+			$decl = $target->source_declaration;
+			if ($decl instanceof ClassKindredDeclaration) {
 				// no any
 			}
-			elseif ($declaration instanceof FunctionDeclaration) {
+			elseif ($decl instanceof FunctionDeclaration) {
 				$item = "function $item";
 			}
-			elseif ($declaration instanceof ConstantDeclaration) {
+			elseif ($decl instanceof ConstantDeclaration) {
 				$item = "const $item";
 			}
 			else {
@@ -1161,20 +1161,20 @@ class PHPCoder extends BaseCoder
 
 	public function render_accessing_identifier(AccessingIdentifier $node)
 	{
-		$declaration = $node->symbol->declaration;
-		if ($declaration instanceof MaskedDeclaration) {
+		$decl = $node->symbol->declaration;
+		if ($decl instanceof MaskedDeclaration) {
 			return $this->render_masked_accessing_identifier($node);
 		}
 
-		$name = $declaration->name;
-		$is_property = $declaration instanceof PropertyDeclaration;
+		$name = $decl->name;
+		$is_property = $decl instanceof PropertyDeclaration;
 		if ($is_property) {
 			//
 		}
-		if ($declaration instanceof MethodDeclaration) {
+		if ($decl instanceof MethodDeclaration) {
 			$name = $this->get_normalized_method_name($name);
 		}
-		elseif ($declaration instanceof ClassConstantDeclaration) {
+		elseif ($decl instanceof ClassConstantDeclaration) {
 			$name = $this->get_normalized_name($name);
 		}
 
@@ -1192,11 +1192,11 @@ class PHPCoder extends BaseCoder
 		// 	return $basing . static::NS_SEPARATOR . $name;
 		// }
 
-		if ($declaration->is_static) {
+		if ($decl->is_static) {
 			// static accessing
 
 			// cannot use '$this' or 'static' for private member, it will be cause syntax error
-			if ($declaration->modifier === _PRIVATE) {
+			if ($decl->modifier === _PRIVATE) {
 				$basing = 'self';
 			}
 			elseif ($basing === _THIS) {
@@ -1235,12 +1235,12 @@ class PHPCoder extends BaseCoder
 
 	protected function render_masked_accessing_identifier(AccessingIdentifier $node)
 	{
-		$declaration = $node->symbol->declaration;
-		$masked = $declaration->body;
+		$decl = $node->symbol->declaration;
+		$masked = $decl->body;
 
 		if ($masked instanceof CallExpression) {
 			$actual_arguments = [];
-			foreach ($declaration->arguments_map as $idx) {
+			foreach ($decl->arguments_map as $idx) {
 				// assert($idx === 0);
 				$actual_arguments[] = $node->basing;
 			}
@@ -1263,19 +1263,19 @@ class PHPCoder extends BaseCoder
 			return $masked->render($this);
 		}
 		else {
-			throw new Exception("Unknow masked contents.", $declaration);
+			throw new Exception("Unknow masked contents.", $decl);
 		}
 	}
 
 	protected function render_masked_call(CallExpression $node)
 	{
-		$declaration = $node->callee->symbol->declaration;
-		$masked = $declaration->body;
+		$decl = $node->callee->symbol->declaration;
+		$masked = $decl->body;
 
 		$masking_arguments = $node->normalized_arguments ?? $node->arguments;
 
 		$actual_arguments = [];
-		foreach ($declaration->arguments_map as $dest_idx => $src) {
+		foreach ($decl->arguments_map as $dest_idx => $src) {
 			// an expression, but not an argument
 			if (!is_int($src)) {
 				$actual_arguments[] = $src;
@@ -1293,8 +1293,8 @@ class PHPCoder extends BaseCoder
 			if (isset($masking_arguments[$actual_index])) {
 				$arg_value = $masking_arguments[$actual_index];
 			}
-			elseif (isset($declaration->parameters[$actual_index]->value)) {
-				$arg_value = $declaration->parameters[$actual_index]->value;
+			elseif (isset($decl->parameters[$actual_index]->value)) {
+				$arg_value = $decl->parameters[$actual_index]->value;
 			}
 			else {
 				throw new Exception("Unexpected render error for masked call '{$node->callee->name}'.");
@@ -1302,7 +1302,7 @@ class PHPCoder extends BaseCoder
 
 			if ($arg_value === ASTFactory::$default_value_mark) {
 				// is should be the last real argument, so we check it is correct
-				if (count($declaration->arguments_map) !== count($actual_arguments) + 1) {
+				if (count($decl->arguments_map) !== count($actual_arguments) + 1) {
 					throw new Exception("Unexpected arguments error for masked call '{$node->callee->name}'.");
 				}
 			}
@@ -1407,29 +1407,29 @@ class PHPCoder extends BaseCoder
 
 	public function render_plain_identifier(PlainIdentifier $node)
 	{
-		$declaration = $node->symbol->declaration;
+		$decl = $node->symbol->declaration;
 
 		// variable
-		if ($declaration instanceof IVariableDeclaration) {
+		if ($decl instanceof IVariableDeclaration) {
 			return $this->add_variable_prefix($node->name);
 		}
 
-		if ($declaration instanceof ClassKindredDeclaration) {
+		if ($decl instanceof ClassKindredDeclaration) {
 			$name = $this->get_classkindred_identifier_name($node);
 		}
 		else {
 			// function/constant
-			$name = $this->get_normalized_name_with_declaration($declaration);
+			$name = $this->get_normalized_name_with_declaration($decl);
 		}
 
 		if (!$node->is_calling && !$node->is_accessing) {
-			if ($declaration instanceof FunctionDeclaration) {
-				$uri = ltrim($declaration->program->unit->dist_ns_uri, static::NS_SEPARATOR);
+			if ($decl instanceof FunctionDeclaration) {
+				$uri = ltrim($decl->program->unit->dist_ns_uri, static::NS_SEPARATOR);
 				$name = sprintf("'%s%s%s'", $uri, static::NS_SEPARATOR, $name);
 			}
-			elseif ($declaration instanceof ClassKindredDeclaration) {
-				$name = TeaHelper::is_builtin_type_name($declaration->name)
-					? "'{$declaration->name}'"
+			elseif ($decl instanceof ClassKindredDeclaration) {
+				$name = TeaHelper::is_builtin_type_name($decl->name)
+					? "'{$decl->name}'"
 					: $name . '::class';
 			}
 		}
@@ -1473,9 +1473,9 @@ class PHPCoder extends BaseCoder
 
 	private function get_classkindred_identifier_name(PlainIdentifier $node)
 	{
-		$declaration = $node->symbol->declaration;
-		if ($declaration->is_root_namespace()) {
-			$name = $this->get_identifier_name_for_root_namespace_declaration($declaration);
+		$decl = $node->symbol->declaration;
+		if ($decl->is_root_namespace()) {
+			$name = $this->get_identifier_name_for_root_namespace_declaration($decl);
 		}
 		else {
 			$name = $this->get_normalized_name($node->name);
@@ -1484,11 +1484,11 @@ class PHPCoder extends BaseCoder
 		return $name;
 	}
 
-	private function get_identifier_name_for_root_namespace_declaration(ClassKindredDeclaration $declaration)
+	private function get_identifier_name_for_root_namespace_declaration(ClassKindredDeclaration $decl)
 	{
-		$name = $declaration->name;
-		if ($declaration->origin_name !== null) {
-			$name = $declaration->origin_name;
+		$name = $decl->name;
+		if ($decl->origin_name !== null) {
+			$name = $decl->origin_name;
 		}
 
 		return static::NS_SEPARATOR . $name;
@@ -1727,8 +1727,8 @@ class PHPCoder extends BaseCoder
 			return true;
 		}
 		elseif ($item instanceof AccessingIdentifier) {
-			$declaration = $item->symbol->declaration;
-			if ($declaration instanceof PropertyDeclaration and !$declaration->is_static) {
+			$decl = $item->symbol->declaration;
+			if ($decl instanceof PropertyDeclaration and !$decl->is_static) {
 				return true;
 			}
 		}

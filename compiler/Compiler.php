@@ -269,45 +269,39 @@ class Compiler
 	private function check_ast_for_unit(Unit $unit, ASTChecker $normal_checker)
 	{
 		$native_checker = ASTChecker::get_native_checker();
+		$programs = $unit->programs;
 
-		foreach ($unit->programs as $program) {
+		// 1st, check all ns usings
+		foreach ($programs as $program) {
 			if ($program->is_native) {
-				$native_checker->collect_program_uses($program);
+				$native_checker->check_all_usings($program);
 			}
 			else {
-				$normal_checker->collect_program_uses($program);
+				$normal_checker->check_all_usings($program);
 			}
 		}
 
-		$native_programs = [];
-		$normal_programs = [];
-		foreach ($unit->programs as $program) {
-			if ($program->is_native) {
-				$native_programs[] = $program;
-			}
-			elseif ($program->name === '__package') {
-				self::echo_start(" - {$program->file}", LF);
-				$normal_checker->check_program($program);
-			}
-			else {
-				$normal_programs[] = $program;
-			}
-		}
-
-		// the Native programs
-		foreach ($native_programs as $program) {
-			$native_checker->check_all_usings($program);
-		}
-
-		foreach ($native_programs as $program) {
+		// 2nd, attach symbols, and collecting auto usings
+		foreach ($programs as $program) {
 			self::echo_start(" - {$program->file}", LF);
-			$native_checker->check_all_declarations($program);
+			$checker = $program->is_native ? $native_checker : $normal_checker;
+			$checker->collect_program_uses($program);
 		}
 
-		// the Tea programs
-		foreach ($normal_programs as $program) {
-			self::echo_start(" - {$program->file}", LF);
-			$normal_checker->check_program($program);
+		// 3td, check statements
+		$package_program = $programs['__package'] ?? null;
+		if ($package_program) {
+			$normal_checker->check_program($package_program);
+		}
+
+		foreach ($programs as $program) {
+			// self::echo_start(" - {$program->file}", LF);
+			$program->is_native and $native_checker->check_program($program);
+		}
+
+		foreach ($programs as $program) {
+			// self::echo_start(" - {$program->file}", LF);
+			!$program->is_native and $normal_checker->check_program($program);
 		}
 	}
 
@@ -552,14 +546,14 @@ class Compiler
 		$program->uses = $this->header_program->uses;
 
 		foreach ($this->unit->symbols as $symbol) {
-			$declaration = $symbol->declaration;
-			$belong_program = $declaration->program;
-			$modifier = $declaration->modifier ?? null;
+			$decl = $symbol->declaration;
+			$belong_program = $decl->program;
+			$modifier = $decl->modifier ?? null;
 			if (($modifier === _PUBLIC)
 				&& $belong_program->unit === $this->unit
 				&& !$belong_program->is_external
 			) {
-				$program->append_declaration($declaration);
+				$program->append_declaration($decl);
 			}
 		}
 

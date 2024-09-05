@@ -54,7 +54,6 @@ class TypeFactory
 
 	// for check Iterable type accepts
 	public static $_iterator_symbol;
-	public static $_generator_symbol;
 
 	private static $_type_map = [];
 	private static $_casting_map;
@@ -133,11 +132,11 @@ class TypeFactory
 			}
 		}
 
-		self::$_exception_symbol = $unit->symbols[_BASE_EXCEPTION] ?? null;
 		self::$_iview_symbol = $unit->symbols['IView'] ?? null;
+
+		self::$_exception_symbol = $unit->symbols[_BASE_EXCEPTION] ?? null;
 		self::$_iterator_symbol = $unit->symbols['Iterator'] ?? null;
-		// self::$_generator_symbol = $unit->symbols['Generator'] ?? null;
-		self::$_generator_symbol = self::$_iterator_symbol;
+		self::$_iterator->symbol = self::$_iterator_symbol;
 	}
 
 	// only valid after set_symbols

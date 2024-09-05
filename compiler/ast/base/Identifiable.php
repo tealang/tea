@@ -23,6 +23,16 @@ abstract class Identifiable extends BaseExpression implements IAssignable
 		return $this->symbol->declaration->unit;
 	}
 
+	// public function get_declaration()
+	// {
+	// 	$decl = $this->symbol->declaration;
+	// 	if ($decl instanceof UseDeclaration) {
+	// 		$decl = $decl->source_declaration;
+	// 	}
+
+	// 	return $decl;
+	// }
+
 	public function is_assignable()
 	{
 		$decl = $this->symbol->declaration;
@@ -89,15 +99,15 @@ class PlainIdentifier extends Identifiable implements IType
 
 	public function is_based_with(IType $target)
 	{
-		if (!$this->symbol->declaration instanceof ClassKindredDeclaration) {
-			return false;
+		$curr_decl = $this->symbol->declaration;
+		if (!$curr_decl instanceof ClassKindredDeclaration) {
+			$is = false;
+		}
+		else {
+			$is = $curr_decl->find_based_with_symbol($target->symbol) !== null;
 		}
 
-		if ($this->symbol->declaration->find_based_with_symbol($target->symbol) !== null) {
-			return true;
-		}
-
-		return false;
+		return $is;
 	}
 
 	public function is_same_or_based_with(IType $target)
@@ -108,20 +118,22 @@ class PlainIdentifier extends Identifiable implements IType
 	public function is_accept_single_type(IType $target)
 	{
 		if ($target->has_null and !$this->nullable and !$this->has_null) {
-			return false;
+			$is = false;
+		}
+		elseif ($target instanceof NoneType) {
+			$is = $this->nullable;
+		}
+		else {
+			$is = $target->symbol === $this->symbol
+				// || $target === TypeFactory::$_none
+				// for check BuiltinTypeClassDeclaration like String
+				// can not use symbol to compare BuiltinTypeClassDeclaration, because of the symbol maybe 'this'
+				|| $this->symbol->declaration === $target->symbol->declaration
+				|| $target->is_based_with($this)
+			;
 		}
 
-		if ($target instanceof NoneType) {
-			return $this->nullable;
-		}
-
-		return $target->symbol === $this->symbol
-			// || $target === TypeFactory::$_none
-			// for check BuiltinTypeClassDeclaration like String
-			// can not use symbol to compare BuiltinTypeClassDeclaration, because of the symbol maybe 'this'
-			|| $this->symbol->declaration === $target->symbol->declaration
-			|| $target->is_based_with($this)
-		;
+		return $is;
 	}
 }
 

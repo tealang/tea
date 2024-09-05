@@ -70,8 +70,8 @@ class ASTFactory
 		$this->root_namespace = $this->create_namespace_identifier(['']);
 
 		// the constant 'UNIT_PATH'
-		$declaration = new ConstantDeclaration(_PUBLIC, _UNIT_PATH, TypeFactory::$_string, null);
-		$this->unit_path_symbol = new Symbol($declaration);
+		$decl = new ConstantDeclaration(_PUBLIC, _UNIT_PATH, TypeFactory::$_string, null);
+		$this->unit_path_symbol = new Symbol($decl);
 	}
 
 	public function set_as_main()
@@ -119,20 +119,20 @@ class ASTFactory
 
 	public function append_use_target(NamespaceIdentifier $ns, string $target_name = null, string $source_name = null)
 	{
-		$declaration = new UseDeclaration($ns, $target_name, $source_name);
-		$this->parser->attach_position($declaration);
+		$decl = new UseDeclaration($ns, $target_name, $source_name);
+		$this->parser->attach_position($decl);
 
 		if ($this->parser->is_parsing_header) {
-			$this->create_internal_symbol($declaration);
+			$this->create_internal_symbol($decl);
 		}
 		else {
-			$this->create_program_symbol($declaration);
+			$this->create_program_symbol($decl);
 		}
 
 		// need to check
-		$this->program->use_targets[] = $declaration;
+		$this->program->use_targets[] = $decl;
 
-		return $declaration;
+		return $decl;
 	}
 
 	public function create_break_statement(?BaseExpression $argument = null)
@@ -188,21 +188,18 @@ class ASTFactory
 
 	public function create_identifier(string $name)
 	{
-		if (TeaHelper::is_builtin_identifier($name)) {
-			$identifier = $this->create_builtin_identifier($name);
-		}
-		else {
-			$identifier = new PlainIdentifier($name);
-			$this->set_defer_check($identifier);
-		}
+		$identifier = TeaHelper::is_builtin_identifier($name)
+			? $this->create_builtin_identifier($name)
+			: $this->create_plain_identifier($name);
 
 		return $identifier;
 	}
 
-	public function create_namespace_identifier(array $names)
+	public function create_plain_identifier(string $name)
 	{
-		$ns = new NamespaceIdentifier($names);
-		return $ns;
+		$identifier = new PlainIdentifier($name);
+		$this->set_defer_check($identifier);
+		return $identifier;
 	}
 
 	public function create_builtin_identifier(string $token): BaseExpression
@@ -212,9 +209,9 @@ class ASTFactory
 				$identifier = new PlainIdentifier($token);
 				if ($this->class) {
 					// function/const/property declaration
-					$declar = $this->declaration;
-					// $declar = $this->function ?? $this->declaration;
-					$identifier->symbol = $declar->is_static
+					$decl = $this->declaration;
+					// $decl = $this->function ?? $this->declaration;
+					$identifier->symbol = $decl->is_static
 						? $this->class->this_class_symbol
 						: $this->class->this_object_symbol;
 				}
@@ -249,6 +246,12 @@ class ASTFactory
 		return $identifier;
 	}
 
+	public function create_namespace_identifier(array $names)
+	{
+		$ns = new NamespaceIdentifier($names);
+		return $ns;
+	}
+
 	public function create_none_identifier()
 	{
 		return new LiteralNone();
@@ -279,18 +282,18 @@ class ASTFactory
 	private function set_defer_check(Identifiable $identifier)
 	{
 		if (!$this->declaration instanceof IFunctionDeclaration or !$this->seek_symbol_in_function($identifier)) {
-			$this->declaration->set_defer_check_identifier($identifier);
+			$this->declaration->append_unknow_identifier($identifier);
 		}
 	}
 
 	public function remove_defer_check(PlainIdentifier $identifier)
 	{
 		$block = $this->scope;
-		$block->remove_defer_check_for_key($identifier->name);
+		$block->remove_unknow_identifier($identifier);
 
 		while ($block = $block->belong_block) {
 			if ($block instanceof IScopeBlock) {
-				$block->remove_defer_check_for_key($identifier->name);
+				$block->remove_unknow_identifier($identifier);
 			}
 		}
 	}
@@ -358,11 +361,11 @@ class ASTFactory
 		// 	throw $this->parser->new_parse_error("Identifier '$identifier->name' not a valid variable name");
 		// }
 
-		$declaration = new VariableDeclaration($identifier->name, null, $value);
-		$declaration->block = $this->block;
+		$decl = new VariableDeclaration($identifier->name, null, $value);
+		$decl->block = $this->block;
 
 		// link to symbol
-		$identifier->symbol = $this->create_local_symbol($declaration);
+		$identifier->symbol = $this->create_local_symbol($decl);
 	}
 
 // ---
@@ -469,94 +472,101 @@ class ASTFactory
 			return null;
 		}
 
-		$declaration = new BuiltinTypeClassDeclaration(_PUBLIC, $name);
+		$decl = new BuiltinTypeClassDeclaration(_PUBLIC, $name);
 
-		$symbol = $this->create_internal_symbol($declaration);
-		$this->bind_class_symbol($declaration, $symbol);
+		$symbol = $this->create_internal_symbol($decl);
+		$this->bind_class_symbol($decl, $symbol);
 
 		// bind to type
 		$type_identifier->symbol = $symbol;
 
-		$this->begin_class($declaration);
+		$this->begin_class($decl);
 
-		return $declaration;
+		return $decl;
 	}
 
 	public function create_class_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'class');
 
-		$declaration = new ClassDeclaration($modifier, $name);
+		$decl = new ClassDeclaration($modifier, $name);
 
-		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns);
-		$this->bind_class_symbol($declaration, $symbol);
+		$symbol = $this->create_symbol_for_top_declaration($decl, $ns);
+		$this->bind_class_symbol($decl, $symbol);
 
-		$this->begin_class($declaration);
+		$this->begin_class($decl);
 
-		return $declaration;
+		return $decl;
 	}
 
 	public function create_interface_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'interface');
 
-		$declaration = new InterfaceDeclaration($modifier, $name);
+		$decl = new InterfaceDeclaration($modifier, $name);
 
-		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns);
-		$this->bind_class_symbol($declaration, $symbol);
+		$symbol = $this->create_symbol_for_top_declaration($decl, $ns);
+		$this->bind_class_symbol($decl, $symbol);
 
-		$this->begin_class($declaration);
+		$this->begin_class($decl);
 
-		return $declaration;
+		return $decl;
 	}
 
 	public function create_intertrait_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'intertrait');
 
-		$declaration = new IntertraitDeclaration($modifier, $name);
+		$decl = new IntertraitDeclaration($modifier, $name);
 
-		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns);
-		$this->bind_class_symbol($declaration, $symbol);
+		$symbol = $this->create_symbol_for_top_declaration($decl, $ns);
+		$this->bind_class_symbol($decl, $symbol);
 
-		$this->begin_class($declaration);
+		$this->begin_class($decl);
 
-		return $declaration;
+		return $decl;
 	}
 
 	public function create_trait_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'trait');
 
-		$declaration = new TraitDeclaration($modifier, $name);
+		$decl = new TraitDeclaration($modifier, $name);
 
-		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns);
-		$this->bind_class_symbol($declaration, $symbol);
+		$symbol = $this->create_symbol_for_top_declaration($decl, $ns);
+		$this->bind_class_symbol($decl, $symbol);
 
-		$this->begin_class($declaration);
+		$this->begin_class($decl);
 
-		return $declaration;
+		return $decl;
 	}
 
-	private static function bind_class_symbol(ClassKindredDeclaration $declaration, Symbol $symbol)
+	private static function bind_class_symbol(ClassKindredDeclaration $decl, Symbol $symbol)
 	{
 		// identifier for 'this'
-		$identifier = new ClassKindredIdentifier($declaration->name); // as a Type for 'this'
+		$identifier = new ClassKindredIdentifier($decl->name); // as a Type for 'this'
 		$identifier->symbol = $symbol;
 
-		$declaration->typing_identifier = $identifier;
-		$declaration->this_class_symbol = $symbol;
-		$declaration->this_object_symbol = self::create_symbol_this($identifier);
+		$decl->typing_identifier = $identifier;
+		$decl->this_class_symbol = $symbol;
+		$decl->this_object_symbol = self::create_symbol_this($identifier);
 
 		// the MetaType
-		$declaration->declared_type = TypeFactory::create_meta_type($identifier);
+		$decl->declared_type = TypeFactory::create_meta_type($identifier);
 	}
 
 	private static function create_symbol_this(ClassKindredIdentifier $class)
 	{
-		$declaration = new FinalVariableDeclaration(_THIS, $class);
-		$declaration->is_checked = true; // do not need to check
-		return new Symbol($declaration);
+		$decl = new FinalVariableDeclaration(_THIS, $class);
+		$decl->is_checked = true; // do not need to check
+		return new Symbol($decl);
+	}
+
+	public function create_traits_using_statement(array $items)
+	{
+		$decl = new TraitsUsingStatement($items);
+		$this->class->append_trait_using($decl);
+		return $decl;
 	}
 
 	public function set_scope_parameters(array $parameters)
@@ -571,80 +581,72 @@ class ASTFactory
 
 	public function create_masked_declaration(string $name)
 	{
-		$declaration = new MaskedDeclaration(_PUBLIC, $name);
-		$this->begin_class_member($declaration);
-		return $declaration;
-	}
-
-	public function create_traits_using_statement(array $items)
-	{
-		$declaration = new TraitsUsingStatement($items);
-		$this->class->append_trait_using($declaration);
-
-		return $declaration;
+		$decl = new MaskedDeclaration(_PUBLIC, $name);
+		$this->begin_class_member($decl);
+		return $decl;
 	}
 
 	public function create_method_declaration(?string $modifier, string $name)
 	{
-		$declaration = new MethodDeclaration($modifier, $name);
-		$this->begin_class_member($declaration);
-		return $declaration;
+		$decl = new MethodDeclaration($modifier, $name);
+		$this->begin_class_member($decl);
+		return $decl;
 	}
 
 	public function create_function_declaration(?string $modifier, string $name, NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'function');
 
-		$declaration = new FunctionDeclaration($modifier, $name);
-		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns);
+		$decl = new FunctionDeclaration($modifier, $name);
+		$symbol = $this->create_symbol_for_top_declaration($decl, $ns);
 
-		$this->begin_root_declaration($declaration);
+		$this->begin_root_declaration($decl);
 
-		return $declaration;
+		return $decl;
 	}
 
 	public function create_property_declaration(?string $modifier, string $name)
 	{
-		$declaration = new PropertyDeclaration($modifier, $name);
-		$this->begin_class_member($declaration);
-		return $declaration;
+		$decl = new PropertyDeclaration($modifier, $name);
+		$this->begin_class_member($decl);
+		return $decl;
 	}
 
 	public function create_class_constant_declaration(?string $modifier, string $name)
 	{
-		$declaration = new ClassConstantDeclaration($modifier, $name);
-		$this->begin_class_member($declaration);
-		return $declaration;
+		$decl = new ClassConstantDeclaration($modifier, $name);
+		$this->begin_class_member($decl);
+		return $decl;
 	}
 
 	public function create_constant_declaration(?string $modifier, string $name, ?NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'constant');
 
-		$declaration = new ConstantDeclaration($modifier, $name);
-		$symbol = $this->create_symbol_for_top_declaration($declaration, $ns);
+		$decl = new ConstantDeclaration($modifier, $name);
+		$symbol = $this->create_symbol_for_top_declaration($decl, $ns);
 
-		$this->begin_root_declaration($declaration);
+		$this->begin_root_declaration($decl);
 
-		return $declaration;
+		return $decl;
 	}
 
 	public function create_super_variable_declaration(string $name, IType $type)
 	{
-		$declaration = new SuperVariableDeclaration($name, $type);
+		$decl = new SuperVariableDeclaration($name, $type);
 
-		$this->begin_root_declaration($declaration);
-		$this->create_internal_symbol($declaration);
+		$this->begin_root_declaration($decl);
+		$this->create_internal_symbol($decl);
 
-		return $declaration;
+		return $decl;
 	}
 
 	public function create_variable_declaration(string $name, ?IType $type = null, ?BaseExpression $value = null)
 	{
-		$declaration = new VariableDeclaration($name, $type, $value);
-		$this->create_local_symbol($declaration);
+		$decl = new VariableDeclaration($name, $type, $value);
+		$this->create_local_symbol($decl);
 
-		return $declaration;
+		return $decl;
 	}
 
 	public function create_anonymous_function()
@@ -947,10 +949,10 @@ class ASTFactory
 		$this->scope = null;
 	}
 
-	public function begin_class(ClassKindredDeclaration $declaration)
+	public function begin_class(ClassKindredDeclaration $decl)
 	{
-		$this->class = $declaration;
-		$this->declaration = $declaration;
+		$this->class = $decl;
+		$this->declaration = $decl;
 		$this->block = null;
 		// $this->function = null;
 		$this->scope = null;
@@ -980,21 +982,21 @@ class ASTFactory
 
 	public function end_class_member()
 	{
-		$this->class->append_defer_check_identifiers($this->declaration);
+		$this->class->append_unknow_identifiers_from_declaration($this->declaration);
 
 		$this->declaration = $this->class;
 		$this->scope = null;
 		// $this->function = null;
 	}
 
-	public function begin_root_declaration(IRootDeclaration $declaration)
+	public function begin_root_declaration(IRootDeclaration $decl)
 	{
-		$this->declaration = $declaration;
+		$this->declaration = $decl;
 
-		if ($declaration instanceof FunctionDeclaration) {
-			$this->block = $declaration;
-			$this->scope = $declaration;
-			// $this->function = $declaration;
+		if ($decl instanceof FunctionDeclaration) {
+			$this->block = $decl;
+			$this->scope = $decl;
+			// $this->function = $decl;
 		}
 	}
 
@@ -1084,7 +1086,7 @@ class ASTFactory
 		if ($symbol === null && $seek_block) {
 			// add to lambda check list
 			if ($seek_block instanceof AnonymousFunction) {
-				$seek_block->set_defer_check_identifier($identifier);
+				$seek_block->append_unknow_identifier($identifier);
 				// $identifier->lambda = $seek_block; // for the mutating feature
 			}
 
@@ -1116,42 +1118,42 @@ class ASTFactory
 	}
 
 	// create symbol, and add to current block
-	private function create_local_symbol(IDeclaration $declaration)
+	private function create_local_symbol(IDeclaration $decl)
 	{
-		$symbol = new Symbol($declaration);
+		$symbol = new Symbol($decl);
 		$this->add_block_symbol($symbol);
 
 		return $symbol;
 	}
 
 	// // create symbol, and add to scope block, includes: Anonymous Function, Normal Function, Method
-	// private function create_scope_symbol(IDeclaration $declaration)
+	// private function create_scope_symbol(IDeclaration $decl)
 	// {
-	// 	$symbol = new Symbol($declaration);
+	// 	$symbol = new Symbol($decl);
 	// 	$this->add_scope_symbol($symbol);
 
 	// 	return $symbol;
 	// }
 
-	private function new_top_symbol(IDeclaration $declaration)
+	private function new_top_symbol(IDeclaration $decl)
 	{
-		return new TopSymbol($declaration);
+		return new TopSymbol($decl);
 	}
 
-	private function create_program_symbol(IDeclaration $declaration)
+	private function create_program_symbol(IDeclaration $decl)
 	{
-		$symbol = $this->new_top_symbol($declaration);
+		$symbol = $this->new_top_symbol($decl);
 		$this->add_program_symbol($symbol);
 
 		return $symbol;
 	}
 
-	private function create_internal_symbol(IDeclaration $declaration, Symbol $symbol = null)
+	private function create_internal_symbol(IDeclaration $decl, Symbol $symbol = null)
 	{
-		$declaration->program = $this->program;
+		$decl->program = $this->program;
 
 		if ($symbol === null) {
-			$symbol = $this->new_top_symbol($declaration);
+			$symbol = $this->new_top_symbol($decl);
 		}
 
 		$this->add_program_symbol($symbol);
@@ -1160,14 +1162,14 @@ class ASTFactory
 		return $symbol;
 	}
 
-	private function create_external_symbol(IDeclaration $declaration, NamespaceIdentifier $ns)
+	private function create_external_symbol(IDeclaration $decl, NamespaceIdentifier $ns)
 	{
-		$declaration->set_namespace($ns);
-		$declaration->program = $this->program;
+		$decl->set_namespace($ns);
+		$decl->program = $this->program;
 
-		$symbol = $this->new_top_symbol($declaration);
+		$symbol = $this->new_top_symbol($decl);
 
-		$ns_decl = $this->find_or_create_namespace_declaration($declaration->ns->names);
+		$ns_decl = $this->find_or_create_namespace_declaration($decl->ns->names);
 		if (isset($ns_decl->symbols[$symbol->name])) {
 			throw $this->parser->new_parse_error("Symbol '{$symbol->name}' is already in use in namespace '{$ns_decl->uri}' of module '{$this->unit->name}'");
 		}
@@ -1177,18 +1179,18 @@ class ASTFactory
 		return $symbol;
 	}
 
-	private function create_symbol_for_top_declaration(RootDeclaration $declaration, ?NamespaceIdentifier $ns)
+	private function create_symbol_for_top_declaration(RootDeclaration $decl, ?NamespaceIdentifier $ns)
 	{
 		$special_namespace = $ns !== null && ($this->ns === null || $ns->uri !== $this->ns->uri);
 
 		if ($special_namespace) {
-			$symbol = $this->create_external_symbol($declaration, $ns);
+			$symbol = $this->create_external_symbol($decl, $ns);
 			if ($this->parser->is_declare_mode) {
-				$this->create_internal_symbol($declaration, $symbol);
+				$this->create_internal_symbol($decl, $symbol);
 			}
 		}
 		else {
-			$symbol = $this->create_internal_symbol($declaration);
+			$symbol = $this->create_internal_symbol($decl);
 		}
 
 		return $symbol;

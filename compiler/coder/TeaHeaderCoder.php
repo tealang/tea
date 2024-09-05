@@ -20,7 +20,7 @@ class TeaHeaderCoder extends BaseCoder
 		}
 	}
 
-	protected function collect_use_statements(Program $program, IDeclaration $declaration)
+	protected function collect_use_statements(Program $program, IDeclaration $decl)
 	{
 		$unit_header_program = $program->unit->programs['__package'] ?? null;
 		if ($unit_header_program) {
@@ -32,7 +32,7 @@ class TeaHeaderCoder extends BaseCoder
 			}
 		}
 
-		foreach ($declaration->uses as $use) {
+		foreach ($decl->uses as $use) {
 			$uri = $use->ns->uri;
 			if (!isset($program->uses[$uri])) {
 				$program->uses[$uri] = new UseStatement($use->ns);
