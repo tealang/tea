@@ -21,7 +21,9 @@ class ASTHelper
 		return $expr instanceof Identifiable && $expr->is_assignable()
 			|| $expr instanceof KeyAccessing && self::is_mutable_expr($expr->basing)
 			|| $expr instanceof SquareAccessing && self::is_mutable_expr($expr->basing)
-			|| $expr instanceof Destructuring;
+			|| $expr instanceof Destructuring
+			|| $expr instanceof BinaryOperation && $expr->operator === OperatorFactory::$member_accessing
+			;
 	}
 
 	public static function is_mutable_expr(BaseExpression $expr)

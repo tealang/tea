@@ -393,6 +393,20 @@ class ASTFactory
 		return $program;
 	}
 
+	public function create_virtual_variable(string $name, ?IType $type = null, ?BaseExpression $value = null)
+	{
+		$decl = new VariableDeclaration($name, $type, $value);
+		$symbol = new Symbol($decl);
+		return [$decl, $symbol];
+	}
+
+	public function create_virtual_constant(string $name, ?IType $type = null, ?BaseExpression $value = null)
+	{
+		$decl = new ConstantDeclaration(_INTERNAL, $name, $type, $value);
+		$symbol = new Symbol($decl);
+		return [$decl, $symbol];
+	}
+
 	public function create_virtual_function(string $name, Program $program = null)
 	{
 		// $program and $program = $this->switch_program($program);
@@ -432,7 +446,7 @@ class ASTFactory
 		return $temp;
 	}
 
-	public function create_virtual_method(string $name, ClassDeclaration $class)
+	public function create_virtual_method(string $name, ClassKindredDeclaration $class)
 	{
 		$decl = new MethodDeclaration(null, $name);
 		$decl->is_dynamic = true;
@@ -445,7 +459,7 @@ class ASTFactory
 		return [$decl, $symbol];
 	}
 
-	public function create_virtual_property(string $name, ClassDeclaration $class)
+	public function create_virtual_property(string $name, ClassKindredDeclaration $class)
 	{
 		$decl = new PropertyDeclaration(null, $name, TypeFactory::$_any);
 		$decl->is_dynamic = true;

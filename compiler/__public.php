@@ -245,6 +245,7 @@ const __AUTOLOADS = [
 	'Tea\CallbackArgument' => 'ast/expression/CallExpression.php',
 	'Tea\IncludeExpression' => 'ast/expression/IncludeExpression.php',
 	'Tea\InterpolatedString' => 'ast/expression/InterpolatedString.php',
+	'Tea\HereDocString' => 'ast/expression/InterpolatedString.php',
 	'Tea\EscapedInterpolatedString' => 'ast/expression/InterpolatedString.php',
 	'Tea\PlainInterpolatedString' => 'ast/expression/InterpolatedString.php',
 	'Tea\InterpolationTrait' => 'ast/expression/InterpolatedString.php',

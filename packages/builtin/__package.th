@@ -117,7 +117,7 @@ runtime func strtoupper(it) String
 runtime func strtolower(it) String
 
 // replace in binary mode
-runtime func strtr(it String, changes Dict) String
+runtime func strtr(it String, from_chars_or_pairs String|Dict, to_chars String? = #default) String
 runtime func str_replace(search, replacement, it String) String
 
 //
@@ -146,7 +146,7 @@ runtime func array_key_exists(key, arr) Bool
 // assoc array
 runtime func array_keys(it) String.Array
 runtime func array_values(it) Array
-runtime func array_column(recordset Array|Dict, key String) Array
+runtime func array_column(recordset Array|Dict, key_or_val_col String, val_col String = #default) Array
 runtime func array_replace as dict_replace(it Dict, replacement Dict) Dict
 
 // json

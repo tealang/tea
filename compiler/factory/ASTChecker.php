@@ -136,7 +136,8 @@ class ASTChecker
 			if ($depends instanceof UseDeclaration) {
 				$source = $depends->source_declaration;
 				if (!$source) {
-					throw $this->new_syntax_error('Unexpected use declaration', $depends);
+					continue;
+					// throw $this->new_syntax_error('Unexpected use declaration', $depends);
 				}
 
 				$symbol->declaration = $source;
@@ -159,8 +160,12 @@ class ASTChecker
 		elseif ($identifier->is_accessing) {
 			[$decl, $symbol] = $this->factory->create_virtual_class($identifier->name, $this->program);
 		}
+		elseif ($identifier instanceof VariableIdentifier) {
+			[$decl, $symbol] = $this->factory->create_virtual_variable($identifier->name);
+		}
 		else {
-			throw $this->new_syntax_error("Unknown purpose identifier", $identifier);
+			// treat others as constant identifiers
+			[$decl, $symbol] = $this->factory->create_virtual_constant($identifier->name);
 		}
 
 		return $symbol;
@@ -717,7 +722,7 @@ class ASTChecker
 		}
 	}
 
-	private function attach_usings_for_class_declaration(ClassDeclaration $node)
+	private function attach_usings_for_class_declaration(ClassKindredDeclaration $node)
 	{
 		foreach ($node->usings as $using) {
 			foreach ($using->items as $identifier) {
@@ -1050,6 +1055,11 @@ class ASTChecker
 		$infereds = [];
 		foreach ($node->branches as $branch) {
 			foreach ($branch->rule_arguments as $argument) {
+				if ($argument === null) {
+					// the default branch
+					continue;
+				}
+
 				$case_type = $this->infer_expression($argument);
 				if (!TypeHelper::is_switch_compatible($matching_type, $case_type)) {
 					$matching_type_name = self::get_type_name($matching_type);
@@ -1074,14 +1084,30 @@ class ASTChecker
 		return $result_type;
 	}
 
+	private function infer_for_block(ForBlock $node): ?IType
+	{
+		$this->check_expression_list($node->args1);
+		$this->check_expression_list($node->args2);
+		$this->check_expression_list($node->args3);
+
+		$result_type = $this->infer_block($node);
+		if ($node->else) {
+			$result_type = $this->reduce_types_with_else_block($node, $result_type);
+		}
+
+		return $result_type;
+	}
+
+	private function check_expression_list(array $list)
+	{
+		foreach ($list as $expr) {
+			$this->infer_expression($expr);
+		}
+	}
+
 	private function infer_foreach_block(ForEachBlock $node): ?IType
 	{
-		$iter_infered = $this->infer_expression($node->iterable);
-		$element_types = $this->infer_iter_element_types($iter_infered);
-		if ($element_types === null) {
-			$type_name = self::get_type_name($iter_infered);
-			throw $this->new_syntax_error("Expect scalar type value, {$type_name} given", $node->iterable);
-		}
+		$element_types = $this->expect_iter_element_types_for_expr($node->iterable);
 
 		[$key_type, $val_type] = $element_types;
 		$key = $node->key;
@@ -1103,18 +1129,14 @@ class ASTChecker
 
 	private function infer_forin_block(ForInBlock $node): ?IType
 	{
-		$iter_infered = $this->infer_expression($node->iterable);
-		$element_types = $this->infer_iter_element_types($iter_infered);
-		if ($element_types === null) {
-			$type_name = self::get_type_name($iter_infered);
-			throw $this->new_syntax_error("Expect scalar type value, {$type_name} given", $node->iterable);
-		}
+		$element_types = $this->expect_iter_element_types_for_expr($node->iterable);
 
 		$key = $node->key;
 		$val = $node->val;
 		$val->is_checked = true;
 
 		[$key_type, $val->infered_type] = $element_types;
+
 		if ($key) {
 			$key->infered_type = $key_type;
 			$key->is_checked = true;
@@ -1130,6 +1152,23 @@ class ASTChecker
 		// }
 
 		return $result_type;
+	}
+
+	private function expect_iter_element_types_for_expr(BaseExpression $expr)
+	{
+		$iter_infered = $this->infer_expression($expr);
+		$element_types = $this->infer_iter_element_types($iter_infered);
+		if ($element_types === null) {
+			if ($this->is_weakly_checking) {
+				$element_types = [TypeFactory::$_dict_key, TypeFactory::$_any];
+			}
+			else {
+				$type_name = self::get_type_name($iter_infered);
+				throw $this->new_syntax_error("Expected iterable type value, {$type_name} given", $expr);
+			}
+		}
+
+		return $element_types;
 	}
 
 	private function infer_iter_element_types(IType $expr_type)
@@ -1281,82 +1320,76 @@ class ASTChecker
 
 	private function infer_statement(IStatement $node): ?IType
 	{
+		$infered = null;
 		switch ($node::KIND) {
 			case NormalStatement::KIND:
 				$node->expression and $this->infer_expression($node->expression);
 				break;
-
 			// case ArrayElementAssignment::KIND:
 			// 	$this->check_array_element_assignment($node);
 			// 	break;
-
 			case EchoStatement::KIND:
 				$this->check_echo_statement($node);
 				break;
-
 			case ThrowStatement::KIND:
 				$this->check_throw_statement($node);
 				break;
-
 			case VarStatement::KIND:
 				$this->check_var_statement($node);
 				break;
-
 			// case VariableDeclaration::KIND:
 			// 	$this->check_variable_declaration($node);
 			// 	break;
-
 			case ReturnStatement::KIND:
-				return $this->infer_return_statement($node);
-
+				$infered = $this->infer_return_statement($node);
+				break;
 			case ExitStatement::KIND:
 				$this->check_exit_statement($node);
 			case BreakStatement::KIND:
 			case ContinueStatement::KIND:
 				break;
-
 			case UnsetStatement::KIND:
 				$this->check_unset_statement($node);
 				break;
-
 			case IfBlock::KIND:
-				return $this->infer_if_block($node);
-
+				$infered = $this->infer_if_block($node);
+				break;
+			case ForBlock::KIND:
+				$infered = $this->infer_for_block($node);
+				break;
 			case ForEachBlock::KIND:
-				return $this->infer_foreach_block($node);
-
+				$infered = $this->infer_foreach_block($node);
+				break;
 			case ForInBlock::KIND:
-				return $this->infer_forin_block($node);
-
+				$infered = $this->infer_forin_block($node);
+				break;
 			case ForToBlock::KIND:
-				return $this->infer_forto_block($node);
-
+				$infered = $this->infer_forto_block($node);
+				break;
 			case WhileBlock::KIND:
-				return $this->infer_while_block($node);
-
+				$infered = $this->infer_while_block($node);
+				break;
 			case LoopBlock::KIND:
-				return $this->infer_loop_block($node);
-
+				$infered = $this->infer_loop_block($node);
+				break;
 			case TryBlock::KIND:
-				return $this->infer_try_block($node);
-
+				$infered = $this->infer_try_block($node);
+				break;
 			case SwitchBlock::KIND:
-				return $this->infer_switch_block($node);
-
+				$infered = $this->infer_switch_block($node);
+				break;
 			case UseStatement::KIND:
 				break;
-
 			case LineComment::KIND:
 			case BlockComment::KIND:
 			case DocComment::KIND:
 				break;
-
 			default:
 				$kind = $node::KIND;
 				throw $this->new_syntax_error("Unknow statement kind: '{$kind}'", $node);
 		}
 
-		return null;
+		return $infered;
 	}
 
 	private function expect_infered_type(BaseExpression $node, IType ...$types)
@@ -1530,6 +1563,9 @@ class ASTChecker
 			case PrefixOperation::KIND:
 				$infered = $this->infer_prefix_operation($node);
 				break;
+			case PostfixOperation::KIND:
+				$infered = $this->infer_postfix_operation($node);
+				break;
 
 			case Parentheses::KIND:
 				$infered = $this->infer_expression($node->expression);
@@ -1586,31 +1622,33 @@ class ASTChecker
 	{
 		$basing_type = $this->infer_expression($node->basing);
 
+		$infered = null;
 		if ($basing_type instanceof ArrayType) {
-			$infered = $basing_type->generic_type;
+			$infered = $basing_type->generic_type ?? TypeFactory::$_any;
 		}
 		elseif ($basing_type instanceof AnyType) {
 			$infered = TypeFactory::$_any;
 		}
 		elseif ($basing_type instanceof UnionType) {
-			if (!$basing_type->is_all_array_types()) {
-				$type_name = $this->get_type_name($basing_type);
-				throw $this->new_syntax_error("Cannot use square accessing for type {$type_name}", $node);
-			}
+			if ($basing_type->is_all_array_types()) {
+				$member_value_types = [];
+				foreach ($basing_type->get_members() as $member) {
+					$member_value_types[] = $member->generic_type;
+				}
 
-			$member_value_types = [];
-			foreach ($basing_type->get_members() as $member) {
-				$member_value_types[] = $member->generic_type;
+				$infered = $this->reduce_expr_types(...$member_value_types);
 			}
-
-			$infered = $this->reduce_expr_types(...$member_value_types);
+			elseif ($this->is_weakly_checking) {
+				$infered = TypeFactory::$_any;
+			}
 		}
-		else {
+
+		if ($infered === null) {
 			$type_name = $this->get_type_name($basing_type);
 			throw $this->new_syntax_error("Cannot use square accessing for type {$type_name}", $node);
 		}
 
-		return $infered ?? TypeFactory::$_any;
+		return $infered;
 	}
 
 	private function infer_key_accessing(KeyAccessing $node): IType
@@ -1632,23 +1670,12 @@ class ASTChecker
 				throw $this->new_syntax_error("Invalid accessing for Dict", $node);
 			}
 
-			if (TypeHelper::is_dict_key_type($key_type)) {
-				// okay
-			}
-			else {
-				$type_name = $this->get_type_name($key_type);
-				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, {$type_name} given", $key_expr);
-			}
-
+			$this->assert_dict_key_type($key_type, $key_expr);
 			$infered = $basing_type->generic_type ?? TypeFactory::$_any;
 		}
 		elseif ($basing_type instanceof AnyType) {
 			// if non key, that's Array access, else just allow Dict as the actual type
-			if ($key_expr and !TypeHelper::is_dict_key_type($key_type)) {
-				$type_name = $this->get_type_name($key_type);
-				throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, {$type_name} given", $key_expr);
-			}
-
+			$key_expr and $this->assert_dict_key_type($key_type, $key_expr);
 			$infered = TypeFactory::$_any;
 		}
 		elseif ($basing_type instanceof StringType) {
@@ -1666,9 +1693,7 @@ class ASTChecker
 				}
 			}
 			elseif ($basing_type->is_all_dict_types()) {
-				if (!TypeHelper::is_dict_key_type($key_type)) {
-					throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$key_type->name}' given", $key_expr);
-				}
+				$this->assert_dict_key_type($key_type, $key_expr);
 			}
 			elseif ($this->is_weakly_checking && $basing_type->is_array_or_dict_types()) {
 				// pass
@@ -1691,6 +1716,13 @@ class ASTChecker
 		}
 
 		return $infered;
+	}
+
+	private function assert_dict_key_type(IType $key_type, BaseExpression $key_expr)
+	{
+		if (!TypeHelper::is_dict_key_type($key_type) && !$this->is_weakly_checking) {
+			throw $this->new_syntax_error("Key type for Dict accessing should be String/Int, '{$key_type->name}' given", $key_expr);
+		}
 	}
 
 	private function infer_assignment_operation(AssignmentOperation $node)
@@ -1718,8 +1750,11 @@ class ASTChecker
 		elseif ($left instanceof Destructuring) {
 			$left_type = $this->infer_destructuring($left);
 		}
+		elseif ($left instanceof BinaryOperation && $left->operator === OperatorFactory::$member_accessing) {
+			$left_type = TypeFactory::$_any;
+		}
 		else {
-			throw $this->new_syntax_error("Required assignable expression", $right);
+			throw $this->new_syntax_error("Required assignable expression", $left);
 		}
 
 		if (!ASTHelper::is_assignable_expr($left)) {
@@ -1930,12 +1965,21 @@ class ASTChecker
 		elseif ($operator->is(OPID::CLONE)) {
 			$infered = $expr_type;
 		}
+		elseif ($operator->is(OPID::SPREAD)) {
+			$infered = TypeFactory::$_array;
+		}
 		else {
 			$sign = $operator->get_debug_sign();
 			throw $this->new_syntax_error("Unknow prefix operator: {$sign}", $node);
 		}
 
 		return $infered;
+	}
+
+	private function infer_postfix_operation(PostfixOperation $node): IType
+	{
+		$expr_type = $this->infer_expression($node->expression);
+		return $expr_type;
 	}
 
 	private function assert_bitwise_operable(IType $type, BaseExpression $node)
@@ -1948,7 +1992,7 @@ class ASTChecker
 
 	private function assert_math_operable(IType $type, BaseExpression $node)
 	{
-		if (!TypeHelper::is_number_type($type, $node)) {
+		if (!TypeHelper::is_number_type($type, $node) && !$this->is_weakly_checking) {
 			$type_name = $this->get_type_name($type);
 			throw $this->new_syntax_error("Math operation cannot use for '$type_name' type expression", $node);
 		}
@@ -3190,7 +3234,7 @@ class ASTChecker
 	{
 		$symbol = $this->find_member_symbol_in_class_declaration($classkindred, $node->name);
 		if ($symbol === null) {
-			if ($classkindred->is_dynamic) {
+			if ($classkindred->is_dynamic || $this->is_dynamic_self_declaration($classkindred)) {
 				[$decl, $symbol] = $node->is_calling
 					? $this->factory->create_virtual_method($node->name, $classkindred)
 					: $this->factory->create_virtual_property($node->name, $classkindred);
@@ -3201,6 +3245,12 @@ class ASTChecker
 		}
 
 		return $symbol;
+	}
+
+	private function is_dynamic_self_declaration(ClassKindredDeclaration $decl)
+	{
+		return ($decl->name === _TYPE_SELF || $decl instanceof TraitDeclaration)
+			&& $this->is_weakly_checking;
 	}
 
 	// private function attach_namespace_member_symbol(NamespaceDeclaration $ns_declaration, AccessingIdentifier $node)

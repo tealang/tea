@@ -9,7 +9,7 @@ namespace Tea;
 
 class TypeFactory
 {
-	// public static $_dict_key;
+	public static $_dict_key;
 
 	public static $_self;
 
@@ -95,7 +95,7 @@ class TypeFactory
 		self::$_callable = self::create_type(CallableType::class);
 		// self::$_namespace = self::create_type(NamespaceType::class);
 
-		// self::$_dict_key = self::create_union_type([self::$_string, self::$_int]);
+		self::$_dict_key = self::create_union_type([self::$_string, self::$_int]);
 
 		self::$_iterator = new ClassKindredIdentifier('Iterator');
 		// self::$_generator = new ClassKindredIdentifier('Generator');

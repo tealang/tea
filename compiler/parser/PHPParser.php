@@ -566,6 +566,8 @@ class PHPParser extends BaseParser
 		$this->expect_paren_close();
 
 		$block = $this->factory->create_if_block($test);
+		$block->pos = $this->pos;
+
 		$this->read_body_for_control_block($block);
 
 		$this->scan_else_block_for($block);
@@ -639,6 +641,8 @@ class PHPParser extends BaseParser
 	private function read_try_block()
 	{
 		$block = $this->factory->create_try_block();
+		$block->pos = $this->pos;
+
 		$this->read_body_for_control_block($block);
 
 		$this->read_catching_block_for($block);
@@ -697,6 +701,7 @@ class PHPParser extends BaseParser
 
 		$block = $this->factory->create_switch_block($argument);
 		$block->label = $label;
+		$block->pos = $this->pos;
 
 		$branches = $this->read_case_branches();
 		$block->set_branches($branches);
@@ -784,6 +789,7 @@ class PHPParser extends BaseParser
 
 		$block = $this->factory->create_foreach_block($iterable, $key, $val);
 		$block->label = $label;
+		$block->pos = $this->pos;
 
 		$this->read_body_for_control_block($block);
 
@@ -811,8 +817,9 @@ class PHPParser extends BaseParser
 		$this->expect_paren_close();
 
 		$block = $this->factory->create_for_block($args1, $args2, $args3);
-
 		$block->label = $label;
+		$block->pos = $this->pos;
+
 		$this->read_body_for_control_block($block);
 
 		return $block;
@@ -826,6 +833,7 @@ class PHPParser extends BaseParser
 
 		$block = $this->factory->create_while_block($test);
 		$block->label = $label;
+		$block->pos = $this->pos;
 
 		$this->read_body_for_control_block($block);
 
@@ -838,6 +846,7 @@ class PHPParser extends BaseParser
 
 		$block = $this->factory->create_do_while_block();
 		$block->label = $label;
+		$block->pos = $this->pos;
 
 		$this->read_body_for_control_block($block);
 
@@ -951,6 +960,9 @@ class PHPParser extends BaseParser
 			case T_LIST:
 				$expr = $this->read_list_destructuring_assignment($token);
 				break;
+			case T_START_HEREDOC:
+				$expr = $this->read_interpolated_string(T_END_HEREDOC);
+				break;
 			case T_INCLUDE_ONCE:
 			case T_INCLUDE:
 			case T_REQUIRE_ONCE:
@@ -1005,7 +1017,7 @@ class PHPParser extends BaseParser
 	protected function read_instancing_expression()
 	{
 		$token = $this->read_expr_token_ignore_empty();
-		$identifiable = $this->scan_identifiable_expression_with_token($token);
+		$identifiable = $this->scan_identifiable_expression_with_token($token, true);
 		if ($identifiable === null) {
 			throw $this->new_unexpected_error();
 		}
@@ -1062,7 +1074,7 @@ class PHPParser extends BaseParser
 		return $expr;
 	}
 
-	protected function scan_identifiable_expression_with_token(string|array $token): ?BaseExpression
+	protected function scan_identifiable_expression_with_token(string|array $token, bool $is_instancing = false): ?BaseExpression
 	{
 		switch ($token[0]) {
 			case T_VARIABLE:
@@ -1075,7 +1087,6 @@ class PHPParser extends BaseParser
 			case T_EMPTY:
 			case T_ISSET:
 			case T_UNSET:
-			case T_STATIC:
 			case T_STRING:
 			case T_NAME_QUALIFIED:
 			case T_NAME_FULLY_QUALIFIED:
@@ -1084,11 +1095,16 @@ class PHPParser extends BaseParser
 			case T_NS_SEPARATOR:
 				$expr = $this->read_classkindred_identifier($token);
 				break;
+			case T_STATIC:
+				$expr = $is_instancing
+					? $this->read_classkindred_identifier($token)
+					: $this->read_normal_identifier_with_token($token);
+				break;
 			case T_CONSTANT_ENCAPSED_STRING:
 				$expr = $this->read_constant_encapsed_string_with_token($token);
 				break;
 			case _DOUBLE_QUOTE:
-				$expr = $this->read_double_quoted_string_expression();
+				$expr = $this->read_interpolated_string(_DOUBLE_QUOTE);
 				break;
 			default:
 				$expr = null;
@@ -1128,16 +1144,13 @@ class PHPParser extends BaseParser
 		return $expr;
 	}
 
-	protected function read_double_quoted_string_expression()
+	protected function read_interpolated_string(string|int $ending)
 	{
 		$items = [];
 		do {
 			$token = $this->scan_token();
-			if ($token === _DOUBLE_QUOTE) {
-				break;
-			}
-
-			switch ($token[0]) {
+			$type = is_array($token) ? $token[0] : $token;
+			switch ($type) {
 				case T_ENCAPSED_AND_WHITESPACE:
 					$item = $token[1];
 					break;
@@ -1148,6 +1161,8 @@ class PHPParser extends BaseParser
 					$item = $this->read_expression();
 					$this->expect_char_token(_BRACE_CLOSE);
 					break;
+				case $ending:
+					break 2;
 				default:
 					throw $this->new_unexpected_error();
 			}
@@ -1156,7 +1171,9 @@ class PHPParser extends BaseParser
 		}
 		while (true);
 
-		$expr = new EscapedInterpolatedString($items);
+		$expr = $ending === T_ENCAPSED_AND_WHITESPACE
+			? new HereDocString($items)
+			: new EscapedInterpolatedString($items);
 		$expr->pos = $this->pos;
 		return $expr;
 	}
@@ -1995,20 +2012,6 @@ class PHPParser extends BaseParser
 	// 	// echo "\n--------------------end {$label}\n";
 	// }
 
-	// private function read_heredoc()
-	// {
-	// 	$items = [];
-	// 	while (($token = $this->scan_token_ignore_empty())) {
-	// 		if ($token[0] === T_END_HEREDOC) {
-	// 			break;
-	// 		}
-
-	// 		$items[] = $token;
-	// 	}
-
-	// 	return $items;
-	// }
-
 	// private function read_double_quoted_literal_string()
 	// {
 	// 	$value = $this->skip_to_char_token(_DOUBLE_QUOTE);
@@ -2032,9 +2035,16 @@ class PHPParser extends BaseParser
 			$token = $this->expect_typed_token_ignore_empty();
 		}
 
-		$components = $this->read_qualified_name_with($token);
-		$identifier = $this->create_classkindred_identifier(array_pop($components), $components);
+		if ($token[0] === T_STATIC) {
+			$name = _TYPE_SELF;
+			$ns_components = [];
+		}
+		else {
+			$ns_components = $this->read_qualified_name_with($token);
+			$name = array_pop($ns_components);
+		}
 
+		$identifier = $this->create_classkindred_identifier($name, $ns_components);
 		$identifier->pos = $this->pos;
 
 		return $identifier;
@@ -2117,7 +2127,10 @@ class PHPParser extends BaseParser
 	private function create_type_identifier(string $name, bool $nullable = false)
 	{
 		$name = static::TYPE_MAP[strtolower($name)] ?? $name;
-		return $this->create_compatible_type_identifier($name, $nullable);
+		$identifier = $this->create_compatible_type_identifier($name, $nullable);
+		$identifier->pos = $this->pos;
+
+		return $identifier;
 	}
 
 	private function create_compatible_type_identifier(string $name, bool $nullable = false)
@@ -2173,6 +2186,7 @@ class PHPParser extends BaseParser
 			}
 
 			$expr = TypeFactory::create_array_type($expr);
+			$expr->pos = $this->pos;
 		}
 
 		return $expr;
@@ -2203,6 +2217,7 @@ class PHPParser extends BaseParser
 				throw $this->new_unexpected_error();
 			}
 
+			$expr->pos = $this->pos;
 			$i++;
 		}
 
@@ -2329,9 +2344,16 @@ class PHPParser extends BaseParser
 		$token = $this->scan_token_ignore_empty();
 		$this->assert_member_identifier_token($token);
 
-		$name = $token[0] === T_VARIABLE
-			? $this->get_var_name($token)
-			: $token[1];
+		$type = $token[0];
+		$name = $token[1];
+		switch ($type) {
+			case T_VARIABLE:
+				$name = $this->get_var_name($token);
+				break;
+			case T_STRING:
+				$name = static::METHOD_MAP[$name] ?? $name;
+				break;
+		}
 
 		return $name;
 	}

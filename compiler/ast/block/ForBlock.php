@@ -13,9 +13,9 @@ class ForBlock extends ControlBlock implements IElseAble, IExceptAble, IBreakAbl
 
 	const KIND = 'for_block';
 
-	public $args1;
-	public $args2;
-	public $args3;
+	public array $args1;
+	public array $args2;
+	public array $args3;
 
 	public function __construct(array $args1, array $args2, array $args3)
 	{

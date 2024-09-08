@@ -130,7 +130,7 @@ runtime func strtoupper(it #Any) String
 
 runtime func strtolower(it #Any) String
 
-runtime func strtr(it String, changes Dict) String
+runtime func strtr(it String, from_chars_or_pairs String|Dict, to_chars String? = #default) String
 
 runtime func str_replace(search #Any, replacement #Any, it String) String
 
@@ -170,7 +170,7 @@ runtime func array_keys(it #Any) String.Array
 
 runtime func array_values(it #Any) Array
 
-runtime func array_column(recordset Array|Dict, key String) Array
+runtime func array_column(recordset Array|Dict, key_or_val_col String, val_col String = #default) Array
 
 runtime func array_replace as dict_replace(it Dict, replacement Dict) Dict
 

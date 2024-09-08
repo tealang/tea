@@ -17,6 +17,11 @@ abstract class InterpolatedString extends BaseExpression
 	}
 }
 
+class HereDocString extends InterpolatedString
+{
+	const KIND = 'heredoc_string';
+}
+
 class EscapedInterpolatedString extends InterpolatedString
 {
 	const KIND = 'escaped_interpolated_string';
