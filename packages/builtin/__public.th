@@ -7,6 +7,8 @@ runtime const __FILE__ String
 runtime const __LINE__ UInt
 runtime const __CLASS__ UInt
 runtime const __FUNCTION__ UInt
+runtime const PHP_INT_MIN Int
+runtime const PHP_INT_MAX UInt
 runtime const INPUT_GET Int
 runtime const INPUT_POST Int
 runtime const INPUT_COOKIE Int
@@ -144,7 +146,7 @@ runtime func in_array(needle #Any, haystack #Any, strict Bool = false) Bool
 
 runtime func array_reverse(array #Any) Array
 
-runtime func array_map(callback (item #Any) Any, items Array) Array
+runtime func array_map(callback (item #Any) Any, items0 Array, items1 Array? = #default) Array
 
 runtime func array_filter(items Array, callback (item #Any) Any, flag Int = #default) Array
 
@@ -194,6 +196,28 @@ runtime interface Iterator {
 	next() #Void
 	rewind() #Void
 	valid() Bool
+}
+
+runtime interface ArrayAccess {
+	// no any
+}
+
+runtime class PDO {
+	internal const FETCH_ASSOC Int
+	internal const FETCH_COLUMN Int
+	construct(dsn String, username String = #default, passwd String = #default, options Dict = #default) #Void
+	exec(statement String) Int
+	query(statement String) PDOStatement
+	quote(string String, parameter_type Int = #default) String
+	lastInsertId(name String = #default) String
+	getAttribute(attribute Int) Any
+	errorCode() String
+	errorInfo() Array
+}
+
+runtime class PDOStatement {
+	fetch(fetch_style Int = #default) String.Dict
+	fetchAll(fetch_style Int = #default) String.Dict.Array
 }
 
 public func is_uint(val #Any) Bool

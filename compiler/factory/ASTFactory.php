@@ -169,14 +169,13 @@ class ASTFactory
 	{
 		$identifier = new ClassKindredIdentifier($name);
 		$this->set_defer_check($identifier);
-
 		return $identifier;
 	}
 
 	public function create_variable_identifier(string $name)
 	{
-		if (TeaHelper::is_builtin_identifier($name)) {
-			$identifier = $this->create_builtin_identifier($name);
+		if ($name === '$this') {
+			$identifier = $this->create_builtin_identifier(_THIS);
 		}
 		else {
 			$identifier = new VariableIdentifier($name);
@@ -215,7 +214,7 @@ class ASTFactory
 						? $this->class->this_class_symbol
 						: $this->class->this_object_symbol;
 				}
-				elseif (!$this->seek_symbol_in_function($identifier)) { // it would be has an #expect
+				elseif (!$this->attach_local_symbol($identifier)) { // it would be has an #expect
 					throw $this->parser->new_parse_error("Identifier '$token' not defined");
 				}
 
@@ -281,7 +280,7 @@ class ASTFactory
 
 	private function set_defer_check(Identifiable $identifier)
 	{
-		if (!$this->declaration instanceof IFunctionDeclaration or !$this->seek_symbol_in_function($identifier)) {
+		if (!$this->declaration instanceof IFunctionDeclaration or !$this->attach_local_symbol($identifier)) {
 			$this->declaration->append_unknow_identifier($identifier);
 		}
 	}
@@ -322,14 +321,7 @@ class ASTFactory
 			$this->process_assigned_target($assigned_to, $value);
 		}
 		elseif ($assigned_to instanceof Destructuring) {
-			foreach ($assigned_to->items as $item) {
-				if ($item instanceof PlainIdentifier) {
-					$this->process_assigned_target($item);
-				}
-				elseif ($item instanceof DictMember && $item->value instanceof PlainIdentifier) {
-					$this->process_assigned_target($item->value);
-				}
-			}
+			// pass
 		}
 		elseif (ASTHelper::is_pure_bracket_accessing_expr($assigned_to)) {
 			$basing = $assigned_to->get_final_basing();
@@ -339,6 +331,24 @@ class ASTFactory
 		$assignment = new AssignmentOperation($assigned_to, $value, $operator);
 
 		return $assignment;
+	}
+
+	public function create_destructuring(array $items)
+	{
+		foreach ($items as $item) {
+			if ($item instanceof PlainIdentifier) {
+				$this->process_assigned_target($item);
+			}
+			elseif ($item instanceof DictMember && $item->value instanceof PlainIdentifier) {
+				$this->process_assigned_target($item->value);
+			}
+			else {
+				// pass
+			}
+		}
+
+		$expr = new Destructuring($items);
+		return $expr;
 	}
 
 	private function process_assigned_target(PlainIdentifier $identifier, ?BaseExpression $value = null)
@@ -393,16 +403,21 @@ class ASTFactory
 		return $program;
 	}
 
-	public function create_virtual_variable(string $name, ?IType $type = null, ?BaseExpression $value = null)
-	{
-		$decl = new VariableDeclaration($name, $type, $value);
-		$symbol = new Symbol($decl);
-		return [$decl, $symbol];
-	}
+	// public function create_virtual_variable(string $name, ?IType $type = null, ?BaseExpression $value = null)
+	// {
+	// 	$decl = new VariableDeclaration($name, $type, $value);
+	// 	$symbol = new Symbol($decl);
+	// 	return [$decl, $symbol];
+	// }
 
 	public function create_virtual_constant(string $name, ?IType $type = null, ?BaseExpression $value = null)
 	{
+		if ($type === null && $value === null) {
+			$type = TypeFactory::$_any;
+		}
+
 		$decl = new ConstantDeclaration(_INTERNAL, $name, $type, $value);
+		$decl->is_virtual = true;
 		$symbol = new Symbol($decl);
 		return [$decl, $symbol];
 	}
@@ -412,7 +427,7 @@ class ASTFactory
 		// $program and $program = $this->switch_program($program);
 
 		$decl = new FunctionDeclaration(_INTERNAL, $name, null, []);
-		$decl->is_dynamic = true;
+		$decl->is_virtual = true;
 
 		// $symbol = $this->create_symbol_for_top_declaration($decl, null);
 		$symbol = new Symbol($decl);
@@ -427,7 +442,7 @@ class ASTFactory
 		// $program and $program = $this->switch_program($program);
 
 		$decl = new ClassDeclaration(null, $name);
-		$decl->is_dynamic = true;
+		$decl->is_virtual = true;
 
 		// $symbol = $this->create_symbol_for_top_declaration($decl, null);
 		$symbol = new Symbol($decl);
@@ -449,7 +464,7 @@ class ASTFactory
 	public function create_virtual_method(string $name, ClassKindredDeclaration $class)
 	{
 		$decl = new MethodDeclaration(null, $name);
-		$decl->is_dynamic = true;
+		$decl->is_virtual = true;
 		$decl->infered_type = TypeFactory::$_any;
 		$decl->parameters = [];
 
@@ -462,7 +477,7 @@ class ASTFactory
 	public function create_virtual_property(string $name, ClassKindredDeclaration $class)
 	{
 		$decl = new PropertyDeclaration(null, $name, TypeFactory::$_any);
-		$decl->is_dynamic = true;
+		$decl->is_virtual = true;
 		$decl->infered_type = TypeFactory::$_any;
 
 		$symbol = new Symbol($decl);
@@ -603,6 +618,28 @@ class ASTFactory
 	public function create_method_declaration(?string $modifier, string $name)
 	{
 		$decl = new MethodDeclaration($modifier, $name);
+
+		switch (strtolower($name)) {
+			case '__get':
+				$this->class->set_feature(ClassFeature::MAGIC_GET);
+				break;
+			case '__set':
+				$this->class->set_feature(ClassFeature::MAGIC_SET);
+				break;
+			case '__isset':
+				$this->class->set_feature(ClassFeature::MAGIC_ISSET);
+				break;
+			case '__unset':
+				$this->class->set_feature(ClassFeature::MAGIC_UNSET);
+				break;
+			case '__call':
+				$this->class->set_feature(ClassFeature::MAGIC_CALL);
+				break;
+			case '__callstatic':
+				$this->class->set_feature(ClassFeature::MAGIC_CALL_STATIC);
+				break;
+		}
+
 		$this->begin_class_member($decl);
 		return $decl;
 	}
@@ -822,23 +859,27 @@ class ASTFactory
 		$this->begin_block($block);
 
 		if ($key instanceof PlainIdentifier) {
-			$this->create_variable_declaration_for_identifier($key, $block);
+			$this->create_variable_declaration_for_identifier($key);
+		}
+
+		if ($val instanceof PrefixOperation) {
+			$val = $val->expression;
 		}
 
 		if ($val instanceof PlainIdentifier) {
-			$this->create_variable_declaration_for_identifier($val, $block);
+			$this->create_variable_declaration_for_identifier($val);
 		}
 
 		return $block;
 	}
 
-	private function create_variable_declaration_for_identifier(PlainIdentifier $identifier, IBlock $block)
+	public function create_variable_declaration_for_identifier(PlainIdentifier $identifier)
 	{
 		$name = $identifier->name;
 		$decl = new VariableDeclaration($name);
 
 		$identifier->symbol = new Symbol($decl);
-		$block->symbols[$name] = $identifier->symbol;
+		$this->block->symbols[$name] = $identifier->symbol;
 
 		$this->remove_defer_check($identifier);
 	}
@@ -1084,7 +1125,7 @@ class ASTFactory
 		return $symbols;
 	}
 
-	private function seek_symbol_in_function(Identifiable $identifier, IBlock $seek_block = null)
+	private function attach_local_symbol(Identifiable $identifier, IBlock $seek_block = null)
 	{
 		if ($seek_block === null) {
 			$seek_block = $this->block;
@@ -1096,7 +1137,6 @@ class ASTFactory
 		}
 
 		$symbol = $this->seek_symbol_in_encolsing($identifier->name, $seek_block);
-
 		if ($symbol === null && $seek_block) {
 			// add to lambda check list
 			if ($seek_block instanceof AnonymousFunction) {
@@ -1105,15 +1145,17 @@ class ASTFactory
 			}
 
 			if ($seek_block->belong_block && !$seek_block->belong_block instanceof ClassKindredDeclaration) {
-				return $this->seek_symbol_in_function($identifier, $seek_block->belong_block);
+				return $this->attach_local_symbol($identifier, $seek_block->belong_block);
 			}
 		}
 
+		$attached = false;
 		if ($symbol) {
 			$identifier->symbol = $symbol;
+			$attached = true;
 		}
 
-		return $symbol;
+		return $attached;
 	}
 
 	private function seek_symbol_in_encolsing(string $name, IBlock &$seek_block): ?Symbol

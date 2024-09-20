@@ -7,7 +7,7 @@ interface IBaseView {
 	public function add_subitem(string $item);
 	public function set_attribute(string $key, string $value);
 	public function render(): string;
-	public function __toString(): string;
+	public function __tostring(): string;
 }
 
 trait IBaseViewTrait {
@@ -38,7 +38,7 @@ trait IBaseViewTrait {
 </view>';
 	}
 
-	public function __toString(): string {
+	public function __tostring(): string {
 		return $this->render();
 	}
 }

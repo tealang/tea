@@ -15,6 +15,8 @@ class TeaParser extends BaseParser
 
 	const EXPR_STOPPING_SIGNS = [_PAREN_CLOSE, _BRACKET_CLOSE, _BLOCK_END, _SEMICOLON];
 
+	protected const METHOD_MAP = ['construct' => _CONSTRUCT, 'destruct' => _DESTRUCT];
+
 	protected $root_statements = [];
 
 	protected $is_in_tea_declaration = false;
@@ -1888,8 +1890,8 @@ class TeaParser extends BaseParser
 
 	protected function read_rest_for_classkindred_declaration(ClassKindredDeclaration $decl)
 	{
-		if ($bases = $this->read_class_bases()) {
-			$decl->set_bases(...$bases);
+		if ($items = $this->read_class_extends()) {
+			$decl->set_extends($items);
 		}
 
 		$this->expect_block_begin();
@@ -1900,25 +1902,25 @@ class TeaParser extends BaseParser
 		$this->factory->end_class();
 	}
 
-	protected function read_class_bases()
+	protected function read_class_extends()
 	{
 		if (!$this->skip_token_ignore_space(_COLON)) {
 			return null;
 		}
 
-		$bases = [];
+		$items = [];
 		while ($identifier = $this->scan_classkindred_identifier()) {
-			$bases[] = $identifier;
+			$items[] = $identifier;
 			if (!$this->skip_comma()) {
 				break;
 			}
 		}
 
-		if (!$bases) {
+		if (!$items) {
 			throw $this->new_parse_error("Based class or interfaces expected.");
 		}
 
-		return $bases;
+		return $items;
 	}
 
 	protected function scan_classkindred_identifier()
@@ -2304,6 +2306,7 @@ class TeaParser extends BaseParser
 
 	protected function read_method_declaration(string $name, ?string $modifier, bool $static)
 	{
+		$name = self::METHOD_MAP[$name] ?? $name;
 		$decl = $this->factory->create_method_declaration($modifier, $name);
 		$decl->pos = $this->pos;
 

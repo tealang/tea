@@ -14,8 +14,6 @@ trait ClassMemberDeclarationTrait
 	public $modifier;
 	public $is_static = false;
 	public $belong_block;
-
-	public $is_dynamic;
 }
 
 class PropertyDeclaration extends BaseVariableDeclaration implements IClassMemberDeclaration, IBlock

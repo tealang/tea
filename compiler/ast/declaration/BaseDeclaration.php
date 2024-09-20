@@ -13,6 +13,9 @@ interface IMemberDeclaration extends IDeclaration {}
 interface IValuedDeclaration extends IDeclaration {}
 
 trait TypingTrait {
+
+	public $is_virtual;
+
 	/**
 	 * @var IType
 	 */

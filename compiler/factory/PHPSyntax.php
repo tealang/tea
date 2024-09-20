@@ -11,8 +11,8 @@ class PHPSyntax
 {
 	const OPERATORS = [
 		[
-			OPID::NEW => ['new', OP_PRE, OP_NA],
-			OPID::CLONE => ['clone', OP_PRE, OP_NA],
+			OPID::NEW => ['new', OP_PREFIX, OP_NA],
+			OPID::CLONE => ['clone', OP_PREFIX, OP_NA],
 			OPID::STATIC_ACCESSING => ['::', OP_BIN, OP_L, OP_NA],
 			OPID::MEMBER_ACCESSING => ['->', OP_BIN, OP_L, OP_NA],
 			OPID::NULLSAFE_MEMBER_ACCESSING => ['?->', OP_BIN, OP_L, OP_NA],
@@ -22,15 +22,15 @@ class PHPSyntax
 		],
 		[
 			OPID::AS => ['(?)', OP_BIN, OP_L, OP_NA],
-			OPID::ERROR_CONTROL => ['@', OP_PRE, OP_L, OP_NA],
-			OPID::REFERENCE => ['&', OP_PRE, OP_NA],
-			OPID::IDENTITY => ['+', OP_PRE, OP_NA],
-			OPID::NEGATION => ['-', OP_PRE, OP_NA],
-			OPID::PRE_INCREMENT => ['++', OP_PRE, OP_NA],
-			OPID::PRE_DECREMENT => ['--', OP_PRE, OP_NA],
-			OPID::POST_INCREMENT => ['++', OP_POST, OP_NA],
-			OPID::POST_DECREMENT => ['--', OP_POST, OP_NA],
-			OPID::BITWISE_NOT => ['~', OP_PRE, OP_NA],
+			OPID::ERROR_CONTROL => ['@', OP_PREFIX, OP_L, OP_NA],
+			OPID::REFERENCE => ['&', OP_PREFIX, OP_NA],
+			OPID::IDENTITY => ['+', OP_PREFIX, OP_NA],
+			OPID::NEGATION => ['-', OP_PREFIX, OP_NA],
+			OPID::PRE_INCREMENT => ['++', OP_PREFIX, OP_NA],
+			OPID::PRE_DECREMENT => ['--', OP_PREFIX, OP_NA],
+			OPID::POST_INCREMENT => ['++', OP_POSTFIX, OP_NA],
+			OPID::POST_DECREMENT => ['--', OP_POSTFIX, OP_NA],
+			OPID::BITWISE_NOT => ['~', OP_PREFIX, OP_NA],
 		],
 		[
 			OPID::MULTIPLICATION => ['*', OP_BIN, OP_L],
@@ -41,7 +41,7 @@ class PHPSyntax
 			OPID::IS => ['instanceof', OP_BIN, OP_L],
 		],
 		[
-			OPID::BOOL_NOT => ['!', OP_PRE, OP_NA],
+			OPID::BOOL_NOT => ['!', OP_PREFIX, OP_NA],
 		],
 		[
 			OPID::ADDITION => ['+', OP_BIN, OP_L],
@@ -106,13 +106,13 @@ class PHPSyntax
 			OPID::NULL_COALESCE_ASSIGNMENT => ['??=', OP_ASSIGN, OP_R],
 		],
 		[
-			OPID::YIELD_FROM => ['yield from', OP_PRE, OP_NA],
+			OPID::YIELD_FROM => ['yield from', OP_PREFIX, OP_NA],
 		],
 		[
-			OPID::YIELD => ['yield', OP_PRE, OP_NA],
+			OPID::YIELD => ['yield', OP_PREFIX, OP_NA],
 		],
 		[
-			OPID::PRINT => ['print', OP_PRE, OP_NA],
+			OPID::PRINT => ['print', OP_PREFIX, OP_NA],
 		],
 		[
 			OPID::LOW_BOOL_AND => ['and', OP_BIN, OP_L],
@@ -124,7 +124,7 @@ class PHPSyntax
 			OPID::LOW_BOOL_OR => ['or', OP_BIN, OP_L],
 		],
 		[
-			OPID::SPREAD => ['...', OP_PRE, OP_NA],
+			OPID::SPREAD => ['...', OP_PREFIX, OP_NA],
 		],
 	];
 }

@@ -25,7 +25,7 @@ public abstract BaseView: IView {
 		return <xview {this.props}>${this.subviews.join()}</xview>
 	}
 
-	to_string() String {
+	__tostring() String {
 		return this.render()
 	}
 }

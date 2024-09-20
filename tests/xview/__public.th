@@ -16,7 +16,7 @@ public class BaseView: IView {
 
 	render() String
 
-	to_string() String
+	__tostring() String
 }
 
 public interface PureInterface {

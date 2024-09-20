@@ -3,7 +3,7 @@
 
 public SQLitePDO: PDO {
 	construct(filename String) {
-		super.construct('sqlite:${realpath(filename)}')
+		super('sqlite:${realpath(filename)}')
 	}
 }
 

@@ -9,8 +9,8 @@ namespace Tea;
 
 // operator constants
 const
-	OP_PRE = 0x00,	// prefix
-	OP_POST = 0x01,	// postfix
+	OP_PREFIX = 0x00,	// prefix
+	OP_POSTFIX = 0x01,	// postfix
 	OP_BIN = 0x02,  // binary
 	OP_TERNARY = 0x04,
 	OP_ASSIGN = 0x08,
@@ -177,8 +177,8 @@ const
 	// _CT_SELF = '__ct_self', // self for compile time
 	// _RT_SELF = '__rt_self', // self for run time
 	// _INST_SELF = '__inst_self', // self for instance
-	_CONSTRUCT = 'construct',
-	_DESTRUCT = 'destruct',
+	_CONSTRUCT = '__construct',
+	_DESTRUCT = '__destruct',
 	_EXTENDS = 'extends',
 	_IMPLEMENTS = 'implements';
 
@@ -201,6 +201,7 @@ const _BUILTIN_TYPE_NAMES = [
 	_XVIEW,
 	_REGEX,
 	_CALLABLE,
+	_TYPE_SELF,
 ];
 
 const _CTRL_STRUCTURE_NAMES = [
@@ -214,7 +215,6 @@ const _ACCESSING_MODIFIERS = [_MASKED, _PUBLIC, _INTERNAL, _PROTECTED, _PRIVATE]
 const _BUILTIN_IDENTIFIERS = [_TYPE_SELF, _THIS, _SUPER, _VAL_NONE, _VAL_TRUE, _VAL_FALSE, _UNIT_PATH];
 
 const _OTHER_KEY_WORDS = [
-	// _CONSTRUCT, _DESTRUCT,
 	_STATIC,
 	_ELSEIF, _ELSE,
 	_IN, _TO, _DOWNTO,

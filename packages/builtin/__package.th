@@ -36,6 +36,8 @@ runtime const __FILE__ String
 runtime const __LINE__ UInt
 runtime const __CLASS__ UInt
 runtime const __FUNCTION__ UInt
+runtime const PHP_INT_MIN Int
+runtime const PHP_INT_MAX UInt
 
 // php super variables, unsupported, use filter_input function instead
 // runtime $_GET Dict
@@ -128,7 +130,7 @@ runtime func explode(delimiter String, it String) String.Array
 runtime func count(array) UInt
 runtime func in_array(needle, haystack, strict Bool = false) Bool
 runtime func array_reverse(array) Array
-runtime func array_map(callback (item) Any, items Array) Array
+runtime func array_map(callback (item) Any, items0 Array, items1 Array? = #default) Array
 runtime func array_filter(items Array, callback (item) Any, flag Int = #default) Array
 runtime func array_reduce(items Array, callback (carry, item) Any, initial Any = #default) Any
 
@@ -173,4 +175,25 @@ runtime interface Iterator {
 	next()
 	rewind()
 	valid() Bool
+}
+
+runtime interface ArrayAccess {}
+
+// PDO
+runtime class PDO {
+	FETCH_ASSOC Int
+	FETCH_COLUMN Int
+	construct(dsn String, username String = #default, passwd String = #default, options Dict = #default)
+	exec(statement String) Int
+	query(statement String) PDOStatement
+	quote(string String, parameter_type Int = #default) String
+	lastInsertId(name String = #default) String
+	getAttribute(attribute Int) Any
+	errorCode() String
+	errorInfo() Array
+}
+
+runtime class PDOStatement {
+	fetch(fetch_style Int = #default) String.Dict
+	fetchAll(fetch_style Int = #default) String.Dict.Array
 }

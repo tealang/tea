@@ -75,9 +75,9 @@ class PHPCoder extends BaseCoder
 	];
 
 	const METHOD_NAMES_MAP = [
-		_CONSTRUCT => '__construct',
-		_DESTRUCT => '__destruct',
-		'to_string' => '__toString',
+		// _CONSTRUCT => '__construct',
+		// _DESTRUCT => '__destruct',
+		// 'to_string' => '__toString',
 	];
 
 	const PROGRAM_HEADER = '<?php';
@@ -244,21 +244,25 @@ class PHPCoder extends BaseCoder
 	protected function generate_class_bases(ClassKindredDeclaration $node)
 	{
 		$code = '';
-		if ($node->inherits) {
-			$code = ' extends ' . $this->render_classkindred_identifier($node->inherits);
+		if ($node->extends) {
+			$code = ' extends ' . $this->render_bases_identifiers($node->extends);
 		}
 
-		if ($node->bases) {
-			$items = [];
-			foreach ($node->bases as $item) {
-				$items[] = $this->render_classkindred_identifier($item);
-			}
-
-			$keyword = $node instanceof InterfaceDeclaration ? ' extends ' : ' implements ';
-			$code .= $keyword . join(', ', $items);
+		if ($node->implements) {
+			$code .= ' implements ' . $this->render_bases_identifiers($node->implements);
 		}
 
 		return $code;
+	}
+
+	private function render_bases_identifiers(array $identifiers)
+	{
+		$items = [];
+		foreach ($identifiers as $item) {
+			$items[] = $this->render_classkindred_identifier($item);
+		}
+
+		return join(', ', $items);
 	}
 
 	protected function generate_function_header(IFunctionDeclaration $node, bool $is_abstract = false)
@@ -482,7 +486,7 @@ class PHPCoder extends BaseCoder
 
 		$items = $this->render_block_nodes($node->members);
 
-		$traits = $this->get_using_trait_name_in_bases($node->bases);
+		$traits = $this->get_using_trait_name_in_bases($node->implements);
 		if ($traits) {
 			array_unshift($items, 'use ' . join(', ', $traits) . ";\n\n");
 		}
@@ -1139,7 +1143,7 @@ class PHPCoder extends BaseCoder
 		return "'/{$pattern}/{$node->flags}'";
 	}
 
-	private function get_normalized_method_name(string $name)
+	protected function get_normalized_method_name(string $name)
 	{
 		return static::METHOD_NAMES_MAP[$name] ?? $name;
 	}
@@ -1422,7 +1426,7 @@ class PHPCoder extends BaseCoder
 			$name = $this->get_normalized_name_with_declaration($decl);
 		}
 
-		if (!$node->is_calling && !$node->is_accessing) {
+		if (!$node->is_accessing_or_invoking()) {
 			if ($decl instanceof FunctionDeclaration) {
 				$uri = ltrim($decl->program->unit->dist_ns_uri, static::NS_SEPARATOR);
 				$name = sprintf("'%s%s%s'", $uri, static::NS_SEPARATOR, $name);

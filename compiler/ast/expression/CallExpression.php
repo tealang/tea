@@ -31,7 +31,7 @@ abstract class BaseCallExpression extends BaseExpression
 
 	public function __construct(BaseExpression $callee, array $arguments)
 	{
-		$callee->is_calling = true;
+		$callee->set_purpose(PURPOSE_INVOKING);
 		$this->callee = $callee;
 		$this->arguments = $arguments;
 	}

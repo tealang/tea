@@ -106,7 +106,7 @@ class TypeFactory
 			T_INT_CAST => self::$_int,
 			T_DOUBLE_CAST => self::$_float,
 			T_BOOL_CAST => self::$_bool,
-			T_ARRAY_CAST => self::$_dict,
+			T_ARRAY_CAST => self::$_generalized_array,
 			T_OBJECT_CAST => self::$_object,
 			T_UNSET_CAST => self::$_none,
 		];
@@ -212,9 +212,19 @@ class TypeFactory
 		return $type;
 	}
 
-	public static function create_union_type(array $members)
+	public static function create_union_type(array $items)
 	{
-		$type = new UnionType($members);
+		$single_items = [];
+		foreach ($items as $member) {
+			if ($member instanceof UnionType) {
+				$single_items = array_merge($member->members);
+			}
+			else {
+				$single_items[] = $member;
+			}
+		}
+
+		$type = new UnionType($single_items);
 		$type->symbol = self::$_union->symbol;
 
 		return $type;

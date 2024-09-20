@@ -9,6 +9,11 @@ namespace Tea;
 
 abstract class BaseCoder
 {
+	const METHOD_NAMES_MAP = [
+		_CONSTRUCT => 'construct',
+		_DESTRUCT => 'destruct',
+	];
+
 	const INDENT = "\t";
 
 	const BLOCK_BEGIN = '{';
@@ -152,11 +157,11 @@ abstract class BaseCoder
 	protected function generate_class_bases(ClassKindredDeclaration $node)
 	{
 		$items = [];
-		if ($node->inherits) {
-			$items[] = $this->render_classkindred_identifier($node->inherits);
+		foreach ($node->extends as $item) {
+			$items[] = $this->render_classkindred_identifier($item);
 		}
 
-		foreach ($node->bases as $item) {
+		foreach ($node->implements as $item) {
 			$items[] = $this->render_classkindred_identifier($item);
 		}
 
@@ -179,7 +184,8 @@ abstract class BaseCoder
 			$items[] = _FUNC;
 		}
 
-		$items[] = $this->get_declaration_name($node);
+		$name = static::METHOD_NAMES_MAP[$node->name] ?? $this->get_declaration_name($node);
+		$items[] = $name;
 
 		// if ($node instanceof MethodDeclaration) {
 		// 	if ($node->modifier) {
@@ -689,6 +695,10 @@ abstract class BaseCoder
 	private function get_variable_name(VariableIdentifier|BaseVariableDeclaration $node)
 	{
 		$name = $node->name;
+		if ($name[0] === _DOLLAR) {
+			$name = substr($name, 1);
+		}
+
 		if (TeaHelper::is_reserved($name)) {
 			$name = '__' . $name;
 		}
@@ -1018,7 +1028,7 @@ abstract class BaseCoder
 	{
 		$items = [];
 		foreach ($subnodes as $subnode) {
-			if ($subnode->is_dynamic) {
+			if ($subnode->is_virtual) {
 				continue;
 			}
 

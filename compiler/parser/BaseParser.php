@@ -201,7 +201,6 @@ abstract class BaseParser
 	protected function print_token(array|string $token = null)
 	{
 		$token === null and ($token = $this->tokens[$this->pos] ?? null);
-		dump($token);
 	}
 
 	public function get_error_place_with_pos(int $pos)
@@ -215,9 +214,15 @@ abstract class BaseParser
 		$message = "{$this->file}:{$line}";
 
 		$code = $this->get_previous_code_inline($pos);
-		if (trim($code) !== '') {
+		if ($code !== '') {
+			$last_br_pos = strrpos($code, "\n");
+			if ($last_br_pos !== false) {
+				$code = substr($code, $last_br_pos + 1);
+			}
+
 			$code = self::tab2spaces($code);
-			$pointer_spaces = str_repeat(' ', strlen($code) - 1);
+			$pointer_pre_len = strlen($code) - 1;
+			$pointer_spaces = str_repeat(' ', $pointer_pre_len);
 
 			$after = $this->get_to_line_end($pos + 1);
 			$code .= self::tab2spaces($after);

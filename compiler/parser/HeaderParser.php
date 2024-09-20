@@ -137,6 +137,7 @@ class HeaderParser extends TeaParser
 
 	protected function read_method_declaration(string $name, ?string $modifier, bool $static)
 	{
+		$name = self::METHOD_MAP[$name] ?? $name;
 		$decl = $this->factory->create_method_declaration($modifier, $name);
 		$decl->pos = $this->pos;
 		$decl->is_static = $static;

@@ -18,8 +18,6 @@ class AnonymousFunction extends BaseExpression implements IScopeBlock
 	 */
 	public $using_params = [];
 
-	public $is_dynamic;
-
 	public function __construct(IType $return_type = null, array $parameters = null)
 	{
 		$this->declared_type = $return_type;

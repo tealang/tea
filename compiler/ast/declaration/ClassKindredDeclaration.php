@@ -7,19 +7,30 @@
 
 namespace Tea;
 
+enum ClassFeature: int
+{
+	case PROPERTIES = 1;
+	case MAGIC_GET = 2;
+	case MAGIC_SET = 4;
+	case MAGIC_ISSET = 8;
+	case MAGIC_UNSET = 16;
+	case MAGIC_CALL = 32;
+	case MAGIC_CALL_STATIC = 64;
+}
+
 abstract class ClassKindredDeclaration extends RootDeclaration
 {
 	/**
-	 * the implements interfaces or inherits class
-	 * @var ClassKindredIdentifier[]
-	 */
-	public $bases = [];
-
-	/**
-	 * the inherits class for classes
+	 * the extends class for classes
 	 * @var ClassDeclaration
 	 */
-	public $inherits;
+	public $extends = [];
+
+	/**
+	 * the implements interfaces
+	 * @var ClassKindredIdentifier[]
+	 */
+	public $implements = [];
 
 	/**
 	 * @var TraitsUsingStatement[]
@@ -59,15 +70,43 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 
 	public $define_mode;
 
+	public $feature_flags = 0;
+
 	public function __construct(?string $modifier, $name)
 	{
 		$this->modifier = $modifier;
 		$this->name = $name;
 	}
 
-	public function set_bases(ClassKindredIdentifier ...$bases)
+	public function unite_feature_flags(int $flags)
 	{
-		$this->bases = $bases;
+		$this->feature_flags |= $flags;
+	}
+
+	public function set_feature(ClassFeature $feature)
+	{
+		$this->feature_flags |= $feature->value;
+	}
+
+	public function has_feature(ClassFeature $feature)
+	{
+		return $this->feature_flags & $feature->value;
+	}
+
+	public function is_dynamic(bool $is_weak)
+	{
+		return $this->is_virtual
+			|| ($is_weak && ($this->name === _TYPE_SELF || $this instanceof TraitDeclaration));
+	}
+
+	public function set_extends(array $identifiers)
+	{
+		$this->extends = $identifiers;
+	}
+
+	public function set_implements(array $identifiers)
+	{
+		$this->extends = $identifiers;
 	}
 
 	public function append_trait_using(TraitsUsingStatement $using)
@@ -99,10 +138,11 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 
 	public function find_based_with_symbol(Symbol $symbol)
 	{
-		$result = null;
+		// the bases interfaces
+		$bases = $this instanceof InterfaceDeclaration ? $this->extends : $this->implements;
 
-		// check the implements interfaces
-		foreach ($this->bases as $based) {
+		$result = null;
+		foreach ($bases as $based) {
 			if ($this->is_identifier_based_with_symbol($based, $symbol)) {
 				$result = $based;
 				break;
@@ -135,7 +175,7 @@ class ClassDeclaration extends ClassKindredDeclaration implements ICallableDecla
 	public function find_based_with_symbol(Symbol $symbol)
 	{
 		// check the extends class first
-		if ($this->inherits and $result = $this->find_based_with_symbol_in_inherits($this->inherits, $symbol)) {
+		if ($this->extends and $result = $this->find_based_with_symbol_in_super($this->extends[0], $symbol)) {
 			// no any
 		}
 		else {
@@ -145,17 +185,17 @@ class ClassDeclaration extends ClassKindredDeclaration implements ICallableDecla
 		return $result;
 	}
 
-	private function find_based_with_symbol_in_inherits(PlainIdentifier $inherits, Symbol $symbol)
+	private function find_based_with_symbol_in_super(PlainIdentifier $super_identifier, Symbol $symbol)
 	{
-		$inherits_symbol = $inherits->symbol;
+		$super_symbol = $super_identifier->symbol;
 		$result = null;
 
 		// symbol in difference packages would be not same, but declaration is
-		if ($inherits_symbol === $symbol || $inherits_symbol->declaration === $symbol->declaration) {
-			$result = $inherits;
+		if ($super_symbol === $symbol || $super_symbol->declaration === $symbol->declaration) {
+			$result = $super_identifier;
 		}
-		elseif ($identifier = $inherits_symbol->declaration->find_based_with_symbol($symbol)) {
-			$result = $identifier;
+		elseif ($based_identifier = $super_symbol->declaration->find_based_with_symbol($symbol)) {
+			$result = $based_identifier;
 		}
 
 		return $result;
@@ -180,8 +220,6 @@ class TraitDeclaration extends ClassKindredDeclaration
 class IntertraitDeclaration extends InterfaceDeclaration
 {
 	const KIND = 'intertrait_declaration';
-
-	// public $has_default_implementations = false;
 }
 
 // end

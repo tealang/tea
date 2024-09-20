@@ -290,10 +290,10 @@ class OperatorFactory
 				$operator->tea_prec = $prec;
 
 				switch ($type) {
-					case OP_PRE:
+					case OP_PREFIX:
 						self::$tea_prefix_map[$sign] = $operator;
 						break;
-					case OP_POST:
+					case OP_POSTFIX:
 					case OP_ASSIGN:
 					case OP_BIN:
 					case OP_TERNARY:
@@ -323,10 +323,10 @@ class OperatorFactory
 				$operator->php_prec = $prec;
 
 				switch ($type) {
-					case OP_PRE:
+					case OP_PREFIX:
 						self::$php_prefix_map[$sign] = $operator;
 						break;
-					case OP_POST:
+					case OP_POSTFIX:
 					case OP_ASSIGN:
 					case OP_BIN:
 					case OP_TERNARY:

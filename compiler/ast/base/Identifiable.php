@@ -64,9 +64,7 @@ class AccessingIdentifier extends Identifiable implements IType
 
 	public function __construct(BaseExpression $basing, string $name, bool $nullsafe = false)
 	{
-		if ($basing instanceof PlainIdentifier) {
-			$basing->is_accessing = true;
-		}
+		$basing->set_purpose(PURPOSE_ACCESSING);
 
 		$this->basing = $basing;
 		$this->name = $name;

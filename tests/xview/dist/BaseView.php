@@ -28,7 +28,7 @@ abstract class BaseView implements \IView {
 		return '<xview ' . \_build_attributes($this->props) . '>' . _std_join($this->subviews, LF) . '</xview>';
 	}
 
-	public function __toString(): string {
+	public function __tostring(): string {
 		return $this->render();
 	}
 }

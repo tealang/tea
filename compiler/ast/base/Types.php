@@ -128,15 +128,16 @@ abstract class SingleGenericType extends BaseType
 			$result = $target->merge_with_single_type($this);
 		}
 		elseif ($this->name === $target->name) {
-			if ($this->generic_type === $target->generic_type) {
+			$this_generic_type = $this->generic_type ?? TypeFactory::$_any;
+			$target_generic_type = $target->generic_type ?? TypeFactory::$_any;
+			if ($this_generic_type->is_same_with($target_generic_type)) {
 				$result = $this;
 			}
 			else {
 				// just to uniting the generic_type
-				$generic_type = $this->generic_type ?? TypeFactory::$_any;
-				$generic_type = $generic_type->unite_type($target->generic_type ?? TypeFactory::$_any);
+				$united = $this_generic_type->unite_type($target_generic_type);
 				$result = clone $this;
-				$result->generic_type = $generic_type;
+				$result->generic_type = $united;
 			}
 		}
 		else {
@@ -250,14 +251,16 @@ class UnionType extends BaseType
 		return true;
 	}
 
-	public function is_array_or_dict_types() {
+	public function has_array_or_dict_type() {
+		$has = false;
 		foreach ($this->members as $member_type) {
-			if (!$member_type instanceof ArrayType && !$member_type instanceof DictType) {
-				return false;
+			if ($member_type instanceof ArrayType || $member_type instanceof DictType) {
+				$has = true;
+				break;
 			}
 		}
 
-		return true;
+		return $has;
 	}
 
 	public function unite_type(IType $target): IType {
@@ -270,41 +273,83 @@ class UnionType extends BaseType
 
 	public function merge_with_single_type(IType $target) {
 		if ($this->is_contains_single_type($target)) {
-			return $this;
+			$type = $this;
+		}
+		elseif ($target instanceof SingleGenericType) {
+			$type = $this->merge_with_container_type($target);
+		}
+		else {
+			$type = clone $this;
+			$type->members[] = $target;
 		}
 
-		$new = clone $this;
-		$new->members[] = $target;
-
-		return $new;
+		return $type;
 	}
 
-	public function merge_with_union_type(UnionType $target) {
-		$diff_items = [];
-		foreach ($target->get_members() as $target_member) {
-			$diff_items[] = $target_member;
-		}
-
-		if (!$diff_items) {
-			return $this;
-		}
-
-		$new = clone $this;
-		$new->members = array_merge($new->members, $diff_items);
-
-		return $new;
-	}
-
-	public function is_contains_single_type(IType $target) {
-		$contains = false;
-		foreach ($this->members as $member) {
-			if ($member->is_same_with($target)) {
-				$contains = true;
+	private function merge_with_container_type(SingleGenericType $target)
+	{
+		$pos = null;
+		foreach ($this->members as $idx => $item) {
+			if (get_class($target) === get_class($item)) {
+				$pos = $idx;
 				break;
 			}
 		}
 
-		return $contains;
+		$result = clone $this;
+		if ($pos === null) {
+			$result->members[] = $target;
+		}
+		else {
+			$member = $result->members[$pos];
+			$result->members[$pos] = $member->unite_type($target);
+		}
+
+		return $result;
+	}
+
+	public function merge_with_union_type(UnionType $target) {
+		$new_members = [];
+		foreach ($target->get_members() as $target_member) {
+			if (!$this->contains_member_type($target_member)) {
+				$new_members[] = $target_member;
+			}
+		}
+
+		if ($new_members) {
+			$type = clone $this;
+			$type->members = array_merge($type->members, $new_members);
+		}
+		else {
+			$type = $this;
+		}
+
+		return $type;
+	}
+
+	private function contains_member_type(IType $target)
+	{
+		$is = false;
+		foreach ($this->members as $member) {
+			if ($member->is_same_with($target)) {
+				$is = true;
+				break;
+			}
+		}
+
+		return $is;
+	}
+
+	public function is_contains_single_type(IType $target) {
+		$is = false;
+		foreach ($this->members as $member) {
+			if ($member->is_same_with($target)) {
+				$is = true;
+				break;
+			}
+		}
+
+		return $is;
 	}
 
 	public function get_members_type_except(IType $target) {
@@ -537,8 +582,6 @@ class CallableType extends BaseType implements ICallableDeclaration {
 	public $parameters = [];
 
 	public $is_checked;
-
-	public $is_dynamic;
 
 	public function __construct(?IType $return_type = null, array $parameters = []) {
 		$this->declared_type = $return_type;
