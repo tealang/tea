@@ -73,9 +73,9 @@ class AccessingIdentifier extends Identifiable implements IType
 }
 
 // use for rendering dist code
-class RuntimeIdentifier extends Identifiable implements IType
+class NativeIdentifier extends Identifiable implements IType
 {
-	const KIND = 'runtime_identifier';
+	const KIND = 'native_identifier';
 }
 
 class PlainIdentifier extends Identifiable implements IType

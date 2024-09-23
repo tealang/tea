@@ -11,11 +11,17 @@ class TeaSyntax
 {
 	const OPERATORS = [
 		[
+			OPID::MEMBER_ACCESSING => ['.', OP_BIN, OP_NA],
+			OPID::NULLSAFE_MEMBER_ACCESSING => ['?.', OP_BIN, OP_NA],
+			// OPID::KEY_ACCESSING => ['[', OP_BIN, OP_NA],
+			OPID::PIPE => ['::', OP_BIN, OP_NA],
+			OPID::AS => ['#', OP_BIN, OP_NA],
+		],
+		// [
+		// 	OPID::CALL => ['(', OP_POSTFIX, OP_L],
+		// ],
+		[
 			OPID::CLONE => ['clone', OP_PREFIX, OP_NA],
-			OPID::MEMBER_ACCESSING => ['.', OP_BIN, OP_L, OP_NA],
-			OPID::NULLSAFE_MEMBER_ACCESSING => ['?.', OP_BIN, OP_L, OP_NA],
-			OPID::PIPE => ['::', OP_BIN, OP_L, OP_NA],
-			OPID::AS => ['#', OP_BIN, OP_L, OP_NA],
 		],
 		[
 			// OPID::REFERENCE => ['&', OP_PREFIX, OP_NA],
@@ -73,7 +79,7 @@ class TeaSyntax
 			OPID::BOOL_OR => ['or', OP_BIN, OP_L],
 		],
 		[
-			OPID::NONE_COALESCING => ['??', OP_BIN, OP_L],
+			OPID::NONE_COALESCING => ['??', OP_BIN, OP_R],
 		],
 		[
 			OPID::TERNARY => ['?', OP_TERNARY, OP_NON],

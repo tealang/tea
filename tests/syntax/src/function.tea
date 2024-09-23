@@ -36,7 +36,7 @@ echo "dict['num'] mutated by fn2: ${dict['num']}"
 
 // callbacks
 internal fn3(some Any, done (caller String) String, error (message) Void = none) String {
-	return done('A cool man') .+ ' with $some'
+	return done('A cool man') .+ ' with ${some}'
 }
 
 var out_num = 1

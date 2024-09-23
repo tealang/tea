@@ -16,10 +16,10 @@ class TryBlock extends ControlBlock implements IExceptAble
 
 	const KIND = 'try_block';
 
-	/**
-	 * @var CatchBlock
-	 */
-	public $catching_all;
+	// /**
+	//  * @var CatchBlock
+	//  */
+	// public $catching_all;
 }
 
 class CatchBlock extends ControlBlock

@@ -9,6 +9,6 @@ use tests\xview { BaseView, IViewDemo }
 use tests\phpdemo { BaseInterface, PHPClassDemo, PHP_CONST_DEMO, php_function_demo }
 
 
-runtime func range(start Int, end Int, step = 1) Array
+extern func range(start Int, end Int, step = 1) Array
 
 

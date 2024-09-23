@@ -16,11 +16,11 @@ class TeaHeaderCoder extends BaseCoder
 		$program->uses = []; // clear the custom use items
 
 		foreach ($program->declarations as $node) {
-			$this->collect_use_statements($program, $node);
+			$this->dig_using_statements($program, $node);
 		}
 	}
 
-	protected function collect_use_statements(Program $program, IDeclaration $decl)
+	protected function dig_using_statements(Program $program, IDeclaration $decl)
 	{
 		$unit_header_program = $program->unit->programs['__package'] ?? null;
 		if ($unit_header_program) {
@@ -131,7 +131,7 @@ class TeaHeaderCoder extends BaseCoder
 		if ($node->noted_type !== null) {
 			$buffer .= _SHARP . $node->noted_type->render($this);
 		}
-		elseif ($declared === null) {
+		elseif ($declared === null && $node->infered_type !== null) {
 			// noted to declared by default
 			$buffer .= _SHARP . $node->infered_type->render($this);
 		}

@@ -51,13 +51,13 @@ class XTag extends XTagElement
 	}
 }
 
-class XTagAttrInterpolation extends BaseExpression
+class XTagAttrInterpolation extends BaseExpression implements Interpolation
 {
 	use InterpolationTrait;
 	const KIND = 'xtag_attr_interpolation';
 }
 
-class XTagChildInterpolation extends XTagElement
+class XTagChildInterpolation extends XTagElement implements Interpolation
 {
 	use InterpolationTrait;
 	const KIND = 'xtag_child_interpolation';

@@ -28,7 +28,7 @@ class TeaParser extends BaseParser
 		while ($this->pos < $this->tokens_count) {
 			$item = $this->read_root_statement();
 			if ($item instanceof IRootDeclaration) {
-				$program->append_declaration($item);
+				// $program->append_declaration($item);
 			}
 			elseif ($item) {
 				$this->root_statements[] = $item;
@@ -259,7 +259,7 @@ class TeaParser extends BaseParser
 			$node = $this->read_switch_block($name);
 		}
 		else {
-			throw $this->new_parse_error("Expected a inline statement after label #{$name}.");
+			throw $this->new_parse_error("Expected a inline statement after label #{$name}");
 		}
 
 		return $node;
@@ -365,7 +365,7 @@ class TeaParser extends BaseParser
 
 		$decl = $this->factory->create_builtin_type_class_declaration($name);
 		if ($decl === null) {
-			throw $this->new_parse_error("'$name' not a builtin type.");
+			throw $this->new_parse_error("'$name' not a builtin type");
 		}
 
 		$this->read_rest_for_classkindred_declaration($decl);
@@ -400,7 +400,7 @@ class TeaParser extends BaseParser
 	private function read_constant_declaration_with(string $name, string $modifier = null)
 	{
 		if ($this->root_statements) {
-			throw $this->new_parse_error("Please define constants at header of program.");
+			throw $this->new_parse_error("Please define constants at header of program");
 		}
 
 		$decl = $this->read_constant_declaration_header($name, $modifier);
@@ -595,7 +595,7 @@ class TeaParser extends BaseParser
 
 		$argument = $this->scan_expression_inline();
 		if ($argument === null) {
-			throw $this->new_parse_error("Required an Exception argument.");
+			throw $this->new_parse_error("Required an Exception argument");
 		}
 
 		$statement = $this->factory->create_throw_statement($argument);
@@ -1144,7 +1144,7 @@ class TeaParser extends BaseParser
 	protected function read_number_with(string $token, string $base_type)
 	{
 		if ($token[-1] === _UNDERSCORE) {
-			throw $this->new_parse_error("Separator '_' can not put at the end of numeric literals.");
+			throw $this->new_parse_error("Separator '_' can not put at the end of numeric literals");
 		}
 
 		if ($base_type === _BASE_DECIMAL) {
@@ -1230,7 +1230,7 @@ class TeaParser extends BaseParser
 			$then = null;
 		}
 		else {
-			$this->expect_space("Missed space char after '?'.");
+			$this->expect_space("Missed space char after '?'");
 			$then = $this->read_expression();
 			if ($then instanceof TernaryExpression) {
 				throw $this->new_parse_error("Required () for compound conditional expressions");
@@ -1253,7 +1253,7 @@ class TeaParser extends BaseParser
 
 	private function read_object_expression()
 	{
-		[$class_decl, $class_symbol] = $this->factory->create_virtual_class();
+		[$class_decl, $class_symbol] = $this->factory->create_virtual_class('__OBJ__');
 
 		while ($key = $this->scan_object_key()) {
 			$this->expect_token_ignore_space(_COLON);
@@ -1401,7 +1401,7 @@ class TeaParser extends BaseParser
 		while (true) {
 			$value = $this->read_expression();
 			if ($value === null) {
-				throw $this->new_parse_error("Value expression for dict required.");
+				throw $this->new_parse_error("Value expression for dict required");
 			}
 
 			$items[] = new DictMember($key, $value);
@@ -1444,7 +1444,7 @@ class TeaParser extends BaseParser
 			$this->scan_token_ignore_space();
 		}
 		elseif (!$arrow_is_optional) {
-			throw $this->new_parse_error("Unexpected token '$next', or missed token '=>'.");
+			throw $this->new_parse_error("Unexpected token '$next', or missed token '=>'");
 		}
 
 		if ($this->get_token_ignore_empty() === _BLOCK_BEGIN) {
@@ -1691,7 +1691,7 @@ class TeaParser extends BaseParser
 
 		$assert_type = $this->scan_type_expression();
 		if ($assert_type === null) {
-			throw $this->new_parse_error("Expected a type name for the 'is' expression.");
+			throw $this->new_parse_error("Expected a type name for the 'is' expression");
 		}
 
 		$expression = new IsOperation($expression, $assert_type, $not);
@@ -1745,25 +1745,16 @@ class TeaParser extends BaseParser
 
 	protected function skip_binary_operator_with_space(string $operator)
 	{
-		$this->expect_space("Missed space char before operator '$operator'.");
+		$this->expect_space("Missed space char before operator '$operator'");
 		$this->scan_token_ignore_empty(); // skip the operator
-		$this->expect_space("Missed space char after operator '$operator'.");
+		$this->expect_space("Missed space char after operator '$operator'");
 	}
 
-	protected function read_none_coalescing_with(BaseExpression $first, Operator $operator)
+	protected function read_none_coalescing_with(BaseExpression $left, Operator $operator)
 	{
-		$items = [$first];
-
-		$item = $this->read_expression($operator);
-		$items[] = $item;
-
-		while ($this->skip_token_ignore_empty(_NONE_COALESCING)) {
-			$item = $this->read_expression();
-			$items[] = $item;
-		}
-
-		$expression = new NoneCoalescingOperation($items);
-		$expression->pos = $item->pos;
+		$right = $this->read_expression($operator);
+		$expression = new NoneCoalescingOperation($left, $right);
+		$expression->pos = $this->pos;
 
 		return $expression;
 	}
@@ -1776,7 +1767,7 @@ class TeaParser extends BaseParser
 			if (isset($item->label)) {
 				// the labeled argument
 				if (isset($items[$item->label])) {
-					throw $this->new_parse_error("Parameter '{$item->label}' already has been assigned.");
+					throw $this->new_parse_error("Parameter '{$item->label}' already has been assigned");
 				}
 				else {
 					$items[$item->label] = $item;
@@ -1786,7 +1777,7 @@ class TeaParser extends BaseParser
 				$has_label = true;
 			}
 			elseif ($has_label) {
-				throw $this->new_parse_error("This argument required a label, because of the prevent has labeled.");
+				throw $this->new_parse_error("This argument required a label, because of the prevent has labeled");
 			}
 			else {
 				$items[] = $item;
@@ -1917,7 +1908,7 @@ class TeaParser extends BaseParser
 		}
 
 		if (!$items) {
-			throw $this->new_parse_error("Based class or interfaces expected.");
+			throw $this->new_parse_error("Based class or interfaces expected");
 		}
 
 		return $items;
@@ -1940,7 +1931,7 @@ class TeaParser extends BaseParser
 		}
 
 		if (!$this->is_in_tea_declaration && TypeFactory::exists_type($token)) {
-			throw $this->new_parse_error("Cannot use type '$token' as a class/interface.");
+			throw $this->new_parse_error("Cannot use type '$token' as a class/interface");
 		}
 
 		$identifier = $this->read_classkindred_identifier_with($token, $is_based_root_ns);
@@ -2049,6 +2040,9 @@ class TeaParser extends BaseParser
 			$this->scan_token_ignore_space(); // skip
 			$type = $this->read_classkindred_identifier_with($token);
 		}
+		elseif ($token === static::NS_SEPARATOR) {
+			$type = $this->scan_classkindred_identifier();
+		}
 		else {
 			return null;
 		}
@@ -2089,7 +2083,7 @@ class TeaParser extends BaseParser
 
 	private function scan_nullable_for(IType &$type)
 	{
-		if ($this->skip_token(_INVALIDABLE_SIGN)) {
+		if ($this->skip_token(_QUESTION)) {
 			if ($type instanceof BaseType) {
 				$type = $type->get_nullable_instance();
 			}
@@ -2438,7 +2432,7 @@ class TeaParser extends BaseParser
 		$next = $this->get_token_ignore_space();
 
 		// if ($mutable_mode && !($type instanceof ArrayType || $type instanceof DictType)) {
-		// 	throw $this->new_parse_error("Cannot use the value-mutable for '$type->name' type parameter.");
+		// 	throw $this->new_parse_error("Cannot use the value-mutable for '$type->name' type parameter");
 		// }
 
 		if ($next === _ASSIGN) {
@@ -2448,7 +2442,7 @@ class TeaParser extends BaseParser
 
 		if ($inout_mode) {
 			if ($parameter->value && $parameter->value !== ASTFactory::$default_value_mark) {
-				throw $this->new_parse_error("Cannot set a default value for inout mode parameter.");
+				throw $this->new_parse_error("Cannot set a default value for inout mode parameter");
 			}
 
 			$parameter->is_inout = true;
@@ -2481,7 +2475,7 @@ class TeaParser extends BaseParser
 
 		if ($has_outer_paren) {
 			$this->expect_token_ignore_empty(_PAREN_CLOSE);
-			$nullable = $this->skip_token_ignore_space(_INVALIDABLE_SIGN);
+			$nullable = $this->skip_token_ignore_space(_QUESTION);
 			if ($nullable) {
 				$node->let_nullable();
 			}

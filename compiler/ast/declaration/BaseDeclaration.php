@@ -35,15 +35,15 @@ trait TypingTrait {
 
 	public function get_hinted_type()
 	{
-		return $this->noted_type ?? $this->declared_type;
+		return $this->noted_type ?? $this->declared_type ?? TypeFactory::$_any;
 	}
 
 	public function get_type()
 	{
-		return $this->noted_type ?? $this->declared_type ?? $this->infered_type;
+		return $this->noted_type ?? $this->declared_type ?? $this->infered_type ?? TypeFactory::$_any;
 	}
 
-	public function set_type(IType $type)
+	public function set_type(?IType $type)
 	{
 		if ($this->noted_type) {
 			$this->noted_type = $type;
@@ -63,7 +63,7 @@ trait DeclarationTrait {
 
 	public $label;
 
-	public $is_runtime;
+	public $is_extern;
 
 	/**
 	 * @var string

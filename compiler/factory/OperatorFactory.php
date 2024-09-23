@@ -9,13 +9,16 @@ namespace Tea;
 
 class OperatorFactory
 {
-	public static $new;
-	public static $clone;
-	public static $static_accessing;
+	public static $scope_resolution;
 	public static $member_accessing;
 	public static $nullsafe_member_accessing;
+	public static $key_accessing;
 	public static $as;
 	public static $pipe;
+
+	public static $new;
+	public static $call;
+	public static $clone;
 
 	public static $error_control;
 	public static $reference;
@@ -90,15 +93,19 @@ class OperatorFactory
 
 	public static function init()
 	{
-		self::$new = self::create_operator(OPID::NEW);
-		self::$clone = self::create_operator(OPID::CLONE);
-
-		self::$static_accessing = self::create_operator(OPID::STATIC_ACCESSING);
+		self::$scope_resolution = self::create_operator(OPID::SCOPE_RESOLUTION);
 		self::$member_accessing = self::create_operator(OPID::MEMBER_ACCESSING);
 		self::$nullsafe_member_accessing = self::create_operator(OPID::NULLSAFE_MEMBER_ACCESSING);
+		self::$key_accessing = self::create_operator(OPID::KEY_ACCESSING);
 
 		self::$as = self::create_operator(OPID::AS);
 		self::$pipe = self::create_operator(OPID::PIPE);
+
+		self::$new = self::create_operator(OPID::NEW);
+		self::$call = self::create_operator(OPID::CALL);
+		self::$clone = self::create_operator(OPID::CLONE);
+
+		self::$exponentiation = self::create_operator(OPID::EXPONENTIATION);
 
 		self::$error_control = self::create_operator(OPID::ERROR_CONTROL);
 		self::$reference = self::create_operator(OPID::REFERENCE);
@@ -111,8 +118,6 @@ class OperatorFactory
 		self::$pre_decrement = self::create_operator(OPID::PRE_DECREMENT);
 		self::$post_increment = self::create_operator(OPID::POST_INCREMENT);
 		self::$post_decrement = self::create_operator(OPID::POST_DECREMENT);
-
-		self::$exponentiation = self::create_operator(OPID::EXPONENTIATION);
 
 		self::$multiplication = self::create_operator(OPID::MULTIPLICATION);
 		self::$division = self::create_operator(OPID::DIVISION);

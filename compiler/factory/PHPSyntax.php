@@ -11,18 +11,26 @@ class PHPSyntax
 {
 	const OPERATORS = [
 		[
+			OPID::SCOPE_RESOLUTION => ['::', OP_BIN, OP_NA],
+			OPID::MEMBER_ACCESSING => ['->', OP_BIN, OP_NA],
+			OPID::NULLSAFE_MEMBER_ACCESSING => ['?->', OP_BIN, OP_NA],
+			OPID::KEY_ACCESSING => ['[]', OP_BIN, OP_NA],
+		],
+		[
 			OPID::NEW => ['new', OP_PREFIX, OP_NA],
+		// ],
+		// [
+		// 	OPID::CALL => ['(', OP_POSTFIX, OP_L],
+		// ],
+		// [
 			OPID::CLONE => ['clone', OP_PREFIX, OP_NA],
-			OPID::STATIC_ACCESSING => ['::', OP_BIN, OP_L, OP_NA],
-			OPID::MEMBER_ACCESSING => ['->', OP_BIN, OP_L, OP_NA],
-			OPID::NULLSAFE_MEMBER_ACCESSING => ['?->', OP_BIN, OP_L, OP_NA],
 		],
 		[
 			OPID::EXPONENTIATION => ['**', OP_BIN, OP_R],
 		],
 		[
-			OPID::AS => ['(?)', OP_BIN, OP_L, OP_NA],
-			OPID::ERROR_CONTROL => ['@', OP_PREFIX, OP_L, OP_NA],
+			OPID::AS => ['(?)', OP_BIN, OP_NA],
+			OPID::ERROR_CONTROL => ['@', OP_PREFIX, OP_NA],
 			OPID::REFERENCE => ['&', OP_PREFIX, OP_NA],
 			OPID::IDENTITY => ['+', OP_PREFIX, OP_NA],
 			OPID::NEGATION => ['-', OP_PREFIX, OP_NA],
@@ -84,7 +92,7 @@ class PHPSyntax
 			OPID::BOOL_OR => ['||', OP_BIN, OP_L],
 		],
 		[
-			OPID::NONE_COALESCING => ['??', OP_BIN, OP_L],
+			OPID::NONE_COALESCING => ['??', OP_BIN, OP_R],
 		],
 		[
 			OPID::TERNARY => ['?', OP_TERNARY, OP_NON],

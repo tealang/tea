@@ -238,7 +238,7 @@ class Compiler
 
 	private function check_ast()
 	{
-		self::echo_start('Checking...', LF);
+		self::echo_start('Initing...', LF);
 
 		$builtin_unit = $this->builtin_unit;
 
@@ -268,10 +268,13 @@ class Compiler
 
 	private function check_ast_for_unit(Unit $unit, ASTChecker $normal_checker)
 	{
+		self::echo_start("\nStart checking: {$unit->name}", "\n");
+
 		$native_checker = ASTChecker::get_native_checker();
 		$programs = $unit->programs;
 
-		// 1st, check all ns usings
+		// 1st, process all namespace usings
+		self::echo_start("  Process namespace usings...", "\n");
 		foreach ($programs as $program) {
 			if ($program->is_native) {
 				$native_checker->check_all_usings($program);
@@ -281,26 +284,26 @@ class Compiler
 			}
 		}
 
-		// 2nd, attach symbols, and collecting auto usings
+		// 2nd, link symbols, and collecting auto namespace usings
+		self::echo_start("  Link symbols...", "\n");
 		foreach ($programs as $program) {
-			self::echo_start(" - {$program->file}", LF);
+			// self::echo_start(" - {$program->file}", "\n");
 			$checker = $program->is_native ? $native_checker : $normal_checker;
-			$checker->collect_program_uses($program);
+			$checker->link_declarations($program);
 		}
 
-		// 3td, check statements
+		// 3td, check details
+		self::echo_start("  Check details...", "\n");
 		$package_program = $programs['__package'] ?? null;
 		if ($package_program) {
 			$normal_checker->check_program($package_program);
 		}
 
 		foreach ($programs as $program) {
-			// self::echo_start(" - {$program->file}", LF);
 			$program->is_native and $native_checker->check_program($program);
 		}
 
 		foreach ($programs as $program) {
-			// self::echo_start(" - {$program->file}", LF);
 			!$program->is_native and $normal_checker->check_program($program);
 		}
 	}
@@ -549,10 +552,12 @@ class Compiler
 			$decl = $symbol->declaration;
 			$belong_program = $decl->program;
 			$modifier = $decl->modifier ?? null;
-			if (($modifier === _PUBLIC)
-				&& $belong_program->unit === $this->unit
-				&& !$belong_program->is_external
-			) {
+			if ($modifier === _PUBLIC && $belong_program->unit === $this->unit) {
+				// treat as extern declaration
+				if ($belong_program->is_external) {
+					$decl->is_extern = true;
+				}
+
 				$program->append_declaration($decl);
 			}
 		}
@@ -573,7 +578,7 @@ class Compiler
 		foreach ($program->declarations as $node) {
 			if ($node instanceof ClassKindredDeclaration
 				&& !$node instanceof BuiltinTypeClassDeclaration
-				&& !$node->is_runtime) {
+				&& !$node->is_extern) {
 				$name = $name_prefix . $node->name;
 				$this->autoloads_map[$name] = $dist_file_path;
 

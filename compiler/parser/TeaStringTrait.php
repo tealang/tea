@@ -33,7 +33,7 @@ trait TeaStringTrait
 
 			$string .= $token;
 			if ($token === _BACK_SLASH) {
-				$string .= $this->scan_string_component(); // 略过转义字符
+				$string .= $this->scan_string_component(); // ignore the escaped char
 			}
 		}
 
@@ -88,7 +88,7 @@ trait TeaStringTrait
 
 				return $items;
 			}
-			elseif ($token === _DOLLAR) {
+			elseif ($token === _DOLLAR_BRACE_OPEN) {
 				$expression = $this->scan_normal_interpolation();
 				if ($expression === null) {
 					$string .= $token;
@@ -118,9 +118,9 @@ trait TeaStringTrait
 
 	protected function scan_normal_interpolation(): ?BaseExpression
 	{
-		if ($this->get_token() === _BLOCK_BEGIN) {
-			// ${ ... } style
-			$this->scan_token(); // skip {
+		// if ($this->get_token() === _BLOCK_BEGIN) {
+		// 	// ${ ... } style
+		// 	$this->scan_token(); // skip {
 
 			$expr = $this->read_expression();
 			if ($expr === null) {
@@ -128,10 +128,10 @@ trait TeaStringTrait
 			}
 
 			$this->expect_block_end();
-		}
-		else {
-			$expr = $this->read_dollar_identifier();
-		}
+		// }
+		// else {
+		// 	$expr = $this->read_dollar_identifier();
+		// }
 
 		$expr = new StringInterpolation($expr);
 		$expr->pos = $this->pos;

@@ -14,7 +14,7 @@ internal intertrait IBaseView {
 
 	set_attribute(key String, value String) {
 		if not /^[a-z][a-z0-9]*$/i.test(key) {
-			throw Exception("Invalid key '$key'")
+			throw Exception("Invalid key '${key}'")
 		}
 
 		this.attributes[key] = value

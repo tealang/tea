@@ -26,7 +26,7 @@ internal BOX_WIDTH = 629
 var tmp_path = dirname(__DIR__, 2) .+ '/tmp/'
 var fontfile = tmp_path .+ 'SourceHanSansSC-Regular.otf'
 if not file_exists(fontfile) {
-	echo "The font file '$fontfile' not found.\nPlease download it and put to path $fontfile"
+	echo "The font file '${fontfile}' not found.\nPlease download it and put to path ${fontfile}"
 	exit
 }
 
@@ -53,9 +53,9 @@ result = imagepng(image, target_image_file)
 imagedestroy(image)
 
 if result {
-	echo 'Image $target_image_file generated.'
+	echo 'Image ${target_image_file} generated.'
 }
 else {
-	echo 'Image $target_image_file generate failure.'
+	echo 'Image ${target_image_file} generate failure.'
 }
 

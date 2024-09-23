@@ -353,7 +353,7 @@ class PHPCoder extends BaseCoder
 
 	public function render_constant_declaration(IConstantDeclaration $node)
 	{
-		if ($node->is_runtime) {
+		if ($node->is_extern) {
 			return null;
 		}
 
@@ -480,7 +480,7 @@ class PHPCoder extends BaseCoder
 
 	public function render_class_declaration(ClassDeclaration $node)
 	{
-		if ($node->is_runtime) {
+		if ($node->is_extern) {
 			return null;
 		}
 
@@ -516,7 +516,7 @@ class PHPCoder extends BaseCoder
 
 	public function render_interface_declaration(InterfaceDeclaration $node)
 	{
-		if ($node->is_runtime) {
+		if ($node->is_extern) {
 			return null;
 		}
 
@@ -912,7 +912,7 @@ class PHPCoder extends BaseCoder
 			}
 		}
 		else {
-			$code = '';
+			$code = "''";
 		}
 
 		return $this->new_string_placeholder($code);
@@ -966,7 +966,7 @@ class PHPCoder extends BaseCoder
 			$code = $this->render_subexpression($expr, OperatorFactory::$concat);
 		}
 		elseif ($type instanceof IterableType and $type->generic_type instanceof XViewType) {
-			$expr = $this->create_runtime_call('\implode', [$this->get_br_string_expr(), $expr]);
+			$expr = $this->create_native_call('\implode', [$this->get_br_string_expr(), $expr]);
 			$code = $this->render_subexpression($expr, OperatorFactory::$concat);
 		}
 		else {
@@ -1090,12 +1090,12 @@ class PHPCoder extends BaseCoder
 			$args[] = $dynamic_expr;
 		}
 
-		return $this->create_runtime_call('\_build_attributes', $args);
+		return $this->create_native_call('\_build_attributes', $args);
 	}
 
-	private function create_runtime_call(string $fn, array $args)
+	private function create_native_call(string $fn, array $args)
 	{
-		$callee = new RuntimeIdentifier($fn);
+		$callee = new NativeIdentifier($fn);
 		return new CallExpression($callee, $args);
 	}
 
@@ -1113,6 +1113,9 @@ class PHPCoder extends BaseCoder
 	private function is_safe_xtag_interpolated(InterpolatedString $node) {
 		$safe = true;
 		foreach ($node->items as $item) {
+			if (is_object($item) and $item->expressed_type === null) {
+				dump($node);exit;
+			}
 			if (is_object($item) and !TypeHelper::is_pure_type($item->expressed_type)) {
 				$safe = false;
 				break;
@@ -1160,7 +1163,7 @@ class PHPCoder extends BaseCoder
 	private function get_normalized_name_with_declaration(IDeclaration $node)
 	{
 		$name = $node->origin_name ?? $node->name;
-		return $node->is_runtime ? $name : $this->get_normalized_name($name);
+		return $node->is_extern ? $name : $this->get_normalized_name($name);
 	}
 
 	public function render_accessing_identifier(AccessingIdentifier $node)
@@ -1441,7 +1444,7 @@ class PHPCoder extends BaseCoder
 		return $name;
 	}
 
-	public function render_runtime_identifier(RuntimeIdentifier $node)
+	public function render_native_identifier(NativeIdentifier $node)
 	{
 		return $node->name;
 	}
@@ -1927,27 +1930,29 @@ class PHPCoder extends BaseCoder
 
 	public function render_none_coalescing_operation(NoneCoalescingOperation $node)
 	{
-		$expr = end($node->items)->render($this);
-		for ($i = count($node->items) - 2; $i >= 0; $i--) {
-			$item = $node->items[$i];
-			$left = $item->render($this);
+		$right_expr = $node->right;
+		$right_code = $right_expr->render($this);
 
-			if ($item instanceof AsOperation) {
-				$test = $item->left->render($this);
-				$expr = sprintf("isset(%s) ? %s : %s", $test, $left, $expr ?? static::VAL_NONE);
-				if ($i !== 0) {
-					$expr = "($expr)";
-				}
-			}
-			elseif ($expr !== null) {
-				$expr = "$left ?? $expr";
-			}
-			else {
-				$expr = $item instanceof MultiOperation ? "($left)" : $left;
-			}
+		if ($right_code === null) {
+			dump($node);
+			exit;
 		}
 
-		return $expr;
+		if ($right_expr instanceof NoneCoalescingOperation && $right_expr->left instanceof AsOperation) {
+			$right_code = "($right_code)";
+		}
+
+		$left_expr = $node->left;
+		$left_code = $left_expr->render($this);
+		if ($left_expr instanceof AsOperation) {
+			$test = $left_expr->left->render($this);
+			$code = sprintf("isset(%s) ? %s : %s", $test, $left_code, $right_code);
+		}
+		else {
+			$code = "$left_code ?? $right_code";
+		}
+
+		return $code;
 	}
 
 	public function render_break_statement(Node $node)

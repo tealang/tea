@@ -13,8 +13,17 @@ const PURPOSE_OUT = 2;
 // const PURPOSE_INOUT = PURPOSE_IN | PURPOSE_OUT;
 const PURPOSE_ACCESSING = 4;
 const PURPOSE_INVOKING = 8;
+const PURPOSE_INSTANCING = 16;
 const PURPOSE_ACCESSING_OR_INVOKING = PURPOSE_ACCESSING | PURPOSE_INVOKING;
-// const PURPOSE_MAYBE_REFERING = 16;
+// const PURPOSE_MAYBE_REFERING = 32;
+
+const PURPOSE_NAMES = [
+	PURPOSE_IN => 'in',
+	PURPOSE_OUT => 'out',
+	PURPOSE_ACCESSING => 'accessing',
+	PURPOSE_INVOKING => 'invoking',
+	PURPOSE_INSTANCING => 'instancing',
+];
 
 abstract class BaseExpression extends Node
 {
@@ -40,6 +49,11 @@ abstract class BaseExpression extends Node
 		return $this->purpose_flags & PURPOSE_INVOKING;
 	}
 
+	public function is_instancing()
+	{
+		return $this->purpose_flags & PURPOSE_INSTANCING;
+	}
+
 	public function is_accessing_or_invoking()
 	{
 		return $this->purpose_flags & PURPOSE_ACCESSING_OR_INVOKING;
@@ -54,6 +68,18 @@ abstract class BaseExpression extends Node
 	public function set_purpose(int $flags)
 	{
 		$this->purpose_flags |= $flags;
+	}
+
+	public function get_purpose_names()
+	{
+		$items = [];
+		foreach (PURPOSE_NAMES as $id => $name) {
+			if ($this->purpose_flags & $id) {
+				$items[] = $name;
+			}
+		}
+
+		return $items;
 	}
 }
 

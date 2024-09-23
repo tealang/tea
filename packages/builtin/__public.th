@@ -2,195 +2,57 @@
 
 namespace tea\builtin
 
-runtime const __DIR__ String
-runtime const __FILE__ String
-runtime const __LINE__ UInt
-runtime const __CLASS__ UInt
-runtime const __FUNCTION__ UInt
-runtime const PHP_INT_MIN Int
-runtime const PHP_INT_MAX UInt
-runtime const INPUT_GET Int
-runtime const INPUT_POST Int
-runtime const INPUT_COOKIE Int
-runtime const INPUT_ENV Int
-runtime const INPUT_SERVER Int
-runtime const FILTER_INT Int
-runtime const FILTER_EMAIL Int
-runtime const FILE_APPEND Int
-runtime const LOCK_EX Int
-runtime const JSON_UNESCAPED_UNICODE Int
-runtime const JSON_PRETTY_PRINT Int
-runtime const ENT_QUOTES Int
-runtime const PREG_SPLIT_DELIM_CAPTURE Int
+extern const INPUT_GET Int
+extern const INPUT_POST Int
+extern const INPUT_COOKIE Int
+extern const INPUT_ENV Int
+extern const INPUT_SERVER Int
+extern const FILTER_INT Int
+extern const FILTER_EMAIL Int
+extern const __DIR__ String
+extern const __FILE__ String
+extern const __LINE__ UInt
+extern const __CLASS__ UInt
+extern const __FUNCTION__ UInt
+extern const PHP_INT_MIN Int
+extern const PHP_INT_MAX UInt
+extern const FILE_APPEND Int
+extern const LOCK_EX Int
+extern const JSON_UNESCAPED_UNICODE Int
+extern const JSON_PRETTY_PRINT Int
+extern const ENT_QUOTES Int
+extern const PREG_SPLIT_DELIM_CAPTURE Int
 public const LF #String
 
-runtime func isset(expr Any) Bool
+extern func filter_input(type Int, key String, filter Int = #default, options Dict = #default) String?
 
-runtime func is_int(val #Any) Bool
+extern func isset(expr Any) Bool
 
-runtime func is_array(val #Any) Bool
+extern func is_int(val) Bool
 
-runtime func is_numeric(val #Any) Bool
+extern func is_array(val) Bool
 
-runtime func exit(status Int|String)
+extern func is_numeric(val) Bool
 
-runtime func empty(expr Any) Bool
+extern func exit(status Int|String)
 
-runtime func var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default) #Void
+extern func empty(expr Any) Bool
 
-runtime func print(expr #Any) Int
+extern func var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default) #Void
 
-runtime func print_r(expr #Any, is_return Bool = #default) #Void
+extern func print(expr) Int
 
-runtime func header(info String, replace #Bool = true, http_response_code Int = #default) #Void
+extern func print_r(expr, is_return Bool = #default) #Void
 
-runtime func time() Int
+extern func header(info String, replace #Bool = true, http_response_code Int = #default) #Void
 
-runtime func date(format String, timestamp Int = #default) String
+extern func time() Int
 
-runtime func strtotime(datetime #Any, now Int = #default) Int
+extern func date(format String, timestamp Int = #default) String
 
-runtime func str_repeat(input #Any, multiplier Int) String
+extern func strtotime(datetime, now Int = #default) Int
 
-runtime func filter_input(type Int, key String, filter Int = #default, options Dict = #default) String?
-
-runtime class Exception {
-	public construct(message String, code Int = 0) #Void
-	public getCode() Int
-	public getMessage() String
-}
-
-runtime class ErrorException: Exception {
-	// no any
-}
-
-runtime class LogicException: Exception {
-	// no any
-}
-
-runtime func file_exists(filename #Any) Bool
-
-runtime func dirname(path #Any, levels UInt = #default) String
-
-runtime func basename(path #Any, suffix String = #default) String
-
-runtime func realpath(path #Any) String
-
-runtime func chdir(dir #Any) Bool
-
-runtime func unlink(file #Any) Bool
-
-runtime func file_get_contents(file #Any) String
-
-runtime func file_put_contents(file #Any, data String, flags Int = #default) UInt
-
-runtime func pow(num #Any, exponent #Any) UInt|Int|Float
-
-runtime func max(n1 #Any, n2 #Any = #default, n3 #Any = #default) Int|UInt|Float
-
-runtime func min(n1 #Any, n2 #Any = #default, n3 #Any = #default) Int|UInt|Float
-
-runtime func abs as int_abs(val #Any) UInt
-
-runtime func abs(val #Any) Float
-
-runtime func round(val #Any, precision #Int = 0) Float
-
-runtime func ceil(val #Any) Int
-
-runtime func floor(val #Any) Int
-
-runtime func trim(it String, characters String = #default) String
-
-runtime func rtrim(it String, characters String = #default) String
-
-runtime func ltrim(it String, characters String = #default) String
-
-runtime func mb_strlen(it String) UInt
-
-runtime func mb_substr(it String, start Int, length Int = #default) String
-
-runtime func mb_strpos(it String, search String, offset Int = 0) UInt
-
-runtime func mb_strrpos(it String, search String, offset Int = 0) UInt
-
-runtime func mb_strtoupper(it String) String
-
-runtime func mb_strtolower(it String) String
-
-runtime func strlen(it #Any) UInt
-
-runtime func substr(it #Any, start Int, length Int = #default) String
-
-runtime func str_contains(it #Any, search #Any) Bool
-
-runtime func strpos(it #Any, search #Any, offset Int = 0) UInt
-
-runtime func strrpos(it #Any, search #Any, offset Int = 0) UInt
-
-runtime func strtoupper(it #Any) String
-
-runtime func strtolower(it #Any) String
-
-runtime func strtr(it String, from_chars_or_pairs String|Dict, to_chars String? = #default) String
-
-runtime func str_replace(search #Any, replacement #Any, it String) String
-
-runtime func implode(glue String, pieces #Any) String
-
-runtime func explode(delimiter String, it String) String.Array
-
-runtime func count(array #Any) UInt
-
-runtime func in_array(needle #Any, haystack #Any, strict Bool = false) Bool
-
-runtime func array_reverse(array #Any) Array
-
-runtime func array_map(callback (item #Any) Any, items0 Array, items1 Array? = #default) Array
-
-runtime func array_filter(items Array, callback (item #Any) Any, flag Int = #default) Array
-
-runtime func array_reduce(items Array, callback (carry #Any, item #Any) Any, initial Any = #default) Any
-
-runtime func array_slice(it Array, offset Int, length UInt = none) Array
-
-runtime func array_unshift(it Array, item Any) UInt
-
-runtime func array_shift(it Array) Any
-
-runtime func array_push(it Array, item Any) UInt
-
-runtime func array_pop(it Array) Any
-
-runtime func array_search as list_search(search #Any, it #Any, strict #Bool = false) UInt|Bool
-
-runtime func array_search as dict_search(search #Any, it #Any, strict #Bool = false) String|Int|Bool
-
-runtime func array_key_exists(key #Any, arr #Any) Bool
-
-runtime func array_keys(it #Any) String.Array
-
-runtime func array_values(it #Any) Array
-
-runtime func array_column(recordset Array|Dict, key_or_val_col String, val_col String = #default) Array
-
-runtime func array_replace as dict_replace(it Dict, replacement Dict) Dict
-
-runtime func json_encode(data #Any, flags Int = 0, depth UInt = 512) String
-
-runtime func json_decode(data #Any, assoc Bool = false, depth UInt = 512, flags Int = 0) Any
-
-runtime func htmlspecialchars(string String, flags Int = #default, encoding String = #default, double_encode #Any = #default) String
-
-runtime func htmlspecialchars_decode(string String, flags Int = #default) String
-
-runtime func preg_match(regex Regex, subject String, matches inout Array? = #default, flags Int = #default, offset Int = #default) Bool
-
-runtime func preg_match_all(regex Regex, subject String, matches inout Array? = #default, flags Int = #default, offset Int = #default) Bool
-
-runtime func preg_split(regex Regex, subject String, limit Int = #default, flags Int = #default) String.Array
-
-runtime interface Iterator {
+extern interface Iterator {
 	current() Any
 	key() Int|String
 	next() #Void
@@ -198,29 +60,202 @@ runtime interface Iterator {
 	valid() Bool
 }
 
-runtime interface ArrayAccess {
+extern interface ArrayAccess {
+	offsetExists(offset Any) Bool
+	offsetGet(offset Any) Any
+	offsetSet(offset Any, value Any) #Void
+	offsetUnset(offset Any) #Void
+}
+
+extern interface Stringable {
+	public __toString() String
+}
+
+extern class stdClass {
 	// no any
 }
 
-runtime class PDO {
+extern interface Throwable: Stringable {
+	public getMessage() String
+	public getPrevious() Throwable
+	public getCode() Int
+	public getFile() String
+	public getLine() Int
+	public getTrace() Array
+	public getTraceAsString() String
+}
+
+extern class Exception: Throwable {
+	public construct(message String, code Int = 0, previous Throwable = none) #Void
+}
+
+extern class ErrorException: Exception {
+	// no any
+}
+
+extern class LogicException: Exception {
+	// no any
+}
+
+extern class RuntimeException: Exception {
+	// no any
+}
+
+extern func file_exists(filename) Bool
+
+extern func dirname(path, levels UInt = #default) String
+
+extern func basename(path, suffix String = #default) String
+
+extern func realpath(path) String
+
+extern func chdir(dir) Bool
+
+extern func unlink(file) Bool
+
+extern func file_get_contents(file) String
+
+extern func file_put_contents(file, data String, flags Int = #default) UInt
+
+extern func pow(num, exponent) UInt|Int|Float
+
+extern func max(n1, n2 #Any = #default, n3 #Any = #default) Int|UInt|Float
+
+extern func min(n1, n2 #Any = #default, n3 #Any = #default) Int|UInt|Float
+
+extern func abs as int_abs(val) UInt
+
+extern func abs(val) Float
+
+extern func round(val, precision #UInt = 0) Float
+
+extern func ceil(val) Int
+
+extern func floor(val) Int
+
+extern func trim(it String, characters String = #default) String
+
+extern func rtrim(it String, characters String = #default) String
+
+extern func ltrim(it String, characters String = #default) String
+
+extern func mb_strlen(it String) UInt
+
+extern func mb_substr(it String, start Int, length Int = #default) String
+
+extern func mb_strpos(it String, search String, offset Int = 0) UInt
+
+extern func mb_strrpos(it String, search String, offset Int = 0) UInt
+
+extern func mb_strtoupper(it String) String
+
+extern func mb_strtolower(it String) String
+
+extern func strlen(it) UInt
+
+extern func substr(it, start Int, length Int = #default) String
+
+extern func str_contains(it, search) Bool
+
+extern func strpos(it, search, offset Int = 0) UInt
+
+extern func strrpos(it, search, offset Int = 0) UInt
+
+extern func strtoupper(it) String
+
+extern func strtolower(it) String
+
+extern func strtr(it String, from_chars_or_pairs String|Dict, to_chars String? = #default) String
+
+extern func str_replace(search, replacement, it String) String
+
+extern func implode(glue String, pieces) String
+
+extern func explode(delimiter String, it String) String.Array
+
+extern func str_repeat(input, multiplier Int) String
+
+extern func count(array) UInt
+
+extern func in_array(needle, haystack, strict Bool = false) Bool
+
+extern func array_reverse(array) Array
+
+extern func array_map(callback (item) Any, items0 Array, items1 Array? = #default) Array
+
+extern func array_filter(items Array, callback (item) Any = #default, mode Int = #default) Array
+
+extern func array_reduce(items Array, callback (carry, item) Any, initial Any = #default) Any
+
+extern func array_slice(it Array, offset Int, length UInt = none) Array
+
+extern func array_unshift(it Array, item Any) UInt
+
+extern func array_shift(it Array) Any
+
+extern func array_push(it Array, item Any) UInt
+
+extern func array_pop(it Array) Any
+
+extern func array_search as list_search(search, it, strict #Bool = false) UInt|Bool
+
+extern func array_search as dict_search(search, it, strict #Bool = false) String|Int|Bool
+
+extern func array_key_exists(key, arr) Bool
+
+extern func array_keys(it) String.Array
+
+extern func array_values(it) Array
+
+extern func array_column(recordset Array|Dict, key_or_val_col String, val_col String = #default) Array
+
+extern func array_replace as dict_replace(it Dict, replacement Dict) Dict
+
+extern func json_encode(data, flags Int = 0, depth UInt = 512) String
+
+extern func json_decode(data, assoc Bool = false, depth UInt = 512, flags Int = 0) Any
+
+extern func htmlspecialchars(string String, flags Int = #default, encoding String = #default, double_encode #Any = #default) String
+
+extern func htmlspecialchars_decode(string String, flags Int = #default) String
+
+extern func preg_match(regex Regex, subject String, matches inout Array? = #default, flags Int = #default, offset Int = #default) Bool
+
+extern func preg_match_all(regex Regex, subject String, matches inout Array? = #default, flags Int = #default, offset Int = #default) Bool
+
+extern func preg_split(regex Regex, subject String, limit Int = #default, flags Int = #default) String.Array
+
+extern class PDO {
 	internal const FETCH_ASSOC Int
 	internal const FETCH_COLUMN Int
 	construct(dsn String, username String = #default, passwd String = #default, options Dict = #default) #Void
 	exec(statement String) Int
-	query(statement String) PDOStatement
+	query(statement String, fetchMode Int? = #default) PDOStatement
 	quote(string String, parameter_type Int = #default) String
 	lastInsertId(name String = #default) String
 	getAttribute(attribute Int) Any
+
+	beginTransaction() Bool
+	commit() Bool
+	rollback() Bool
+	inTransaction() Bool
+
 	errorCode() String
 	errorInfo() Array
 }
 
-runtime class PDOStatement {
-	fetch(fetch_style Int = #default) String.Dict
-	fetchAll(fetch_style Int = #default) String.Dict.Array
+extern class PDOStatement {
+	fetch(mode Int = #default) String.Dict
+	fetchAll(mode Int = #default, column_or_class_or_func Int|String|Callable = #default) String.Dict.Array
+	fetchColumn(column UInt = 0) Any
+	fetchObject(class MetaType = #default, constructorArgs Array = #default) Object|Bool
 }
 
-public func is_uint(val #Any) Bool
+extern class PDOException: RuntimeException {
+	public errorInfo Array?
+}
+
+public func is_uint(val) Bool
 
 public func uint_ensure(num Int) #Int
 
@@ -250,7 +285,7 @@ public type Any {
 
 public func _std_split(it String, separator String) #String.Array
 
-public func _std_replace(it String, search #Any, replacement #Any) #String
+public func _std_replace(it String, search, replacement) #String
 
 public type Bytes {
 	masked length #UInt
@@ -279,7 +314,7 @@ public type String {
 
 	masked split(separator String) #String.Array
 
-	masked replace(search #Any, replacement #Any) #String
+	masked replace(search, replacement) #String
 
 	masked trim(characters String = #default) #String
 
@@ -307,7 +342,7 @@ public type Float {
 
 	masked floor() #Int
 
-	masked round(precision #Int = 0) #Float
+	masked round(precision #UInt = 0) #Float
 }
 
 public type Bool {
@@ -316,9 +351,9 @@ public type Bool {
 
 public func _has(it Array|Dict, key String|Int) #Bool
 
-public func _vals_contains(it Array|Dict, val #Any, strict Bool = false) #Bool
+public func _vals_contains(it Array|Dict, val, strict Bool = false) #Bool
 
-public func _array_find(it Array, val #Any) #UInt|Bool
+public func _array_find(it Array, val) #UInt|Bool
 
 public func _std_array_map(it Array, callback (item Any) Any) #Array
 
@@ -329,9 +364,9 @@ public type Array {
 
 	masked has(key Int) #Bool
 
-	masked contains(val #Any) #Bool
+	masked contains(val) #Bool
 
-	masked find(val #Any) #UInt|Bool
+	masked find(val) #UInt|Bool
 
 	masked join(separator String = LF) #String
 
@@ -339,22 +374,22 @@ public type Array {
 
 	masked reversed() #Array
 
-	masked unshift(item #Any) #UInt
+	masked unshift(item) #UInt
 
 	masked shift() #Any
 
-	masked push(item #Any) #UInt
+	masked push(item) #UInt
 
 	masked pop() #Any
 
-	masked map(callback (item #Any) Any) #Array
+	masked map(callback (item) Any) #Array
 
-	masked filter(callback (item #Any) Any) #Array
+	masked filter(callback (item) Any) #Array
 
-	masked reduce(callback (carry #Any, item #Any) Any, initial Any = #default) #Any
+	masked reduce(callback (carry, item) Any, initial Any = #default) #Any
 }
 
-public func _dict_find(it Dict, val #Any) #String|Int|Bool
+public func _dict_find(it Dict, val) #String|Int|Bool
 
 public func _dict_get(it Dict, key String|Int) #Any
 
@@ -363,9 +398,9 @@ public type Dict {
 
 	masked has(key String) #Bool
 
-	masked contains(val #Any) #Bool
+	masked contains(val) #Bool
 
-	masked find(val #Any) #String|Int|Bool
+	masked find(val) #String|Int|Bool
 
 	masked join(separator String = LF) #String
 
@@ -398,7 +433,7 @@ public type Regex {
 	masked capture_all(string String) #String.Array.Array?
 }
 
-public func _build_attributes(items Dict, additions Dict = none) String
+public func _build_attributes(items Dict, additions Dict? = none) String
 
 public type XView {
 	// no any

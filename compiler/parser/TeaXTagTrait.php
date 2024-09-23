@@ -294,7 +294,7 @@ trait TeaXTagTrait
 					$this->xtag_append_expr($xtag, $expr, $is_newline, $indents);
 					break;
 
-				case _DOLLAR:
+				case _DOLLAR_BRACE_OPEN:
 					$expr = $this->scan_normal_interpolation();
 					if ($expr === null) {
 						$text .= $token;

@@ -9,12 +9,14 @@ namespace Tea;
 
 class OPID
 {
-	const NEW = 1;
-	const CLONE = 2;
+	const SCOPE_RESOLUTION = 1; // static member accessing
+	const MEMBER_ACCESSING = 2;  // $xxx->some
+	const NULLSAFE_MEMBER_ACCESSING = 3; // xxx::some
+	const KEY_ACCESSING = 4; // xxx[...]
 
-	const STATIC_ACCESSING = 5; // static member accessing
-	const MEMBER_ACCESSING = 6;
-	const NULLSAFE_MEMBER_ACCESSING = 7;
+	const NEW = 5;
+	const CALL = 6; // xxx(...)
+	const CLONE = 7;
 
 	const REFERENCE = 20;
 	const IDENTITY = 21;  		// conversion of string to int/float, eg. +"123" to 123

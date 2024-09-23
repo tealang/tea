@@ -211,8 +211,8 @@ public type Regex {
 }
 
 // use for processing XView
-public _build_attributes(items Dict, additions Dict = none) String {
-	if additions !== none {
+public _build_attributes(items Dict, additions Dict? = none) String {
+	if additions is not None {
 		items = items.replace(additions)
 	}
 
@@ -222,7 +222,7 @@ public _build_attributes(items Dict, additions Dict = none) String {
 			continue
 		}
 
-		list[] = val === true ? key : '$key="${htmlspecialchars(val#String)}"'
+		list[] = val === true ? key : '${key}="${htmlspecialchars(val#String)}"'
 	}
 
 	return implode(' ', list)

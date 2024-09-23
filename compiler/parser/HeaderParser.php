@@ -35,8 +35,8 @@ class HeaderParser extends TeaParser
 			$this->skip_current_line();
 			return $this->read_root_statement($leading_br, $doc);
 		}
-		elseif ($token === _RUNTIME) {
-			$node = $this->read_runtime_declaration();
+		elseif ($token === _EXTERN) {
+			$node = $this->read_extern_declaration();
 		}
 		elseif (TeaHelper::is_modifier($token)) {
 			$node = $this->read_header_declaration_with_modifier($token);
@@ -155,7 +155,7 @@ class HeaderParser extends TeaParser
 
 // ---
 
-	protected function read_runtime_declaration()
+	protected function read_extern_declaration()
 	{
 		$modifier = _PUBLIC;
 		$token = $this->scan_token_ignore_space();
@@ -189,7 +189,7 @@ class HeaderParser extends TeaParser
 				break;
 			case _VAR:
 				$origin_name = null;
-				$name = $this->expect_identifier_token_ignore_space();
+				$name = $this->expect_super_variable_name_token_ignore_space();
 				$decl = $this->read_super_var_declaration($name);
 				break;
 			default:
@@ -197,7 +197,14 @@ class HeaderParser extends TeaParser
 		}
 
 		$decl->origin_name = $origin_name;
-		$decl->is_runtime = true;
+		$decl->is_extern = true;
+
+		if ($decl instanceof ClassKindredDeclaration) {
+			$flags = _CLASS_FLAG_MAP[$name] ?? null;
+			if ($flags !== null) {
+				$decl->unite_feature_flags($flags);
+			}
+		}
 
 		return $decl;
 	}

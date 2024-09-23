@@ -11,6 +11,8 @@ class PHPChecker extends ASTChecker
 {
 	const NS_SEPARATOR = PHPParser::NS_SEPARATOR;
 
+	const DYNAMIC_CLASS_NAMES = [_TYPE_SELF, _ANY, _STRING];
+
 	protected $is_weakly_checking = true;
 
 }

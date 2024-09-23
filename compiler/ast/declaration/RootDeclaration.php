@@ -26,7 +26,7 @@ abstract class RootDeclaration extends Node implements IRootDeclaration, IStatem
 
 	public function is_root_namespace()
 	{
-		return $this->program->unit === null || $this->is_runtime;
+		return $this->program->unit === null || $this->is_extern;
 	}
 }
 

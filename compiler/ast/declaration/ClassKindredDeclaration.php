@@ -9,14 +9,22 @@ namespace Tea;
 
 enum ClassFeature: int
 {
-	case PROPERTIES = 1;
-	case MAGIC_GET = 2;
-	case MAGIC_SET = 4;
-	case MAGIC_ISSET = 8;
-	case MAGIC_UNSET = 16;
-	case MAGIC_CALL = 32;
-	case MAGIC_CALL_STATIC = 64;
+	case ITERATOR = 0x1;
+	case ARRAY_ACCESS = 0x2;
+	case DYNAMIC_PROPERTIES = 0x4;
+	case MAGIC_GET = 0x100;
+	case MAGIC_SET = 0x200;
+	case MAGIC_ISSET = 0x400;
+	case MAGIC_UNSET = 0x800;
+	case MAGIC_CALL = 0x1000;
+	case MAGIC_CALL_STATIC = 0x2000;
 }
+
+const _CLASS_FLAG_MAP = [
+	'Iterator' => ClassFeature::ITERATOR->value,
+	'ArrayAccess' => ClassFeature::ARRAY_ACCESS->value,
+	'stdClass' => ClassFeature::DYNAMIC_PROPERTIES->value,
+];
 
 abstract class ClassKindredDeclaration extends RootDeclaration
 {
@@ -72,6 +80,8 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 
 	public $feature_flags = 0;
 
+	public $is_linked;
+
 	public function __construct(?string $modifier, $name)
 	{
 		$this->modifier = $modifier;
@@ -93,12 +103,6 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 		return $this->feature_flags & $feature->value;
 	}
 
-	public function is_dynamic(bool $is_weak)
-	{
-		return $this->is_virtual
-			|| ($is_weak && ($this->name === _TYPE_SELF || $this instanceof TraitDeclaration));
-	}
-
 	public function set_extends(array $identifiers)
 	{
 		$this->extends = $identifiers;
@@ -106,7 +110,7 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 
 	public function set_implements(array $identifiers)
 	{
-		$this->extends = $identifiers;
+		$this->implements = $identifiers;
 	}
 
 	public function append_trait_using(TraitsUsingStatement $using)

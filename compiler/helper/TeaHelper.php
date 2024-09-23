@@ -88,8 +88,13 @@ class TeaHelper
 
 	public static function is_normal_variable_name(?string $token)
 	{
-		return (preg_match('/^_{0,2}[a-z][a-z0-9_]*$/', $token)
+		return (preg_match('/^_{0,2}[a-z][a-z0-9_]*$/i', $token)
 			&& !self::is_reserved($token)) || $token === '_';
+	}
+
+	public static function is_super_variable_name(?string $token)
+	{
+		return preg_match('/^\$_{0,2}[a-z][a-z0-9_]*$/i', $token);
 	}
 
 	public static function is_normal_constant_name(?string $token)

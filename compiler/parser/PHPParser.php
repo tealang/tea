@@ -83,9 +83,9 @@ class PHPParser extends BaseParser
 
 		while ($this->pos < $max_pos) {
 			$item = $this->read_root_statement();
-			if ($item instanceof IRootDeclaration) {
-				$this->program->append_declaration($item);
-			}
+			// if ($item instanceof IRootDeclaration) {
+			// 	$this->program->append_declaration($item);
+			// }
 		}
 
 		$this->factory->end_program();
@@ -671,9 +671,9 @@ class PHPParser extends BaseParser
 			$this->read_body_for_control_block($sub_block);
 			$main_block->add_catching_block($sub_block);
 
-			if ($type->name === _BASE_EXCEPTION && $type->ns?->is_global_space()) {
-				$main_block->catching_all = $sub_block;
-			}
+			// if ($type->name === _BASE_EXCEPTION && $type->ns?->is_global_space()) {
+			// 	$main_block->catching_all = $sub_block;
+			// }
 
 			// another except block
 			$this->read_catching_block_for($main_block);
@@ -1020,13 +1020,27 @@ class PHPParser extends BaseParser
 
 	protected function read_instancing_expression()
 	{
-		$token = $this->read_expr_token_ignore_empty();
-		$identifiable = $this->scan_identifiable_expression_with_token($token, true);
-		if ($identifiable === null) {
-			throw $this->new_unexpected_error();
+		// $token = $this->read_expr_token_ignore_empty();
+		// $identifiable = $this->scan_identifiable_expression_with_token($token, true);
+		// if ($identifiable === null) {
+		// 	throw $this->new_unexpected_error();
+		// }
+
+		// $args = $this->scan_instancing_arguments();
+
+		$identifiable = $this->read_expression(OperatorFactory::$new);
+		if ($identifiable instanceof CallExpression) {
+			$args = $identifiable->arguments;
+			$identifiable = $identifiable->callee;
+		}
+		else {
+			$args = [];
 		}
 
-		$args = $this->scan_instancing_arguments();
+		if ($identifiable instanceof PlainIdentifier && $identifiable->name === _THIS) {
+			$identifiable = $this->create_classkindred_identifier(_TYPE_SELF);
+		}
+
 		$expr = new InstancingExpression($identifiable, $args);
 		$expr->pos = $this->pos;
 		return $expr;
@@ -1282,14 +1296,16 @@ class PHPParser extends BaseParser
 		$token = $this->scan_token_ignore_empty();
 		$type = $token[0];
 		switch ($type) {
-			case T_STRING:
-			case T_CLASS:
+			case T_VARIABLE:
+				$name = $this->get_property_name($token);
+				break;
 			case T_PRINT:
+			case T_STRING:
 				$name = $token[1];
 				// $name = static::METHOD_MAP[$name] ?? $name;
 				break;
-			case T_VARIABLE:
-				$name = $this->get_property_name($token);
+			case T_CLASS:
+				$name = strtolower($token[1]);
 				break;
 			default:
 				throw $this->new_unexpected_error();
@@ -1978,7 +1994,7 @@ class PHPParser extends BaseParser
 
 	private function read_type_expression_with_token(string|array $token)
 	{
-		$nullable = $token === _INVALIDABLE_SIGN;
+		$nullable = $token === _QUESTION;
 		if ($nullable) {
 			$token = $this->expect_typed_token_ignore_empty();
 		}
@@ -2127,7 +2143,7 @@ class PHPParser extends BaseParser
 		if ($following_comment !== null) {
 			// trim '/*' and '*/'
 			$name = substr($following_comment, 2, -2);
-			$nullable = str_ends_with($name, _INVALIDABLE_SIGN);
+			$nullable = str_ends_with($name, _QUESTION);
 			if ($nullable) {
 				$name = substr($name, 0, -1);
 			}

@@ -36,12 +36,6 @@ class ASTFactory
 	 */
 	private $class;
 
-	// /**
-	//  * current function or method
-	//  * @var IFunctionDeclaration
-	//  */
-	// private $function;
-
 	/**
 	 * current function or closure
 	 * @var IScopeBlock
@@ -209,7 +203,6 @@ class ASTFactory
 				if ($this->class) {
 					// function/const/property declaration
 					$decl = $this->declaration;
-					// $decl = $this->function ?? $this->declaration;
 					$identifier->symbol = $decl->is_static
 						? $this->class->this_class_symbol
 						: $this->class->this_object_symbol;
@@ -226,7 +219,7 @@ class ASTFactory
 				}
 				break;
 			case _VAL_NONE:
-				$identifier = $this->create_none_identifier();
+				$identifier = new LiteralNone();
 				break;
 			case _VAL_TRUE:
 				$identifier = new LiteralBoolean(true);
@@ -234,10 +227,10 @@ class ASTFactory
 			case _VAL_FALSE:
 				$identifier = new LiteralBoolean(false);
 				break;
-			case _UNIT_PATH:
-				$identifier = new ConstantIdentifier(_UNIT_PATH);
-				$identifier->symbol = $this->unit_path_symbol;
-				break;
+			// case _UNIT_PATH:
+			// 	$identifier = new ConstantIdentifier(_UNIT_PATH);
+			// 	$identifier->symbol = $this->unit_path_symbol;
+			// 	break;
 			default:
 				throw $this->parser->new_parse_error("Unknow builtin identifier '$token'");
 		}
@@ -249,11 +242,6 @@ class ASTFactory
 	{
 		$ns = new NamespaceIdentifier($names);
 		return $ns;
-	}
-
-	public function create_none_identifier()
-	{
-		return new LiteralNone();
 	}
 
 	// public function create_include_expression(string $target)
@@ -372,6 +360,7 @@ class ASTFactory
 		// }
 
 		$decl = new VariableDeclaration($identifier->name, null, $value);
+		$decl->is_virtual = true;
 		$decl->block = $this->block;
 
 		// link to symbol
@@ -437,11 +426,18 @@ class ASTFactory
 		return [$decl, $symbol];
 	}
 
-	public function create_virtual_class(string $name = '__object_class', Program $program = null)
+	// private function switch_program(Program $program)
+	// {
+	// 	$temp = $this->program;
+	// 	$this->program = $program;
+	// 	return $temp;
+	// }
+
+	public function create_virtual_class(string $name, Program $program = null)
 	{
 		// $program and $program = $this->switch_program($program);
 
-		$decl = new ClassDeclaration(null, $name);
+		$decl = new ClassDeclaration(null, 'Object');
 		$decl->is_virtual = true;
 
 		// $symbol = $this->create_symbol_for_top_declaration($decl, null);
@@ -452,13 +448,6 @@ class ASTFactory
 		// $program and $program = $this->switch_program($program);
 
 		return [$decl, $symbol];
-	}
-
-	private function switch_program(Program $program)
-	{
-		$temp = $this->program;
-		$this->program = $program;
-		return $temp;
 	}
 
 	public function create_virtual_method(string $name, ClassKindredDeclaration $class)
@@ -479,6 +468,22 @@ class ASTFactory
 		$decl = new PropertyDeclaration(null, $name, TypeFactory::$_any);
 		$decl->is_virtual = true;
 		$decl->infered_type = TypeFactory::$_any;
+
+		$symbol = new Symbol($decl);
+		$class->append_member_symbol($symbol);
+
+		return [$decl, $symbol];
+	}
+
+	public function create_virtual_class_constant(string $name, ?IType $type, ClassKindredDeclaration $class)
+	{
+		if ($type === null) {
+			$type = TypeFactory::$_any;
+		}
+
+		$decl = new ClassConstantDeclaration(null, $name, $type);
+		$decl->is_virtual = true;
+		$decl->infered_type = $type;
 
 		$symbol = new Symbol($decl);
 		$class->append_member_symbol($symbol);
@@ -961,9 +966,12 @@ class ASTFactory
 			}
 		}
 		elseif ($node instanceof TryBlock) {
-			if ($node->catching_all) {
-				$symbols = $this->intersect_symbols_with_blocks($node, [$node->catching_all]);
-			}
+			// if ($node->catching_all) {
+			// 	$symbols = $this->intersect_symbols_with_blocks($node, [$node->catching_all]);
+			// }
+
+			// if some exceptions do not be catched, it would be throws
+			$symbols = $this->intersect_symbols_with_blocks($node, $node->catchings);
 
 			if ($node->finally) {
 				$symbols += $node->finally->symbols;
@@ -1000,7 +1008,6 @@ class ASTFactory
 		$this->program = null;
 		$this->declaration = null;
 		$this->block = null;
-		// $this->function = null;
 		$this->scope = null;
 	}
 
@@ -1009,8 +1016,9 @@ class ASTFactory
 		$this->class = $decl;
 		$this->declaration = $decl;
 		$this->block = null;
-		// $this->function = null;
 		$this->scope = null;
+
+		$this->program->append_declaration($decl);
 	}
 
 	public function end_class()
@@ -1028,7 +1036,6 @@ class ASTFactory
 
 		// if ($member instanceof MethodDeclaration) {
 			$this->scope = $member;
-			// $this->function = $member;
 		// }
 
 		$this->block = $member;
@@ -1041,7 +1048,6 @@ class ASTFactory
 
 		$this->declaration = $this->class;
 		$this->scope = null;
-		// $this->function = null;
 	}
 
 	public function begin_root_declaration(IRootDeclaration $decl)
@@ -1051,8 +1057,9 @@ class ASTFactory
 		if ($decl instanceof FunctionDeclaration) {
 			$this->block = $decl;
 			$this->scope = $decl;
-			// $this->function = $decl;
 		}
+
+		$this->program->append_declaration($decl);
 	}
 
 	public function end_root_declaration()
@@ -1063,7 +1070,6 @@ class ASTFactory
 	private function switch_to_initializer()
 	{
 		$this->declaration = $this->scope = $this->block = $this->program->initializer;
-		// $this->function = $this->declaration;
 	}
 
 	public function begin_block(IBlock $block)
@@ -1108,22 +1114,22 @@ class ASTFactory
 		}
 	}
 
-	// use for include expression
-	private function collect_created_symbols_in_current_function()
-	{
-		$block = $this->block;
-		$symbols = $block->symbols;
+	// // use for include expression
+	// private function collect_created_symbols_in_current_function()
+	// {
+	// 	$block = $this->block;
+	// 	$symbols = $block->symbols;
 
-		while (($block = $block->belong_block) && !$block instanceof ClassKindredDeclaration) {
-			$symbols = array_merge($symbols, $block->symbols);
-		}
+	// 	while (($block = $block->belong_block) && !$block instanceof ClassKindredDeclaration) {
+	// 		$symbols = array_merge($symbols, $block->symbols);
+	// 	}
 
-		if ($this->class) {
-			$symbols[_THIS] = $this->class->this_object_symbol;
-		}
+	// 	if ($this->class) {
+	// 		$symbols[_THIS] = $this->class->this_object_symbol;
+	// 	}
 
-		return $symbols;
-	}
+	// 	return $symbols;
+	// }
 
 	private function attach_local_symbol(Identifiable $identifier, IBlock $seek_block = null)
 	{

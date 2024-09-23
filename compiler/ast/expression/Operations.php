@@ -94,17 +94,14 @@ class IsOperation extends BinaryOperation
 	}
 }
 
-class NoneCoalescingOperation extends MultiOperation
+class NoneCoalescingOperation extends BinaryOperation
 {
 	const KIND = 'none_coalescing_operation';
 
-	/**
-	 * @var BaseExpression[]
-	 */
-	public $items;
-
-	public function __construct(array $items) {
-		$this->items = $items;
+	public function __construct(BaseExpression $left, BaseExpression $right)
+	{
+		$this->left = $left;
+		$this->right = $right;
 		$this->operator = OperatorFactory::$none_coalescing;
 	}
 }

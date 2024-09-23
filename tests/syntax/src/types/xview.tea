@@ -21,7 +21,7 @@ internal Cell: BaseView {
 
 	render() String {
 		text = this.text.replace(LF, '<br>')
-		return <cell>$text</cell>
+		return <cell>${text}</cell>
 	}
 }
 
@@ -74,10 +74,10 @@ public DemoList: BaseView {
 		var cells XView.Array = []
 		for key, value in this.items {
 			if key == 0 {
-				cells.push(<li index="0"> $key: $value </li>)
+				cells.push(<li index="0"> ${key}: ${value} </li>)
 			}
 			else {
-				cells.push(<li> $key: $value </li>)
+				cells.push(<li> ${key}: ${value} </li>)
 			}
 		}
 

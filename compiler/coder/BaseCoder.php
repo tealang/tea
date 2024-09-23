@@ -138,7 +138,7 @@ abstract class BaseCoder
 			$modifier = _SHARP . $node->label;
 		}
 		else {
-			$modifier = $node->is_runtime ? _RUNTIME : ($node->modifier ?? $default_modifier);
+			$modifier = $node->is_extern ? _EXTERN : ($node->modifier ?? $default_modifier);
 		}
 
 		return $modifier;
@@ -713,10 +713,6 @@ abstract class BaseCoder
 
 	public function render_type_identifier(IType $node)
 	{
-		if ($node === TypeFactory::$_none) {
-			return null;
-		}
-
 		if ($node instanceof CallableType) {
 			$buffer = $this->render_callable_type($node);
 		}
@@ -1110,12 +1106,10 @@ abstract class BaseCoder
 
 	public function render_none_coalescing_operation(NoneCoalescingOperation $node)
 	{
-		$items = [];
-		foreach ($node->items as $item) {
-			$items[] = $item->render($this);
-		}
+		$left = $node->left->render($this);
+		$right = $node->right->render($this);
 
-		return join(' ?? ', $items);
+		return sprintf('%s ?? %s', $left, $operator, $right);
 	}
 
 	public function render_ternary_expression(TernaryExpression $node)

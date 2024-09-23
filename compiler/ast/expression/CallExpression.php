@@ -43,6 +43,14 @@ abstract class BaseCallExpression extends BaseExpression
 class InstancingExpression extends BaseCallExpression
 {
 	const KIND = 'new_expression';
+
+	public function __construct(BaseExpression $callee, array $arguments)
+	{
+		$callee->set_purpose(PURPOSE_INVOKING);
+		$callee->set_purpose(PURPOSE_INSTANCING);
+		$this->callee = $callee;
+		$this->arguments = $arguments;
+	}
 }
 
 class PipeCallExpression extends BaseCallExpression

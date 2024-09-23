@@ -27,7 +27,7 @@ class TypeFactory
 	// static $_scalar;
 	public static $_bytes;
 	public static $_string;
-	public static $_pure_string;
+	public static $_pures;
 	public static $_float;
 	public static $_int;
 	public static $_uint;
@@ -46,6 +46,9 @@ class TypeFactory
 
 	public static $_iterator;
 	public static $_generator;
+
+	public static $_int_types;
+	public static $_int_and_string_types;
 
 	public static $_exception_symbol;
 
@@ -69,7 +72,6 @@ class TypeFactory
 
 		self::$_void = self::create_type(VoidType::class);
 		self::$_none = self::create_type(NoneType::class);
-		self::$_default_marker = self::create_type(NoneType::class);
 
 		self::$_any = self::create_type(AnyType::class);
 		self::$_object = self::create_type(ObjectType::class);
@@ -77,7 +79,7 @@ class TypeFactory
 		// self::$_scalar = self::create_type(ScalarType::class);
 		self::$_bytes = self::create_type(BytesType::class);
 		self::$_string = self::create_type(StringType::class);
-		self::$_pure_string = self::create_type(PuresType::class);
+		self::$_pures = self::create_type(PuresType::class);
 		self::$_float = self::create_type(FloatType::class);
 		self::$_int = self::create_type(IntType::class);
 		self::$_uint = self::create_type(UIntType::class);
@@ -100,6 +102,9 @@ class TypeFactory
 		self::$_iterator = new ClassKindredIdentifier('Iterator');
 		// self::$_generator = new ClassKindredIdentifier('Generator');
 		self::$_generator = self::$_iterator;
+
+		self::$_int_types = [self::$_uint, self::$_int];
+		self::$_int_and_string_types = [self::$_uint, self::$_int, self::$_string, self::$_pures];
 
 		self::$_casting_map = [
 			T_STRING_CAST => self::$_string,
@@ -131,6 +136,9 @@ class TypeFactory
 				$object->symbol = $unit->symbols[$type_name];
 			}
 		}
+
+		// just a marker
+		self::$_default_marker = clone self::$_none;
 
 		self::$_iview_symbol = $unit->symbols['IView'] ?? null;
 

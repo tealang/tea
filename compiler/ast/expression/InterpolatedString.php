@@ -32,6 +32,8 @@ class PlainInterpolatedString extends InterpolatedString
 	const KIND = 'plain_interpolated_string';
 }
 
+interface Interpolation {}
+
 trait InterpolationTrait
 {
 	public $content;
@@ -46,7 +48,7 @@ trait InterpolationTrait
 	}
 }
 
-class StringInterpolation extends BaseExpression
+class StringInterpolation extends BaseExpression implements Interpolation
 {
 	use InterpolationTrait;
 	const KIND = 'string_interpolation';

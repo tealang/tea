@@ -7,7 +7,7 @@ public SQLitePDO: PDO {
 	}
 }
 
-var sqlite = SQLitePDO('$__DIR__/pdo_sqlite.db')
+var sqlite = SQLitePDO('${__DIR__}/pdo_sqlite.db')
 rs = sqlite.query('SELECT name FROM sqlite_master ORDER BY name')
 rows = rs.fetchAll(PDO.FETCH_ASSOC)
 

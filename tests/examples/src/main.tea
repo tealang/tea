@@ -2,7 +2,7 @@
 var days = ['Monday', 'Tuesday', 'Wednesday']
 var items String.Array = []
 for i, day in days {
-	items[] = "${i + 1}: $day"
+	items[] = "${i + 1}: ${day}"
 }
 
 echo items.join(', ')
@@ -10,7 +10,7 @@ echo items.join(', ')
 echo   // print an empty line
 
 internal say_hello(name = 'World') {
-	echo 'Hello, $name!'
+	echo 'Hello, ${name}!'
 }
 
 say_hello()

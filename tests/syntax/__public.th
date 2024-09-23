@@ -10,7 +10,7 @@ public const MY_CONST #Pures.Dict
 public const C1 #UInt
 public const C2 #Pures
 
-runtime func range(start Int, end Int, step #Int = 1) Array
+extern func range(start Int, end Int, step #UInt = 1) Array
 
 public class PHPClassInMixed1 {
 	protected const CONST1 #Pures
@@ -24,7 +24,7 @@ public class PHPClassInMixed1 {
 
 public func php_get_num() Int
 
-public func fn0(str #Any) #String
+public func fn0(str) #String
 
 public class TeaDemoClass {
 	static static_prop1 #Pures
@@ -46,7 +46,7 @@ public class DemoList: BaseView {
 
 	cells Array
 
-	construct(name String, title #Pures = '', items String.Array = [], each () Cell? = none, error (message #Any) Void = none) #Void
+	construct(name String, title #Pures = '', items String.Array = [], each () Cell? = none, error (message) Void = none) #Void
 
 	render() String
 }

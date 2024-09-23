@@ -36,7 +36,6 @@ const
 	_DEFAULT = 'default',
 
 	// builtin types
-	_INVALIDABLE_SIGN = '?',
 	_UNIONTYPE = 'UnionType',
 	_METATYPE = 'MetaType',
 	_VOID = 'Void',
@@ -121,7 +120,7 @@ const
 	_XTAG_OPEN = '<', _XTAG_CLOSE = '>',
 	_PAREN_OPEN = '(', _PAREN_CLOSE = ')',
 	_BRACKET_OPEN = '[', _BRACKET_CLOSE = ']',
-	_BRACE_OPEN = '{', _BRACE_CLOSE = '}',
+	_BRACE_OPEN = '{', _BRACE_CLOSE = '}', _DOLLAR_BRACE_OPEN = '${',
 	_GENERIC_OPEN = '<', _GENERIC_CLOSE = '>',
 	_BLOCK_BEGIN = _BRACE_OPEN, _BLOCK_END = _BRACE_CLOSE,
 	_DOC_MARK = '---',
@@ -157,7 +156,7 @@ const
 	_STATIC = 'static',
 	_FINAL = 'final',
 	_MASKED = 'masked',
-	_RUNTIME = 'runtime',
+	_EXTERN = 'extern',
 	_PUBLIC = 'public',
 	_INTERNAL = 'internal',
 	_PROTECTED = 'protected',

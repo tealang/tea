@@ -7,7 +7,7 @@
 
 namespace Tea;
 
-const TEA_TOKENS_SPLIT_PATTERN = '/(\s|\{|\}|\(|\)|\[|\]|\'|\"|\,|\.\+|\.\*|\.=|\.|\$|\\\|\/\*|\*\/|\/\/|\/>|\/=|\/|\;|\+=|---|-->|->|-=|--|-|~|=>|<=|>=|>>=|<<=|>>|<<|<|>|===|\!==|\!=|\!|==|\*=|&=|\|=|\^=|\*\*=|\^|\?\?=|\?\?|\?|=|@|#|&|::|:|\|)/';
+const TEA_TOKENS_SPLIT_PATTERN = '/(\s|\{|\}|\$\{|\(|\)|\[|\]|\'|\"|\,|\.\+|\.\*|\.=|\.|\\\|\/\*|\*\/|\/\/|\/>|\/=|\/|\;|\+=|---|-->|->|-=|--|-|~|=>|<=|>=|>>=|<<=|>>|<<|<|>|===|\!==|\!=|\!|==|\*=|&=|\|=|\^=|\*\*=|\^|\?\?=|\?\?|\?|=|@|#|&|::|:|\|)/';
 
 trait TeaTokenTrait
 {
@@ -484,6 +484,16 @@ trait TeaTokenTrait
 		}
 
 		throw $this->new_parse_error("Invalid identifier token '{$token}'", 1);
+	}
+
+	protected function expect_super_variable_name_token_ignore_space()
+	{
+		$token = $this->scan_token_ignore_space();
+		if (TeaHelper::is_super_variable_name($token)) {
+			return $token;
+		}
+
+		throw $this->new_parse_error("Invalid super variable name token '{$token}'", 1);
 	}
 
 	protected function get_identifier_token_ignore_space()

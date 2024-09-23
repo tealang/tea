@@ -75,7 +75,7 @@ function _regex_capture_all(string $regex, string $subject): ?array {
 	return $results;
 }
 
-function _build_attributes(array $items, array $additions = null): string {
+function _build_attributes(array $items, ?array $additions = null): string {
 	if ($additions !== null) {
 		$items = array_replace($items, $additions);
 	}
