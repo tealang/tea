@@ -97,12 +97,16 @@ class PlainIdentifier extends Identifiable implements IType
 
 	public function is_based_with(IType $target)
 	{
-		$curr_decl = $this->symbol->declaration;
-		if (!$curr_decl instanceof ClassKindredDeclaration) {
-			$is = false;
+		$this_decl = $this->symbol->declaration;
+		if ($this_decl instanceof ClassKindredDeclaration) {
+			$is = $this_decl->find_based_with_symbol($target->symbol) !== null;
 		}
 		else {
-			$is = $curr_decl->find_based_with_symbol($target->symbol) !== null;
+			$is = false;
+		}
+
+		if (!$is and $target instanceof ClassKindredIdentifier) {
+			dump($this->name, $target->name);exit;
 		}
 
 		return $is;

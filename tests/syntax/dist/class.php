@@ -8,16 +8,20 @@ require_once dirname(__DIR__, 1) . '/__public.php';
 #internal
 interface IDemo extends BaseInterface {
 	const CONST1 = 'const value';
+	const CLASS_IN_CONST = IterableObject::class;
 	public function __construct(string $some);
 	public function get_class_name(string $caller = 'caller1'): string;
 	public function get_self(): static;
 }
 
 trait IDemoTrait {
+	public $class_in_prop = IterableObject::class;
 	public $prop;
 
 	public function __construct(string $some) {
 		$this->prop = $some;
+		$instance_by_const = new ($this::CLASS_IN_CONST)();
+		$instance_by_prop = new ($this->class_in_prop)();
 	}
 
 	public function get_class_name(string $caller = 'caller1'): string {

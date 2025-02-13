@@ -2428,21 +2428,16 @@ class ASTChecker
 		// the endmost declaration, some times maybe not the direct
 		$callable_decl = $this->require_callee_declaration($callee);
 
-		// if is a variable, it's value must be a callable declaration
-		// eg. AnonymousFunction
-		if ($callable_decl instanceof IVariableDeclaration) {
-			$callable_decl = $callable_decl->value;
-		}
+		// if ($callable_decl === null) {
+		// 	// the Any-Callable type do not need to match parameters
+		// 	foreach ($node->arguments as $argument) {
+		// 		$this->infer_expression($argument);
+		// 	}
 
-		if ($callable_decl === null) {
-			// the Any-Callable type do not need to match parameters
-			foreach ($node->arguments as $argument) {
-				$this->infer_expression($argument);
-			}
-
-			$infered = TypeFactory::$_any;
-		}
-		elseif ($callable_decl instanceof ClassKindredDeclaration) {
+		// 	$infered = TypeFactory::$_any;
+		// }
+		// else
+		if ($callable_decl instanceof ClassKindredDeclaration) {
 			$node->is_instancing = true;
 			$infered = $this->infer_instancing_expr($callee, $callable_decl);
 			// instancing arguments
@@ -2552,14 +2547,14 @@ class ASTChecker
 			$infered = $this->infer_expression($argument);
 			if (!$param_type->is_accept_type($infered) && !$this->is_weakly_checking) {
 				$callee_name = self::get_declaration_name($callee_decl);
-				$expected_type_name = self::get_type_name($param_type);
+				$expected_name = self::get_type_name($param_type);
 				$infered_name = self::get_type_name($infered);
 
 				if (!is_int($key)) {
 					$key = "'$key'";
 				}
 
-				throw $this->new_syntax_error("Type of argument $key does not matched the parameter, expected {$expected_type_name}, {$infered_name} given", $argument);
+				throw $this->new_syntax_error("Type of argument $key does not matched the parameter, expected {$expected_name}, {$infered_name} given", $argument);
 			}
 
 			if ($parameter->is_inout) {
@@ -3071,6 +3066,17 @@ class ASTChecker
 					throw $this->new_syntax_error("Unknow callee kind: '$kind'", $node);
 				}
 			}
+		}
+
+		// if is a variable, it's value must be a callable declaration
+		// eg. AnonymousFunction
+		if ($decl instanceof IVariableDeclaration or $decl instanceof IConstantDeclaration) {
+			$type = $decl->infered_type;
+			if ($type instanceof MetaType) {
+				$type = $type->generic_type;
+			}
+
+			$decl = $type->symbol->declaration;
 		}
 
 		return $decl;

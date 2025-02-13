@@ -160,6 +160,7 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 	{
 		$based_symbol = $based->symbol;
 		$is = $based_symbol === $symbol
+			|| $based_symbol->declaration === $symbol->declaration // because Symbols are different in classes and usings
 			|| $based_symbol->declaration->find_based_with_symbol($symbol);
 
 		return $is;

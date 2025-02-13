@@ -908,11 +908,11 @@ class TeaParser extends BaseParser
 		// 	$token = $this->scan_token_ignore_space();
 		// }
 
-		$expression = $this->read_expression_with_token($token);
+		$expr = $this->read_expression_with_token($token);
+		// $expr->label = $label;
+		$expr->pos = $this->pos;
 
-		// $expression->label = $label;
-
-		return $expression;
+		return $expr;
 	}
 
 	protected function read_expression_with_token(string $token, Operator $prev_operator = null): ?BaseExpression
@@ -1097,7 +1097,9 @@ class TeaParser extends BaseParser
 			throw $this->new_unexpected_error();
 		}
 
-		return new Parentheses($expression);
+		$expr = new Parentheses($expression);
+		$expr->pos = $this->pos;
+		return $expr;
 	}
 
 	protected function read_lambda_for_parentheses(PlainIdentifier $readed_identifier)
@@ -1159,18 +1161,26 @@ class TeaParser extends BaseParser
 
 				if ($token[-1] === _LOW_CASE_E) {
 					// e.g. 0.123e-6
-					return $this->read_scientific_notation_number_with($token);
+					$item = $this->read_scientific_notation_number_with($token);
 				}
-
-				return new LiteralFloat($token);
+				else {
+					$item = new LiteralFloat($token);
+				}
 			}
 			elseif ($token[-1] === _LOW_CASE_E) {
 				// e.g. 123e-6
-				return $this->read_scientific_notation_number_with($token);
+				$item = $this->read_scientific_notation_number_with($token);
+			}
+			else {
+				$item = new LiteralInteger($token);
 			}
 		}
+		else {
+			$item = new LiteralInteger($token);
+		}
 
-		return new LiteralInteger($token);
+		$item->pos = $this->pos;
+		return $item;
 	}
 
 	protected function read_scientific_notation_number_with(string $prefix)

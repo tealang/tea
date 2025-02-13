@@ -966,6 +966,10 @@ class PHPCoder extends BaseCoder
 			$code = $this->render_subexpression($expr, OperatorFactory::$concat);
 		}
 		elseif ($type instanceof IterableType and $type->generic_type instanceof XViewType) {
+			if ($type->nullable) {
+				$expr = new NoneCoalescingOperation($expr, new ArrayExpression());
+			}
+
 			$expr = $this->create_native_call('\implode', [$this->get_br_string_expr(), $expr]);
 			$code = $this->render_subexpression($expr, OperatorFactory::$concat);
 		}
@@ -1341,24 +1345,25 @@ class PHPCoder extends BaseCoder
 			return $this->render_masked_call($node);
 		}
 
-		$callee = $this->render_basing_expression($node->callee);
+		$callee = $node->callee;
+		$callee_code = $this->render_basing_expression($callee);
 
 		// object member as callee, must be got it's result, then handling call
-		if ($node->infered_callee_declaration instanceof BaseExpression
-			and $node->callee instanceof AccessingIdentifier
-			// and $node->callee->symbol->declaration !== ASTFactory::$virtual_property_for_any
+		if ($callee instanceof AccessingIdentifier
+			and !$callee->symbol->declaration instanceof ICallableDeclaration
+			// and $callee->symbol->declaration !== ASTFactory::$virtual_property_for_any
 		) {
-			$callee = "($callee)";
+			$callee_code = "($callee_code)";
 		}
 
 		$arguments = $node->normalized_arguments ?? $node->arguments;
 		$arguments = $this->render_arguments($arguments);
 
 		if ($node->is_instancing) {
-			$code = "new {$callee}($arguments)";
+			$code = "new {$callee_code}($arguments)";
 		}
 		else {
-			$code = "{$callee}($arguments)";
+			$code = "{$callee_code}($arguments)";
 		}
 
 		return $code;

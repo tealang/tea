@@ -54,6 +54,7 @@ trait TeaStringTrait
 			$expression = new PlainInterpolatedString($items);
 		}
 
+		$expression->pos = $this->pos;
 		return $expression;
 	}
 
@@ -72,7 +73,6 @@ trait TeaStringTrait
 		}
 
 		$expression->pos = $this->pos;
-
 		return $expression;
 	}
 

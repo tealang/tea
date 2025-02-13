@@ -101,7 +101,7 @@ public type Bool {}
 // 	return count(array) - 1
 // }
 
-public _has(it Array|Dict, key String|Int) {
+public _has(it Array|Dict, key String|Int|None) {
 	return array_key_exists(key, it)
 }
 
@@ -163,7 +163,7 @@ public _dict_get(it Dict, key String|Int) {
 public type Dict {
 	masked length => count(this)
 
-	masked has(key String) => _has(this, key)
+	masked has(key String|None) => _has(this, key)
 	masked contains(val) => _vals_contains(this, val)
 	masked find(val) => _dict_find(this, val) // find the key with supported value
 

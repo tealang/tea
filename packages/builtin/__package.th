@@ -174,7 +174,7 @@ extern func array_key_exists(key, arr) Bool
 // assoc array
 extern func array_keys(it) String.Array
 extern func array_values(it) Array
-extern func array_column(recordset Array|Dict, key_or_val_col String, val_col String = #default) Array
+extern func array_column(recordset Array|Dict, column_key String?, index_key String? = #default) Array
 extern func array_replace as dict_replace(it Dict, replacement Dict) Dict
 
 // json

@@ -1,12 +1,19 @@
 #main
 
 internal intertrait IDemo: BaseInterface {
+
 	CONST1 = 'const value'
+
+	CLASS_IN_CONST = IterableObject
+
+	class_in_prop = IterableObject
 
 	prop String
 
 	construct(some String) {
 		this.prop = some
+		instance_by_const = this.CLASS_IN_CONST()
+		instance_by_prop = this.class_in_prop()
 	}
 
 	get_class_name(caller String = 'caller1') String {
@@ -71,14 +78,9 @@ var t1_1 = clone t1
 echo t1_1.get_class_name('Unknow')
 
 internal Test2 {
-	// 自定义类作为属性
+
 	t1 BaseInterface
 
-	// 参数类型为自定义类
-	---
-	Some text
-	@t1  some parameter comment
-	---
 	set_t1(t1 BaseInterface) {
 		this.t1 = t1
 	}
