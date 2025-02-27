@@ -22,7 +22,7 @@ class PHPClassInMixed1 {
 
 	public \Exception $some;
 
-	public function __construct(string $caller, array /*Array*/ $items, bool $some = null) {
+	public function __construct(string $caller, array /*Array*/ $items, ?bool $some = null) {
 		$this->caller = $caller;
 
 		list($a, $b) = $items;

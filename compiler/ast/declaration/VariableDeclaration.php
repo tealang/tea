@@ -21,7 +21,7 @@ abstract class BaseVariableDeclaration extends Node implements IVariableDeclarat
 	// just for Array|Dict|Object values
 	public $is_mutable = true;
 
-	public function __construct(string $name, IType $type = null, BaseExpression $value = null)
+	public function __construct(string $name, ?IType $type = null, ?BaseExpression $value = null)
 	{
 		$this->name = $name;
 		$this->declared_type = $type;

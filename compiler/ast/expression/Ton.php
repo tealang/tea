@@ -15,7 +15,7 @@ class Ton extends BaseExpression
 	public $attributes;
 	public $elements;
 
-	public function __construct(?string $name, array $attributes = [], array $elements = null)
+	public function __construct(?string $name, array $attributes = [], ?array $elements = null)
 	{
 		$this->name = $name;
 		$this->attributes = $attributes;

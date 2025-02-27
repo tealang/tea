@@ -20,7 +20,7 @@ class Data {
 }
 
 #internal
-function fn3($some, callable $done, callable $error = null): string {
+function fn3($some, callable $done, ?callable $error = null): string {
 	return $done('A cool man') . ' with ' . $some;
 }
 

@@ -11,7 +11,7 @@ class PHPLoaderMaker
 {
 	const GENERATES_TAG = '# --- generates ---';
 
-	public static function generate_loader_file(string $path, array $autoloads, string $namespace = null)
+	public static function generate_loader_file(string $path, array $autoloads, ?string $namespace = null)
 	{
 		$loader_file = $path . PUBLIC_LOADER_FILE_NAME;
 		$warring = '// Please do not modify the following contents';

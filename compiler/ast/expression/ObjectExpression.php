@@ -22,7 +22,7 @@ class ObjectMember extends PropertyDeclaration
 
 	public $key_quote_mark;
 
-	public function __construct(string $name, string $key_quote_mark = null)
+	public function __construct(string $name, ?string $key_quote_mark = null)
 	{
 		$this->name = $name;
 		$this->key_quote_mark = $key_quote_mark;

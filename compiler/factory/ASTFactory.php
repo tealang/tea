@@ -111,7 +111,7 @@ class ASTFactory
 		return $statement;
 	}
 
-	public function append_use_target(NamespaceIdentifier $ns, string $target_name = null, string $source_name = null)
+	public function append_use_target(NamespaceIdentifier $ns, ?string $target_name = null, ?string $source_name = null)
 	{
 		$decl = new UseDeclaration($ns, $target_name, $source_name);
 		$this->parser->attach_position($decl);
@@ -411,7 +411,7 @@ class ASTFactory
 		return [$decl, $symbol];
 	}
 
-	public function create_virtual_function(string $name, Program $program = null)
+	public function create_virtual_function(string $name, ?Program $program = null)
 	{
 		// $program and $program = $this->switch_program($program);
 
@@ -433,7 +433,7 @@ class ASTFactory
 	// 	return $temp;
 	// }
 
-	public function create_virtual_class(string $name, Program $program = null)
+	public function create_virtual_class(string $name, ?Program $program = null)
 	{
 		// $program and $program = $this->switch_program($program);
 
@@ -519,7 +519,7 @@ class ASTFactory
 		return $decl;
 	}
 
-	public function create_class_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null)
+	public function create_class_declaration(string $name, string $modifier, ?NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'class');
 
@@ -533,7 +533,7 @@ class ASTFactory
 		return $decl;
 	}
 
-	public function create_interface_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null)
+	public function create_interface_declaration(string $name, string $modifier, ?NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'interface');
 
@@ -547,7 +547,7 @@ class ASTFactory
 		return $decl;
 	}
 
-	public function create_intertrait_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null)
+	public function create_intertrait_declaration(string $name, string $modifier, ?NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'intertrait');
 
@@ -561,7 +561,7 @@ class ASTFactory
 		return $decl;
 	}
 
-	public function create_trait_declaration(string $name, string $modifier, NamespaceIdentifier $ns = null)
+	public function create_trait_declaration(string $name, string $modifier, ?NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'trait');
 
@@ -649,7 +649,7 @@ class ASTFactory
 		return $decl;
 	}
 
-	public function create_function_declaration(?string $modifier, string $name, NamespaceIdentifier $ns = null)
+	public function create_function_declaration(?string $modifier, string $name, ?NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'function');
 
@@ -1131,7 +1131,7 @@ class ASTFactory
 	// 	return $symbols;
 	// }
 
-	private function attach_local_symbol(Identifiable $identifier, IBlock $seek_block = null)
+	private function attach_local_symbol(Identifiable $identifier, ?IBlock $seek_block = null)
 	{
 		if ($seek_block === null) {
 			$seek_block = $this->block;
@@ -1210,7 +1210,7 @@ class ASTFactory
 		return $symbol;
 	}
 
-	private function create_internal_symbol(IDeclaration $decl, Symbol $symbol = null)
+	private function create_internal_symbol(IDeclaration $decl, ?Symbol $symbol = null)
 	{
 		$decl->program = $this->program;
 

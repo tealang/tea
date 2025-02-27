@@ -8,7 +8,7 @@ abstract class BaseView implements \IView {
 	protected $props = [];
 	protected $subviews = [];
 
-	public function __construct(array $props = null) {
+	public function __construct(?array $props = null) {
 		if (is_array($props)) {
 			$this->props = $props;
 		}

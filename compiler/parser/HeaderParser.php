@@ -11,7 +11,7 @@ class HeaderParser extends TeaParser
 {
 	public $is_parsing_header = true;
 
-	protected function read_root_statement(bool $leading_br = false, DocComment $doc = null)
+	protected function read_root_statement(bool $leading_br = false, ?DocComment $doc = null)
 	{
 		$token = $this->scan_token_ignore_space();
 		if ($token === LF) {

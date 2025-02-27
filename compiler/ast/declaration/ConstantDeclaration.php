@@ -17,7 +17,7 @@ trait ConstantDeclarationTrait
 
 	public $value;
 
-	public function __construct(?string $modifier, string $name, BaseType $type = null, BaseExpression $value = null)
+	public function __construct(?string $modifier, string $name, ?BaseType $type = null, ?BaseExpression $value = null)
 	{
 		if ($modifier === _PUBLIC) {
 			$this->is_unit_level = true;

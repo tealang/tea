@@ -157,7 +157,7 @@ trait TeaTokenTrait
 		return $token;
 	}
 
-	protected function get_token_ignore_space(int &$pos = null)
+	protected function get_token_ignore_space(?int &$pos = null)
 	{
 		if ($pos === null) {
 			$pos = $this->pos;
@@ -172,7 +172,7 @@ trait TeaTokenTrait
 		}
 	}
 
-	private function get_token_ignore_empty(int &$pos = null)
+	private function get_token_ignore_empty(?int &$pos = null)
 	{
 		if ($pos === null) {
 			$pos = $this->pos;
@@ -187,7 +187,7 @@ trait TeaTokenTrait
 		}
 	}
 
-	private function get_to_token(string $to, int $from = null)
+	private function get_to_token(string $to, ?int $from = null)
 	{
 		$i = $from ?? $this->pos + 1;
 
@@ -206,7 +206,7 @@ trait TeaTokenTrait
 		return $tmp;
 	}
 
-	protected function get_to_line_end(int $from = null)
+	protected function get_to_line_end(?int $from = null)
 	{
 		return $this->get_to_token(LF, $from);
 	}
@@ -456,7 +456,7 @@ trait TeaTokenTrait
 		return $next;
 	}
 
-	protected function expect_space(string $message = null)
+	protected function expect_space(?string $message = null)
 	{
 		$token = $this->scan_token();
 		if (!TeaHelper::is_space_tab_nl($token)) {
@@ -563,7 +563,7 @@ trait TeaTokenTrait
 		// echo sprintf("- %s\n", $token);
 	}
 
-	protected function get_previous_code_inline(int $pos = null): string
+	protected function get_previous_code_inline(?int $pos = null): string
 	{
 		if ($pos === null) $pos = $this->pos;
 
@@ -579,7 +579,7 @@ trait TeaTokenTrait
 		return $tmp;
 	}
 
-	protected function get_heading_spaces_inline(int $pos = null)
+	protected function get_heading_spaces_inline(?int $pos = null)
 	{
 		$string = $this->get_previous_code_inline($pos);
 

@@ -40,6 +40,7 @@ class PHPCoder extends BaseCoder
 	const BUILTIN_TYPE_MAP = [
 		_VOID => 'void',
 		_ANY => '',
+		_NONE => 'null',
 		_STRING => 'string',
 		_PURE_STRING => 'string',
 		_INT => 'int',
@@ -55,6 +56,23 @@ class PHPCoder extends BaseCoder
 		_XVIEW => 'string',
 		_METATYPE => 'string',
 		_TYPE_SELF => 'static',
+	];
+
+	const IS_TEST_MAP = [
+		_STRING => 'is_string',
+		_PURE_STRING => 'is_string',
+		_INT => 'is_int',
+		_UINT => 'is_uint',
+		_FLOAT => 'is_float',
+		_BOOL => 'is_bool',
+		_ARRAY => 'is_array',
+		_DICT => 'is_array',
+		_CALLABLE => 'is_callable',
+		_ITERABLE => 'is_iterable',
+		_OBJECT => 'is_object',
+		_REGEX => 'is_string',
+		_XVIEW => 'is_string',
+		_METATYPE => 'is_string'
 	];
 
 	const EXTRA_RESERVEDS = [
@@ -1083,7 +1101,7 @@ class PHPCoder extends BaseCoder
 		return $items;
 	}
 
-	private function create_building_attributes_expression(array $fixed_map, BaseExpression $dynamic_expr = null)
+	private function create_building_attributes_expression(array $fixed_map, ?BaseExpression $dynamic_expr = null)
 	{
 		$args = [];
 		if ($fixed_map) {
@@ -1117,9 +1135,6 @@ class PHPCoder extends BaseCoder
 	private function is_safe_xtag_interpolated(InterpolatedString $node) {
 		$safe = true;
 		foreach ($node->items as $item) {
-			if (is_object($item) and $item->expressed_type === null) {
-				dump($node);exit;
-			}
 			if (is_object($item) and !TypeHelper::is_pure_type($item->expressed_type)) {
 				$safe = false;
 				break;
@@ -1458,7 +1473,7 @@ class PHPCoder extends BaseCoder
 	{
 		$code = $node->render($this);
 
-		if ($code && $node->nullable) {
+		if ($code && ($node->nullable || $node->has_null)) {
 			$code = '?' . $code;
 		}
 
@@ -1809,14 +1824,10 @@ class PHPCoder extends BaseCoder
 	public function render_is_operation(IsOperation $node)
 	{
 		$left = $this->render_subexpression($node->left, $node->operator);
-		$type_name = static::BUILTIN_TYPE_MAP[$node->right->name] ?? null;
+		$func_name = static::IS_TEST_MAP[$node->right->name] ?? null;
 
-		if ($type_name) {
-			if ($node->right->name === _UINT) {
-				$type_name = 'uint';
-			}
-
-			$code = "is_{$type_name}($left)";
+		if ($func_name) {
+			$code = "{$func_name}($left)";
 			if ($node->not) {
 				$code = '!' . $code;
 			}
@@ -1937,11 +1948,6 @@ class PHPCoder extends BaseCoder
 	{
 		$right_expr = $node->right;
 		$right_code = $right_expr->render($this);
-
-		if ($right_code === null) {
-			dump($node);
-			exit;
-		}
 
 		if ($right_expr instanceof NoneCoalescingOperation && $right_expr->left instanceof AsOperation) {
 			$right_code = "($right_code)";

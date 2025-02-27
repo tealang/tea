@@ -24,7 +24,7 @@ trait IScopeBlockTrait
 	// set true when checking AST
 	public $is_checking;
 
-	public function __construct(?string $modifier, string $name, IType $return_type = null, array $parameters = null)
+	public function __construct(?string $modifier, string $name, ?IType $return_type = null, ?array $parameters = null)
 	{
 		if ($modifier === _PUBLIC) {
 			$this->is_unit_level = true;

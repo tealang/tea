@@ -198,7 +198,7 @@ abstract class BaseParser
 		return $this->new_parse_error("Unexpected token '$token_string'", 1);
 	}
 
-	protected function print_token(array|string $token = null)
+	protected function print_token(array|string|null $token = null)
 	{
 		$token === null and ($token = $this->tokens[$this->pos] ?? null);
 	}
@@ -243,7 +243,7 @@ abstract class BaseParser
 		return str_replace("\t", '    ', $str);
 	}
 
-	protected abstract function get_to_line_end(int $from = null);
+	protected abstract function get_to_line_end(?int $from = null);
 
 	protected abstract function get_current_token_string();
 

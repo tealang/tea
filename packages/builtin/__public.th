@@ -207,7 +207,7 @@ extern func array_keys(it) String.Array
 
 extern func array_values(it) Array
 
-extern func array_column(recordset Array|Dict, key_or_val_col String, val_col String = #default) Array
+extern func array_column(recordset Array|Dict, column_key String?, index_key String? = #default) Array
 
 extern func array_replace as dict_replace(it Dict, replacement Dict) Dict
 
@@ -349,7 +349,7 @@ public type Bool {
 	// no any
 }
 
-public func _has(it Array|Dict, key String|Int) #Bool
+public func _has(it Array|Dict, key String|Int|None) #Bool
 
 public func _vals_contains(it Array|Dict, val, strict Bool = false) #Bool
 
@@ -396,7 +396,7 @@ public func _dict_get(it Dict, key String|Int) #Any
 public type Dict {
 	masked length #UInt
 
-	masked has(key String) #Bool
+	masked has(key String|None) #Bool
 
 	masked contains(val) #Bool
 

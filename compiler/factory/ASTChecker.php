@@ -64,7 +64,7 @@ class ASTChecker
 		return self::$native_checker_instance;
 	}
 
-	public static function init_checkers(Unit $main_unit, Unit $builtin_unit = null)
+	public static function init_checkers(Unit $main_unit, ?Unit $builtin_unit = null)
 	{
 		self::$normal_checker_instances = [];
 
@@ -95,7 +95,7 @@ class ASTChecker
 		}
 	}
 
-	public function __construct(Unit $unit, Unit $builtin_unit = null)
+	public function __construct(Unit $unit, ?Unit $builtin_unit = null)
 	{
 		$this->unit = $unit;
 		$this->builtin_unit = $builtin_unit;
@@ -412,8 +412,17 @@ class ASTChecker
 	{
 		$hinted = $this->get_and_check_hinted_type($node);
 		if ($hinted) {
-			if ($infered and !$infered instanceof NoneType) {
-				$this->assert_type_compatible($hinted, $infered, $node->value);
+			if ($infered) {
+				if ($infered instanceof NoneType) {
+					if ($node->value !== ASTFactory::$default_value_mark) {
+						$hinted = clone $hinted;
+						$hinted->let_assigned_null();
+						$node->set_type($hinted);
+					}
+				}
+				else {
+					$this->assert_type_compatible($hinted, $infered, $node->value);
+				}
 			}
 
 			// use the hinted as infered, because is declaration

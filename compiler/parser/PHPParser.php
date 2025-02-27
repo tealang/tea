@@ -692,7 +692,7 @@ class PHPParser extends BaseParser
 		}
 	}
 
-	private function read_switch_block(string $label = null)
+	private function read_switch_block(?string $label = null)
 	{
 		$this->expect_paren_open();
 		$argument = $this->read_expression();
@@ -770,7 +770,7 @@ class PHPParser extends BaseParser
 		return $items;
 	}
 
-	private function read_foreach_block(string $label = null)
+	private function read_foreach_block(?string $label = null)
 	{
 		$this->expect_paren_open();
 		$iterable = $this->read_expression();
@@ -807,7 +807,7 @@ class PHPParser extends BaseParser
 		return $identifier;
 	}
 
-	private function read_for_block(string $label = null)
+	private function read_for_block(?string $label = null)
 	{
 		$this->expect_paren_open();
 		$args1 = $this->scan_arguments();
@@ -829,7 +829,7 @@ class PHPParser extends BaseParser
 		return $block;
 	}
 
-	private function read_while_block(string $label = null)
+	private function read_while_block(?string $label = null)
 	{
 		$this->expect_paren_open();
 		$test = $this->read_expression();
@@ -844,7 +844,7 @@ class PHPParser extends BaseParser
 		return $block;
 	}
 
-	private function read_do_while_block(string $label = null)
+	private function read_do_while_block(?string $label = null)
 	{
 		// e.g. while test_expression {}
 
@@ -865,7 +865,7 @@ class PHPParser extends BaseParser
 
 // ---
 
-	protected function read_expression(Operator $prev_op = null): BaseExpression
+	protected function read_expression(?Operator $prev_op = null): BaseExpression
 	{
 		$this->skip_comments();
 		$token = $this->scan_expr_token_ignore_empty();
@@ -877,7 +877,7 @@ class PHPParser extends BaseParser
 		return $expr;
 	}
 
-	protected function scan_expression(Operator $prev_op = null): ?BaseExpression
+	protected function scan_expression(?Operator $prev_op = null): ?BaseExpression
 	{
 		$this->skip_comments();
 		$token = $this->scan_expr_token_ignore_empty();
@@ -911,7 +911,7 @@ class PHPParser extends BaseParser
 		return $token;
 	}
 
-	private function read_expression_with_token(string|array $token, Operator $prev_op = null): BaseExpression
+	private function read_expression_with_token(string|array $token, ?Operator $prev_op = null): BaseExpression
 	{
 		// the typed token
 		if (is_string($token)) {
@@ -1221,7 +1221,7 @@ class PHPParser extends BaseParser
 		return $expr;
 	}
 
-	protected function read_expression_combination(BaseExpression $expr, Operator $prev_op = null)
+	protected function read_expression_combination(BaseExpression $expr, ?Operator $prev_op = null)
 	{
 		$token = $this->get_token_ignore_empty();
 		$token_type = is_string($token) ? $token : $token[0];
@@ -1357,7 +1357,7 @@ class PHPParser extends BaseParser
 		return $call;
 	}
 
-	protected function scan_combinated_operator(Operator $prev_op = null)
+	protected function scan_combinated_operator(?Operator $prev_op = null)
 	{
 		$this->skip_comments();
 		$token = $this->get_token_ignore_empty();
@@ -1435,7 +1435,7 @@ class PHPParser extends BaseParser
 		return $expr;
 	}
 
-	private function read_bracket_expression_with_token(string|array $token = null)
+	private function read_bracket_expression_with_token(string|array|null $token = null)
 	{
 		$is_bracket = $token === _BRACKET_OPEN;
 		if (!$is_bracket) {
@@ -1791,7 +1791,7 @@ class PHPParser extends BaseParser
 		return $type_expr;
 	}
 
-	private function read_property_declaration(array $token, string $modifier, ?string $doc, IType $type = null)
+	private function read_property_declaration(array $token, string $modifier, ?string $doc, ?IType $type = null)
 	{
 		$name = $this->get_property_name($token);
 		$decl = $this->factory->create_property_declaration($modifier, $name);
@@ -1814,7 +1814,7 @@ class PHPParser extends BaseParser
 		return $decl;
 	}
 
-	private function read_method_declaration(string $modifier = null, ?string $doc, bool $is_abstract = false)
+	private function read_method_declaration(?string $modifier, ?string $doc, bool $is_abstract = false)
 	{
 		$name = $this->expect_class_member_name();
 		$decl = $this->factory->create_method_declaration($modifier ?? _PUBLIC, $name);
@@ -1939,7 +1939,7 @@ class PHPParser extends BaseParser
 
 		$this->scan_token_ignore_empty();
 
-		// parameters at __construct maybe has modifiers
+		// parameters at __construct maybe has ?modifiers
 		$modifier = null;
 		if (in_array($token[0], [T_PUBLIC, T_PROTECTED, T_PRIVATE])) {
 			$modifier = $token[1];
@@ -2014,7 +2014,7 @@ class PHPParser extends BaseParser
 		return $type;
 	}
 
-	// private function read_block(string $label = null)
+	// private function read_block(?string $label = null)
 	// {
 	// 	// echo "\n--------------------begin {$label}\n";
 	// 	$this->expect_block_begin();
@@ -2087,7 +2087,7 @@ class PHPParser extends BaseParser
 		return $identifier;
 	}
 
-	private function create_classkindred_identifier(string $name, array $ns_components = null)
+	private function create_classkindred_identifier(string $name, ?array $ns_components = null)
 	{
 		$identifier = $this->factory->create_classkindred_identifier($name);
 		$identifier->pos = $this->pos;
@@ -2552,7 +2552,7 @@ class PHPParser extends BaseParser
 		return $this->tokens[$this->pos + 1] ?? null;
 	}
 
-	protected function get_to_line_end(int $from = null)
+	protected function get_to_line_end(?int $from = null)
 	{
 		$i = $from ?? $this->pos + 1;
 
@@ -2589,7 +2589,7 @@ class PHPParser extends BaseParser
 		return $this->tokens[$pos][2];
 	}
 
-	protected function get_previous_code_inline(int $pos = null): string
+	protected function get_previous_code_inline(?int $pos = null): string
 	{
 		if ($pos === null) {
 			$pos = $this->pos;
@@ -2618,7 +2618,7 @@ class PHPParser extends BaseParser
 		return $code;
 	}
 
-	protected function print_token($token = null, string $marker = null)
+	protected function print_token($token = null, ?string $marker = null)
 	{
 		$token === null and ($token = $this->tokens[$this->pos] ?? null);
 

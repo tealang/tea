@@ -22,7 +22,7 @@ class PropertyDeclaration extends BaseVariableDeclaration implements IClassMembe
 
 	const KIND = 'property_declaration';
 
-	public function __construct(?string $modifier, string $name, IType $type = null, BaseExpression $value = null)
+	public function __construct(?string $modifier, string $name, ?IType $type = null, ?BaseExpression $value = null)
 	{
 		$this->modifier = $modifier;
 		$this->name = $name;

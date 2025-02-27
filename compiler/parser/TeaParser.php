@@ -48,7 +48,7 @@ class TeaParser extends BaseParser
 		return $program;
 	}
 
-	protected function read_root_statement(bool $leading_br = false, DocComment $doc = null)
+	protected function read_root_statement(bool $leading_br = false, ?DocComment $doc = null)
 	{
 		$token = $this->scan_token_ignore_space();
 		if ($token === LF) {
@@ -101,7 +101,7 @@ class TeaParser extends BaseParser
 		return $node;
 	}
 
-	protected function read_inner_statement(bool $leading_br = false, DocComment $doc = null)
+	protected function read_inner_statement(bool $leading_br = false, ?DocComment $doc = null)
 	{
 		if ($this->get_token_ignore_space() === _BLOCK_END) {
 			return null;
@@ -375,7 +375,7 @@ class TeaParser extends BaseParser
 		return $decl;
 	}
 
-	protected function read_function_declaration_with(string $name, string $modifier = null, NamespaceIdentifier $ns = null)
+	protected function read_function_declaration_with(string $name, ?string $modifier = null, ?NamespaceIdentifier $ns = null)
 	{
 		// func1(arg0 String, arg1 Int = 0) // declare mode has no body
 		// func1(arg0 String, arg1 Int = 0) { ... } // normal mode required body
@@ -397,7 +397,7 @@ class TeaParser extends BaseParser
 		return $decl;
 	}
 
-	private function read_constant_declaration_with(string $name, string $modifier = null)
+	private function read_constant_declaration_with(string $name, ?string $modifier = null)
 	{
 		if ($this->root_statements) {
 			throw $this->new_parse_error("Please define constants at header of program");
@@ -413,7 +413,7 @@ class TeaParser extends BaseParser
 		return $decl;
 	}
 
-	protected function read_constant_declaration_without_value(string $name, string $modifier = null, NamespaceIdentifier $ns = null)
+	protected function read_constant_declaration_without_value(string $name, ?string $modifier = null, ?NamespaceIdentifier $ns = null)
 	{
 		$this->assert_not_reserved_word($name);
 
@@ -427,7 +427,7 @@ class TeaParser extends BaseParser
 		return $decl;
 	}
 
-	private function read_constant_declaration_header(string $name, string $modifier = null, NamespaceIdentifier $ns = null)
+	private function read_constant_declaration_header(string $name, ?string $modifier = null, ?NamespaceIdentifier $ns = null)
 	{
 		$decl = $this->factory->create_constant_declaration($modifier, $name, $ns);
 		$decl->pos = $this->pos;
@@ -696,7 +696,7 @@ class TeaParser extends BaseParser
 		}
 	}
 
-	protected function read_switch_block(string $label = null)
+	protected function read_switch_block(?string $label = null)
 	{
 		// case test-expression { branches }
 
@@ -760,7 +760,7 @@ class TeaParser extends BaseParser
 		return $items;
 	}
 
-	protected function read_for_block(string $label = null)
+	protected function read_for_block(?string $label = null)
 	{
 		// for k, v in items {} else {}
 		// for i in 0 to 9 {}  // the default step is 1
@@ -840,7 +840,7 @@ class TeaParser extends BaseParser
 		return $step;
 	}
 
-	protected function read_while_block(string $label = null)
+	protected function read_while_block(?string $label = null)
 	{
 		// e.g. while test_expression {}
 
@@ -866,7 +866,7 @@ class TeaParser extends BaseParser
 		return $this->scan_expression();
 	}
 
-	protected function read_expression(Operator $prev_operator = null): BaseExpression
+	protected function read_expression(?Operator $prev_operator = null): BaseExpression
 	{
 		$token = $this->scan_token_ignore_empty();
 		if ($token === null) {
@@ -881,7 +881,7 @@ class TeaParser extends BaseParser
 		return $expr;
 	}
 
-	protected function scan_expression(Operator $prev_operator = null)
+	protected function scan_expression(?Operator $prev_operator = null)
 	{
 		$token = $this->scan_token_ignore_empty();
 		if ($token === null or in_array($token, static::EXPR_STOPPING_SIGNS, true)) {
@@ -915,7 +915,7 @@ class TeaParser extends BaseParser
 		return $expr;
 	}
 
-	protected function read_expression_with_token(string $token, Operator $prev_operator = null): ?BaseExpression
+	protected function read_expression_with_token(string $token, ?Operator $prev_operator = null): ?BaseExpression
 	{
 		switch ($token) {
 			case _SINGLE_QUOTE:
@@ -1122,7 +1122,7 @@ class TeaParser extends BaseParser
 		return $this->read_lambda_combination($parameters);
 	}
 
-	protected function read_rest_lambda_parameters(ParameterDeclaration $parameter = null)
+	protected function read_rest_lambda_parameters(?ParameterDeclaration $parameter = null)
 	{
 		$items = [];
 
@@ -1470,7 +1470,7 @@ class TeaParser extends BaseParser
 		return $decl;
 	}
 
-	protected function read_expression_combination(BaseExpression $expr, Operator $prev_operator = null)
+	protected function read_expression_combination(BaseExpression $expr, ?Operator $prev_operator = null)
 	{
 		$token = $this->get_token_ignore_empty();
 
@@ -1647,7 +1647,7 @@ class TeaParser extends BaseParser
 		return $node;
 	}
 
-	protected function read_operation_for(BaseExpression $expr, Operator $prev_operator = null)
+	protected function read_operation_for(BaseExpression $expr, ?Operator $prev_operator = null)
 	{
 		$token = $this->get_token_ignore_empty();
 
@@ -1834,7 +1834,7 @@ class TeaParser extends BaseParser
 		return $items;
 	}
 
-	protected function read_class_declaration_with(string $name, ?string $modifier, NamespaceIdentifier $ns = null)
+	protected function read_class_declaration_with(string $name, ?string $modifier, ?NamespaceIdentifier $ns = null)
 	{
 		$decl = $this->factory->create_class_declaration($name, $modifier, $ns);
 		$decl->pos = $this->pos;
@@ -1845,7 +1845,7 @@ class TeaParser extends BaseParser
 		return $decl;
 	}
 
-	protected function read_interface_declaration(string $name, ?string $modifier, NamespaceIdentifier $ns = null)
+	protected function read_interface_declaration(string $name, ?string $modifier, ?NamespaceIdentifier $ns = null)
 	{
 		$decl = $this->factory->create_interface_declaration($name, $modifier, $ns);
 		$decl->pos = $this->pos;
@@ -1861,7 +1861,7 @@ class TeaParser extends BaseParser
 		return $decl;
 	}
 
-	protected function read_intertrait_declaration(string $name, ?string $modifier, NamespaceIdentifier $ns = null)
+	protected function read_intertrait_declaration(string $name, ?string $modifier, ?NamespaceIdentifier $ns = null)
 	{
 		$decl = $this->factory->create_intertrait_declaration($name, $modifier, $ns);
 		$decl->pos = $this->pos;
@@ -1875,7 +1875,7 @@ class TeaParser extends BaseParser
 		return $decl;
 	}
 
-	protected function read_trait_declaration(string $name, ?string $modifier, NamespaceIdentifier $ns = null)
+	protected function read_trait_declaration(string $name, ?string $modifier, ?NamespaceIdentifier $ns = null)
 	{
 		$decl = $this->factory->create_trait_declaration($name, $modifier, $ns);
 		$decl->pos = $this->pos;

@@ -31,7 +31,7 @@ function _std_replace(string $it, $search, $replacement) {
 	return str_replace($search, $replacement, $it);
 }
 
-function _has(array $it, string|int $key) {
+function _has(array $it, string|int|null $key) {
 	return array_key_exists($key, $it);
 }
 

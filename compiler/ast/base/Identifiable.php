@@ -105,10 +105,6 @@ class PlainIdentifier extends Identifiable implements IType
 			$is = false;
 		}
 
-		if (!$is and $target instanceof ClassKindredIdentifier) {
-			dump($this->name, $target->name);exit;
-		}
-
 		return $is;
 	}
 

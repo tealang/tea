@@ -567,7 +567,7 @@ class Compiler
 		file_put_contents($this->unit_public_file, $code);
 	}
 
-	private function collect_autoloads(Program $program, string $dist_file_path, string $name_prefix = null)
+	private function collect_autoloads(Program $program, string $dist_file_path, ?string $name_prefix = null)
 	{
 		if ($name_prefix !== null) {
 			$name_prefix = ltrim($name_prefix, _BACK_SLASH);

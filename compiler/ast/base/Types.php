@@ -15,6 +15,11 @@ trait ITypeTrait
 
 	public $has_null;
 
+	public function let_assigned_null()
+	{
+		$this->has_null = true;
+	}
+
 	public function let_nullable() {
 		$this->nullable = true;
 		$this->has_null = true;
@@ -119,7 +124,7 @@ abstract class SingleGenericType extends BaseType
 	 */
 	public $generic_type;
 
-	public function __construct(IType $generic_type = null) {
+	public function __construct(?IType $generic_type = null) {
 		$this->generic_type = $generic_type;
 	}
 

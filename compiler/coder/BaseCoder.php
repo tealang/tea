@@ -132,7 +132,7 @@ abstract class BaseCoder
 		return "$modifier $kind $name";
 	}
 
-	protected function get_declaration_modifier(IDeclaration $node, string $default_modifier = null)
+	protected function get_declaration_modifier(IDeclaration $node, ?string $default_modifier = null)
 	{
 		if ($node->label) {
 			$modifier = _SHARP . $node->label;
