@@ -496,7 +496,7 @@ class PHPCoder extends BaseCoder
 		return null;
 	}
 
-	public function render_class_declaration(ClassDeclaration $node)
+	public function render_class_declaration(ClassDeclaration|EnumDeclaration $node)
 	{
 		if ($node->is_extern) {
 			return null;
@@ -649,11 +649,11 @@ class PHPCoder extends BaseCoder
 
 	public function render_switch_block(SwitchBlock $node)
 	{
-		$test = $node->test->render($this);
+		$subject = $node->subject->render($this);
 
 		$branches = [];
 		foreach ($node->branches as $branch) {
-			$branches[] = $this->render_case_branch($branch);
+			$branches[] = $this->render_switch_branch($branch);
 		}
 
 		if ($node->else) {
@@ -661,7 +661,7 @@ class PHPCoder extends BaseCoder
 		}
 
 		$branches = $this->indents(join(LF, $branches));
-		$code = "switch ($test) {\n$branches\n}";
+		$code = "switch ($subject) {\n$branches\n}";
 
 		if ($node->has_exceptional()) {
 			$code = $this->wrap_with_except_block($node, $code);
@@ -673,7 +673,7 @@ class PHPCoder extends BaseCoder
 	protected function render_else_for_switch_block(IElseBlock $node)
 	{
 		if ($node instanceof ElseBlock) {
-			$body = $this->render_case_branch_body($node->body);
+			$body = $this->render_switch_branch_body($node->body);
 		}
 		else {
 			// that should be ElseIfBlock
@@ -691,12 +691,12 @@ class PHPCoder extends BaseCoder
 		return "default:\n{$body}";
 	}
 
-	protected function render_case_branch(CaseBranch $node)
+	protected function render_switch_branch(SwitchBranch $node)
 	{
 		$codes = [];
-		foreach ($node->rule_arguments as $argument) {
-			if ($argument) {
-				$expr = $argument->render($this);
+		foreach ($node->patterns as $pattern) {
+			if ($pattern) {
+				$expr = $pattern->render($this);
 				$branch = "case {$expr}:";
 			}
 			else {
@@ -706,12 +706,12 @@ class PHPCoder extends BaseCoder
 			$codes[] = $branch;
 		}
 
-		$codes[] = $this->render_case_branch_body($node->body);
+		$codes[] = $this->render_switch_branch_body($node->body);
 
 		return join(LF, $codes);
 	}
 
-	protected function render_case_branch_body(array $nodes)
+	protected function render_switch_branch_body(array $nodes)
 	{
 		$items = [];
 		$node = null;
@@ -810,7 +810,7 @@ class PHPCoder extends BaseCoder
 		return _DOLLAR . '__tmp' . $this->temp_name_index++;
 	}
 
-	private function build_foreach_statement(ControlBlock $node, string $iterable)
+	private function build_foreach_statement(BaseControlBlock $node, string $iterable)
 	{
 		$val = $node->val->render($this);
 		$body = $this->render_control_structure_body($node);
@@ -980,10 +980,10 @@ class PHPCoder extends BaseCoder
 		$expr = $node->content;
 		$type = $expr->expressed_type;
 
-		if ($type instanceof XViewType or $type instanceof PuresType) {
+		if (TypeHelper::is_simple_xtag_safe_value_type($type)) {
 			$code = $this->render_subexpression($expr, OperatorFactory::$concat);
 		}
-		elseif ($type instanceof IterableType and $type->generic_type instanceof XViewType) {
+		elseif ($type instanceof IterableType and TypeHelper::is_simple_xtag_safe_value_type($type->generic_type)) {
 			if ($type->nullable) {
 				$expr = new NoneCoalescingOperation($expr, new ArrayExpression());
 			}
@@ -1204,7 +1204,7 @@ class PHPCoder extends BaseCoder
 			$name = $this->get_normalized_name($name);
 		}
 
-		if ($node->basing instanceof CallExpression && $node->basing->is_instancing) {
+		if ($node->basing instanceof CallExpression && $node->basing->instancing) {
 			// for the class new expression
 			$basing = $node->basing->render($this);
 			$basing = "($basing)";
@@ -1374,7 +1374,7 @@ class PHPCoder extends BaseCoder
 		$arguments = $node->normalized_arguments ?? $node->arguments;
 		$arguments = $this->render_arguments($arguments);
 
-		if ($node->is_instancing) {
+		if ($node->instancing) {
 			$code = "new {$callee_code}($arguments)";
 		}
 		else {
@@ -1454,10 +1454,11 @@ class PHPCoder extends BaseCoder
 				$uri = ltrim($decl->program->unit->dist_ns_uri, static::NS_SEPARATOR);
 				$name = sprintf("'%s%s%s'", $uri, static::NS_SEPARATOR, $name);
 			}
+			elseif ($decl instanceof BuiltinTypeClassDeclaration) {
+				$name = "'{$decl->name}'";
+			}
 			elseif ($decl instanceof ClassKindredDeclaration) {
-				$name = TeaHelper::is_builtin_type_name($decl->name)
-					? "'{$decl->name}'"
-					: $name . '::class';
+				$name .= '::class';
 			}
 		}
 

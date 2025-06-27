@@ -75,7 +75,7 @@ class ReturnBuilder
 					continue;
 				}
 			}
-			elseif ($subnode instanceof ControlBlock) {
+			elseif ($subnode instanceof BaseControlBlock) {
 				// e.g. for-in, if-elseif-else, try-catch-finally, ...
 				$to_fix_block = clone $subnode;
 				$to_fix_block->body = $this->collect_block($to_fix_block);
@@ -92,8 +92,8 @@ class ReturnBuilder
 	{
 		$expr = $stmt->expression;
 		if ($expr->callee instanceof PlainIdentifier) {
-			// if ($expr->is_instancing && $expr->callee->is_same_or_based_with($this->collect_type)) {
-			if ($expr->is_instancing) {
+			// if ($expr->instancing && $expr->callee->is_same_or_based_with($this->collect_type)) {
+			if ($expr->instancing) {
 				if ($this->collect_type->is_accept_type($expr->callee)) {
 					$this->collecteds++;
 					$fixeds[] = new ArrayElementAssignment($this->vector_identifier, null, $expr);

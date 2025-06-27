@@ -1,23 +1,23 @@
+// the public declarations
 
 namespace tests\phpdemo
 
-// a php const
-public const PHP_CONST_DEMO String
+public const PHP_CONST_DEMO #Pures
 
-// a php function
+public class PHPClassDemo: Interface1 {
+	public get_class_name(caller String = 'anonymous') String
+	public static get_target_class_methods(class String) Array|Dict
+}
+
+public interface BaseInterface {
+	public get_class_name(caller String = 'anonymous') String
+}
+
+public interface Interface1: BaseInterface {
+	public const LINE #UInt
+	public static get_target_class_methods(class String) Array|Dict
+}
+
 public func php_function_demo(message String) Int
 
-// do not need 'as', because of it already has a suffix 'Interface'
-public interface BaseInterface {
-	public get_class_name(caller String = #default) String
-}
-
-// need use 'as' to add a suffix 'Interface'
-public interface Interface1 as DemoInterface: BaseInterface {
-	public LINE UInt
-	public static get_target_class_methods(class)
-}
-
-// a php class with a sub-namespace
-// 'as' syntax is required for all classes / interfaces witch has sub-namespaces
-public class NS1.Demo as PHPClassDemo: DemoInterface {}
+// program end

@@ -38,7 +38,7 @@ trait ElseTrait
 	}
 }
 
-abstract class BaseIfBlock extends ControlBlock implements IElseAble, IExceptAble
+abstract class BaseIfBlock extends BaseControlBlock implements IElseAble, IExceptAble
 {
 	use ElseTrait;
 
@@ -62,7 +62,7 @@ class ElseIfBlock extends BaseIfBlock implements IElseBlock
 	const KIND = 'elseif_block';
 }
 
-class ElseBlock extends ControlBlock implements IElseBlock
+class ElseBlock extends BaseControlBlock implements IElseBlock
 {
 	const KIND = 'else_block';
 }

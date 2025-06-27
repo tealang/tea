@@ -9,9 +9,13 @@ namespace Tea;
 
 interface IConstantDeclaration extends IValuedDeclaration {}
 
-trait ConstantDeclarationTrait
+class ConstantDeclaration extends RootDeclaration implements IConstantDeclaration, IRootDeclaration, IStatement
 {
 	use DeclarationTrait;
+
+	const KIND = 'constant_declaration';
+
+	public $is_static = true;
 
 	public $modifier;
 
@@ -23,28 +27,11 @@ trait ConstantDeclarationTrait
 			$this->is_unit_level = true;
 		}
 
-		$this->is_static = true;
 		$this->modifier = $modifier;
 		$this->name = $name;
 		$this->declared_type = $type;
 		$this->value = $value;
 	}
-}
-
-class ConstantDeclaration extends RootDeclaration implements IConstantDeclaration, IRootDeclaration, IStatement
-{
-	use ConstantDeclarationTrait;
-
-	const KIND = 'constant_declaration';
-
-	public $is_static;
-}
-
-class ClassConstantDeclaration extends Node implements IConstantDeclaration, IClassMemberDeclaration
-{
-	use ClassMemberDeclarationTrait, ConstantDeclarationTrait;
-
-	const KIND = 'class_constant_declaration';
 }
 
 // end

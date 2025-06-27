@@ -10,7 +10,7 @@ namespace Tea;
 interface IExceptAble {}
 interface IExceptBlock {}
 
-class TryBlock extends ControlBlock implements IExceptAble
+class TryBlock extends BaseControlBlock implements IExceptAble
 {
 	use ExceptTrait;
 
@@ -22,7 +22,7 @@ class TryBlock extends ControlBlock implements IExceptAble
 	// public $catching_all;
 }
 
-class CatchBlock extends ControlBlock
+class CatchBlock extends BaseControlBlock
 {
 	const KIND = 'catch_block';
 
@@ -34,7 +34,7 @@ class CatchBlock extends ControlBlock
 	}
 }
 
-class FinallyBlock extends ControlBlock
+class FinallyBlock extends BaseControlBlock
 {
 	const KIND = 'finally_block';
 }

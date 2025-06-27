@@ -30,6 +30,3 @@ trait IBlockTrait {
 	}
 }
 
-class ControlBlock extends BaseStatement implements IBlock {
-	use IBlockTrait;
-}

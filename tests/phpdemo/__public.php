@@ -1,30 +1,22 @@
 <?php
-/**
- * The phpdemo
- *
- */
-
 namespace tests\phpdemo;
 
-require_once __DIR__ . '/constants.php';
-require_once __DIR__ . '/functions.php';
+const UNIT_PATH = __DIR__ . DIRECTORY_SEPARATOR;
 
-// Please do not modify the following contents
+// program end
 
-
-
-
-
-
-# --- generates ---
+// autoloads
 const __AUTOLOADS = [
+	'tests\phpdemo\PHPClassDemo' => 'Demo.php',
 	'tests\phpdemo\BaseInterface' => 'InterfaceDemo.php',
-	'tests\phpdemo\Interface1' => 'InterfaceDemo.php',
-	'tests\phpdemo\NS1\Demo' => 'NS1/Demo.php'
+	'tests\phpdemo\Interface1' => 'InterfaceDemo.php'
 ];
 
 spl_autoload_register(function ($class) {
-	isset(__AUTOLOADS[$class]) && require __DIR__ . DIRECTORY_SEPARATOR . __AUTOLOADS[$class];
+	isset(__AUTOLOADS[$class]) && require UNIT_PATH . __AUTOLOADS[$class];
 });
+
+require_once UNIT_PATH . 'constants.php';
+require_once UNIT_PATH . 'functions.php';
 
 // end

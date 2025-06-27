@@ -27,7 +27,7 @@ abstract class BaseCallExpression extends BaseExpression
 	 * when creating class instance, set to true
 	 * @var bool
 	 */
-	public $is_instancing;
+	public $instancing;
 
 	public function __construct(BaseExpression $callee, array $arguments)
 	{

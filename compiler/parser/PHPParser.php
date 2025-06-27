@@ -41,6 +41,7 @@ class PHPParser extends BaseParser
 		'bool' => _BOOL,
 		'false' => _BOOL,
 		'array' => _GENERAL_ARRAY,
+		'dict' => _DICT,  // using in noted
 		'iterable' => _ITERABLE,
 		'callable' => _CALLABLE,
 		'object' => _OBJECT,
@@ -62,7 +63,7 @@ class PHPParser extends BaseParser
 
 	private const EXPR_STOPPING_SIGNS = [_PAREN_CLOSE, _BRACKET_CLOSE, _BLOCK_END, _COMMA, _SEMICOLON];
 
-	private const NORMAL_IDENTIFIER_TOKEN_TYPES = [T_STRING, T_ARRAY, T_STATIC, T_USE, T_UNSET, T_PRINT, T_NAME_FULLY_QUALIFIED];
+	private const NORMAL_IDENTIFIER_TOKEN_TYPES = [T_STRING, T_ARRAY, T_STATIC, T_USE, T_UNSET, T_PRINT, T_NEW, T_CLONE, T_AS, T_YIELD, T_NAME_FULLY_QUALIFIED];
 
 	private const SUPER_GLOBAL_NAMES = ['$_GET', '$_POST', '$_FILE', '$_COOKIE', '$_REQUEST', '$GLOBALS'];
 
@@ -202,6 +203,9 @@ class PHPParser extends BaseParser
 				$node = $this->read_class_declaration($attributes);
 				$node->is_abstract = true;
 				break;
+			case T_ENUM:
+				$node = $this->read_enum_declaration($attributes);
+				break;
 			case T_INTERFACE:
 				$node = $this->read_interface_declaration($attributes);
 				break;
@@ -231,9 +235,6 @@ class PHPParser extends BaseParser
 				break;
 			case T_SWITCH:
 				$node = $this->read_switch_block();
-				break;
-			case T_MATCH:
-				$node = $this->read_match_block();
 				break;
 			case T_FOR:
 				$node = $this->read_for_block();
@@ -692,6 +693,67 @@ class PHPParser extends BaseParser
 		}
 	}
 
+	private function read_match_block(?string $label = null)
+	{
+		$this->expect_paren_open();
+		$argument = $this->read_expression();
+		$this->expect_paren_close();
+
+		$block = $this->factory->create_match_block($argument);
+		$block->label = $label;
+		$block->pos = $this->pos;
+
+		$arms = $this->read_match_arms();
+		$block->set_arms($arms);
+
+		return $block;
+	}
+
+	private function read_match_arms()
+	{
+		$this->expect_block_begin();
+
+		$items = [];
+		while($patterns = $this->scan_patterns()) {
+			$item = $this->factory->create_match_arm($patterns);
+			$this->expect_typed_token_ignore_empty(T_DOUBLE_ARROW);
+			$item->return = $this->read_expression();
+			$items[] = $item;
+
+			if (!$this->skip_char_token(_COMMA)) {
+				break;
+			}
+		}
+
+		$this->expect_block_end();
+
+		return $items;
+	}
+
+	protected function scan_patterns()
+	{
+		$items = [];
+		while ($item = $this->scan_expression()) {
+			$items[] = $item;
+			if (!$this->skip_comma()) {
+				break;
+			}
+		}
+
+		// the 'default' pattern
+		// if ($this->skip_typed_token(T_DEFAULT)) {
+		// 	if ($items) {
+		// 		throw $this->new_unexpected_error();
+		// 	}
+
+		// 	$item = new DefaultPattern();
+		// 	$item->pos = $this->pos;
+		// 	$items[] = $item;
+		// }
+
+		return $items;
+	}
+
 	private function read_switch_block(?string $label = null)
 	{
 		$this->expect_paren_open();
@@ -702,43 +764,43 @@ class PHPParser extends BaseParser
 		$block->label = $label;
 		$block->pos = $this->pos;
 
-		$branches = $this->read_case_branches();
+		$branches = $this->read_switch_branches();
 		$block->set_branches($branches);
 
 		return $block;
 	}
 
-	private function read_case_branches()
+	private function read_switch_branches()
 	{
 		$this->expect_block_begin();
 
-		$branches = [];
-		$case_type = $this->skip_case();
+		$items = [];
+		$case_type = $this->scan_case_token();
 
 		while ($case_type) {
-			$arguments = $this->read_case_arguments($case_type);
-			$case_branch = $this->factory->create_case_branch_block($arguments);
+			$patterns = $this->read_switch_branch_patterns($case_type);
+			$branch = $this->factory->create_switch_branch($patterns);
 
 			$stmts = [];
-			while ($item = $this->read_inner_statement()) {
-				$stmts[] = $item;
+			while ($stmt = $this->read_inner_statement()) {
+				$stmts[] = $stmt;
 				$this->skip_comments();
-				$case_type = $this->skip_case();
+				$case_type = $this->scan_case_token();
 				if ($case_type) {
 					break;
 				}
 			}
 
-			$case_branch->set_body_with_statements($stmts);
-			$branches[] = $case_branch;
+			$branch->set_body_with_statements($stmts);
+			$items[] = $branch;
 		}
 
 		$this->expect_block_end();
 
-		return $branches;
+		return $items;
 	}
 
-	private function skip_case()
+	private function scan_case_token()
 	{
 		$next = $this->get_token_ignore_empty();
 		$type = is_string($next) ? 0 : $next[0];
@@ -754,7 +816,7 @@ class PHPParser extends BaseParser
 		return $skiped;
 	}
 
-	private function read_case_arguments(int $case_type)
+	private function read_switch_branch_patterns(int $case_type)
 	{
 		$items = [];
 		do {
@@ -763,7 +825,7 @@ class PHPParser extends BaseParser
 				: null;
 
 			$this->expect_char_token(_COLON);
-			$case_type = $this->skip_case();
+			$case_type = $this->scan_case_token();
 		}
 		while ($case_type);
 
@@ -884,6 +946,7 @@ class PHPParser extends BaseParser
 		$expr = $token
 			? $this->read_expression_with_token($token, $prev_op)
 			: null;
+
 		return $expr;
 	}
 
@@ -967,12 +1030,26 @@ class PHPParser extends BaseParser
 			case T_START_HEREDOC:
 				$expr = $this->read_interpolated_string(T_END_HEREDOC);
 				break;
+			case T_MATCH:
+				$expr = $this->read_match_block();
+				break;
+			case T_DEFAULT:
+				$expr = new DefaultPattern();
+				$expr->pos = $this->pos;
+				return $expr;
 			case T_INCLUDE_ONCE:
 			case T_INCLUDE:
 			case T_REQUIRE_ONCE:
 			case T_REQUIRE:
 				// include expression do not supported any combination
 				return $this->read_include_expression_with_token($token);
+			case T_LINE:
+			case T_FILE:
+			case T_DIR:
+			case T_CLASS_C:
+				$expr = $this->factory->create_identifier($token_content);
+				$expr->pos = $this->pos;
+				break;
 			default:
 				$expr = $this->scan_identifiable_expression_with_token($token);
 				if ($expr === null) {
@@ -1062,12 +1139,10 @@ class PHPParser extends BaseParser
 	protected function scan_arguments()
 	{
 		$items = [];
-
-		$item = $this->scan_expression();
-		if ($item) {
+		while ($item = $this->scan_expression()) {
 			$items[] = $item;
-			while ($this->skip_comma() and $item = $this->scan_expression()) {
-				$items[] = $item;
+			if (!$this->skip_comma()) {
+				break;
 			}
 		}
 
@@ -1300,6 +1375,10 @@ class PHPParser extends BaseParser
 				$name = $this->get_property_name($token);
 				break;
 			case T_PRINT:
+			case T_NEW:
+			case T_CLONE:
+			case T_AS:
+			case T_YIELD:
 			case T_STRING:
 				$name = $token[1];
 				// $name = static::METHOD_MAP[$name] ?? $name;
@@ -1489,16 +1568,11 @@ class PHPParser extends BaseParser
 	private function read_interface_declaration()
 	{
 		$name = $this->expect_identifier_name();
-
 		$decl = $this->factory->create_interface_declaration($name, _PUBLIC, $this->namespace);
 		$decl->pos = $this->pos;
 
 		if ($this->skip_typed_token(T_EXTENDS)) {
-			$identifiers = [];
-			do {
-				$identifiers[] = $this->read_classkindred_identifier();
-			}
-			while ($this->skip_char_token(_COMMA));
+			$identifiers = $this->read_classkindred_identifiers();
 			$decl->set_extends($identifiers);
 		}
 
@@ -1512,12 +1586,21 @@ class PHPParser extends BaseParser
 		return $decl;
 	}
 
-	private function read_trait_declaration()
+	private function read_class_declaration(array $attributes)
 	{
 		$name = $this->expect_identifier_name();
-
-		$decl = $this->factory->create_trait_declaration($name, _PUBLIC, $this->namespace);
+		$decl = $this->factory->create_class_declaration($name, _PUBLIC, $this->namespace);
 		$decl->pos = $this->pos;
+
+		if ($this->skip_typed_token(T_EXTENDS)) {
+			$identifiers = $this->read_classkindred_identifiers();
+			$decl->set_extends($identifiers);
+		}
+
+		if ($this->skip_typed_token(T_IMPLEMENTS)) {
+			$identifiers = $this->read_classkindred_identifiers();
+			$decl->set_implements($identifiers);
+		}
 
 		$this->expect_block_begin();
 
@@ -1529,30 +1612,54 @@ class PHPParser extends BaseParser
 		return $decl;
 	}
 
-	private function read_class_declaration(array $attributes)
+	private function read_enum_declaration(array $attributes)
 	{
 		$name = $this->expect_identifier_name();
-
-		$decl = $this->factory->create_class_declaration($name, _PUBLIC, $this->namespace);
+		$decl = $this->factory->create_enum_declaration($name, _PUBLIC, $this->namespace);
 		$decl->pos = $this->pos;
 
-		if ($this->skip_typed_token(T_EXTENDS)) {
-			$identifiers = [];
-			do {
-				$identifiers[] = $this->read_classkindred_identifier();
-			}
-			while ($this->skip_char_token(_COMMA));
-			$decl->set_extends($identifiers);
+		if ($this->skip_char_token(_COLON)) {
+			$decl->value_type = $this->read_simple_type_identifier();
 		}
 
 		if ($this->skip_typed_token(T_IMPLEMENTS)) {
-			$identifiers = [];
-			do {
-				$identifiers[] = $this->read_classkindred_identifier();
-			}
-			while ($this->skip_char_token(_COMMA));
+			$identifiers = $this->read_classkindred_identifiers();
 			$decl->set_implements($identifiers);
 		}
+
+		$this->expect_block_begin();
+
+		while ($this->read_class_member());
+
+		$this->expect_block_end();
+		$this->factory->end_class();
+
+		return $decl;
+	}
+
+	private function read_simple_type_identifier()
+	{
+		$name = $this->expect_identifier_name();
+		return $this->create_type_identifier($name);
+	}
+
+	private function read_classkindred_identifiers()
+	{
+		$items = [];
+		do {
+			$items[] = $this->read_classkindred_identifier();
+		}
+		while ($this->skip_char_token(_COMMA));
+
+		return $items;
+	}
+
+	private function read_trait_declaration()
+	{
+		$name = $this->expect_identifier_name();
+
+		$decl = $this->factory->create_trait_declaration($name, _PUBLIC, $this->namespace);
+		$decl->pos = $this->pos;
 
 		$this->expect_block_begin();
 
@@ -1664,15 +1771,6 @@ class PHPParser extends BaseParser
 		}
 
 		switch ($token[0]) {
-			case T_VAR:
-				$token = $this->expect_typed_token_ignore_empty();
-				// unbreak
-			case T_VARIABLE:
-				$member = $this->read_property_declaration($token, $modifier, $doc);
-				$member->is_static = $is_static;
-				$this->expect_statement_end();
-				break;
-
 			case T_STRING: // type annotated property
 			case T_ARRAY:
 			case T_NAME_FULLY_QUALIFIED:
@@ -1683,6 +1781,15 @@ class PHPParser extends BaseParser
 				$member = $this->read_property_declaration($token, $modifier, $doc, $declared_type);
 				$member->is_static = $is_static;
 				$member->noted_type = $noted_type;
+				$this->expect_statement_end();
+				break;
+
+			case T_VAR:
+				$token = $this->expect_typed_token_ignore_empty();
+				// unbreak
+			case T_VARIABLE:
+				$member = $this->read_property_declaration($token, $modifier, $doc);
+				$member->is_static = $is_static;
 				$this->expect_statement_end();
 				break;
 
@@ -1697,12 +1804,21 @@ class PHPParser extends BaseParser
 				$member->is_abstract = $is_abstract;
 				break;
 
-			case T_COMMENT:
-				return $this->read_class_member();
+			case T_CASE:
+				if ($modifier or $is_static) {
+					throw $this->new_unexpected_error();
+				}
+
+				$member = $this->read_enum_case_declaration($modifier);
+				$this->expect_statement_end();
+				break;
 
 			case T_USE:
 				$member = $this->read_traits_using_statement();
 				break;
+
+			case T_COMMENT:
+				return $this->read_class_member();
 
 			default:
 				throw $this->new_unexpected_error();
@@ -1755,19 +1871,6 @@ class PHPParser extends BaseParser
 		return $decl;
 	}
 
-	private function read_class_constant_declaration(?string $modifier, ?string $doc)
-	{
-		$name = $this->expect_identifier_name();
-		$decl = $this->factory->create_class_constant_declaration($modifier ?? _PUBLIC, $name);
-		$decl->pos = $this->pos;
-
-		$this->continue_reading_constant_decl($decl, $doc);
-
-		$this->factory->end_class_member();
-
-		return $decl;
-	}
-
 	private function continue_reading_constant_decl(IConstantDeclaration $decl, ?string $doc)
 	{
 		if ($doc) {
@@ -1789,6 +1892,34 @@ class PHPParser extends BaseParser
 			: null;
 
 		return $type_expr;
+	}
+
+	private function read_enum_case_declaration()
+	{
+		$name = $this->expect_identifier_name();
+		$decl = $this->factory->create_enum_case_declaration($name);
+		$decl->pos = $this->pos;
+
+		if ($this->skip_char_token(_ASSIGN)) {
+			$decl->value = $this->read_expression();
+		}
+
+		$this->factory->end_class_member();
+
+		return $decl;
+	}
+
+	private function read_class_constant_declaration(?string $modifier, ?string $doc)
+	{
+		$name = $this->expect_identifier_name();
+		$decl = $this->factory->create_class_constant_declaration($modifier ?? _PUBLIC, $name);
+		$decl->pos = $this->pos;
+
+		$this->continue_reading_constant_decl($decl, $doc);
+
+		$this->factory->end_class_member();
+
+		return $decl;
 	}
 
 	private function read_property_declaration(array $token, string $modifier, ?string $doc, ?IType $type = null)
@@ -2063,6 +2194,22 @@ class PHPParser extends BaseParser
 	// 	return $value;
 	// }
 
+	// private function read_class_type()
+	// {
+	// 	// NS1\NS2\Target
+	// 	// \NS1\NS2\Target
+
+	// 	$token = $this->expect_typed_token_ignore_empty();
+
+	// 	$ns_components = $this->read_qualified_name_with($token);
+	// 	$name = array_pop($ns_components);
+
+	// 	$identifier = $this->create_class_type_identifier($name, $ns_components);
+	// 	$identifier->pos = $this->pos;
+
+	// 	return $identifier;
+	// }
+
 	private function read_classkindred_identifier(?array $token = null)
 	{
 		// NS1\NS2\Target
@@ -2086,6 +2233,23 @@ class PHPParser extends BaseParser
 
 		return $identifier;
 	}
+
+	// private function create_class_type_identifier(string $name, ?array $ns_components = null)
+	// {
+	// 	$identifier = $this->factory->create_class_type_identifier($name);
+	// 	$identifier->pos = $this->pos;
+
+	// 	if ($ns_components) {
+	// 		$ns = $this->create_namespace_identifier($ns_components);
+	// 		$identifier->set_namespace($ns);
+
+	// 		// $target = $this->factory->append_use_target($ns, $name);
+	// 		// $statement = $this->create_use_statement_when_not_exists($ns, [$target]);
+	// 	}
+
+	// 	$this->program->append_unknow_identifier($identifier);
+	// 	return $identifier;
+	// }
 
 	private function create_classkindred_identifier(string $name, ?array $ns_components = null)
 	{
@@ -2163,19 +2327,9 @@ class PHPParser extends BaseParser
 
 	private function create_type_identifier(string $name, bool $nullable = false)
 	{
-		$name = static::TYPE_MAP[strtolower($name)] ?? $name;
-		$identifier = $this->create_compatible_type_identifier($name, $nullable);
-		$identifier->pos = $this->pos;
-
-		return $identifier;
-	}
-
-	private function create_compatible_type_identifier(string $name, bool $nullable = false)
-	{
-		if ($identifier = TypeFactory::get_type($name)) {
-			if ($nullable) {
-				$identifier = clone $identifier;
-			}
+		$name_in_tea = static::TYPE_MAP[strtolower($name)] ?? null;
+		if ($name_in_tea and $type_identifier = TypeFactory::get_type($name_in_tea)) {
+			$identifier = clone $type_identifier;
 		}
 		elseif (strpos($name, static::NS_SEPARATOR) !== false) {
 			$names = explode(static::NS_SEPARATOR, $name);
@@ -2284,6 +2438,7 @@ class PHPParser extends BaseParser
 
 	private function expect_char_token(string $char)
 	{
+		$this->skip_comments();
 		$token = $this->scan_token_ignore_empty();
 		if ($token !== $char) {
 			throw $this->new_unexpected_error();
@@ -2470,6 +2625,7 @@ class PHPParser extends BaseParser
 		$next = $this->get_token_ignore_space();
 		if ($next !== null and ($next[0] === T_DOC_COMMENT || $next[0] === T_COMMENT)) {
 			$comment = $next[1];
+			$tmp = null;
 			do {
 				$this->pos++;
 				$tmp = $this->tokens[$this->pos] ?? null;
@@ -2484,6 +2640,7 @@ class PHPParser extends BaseParser
 
 	private function scan_token_ignore_empty()
 	{
+		$token = null;
 		do {
 			$this->pos++;
 			$token = $this->tokens[$this->pos] ?? null;
@@ -2511,6 +2668,7 @@ class PHPParser extends BaseParser
 	{
 		$pos = $this->pos;
 
+		$token = null;
 		do {
 			$pos++;
 			$token = $this->tokens[$pos] ?? null;
@@ -2526,6 +2684,7 @@ class PHPParser extends BaseParser
 	{
 		$pos = $this->pos;
 
+		$token = null;
 		do {
 			$pos++;
 			$token = $this->tokens[$pos] ?? null;

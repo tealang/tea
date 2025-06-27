@@ -64,7 +64,7 @@ class ASTFactory
 		$this->root_namespace = $this->create_namespace_identifier(['']);
 
 		// the constant 'UNIT_PATH'
-		$decl = new ConstantDeclaration(_PUBLIC, _UNIT_PATH, TypeFactory::$_string, null);
+		$decl = new ConstantDeclaration(_PUBLIC, _UNIT_PATH, TypeFactory::$_string);
 		$this->unit_path_symbol = new Symbol($decl);
 	}
 
@@ -178,6 +178,26 @@ class ASTFactory
 
 		return $identifier;
 	}
+
+	// public function create_type_identifier(string $name)
+	// {
+	// 	$identifier = TeaHelper::is_builtin_identifier($name)
+	// 		? $this->create_builtin_identifier($name)
+	// 		: $this->create_class_type_identifier($name);
+
+	// 	return $identifier;
+	// }
+
+	// public function create_class_type_identifier(string $name)
+	// {
+	// 	if (strtolower($name) === 'Array') {
+	// 		debug_print_backtrace();
+	// 		exit;
+	// 	}
+	// 	$identifier = new ClassType($name);
+	// 	$this->set_defer_check($identifier);
+	// 	return $identifier;
+	// }
 
 	public function create_identifier(string $name)
 	{
@@ -299,7 +319,15 @@ class ASTFactory
 
 	public function create_binary_operation(BaseExpression $left, BaseExpression $right, Operator $operator)
 	{
-		$expr = new BinaryOperation($left, $right, $operator);
+		if ($operator->is(OPID::IS)) {
+			$type = $this->create_classkindred_identifier($right->name);
+			$type->pos = $right;
+			$expr = new IsOperation($left, $type);
+		}
+		else {
+			$expr = new BinaryOperation($left, $right, $operator);
+		}
+
 		return $expr;
 	}
 
@@ -381,7 +409,7 @@ class ASTFactory
 			throw new Exception("Error: Program name '{$program->name}' has been used, please rename the file '{$program->file}'");
 		}
 
-		$program->initializer = new FunctionDeclaration(_INTERNAL, '__main', null, []);
+		$program->initializer = new FunctionDeclaration(_INTERNAL, '__main');
 		$program->initializer->program = $program;
 
 		$this->program = $program;
@@ -415,7 +443,7 @@ class ASTFactory
 	{
 		// $program and $program = $this->switch_program($program);
 
-		$decl = new FunctionDeclaration(_INTERNAL, $name, null, []);
+		$decl = new FunctionDeclaration(_INTERNAL, $name);
 		$decl->is_virtual = true;
 
 		// $symbol = $this->create_symbol_for_top_declaration($decl, null);
@@ -524,6 +552,20 @@ class ASTFactory
 		$this->check_global_modifier($modifier, 'class');
 
 		$decl = new ClassDeclaration($modifier, $name);
+
+		$symbol = $this->create_symbol_for_top_declaration($decl, $ns);
+		$this->bind_class_symbol($decl, $symbol);
+
+		$this->begin_class($decl);
+
+		return $decl;
+	}
+
+	public function create_enum_declaration(string $name, string $modifier, ?NamespaceIdentifier $ns = null)
+	{
+		$this->check_global_modifier($modifier, 'enum');
+
+		$decl = new EnumDeclaration($modifier, $name);
 
 		$symbol = $this->create_symbol_for_top_declaration($decl, $ns);
 		$this->bind_class_symbol($decl, $symbol);
@@ -675,6 +717,13 @@ class ASTFactory
 		return $decl;
 	}
 
+	public function create_enum_case_declaration(string $name)
+	{
+		$decl = new EnumCaseDeclaration($name);
+		$this->begin_class_member($decl);
+		return $decl;
+	}
+
 	public function create_constant_declaration(?string $modifier, string $name, ?NamespaceIdentifier $ns = null)
 	{
 		$this->check_global_modifier($modifier, 'constant');
@@ -773,16 +822,29 @@ class ASTFactory
 		return $block;
 	}
 
-	public function create_switch_block(BaseExpression $test_argument)
+	public function create_match_block(BaseExpression $subject)
 	{
-		$block = new SwitchBlock($test_argument);
+		$block = new MatchBlock($subject);
 		$this->begin_block($block);
 		return $block;
 	}
 
-	public function create_case_branch_block(array $rule_arguments)
+	public function create_match_arm(array $patterns)
 	{
-		$block = new CaseBranch($rule_arguments);
+		$expr = new MatchArm($patterns);
+		return $expr;
+	}
+
+	public function create_switch_block(BaseExpression $subject)
+	{
+		$block = new SwitchBlock($subject);
+		$this->begin_block($block);
+		return $block;
+	}
+
+	public function create_switch_branch(array $patterns)
+	{
+		$block = new SwitchBranch($patterns);
 		$this->begin_block($block);
 		return $block;
 	}
@@ -909,7 +971,7 @@ class ASTFactory
 		return $block;
 	}
 
-	private function prepare_forin_vars(?ParameterDeclaration $key, ParameterDeclaration $val, ControlBlock $block)
+	private function prepare_forin_vars(?ParameterDeclaration $key, ParameterDeclaration $val, BaseControlBlock $block)
 	{
 		if ($key) {
 			// $key = new VariableDeclaration($key->name);
@@ -951,13 +1013,13 @@ class ASTFactory
 
 // --------
 
-	public function end_branches(ControlBlock $node)
+	public function end_branches(BaseControlBlock $node)
 	{
 		$symbols = $this->dig_intersected_symbols_for_block($node);
 		$this->add_symbols_to_block($node->belong_block, $symbols);
 	}
 
-	private function dig_intersected_symbols_for_block(ControlBlock $node)
+	private function dig_intersected_symbols_for_block(BaseControlBlock $node)
 	{
 		$symbols = [];
 		if ($node instanceof IfBlock) {
@@ -981,7 +1043,7 @@ class ASTFactory
 		return $symbols;
 	}
 
-	private function intersect_symbols_with_blocks(ControlBlock $block, array $branches)
+	private function intersect_symbols_with_blocks(BaseControlBlock $block, array $branches)
 	{
 		$symbols = $block->symbols;
 		foreach ($branches as $branch) {

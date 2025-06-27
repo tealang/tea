@@ -61,8 +61,9 @@ class TeaParser extends BaseParser
 
 		$this->trace_statement($token);
 
+		$node = null;
 		if ($token === _SHARP) {
-			$node = $this->read_root_labeled_statement();
+			$this->read_root_labeled_statement();
 		}
 		elseif ($token === _DOC_MARK) {
 			$doc = $this->read_doc_comment();
@@ -117,6 +118,7 @@ class TeaParser extends BaseParser
 
 		$this->trace_statement($token);
 
+		$node = null;
 		// if ($token === _SHARP) {
 		// 	$node = $this->read_inner_label_statement();
 		// }
@@ -215,7 +217,7 @@ class TeaParser extends BaseParser
 				throw $this->new_parse_error("Unknow sharp statement");
 		}
 
-		return $node;
+		return null;
 	}
 
 	// protected function read_inner_label_statement()
@@ -452,6 +454,9 @@ class TeaParser extends BaseParser
 		if ($this->get_token() === _PAREN_OPEN) {
 			$parameters = $this->read_parameters_with_parentheses();
 			$this->factory->set_scope_parameters($parameters);
+		}
+		else {
+			$decl->is_property = true;
 		}
 
 		$this->read_type_hints_for_declaration($decl);
@@ -705,7 +710,7 @@ class TeaParser extends BaseParser
 		$block = $this->factory->create_switch_block($argument);
 		$block->label = $label;
 
-		$branches = $this->read_case_branches();
+		$branches = $this->read_switch_branches();
 		$block->set_branches($branches);
 
 		$this->scan_else_block_for($block);
@@ -714,14 +719,14 @@ class TeaParser extends BaseParser
 		return $block;
 	}
 
-	protected function read_case_branches()
+	protected function read_switch_branches()
 	{
 		$this->expect_block_begin();
 
 		$branches = [];
 		while ($arguments = $this->read_case_arguments()) {
 			$this->expect_token_ignore_space(_COLON);
-			$case_branch = $this->factory->create_case_branch_block($arguments);
+			$case_branch = $this->factory->create_switch_branch($arguments);
 
 			$statements = [];
 			while (($item = $this->read_inner_statement()) !== null) {
@@ -746,6 +751,7 @@ class TeaParser extends BaseParser
 
 	private function read_case_arguments()
 	{
+		$this->skip_comments();
 		if (!$this->skip_token_ignore_empty(_CASE)) {
 			return null;
 		}
@@ -1824,6 +1830,7 @@ class TeaParser extends BaseParser
 			return [];
 		}
 
+		$items = [];
 		while ($item = $this->scan_expression()) {
 			$items[] = $item;
 			if (!$this->skip_comma()) {

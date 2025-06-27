@@ -110,15 +110,17 @@ class TeaHeaderCoder extends BaseCoder
 		$header = _MASKED . " {$node->name}";
 		$type = $this->render_type_expr_for_decl($node);
 
-		if ($node->parameters === null && $node->callbacks === null) {
-			return "{$header} {$type}";
+		if ($node->is_property) {
+			$code = "{$header} {$type}";
 		}
 		else {
 			$parameters = $node->parameters ? $this->render_parameters($node->parameters) : '';
 			$callbacks = $node->callbacks ? $this->render_callback_protocols($node->callbacks) : '';
 
-			return "{$header}($parameters) {$type}{$callbacks}";
+			$code = "{$header}($parameters) {$type}{$callbacks}";
 		}
+
+		return $code;
 	}
 
 	protected function render_type_expr_for_decl(IDeclaration $node)

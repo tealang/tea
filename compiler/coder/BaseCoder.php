@@ -233,6 +233,11 @@ abstract class BaseCoder
 		return join(' ', $items);
 	}
 
+	protected function generate_enum_case_header(EnumCaseDeclaration $node)
+	{
+		return 'case ' . $node->name;
+	}
+
 	protected function generate_class_constant_header(ClassConstantDeclaration $node)
 	{
 		return $this->generate_constant_header($node);
@@ -305,7 +310,7 @@ abstract class BaseCoder
 	{
 		$code = _MASKED . " {$node->name}";
 
-		if ($node->parameters !== null) {
+		if (!$node->is_property) {
 			$parameters = $this->render_parameters($node->parameters);
 			$code .= "($parameters)";
 		}
@@ -380,7 +385,7 @@ abstract class BaseCoder
 		return $code;
 	}
 
-	public function render_class_declaration(ClassDeclaration $node)
+	public function render_class_declaration(ClassDeclaration|EnumDeclaration $node)
 	{
 		$body = $this->render_block_nodes($node->members);
 
@@ -391,6 +396,11 @@ abstract class BaseCoder
 		);
 
 		return $code;
+	}
+
+	public function render_enum_declaration(EnumDeclaration $node)
+	{
+		return $this->render_class_declaration($node);
 	}
 
 	public function render_interface_declaration(InterfaceDeclaration $node)
@@ -435,6 +445,17 @@ abstract class BaseCoder
 	public function render_property_declaration(PropertyDeclaration $node)
 	{
 		$code = $this->generate_property_header($node);
+
+		if ($node->value) {
+			$code .= ' = ' . $node->value->render($this);
+		}
+
+		return $code . static::CLASS_MEMBER_TERMINATOR;
+	}
+
+	public function render_enum_member_declaration(EnumCaseDeclaration $node)
+	{
+		$code = $this->generate_enum_case_header($node);
 
 		if ($node->value) {
 			$code .= ' = ' . $node->value->render($this);
@@ -692,7 +713,7 @@ abstract class BaseCoder
 		return $this->get_variable_name($node);
 	}
 
-	private function get_variable_name(VariableIdentifier|BaseVariableDeclaration $node)
+	private function get_variable_name(VariableIdentifier|IVariableDeclaration $node)
 	{
 		$name = $node->name;
 		if ($name[0] === _DOLLAR) {
@@ -763,10 +784,19 @@ abstract class BaseCoder
 		return sprintf('(%s) %s', $parameters, $type);
 	}
 
+	// public function render_class_type(ClassType $node)
+	// {
+	// 	$name = $node->name;
+	// 	if ($node->ns) {
+	// 		return $this->render_namespace_identifier($node->ns) . static::NS_SEPARATOR . $name;
+	// 	}
+
+	// 	return $name;
+	// }
+
 	public function render_classkindred_identifier(ClassKindredIdentifier $node)
 	{
 		$name = $node->name;
-
 		if ($node->ns) {
 			return $this->render_namespace_identifier($node->ns) . static::NS_SEPARATOR . $name;
 		}

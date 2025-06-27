@@ -9,6 +9,13 @@ namespace Tea;
 
 class TypeHelper
 {
+	public static function is_simple_xtag_safe_value_type(?IType $type)
+	{
+		return $type instanceof PuresType
+			or $type instanceof XViewType
+			or $type->symbol->declaration->is_same_or_based_with_symbol(TypeFactory::$_iview_symbol);
+	}
+
 	public static function is_xtag_child_type(?IType $type)
 	{
 		$is = false;
@@ -16,7 +23,9 @@ class TypeHelper
 			|| $type instanceof StringType
 			|| $type instanceof IntType
 			|| $type instanceof FloatType
-			|| $type instanceof NoneType) {
+			|| $type instanceof NoneType
+			|| $type->symbol->declaration->is_same_or_based_with_symbol(TypeFactory::$_iview_symbol)
+		) {
 			$is = true;
 		}
 		elseif ($type instanceof IterableType and $type->generic_type instanceof XViewType) {
@@ -102,6 +111,7 @@ class TypeHelper
 
 	public static function is_scalar_type(?IType $type)
 	{
+		$is = false;
 		if ($type instanceof IScalarType or $type instanceof NoneType) {
 			$is = true;
 		}
@@ -112,9 +122,6 @@ class TypeHelper
 					break;
 				}
 			}
-		}
-		else {
-			$is = false;
 		}
 
 		return $is;

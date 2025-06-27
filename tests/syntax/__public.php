@@ -20,6 +20,9 @@ function fn0($str) {
 // autoloads
 const __AUTOLOADS = [
 	'tests\syntax\PHPClassInMixed1' => 'php/_mixed1.php',
+	'tests\syntax\Colorful' => 'php/enum.php',
+	'tests\syntax\Rectangle' => 'php/enum.php',
+	'tests\syntax\Suit' => 'php/enum.php',
 	'tests\syntax\IDemo' => 'dist/class.php',
 	'tests\syntax\IDemoTrait' => 'dist/class.php',
 	'tests\syntax\IterableObject' => 'dist/class.php',
@@ -43,6 +46,7 @@ spl_autoload_register(function ($class) {
 });
 
 require_once UNIT_PATH . 'php/_mixed2.php';
+require_once UNIT_PATH . 'php/enum.php';
 require_once UNIT_PATH . 'dist/function.php';
 
 // end

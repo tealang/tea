@@ -7,7 +7,7 @@
 
 namespace Tea;
 
-class WhileLikeBlock extends ControlBlock implements IExceptAble, IBreakAble, IContinueAble
+class WhileLikeBlock extends BaseControlBlock implements IExceptAble, IBreakAble, IContinueAble
 {
 	use ExceptTrait;
 
@@ -34,7 +34,7 @@ class DoWhileBlock extends WhileLikeBlock
 	const KIND = 'do_while_block';
 }
 
-class LoopBlock extends ControlBlock implements IExceptAble, IBreakAble, IContinueAble
+class LoopBlock extends BaseControlBlock implements IExceptAble, IBreakAble, IContinueAble
 {
 	use ExceptTrait;
 

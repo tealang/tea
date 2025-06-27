@@ -24,7 +24,27 @@ public class PHPClassInMixed1 {
 
 public func php_get_num() Int
 
-public func fn0(str) #String
+public interface Colorful {
+	public color() String
+}
+
+public trait Rectangle {
+	public shape() String
+}
+
+public class Suit: Colorful {
+	case Hearts = 1
+	case Diamonds = 2
+	case Clubs = 3
+	case Spades = '122'
+	public const A #Suit
+	public color() String
+	public shape() String
+}
+
+public func paint(c Colorful) #String
+
+public func fn0(str) #Pures
 
 public class TeaDemoClass {
 	static static_prop1 #Pures

@@ -237,8 +237,8 @@ class UnionType extends BaseType
 	}
 
 	public function is_all_array_types() {
-		foreach ($this->members as $member_type) {
-			if (!$member_type instanceof ArrayType) {
+		foreach ($this->members as $type) {
+			if (!$type instanceof ArrayType) {
 				return false;
 			}
 		}
@@ -247,8 +247,9 @@ class UnionType extends BaseType
 	}
 
 	public function is_all_dict_types() {
-		foreach ($this->members as $member_type) {
-			if (!$member_type instanceof DictType) {
+		foreach ($this->members as $type) {
+			if (!$type instanceof DictType
+				and !$type->symbol->declaration->has_feature(ClassFeature::ARRAY_ACCESS)) {
 				return false;
 			}
 		}
@@ -258,8 +259,8 @@ class UnionType extends BaseType
 
 	public function has_array_or_dict_type() {
 		$has = false;
-		foreach ($this->members as $member_type) {
-			if ($member_type instanceof ArrayType || $member_type instanceof DictType) {
+		foreach ($this->members as $type) {
+			if ($type instanceof ArrayType || $type instanceof DictType) {
 				$has = true;
 				break;
 			}
@@ -502,7 +503,7 @@ class BytesType extends BaseType implements IScalarType {
 }
 
 class StringType extends BaseType implements IScalarType {
-	const ACCEPT_TYPES = [_BYTES, _INT, _UINT, _PURE_STRING, _XVIEW];
+	const ACCEPT_TYPES = [_BYTES, _INT, _UINT, _PURE_STRING, _XVIEW, _METATYPE];
 	public $name = _STRING;
 }
 

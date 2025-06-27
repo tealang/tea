@@ -104,7 +104,7 @@ class ASTChecker
 
 	public function link_declarations(Program $program)
 	{
-		$this->program = $program;
+		$this->set_program($program, __LINE__);
 
 		foreach ($program->declarations as $decl) {
 			if ($decl instanceof ClassKindredDeclaration) {
@@ -118,8 +118,16 @@ class ASTChecker
 		$program->initializer && $this->resolve_unknown_identifiers($program->initializer);
 	}
 
+	private function set_program(Program $program, int $line)
+	{
+		$this->program = $program;
+	}
+
 	private function resolve_unknown_identifiers(IDeclaration $host_decl)
 	{
+		$temp_program = $this->program;
+		$host_decl->program and $this->set_program($host_decl->program, __LINE__);
+
 		foreach ($host_decl->unknow_identifiers as $identifier) {
 			if ($identifier->symbol !== null) {
 				// eg. identifiers that in foreach arguments
@@ -155,6 +163,8 @@ class ASTChecker
 
 			$identifier->symbol = $symbol;
 		}
+
+		$host_decl->program and $this->set_program($temp_program, __LINE__);
 	}
 
 	private function try_create_virtual_symbol(PlainIdentifier $identifier)
@@ -181,7 +191,7 @@ class ASTChecker
 		if ($program->is_checked) return;
 		$program->is_checked = true;
 
-		$this->program = $program;
+		$this->set_program($program, __LINE__);
 
 		// foreach ($program->use_targets as $target) {
 		// 	$this->check_use_target($target);
@@ -198,7 +208,7 @@ class ASTChecker
 
 	public function check_all_usings(Program $program)
 	{
-		$this->program = $program;
+		$this->set_program($program, __LINE__);
 		foreach ($program->use_targets as $target) {
 			$this->check_use_target($target);
 		}
@@ -223,7 +233,7 @@ class ASTChecker
 
 		$decl_program = $decl->program ?? null;
 		$temp_program = $this->program;
-		$decl_program and $this->program = $decl_program;
+		$decl_program and $this->set_program($decl_program, __LINE__);
 
 		switch ($decl::KIND) {
 			case FunctionDeclaration::KIND:
@@ -232,6 +242,7 @@ class ASTChecker
 
 			case BuiltinTypeClassDeclaration::KIND:
 			case ClassDeclaration::KIND:
+			case EnumDeclaration::KIND:
 			case IntertraitDeclaration::KIND:
 			case TraitDeclaration::KIND:
 			case InterfaceDeclaration::KIND:
@@ -252,7 +263,7 @@ class ASTChecker
 				throw $this->new_syntax_error("Unexpect declaration kind: '{$kind}'", $decl);
 		}
 
-		$decl_program and $this->program = $temp_program;
+		$decl_program and $this->set_program($temp_program, __LINE__);
 	}
 
 	private function check_class_member_declaration(IClassMemberDeclaration $node)
@@ -273,6 +284,10 @@ class ASTChecker
 
 			case ClassConstantDeclaration::KIND:
 				$this->check_class_constant_declaration($node);
+				break;
+
+			case EnumCaseDeclaration::KIND:
+				$this->check_enum_case_declaration($node);
 				break;
 
 			default:
@@ -399,7 +414,7 @@ class ASTChecker
 		return $result;
 	}
 
-	private function check_variable_declaration(BaseVariableDeclaration $node)
+	private function check_variable_declaration(IVariableDeclaration $node)
 	{
 		$node->is_checked = true;
 
@@ -639,6 +654,16 @@ class ASTChecker
 		$this->set_variable_kindred_declaration_type($node, $infered);
 	}
 
+	private function check_enum_case_declaration(EnumCaseDeclaration $node)
+	{
+		if ($node->value !== null) {
+			$infered = $this->infer_expression($node->value);
+			$this->assert_compile_time_value_for($node);
+		}
+
+		$node->infered_type = $node->belong_block->typing_identifier;
+	}
+
 	private function check_class_constant_declaration(ClassConstantDeclaration $node)
 	{
 		$infered = isset($node->value) ? $this->infer_expression($node->value) : null;
@@ -862,7 +887,7 @@ class ASTChecker
 		$covariance_mode = false;
 		if ($super instanceof MethodDeclaration) {
 			if (!$node instanceof MethodDeclaration) {
-				throw $this->new_syntax_error("Kind of '{$node->belong_block->name}.{$node->name}' is incompatible with '{$super->belong_block->name}.{$super->name}'", $node);
+				throw $this->new_syntax_error("Member declaration kind of '{$node->belong_block->name}.{$node->name}' is incompatible with '{$super->belong_block->name}.{$super->name}'", $node);
 			}
 
 			$this->check_overrided_method_parameters($node, $super);
@@ -870,7 +895,7 @@ class ASTChecker
 		}
 		elseif ($super instanceof PropertyDeclaration) {
 			if (!$node instanceof PropertyDeclaration) {
-				throw $this->new_syntax_error("Kind of '{$node->belong_block->name}.{$node->name}' is incompatible with '{$super->belong_block->name}.{$super->name}'", $node);
+				throw $this->new_syntax_error("Member declaration kind of '{$node->belong_block->name}.{$node->name}' is incompatible with '{$super->belong_block->name}.{$super->name}'", $node);
 			}
 		}
 		elseif ($super instanceof ClassConstantDeclaration && $is_interface) {
@@ -937,6 +962,7 @@ class ASTChecker
 	{
 		return $super === $current
 			|| $super->symbol === $current->symbol
+			|| $super->symbol->declaration === $current->symbol->declaration
 			|| ($super === TypeFactory::$_int && $current === TypeFactory::$_uint)
 			|| $current instanceof UnionType && $current->is_accept_type($super)  // supports Contravariance
 		;
@@ -955,12 +981,13 @@ class ASTChecker
 
 	private function infer_base_if_block(BaseIfBlock $node): ?IType
 	{
-		$this->infer_expression($node->condition);
+		$condition = $node->condition;
+		$this->infer_expression($condition);
 
-		$assertion = $this->get_type_assertion($node->condition);
+		[$assertion, $is_not] = $this->get_type_assertion($condition);
 		if ($assertion) {
 			// with type assertion
-			$result_type = $this->infer_base_if_block_with_assertion($node, $assertion);
+			$result_type = $this->infer_base_if_block_with_assertion($node, $assertion, $is_not);
 		}
 		else {
 			// without type assertion
@@ -973,20 +1000,30 @@ class ASTChecker
 		return $result_type;
 	}
 
-	private function get_type_assertion(BaseExpression $condition)
+	private function get_type_assertion(BaseExpression $expr)
 	{
-		$assertion = null;
-		if ($condition instanceof BinaryOperation) {
-			$assertion = $condition->type_assertion;
-		}
-		elseif ($condition instanceof Identifiable) {
-			$assertion = new IsOperation($condition, TypeFactory::$_none, true);
+		$is_not = false;
+		if ($expr instanceof PrefixOperation and $expr->operator->is(OPID::BOOL_NOT)) {
+			$is_not = true;
+			$expr = $expr->expression;
 		}
 
-		return $assertion;
+		$assertion = null;
+		if ($expr instanceof BinaryOperation) {
+			$assertion = $expr->type_assertion;
+		}
+		elseif ($expr instanceof Identifiable) {
+			$assertion = new IsOperation($expr, TypeFactory::$_none, true);
+		}
+
+		if ($assertion and $assertion->not) {
+			$is_not = !$is_not;
+		}
+
+		return [$assertion, $is_not];
 	}
 
-	private function infer_base_if_block_with_assertion(BaseIfBlock $node, IsOperation $type_assertion): ?IType
+	private function infer_base_if_block_with_assertion(BaseIfBlock $node, IsOperation $type_assertion, bool $is_not): ?IType
 	{
 		// cannot use type assertion when not an Identifiable
 		if (!$type_assertion->left instanceof Identifiable) {
@@ -1007,7 +1044,7 @@ class ASTChecker
 		$left_type = $left_original_type ?? TypeFactory::$_any;
 		$asserting_type = $type_assertion->right;
 
-		if ($type_assertion->not) {
+		if ($is_not) {
 			if ($left_type instanceof UnionType) {
 				$asserted_then_type = $left_type->get_members_type_except($asserting_type);
 			}
@@ -1105,25 +1142,25 @@ class ASTChecker
 
 	private function infer_switch_block(SwitchBlock $node): ?IType
 	{
-		$matching_type = $this->infer_expression($node->test);
-		if (!$this->is_weakly_checking && !TypeHelper::is_case_testable_type($matching_type)) {
-			$matching_type_name = self::get_type_name($matching_type);
-			throw $this->new_syntax_error("The case compare expression should be String/Int/UInt, $matching_type_name given", $node->test);
+		$subject_type = $this->infer_expression($node->subject);
+		if (!$this->is_weakly_checking && !TypeHelper::is_case_testable_type($subject_type)) {
+			$subject_type_name = self::get_type_name($subject_type);
+			throw $this->new_syntax_error("The switch subject should be String/Int/UInt, $subject_type_name given", $node->subject);
 		}
 
 		$infereds = [];
 		foreach ($node->branches as $branch) {
-			foreach ($branch->rule_arguments as $argument) {
-				if ($argument === null) {
-					// the default branch
+			foreach ($branch->patterns as $pattern) {
+				if ($pattern === null) {
+					// the 'default' branch
 					continue;
 				}
 
-				$case_type = $this->infer_expression($argument);
-				if (!TypeHelper::is_switch_compatible($matching_type, $case_type)) {
-					$matching_type_name = self::get_type_name($matching_type);
+				$case_type = $this->infer_expression($pattern);
+				if (!TypeHelper::is_switch_compatible($subject_type, $case_type)) {
+					$subject_type_name = self::get_type_name($subject_type);
 					$case_type_name = self::get_type_name($case_type);
-					throw $this->new_syntax_error("Incompatible matching types, matching type is $matching_type_name, case type is $case_type_name", $argument);
+					throw $this->new_syntax_error("Incompatible matching types, matching type is $subject_type_name, case type is $case_type_name", $pattern);
 				}
 			}
 
@@ -1136,10 +1173,37 @@ class ASTChecker
 			$result_type = $this->reduce_types_with_else_block($node, $result_type);
 		}
 
-		// if ($node->has_exceptional()) {
-		// 	$result_type = $this->reduce_types_with_except_block($node, $result_type);
-		// }
+		return $result_type;
+	}
 
+	private function infer_match_block(MatchBlock $node): ?IType
+	{
+		$subject_type = $this->infer_expression($node->subject);
+		if (!$this->is_weakly_checking && !TypeHelper::is_case_testable_type($subject_type)) {
+			$subject_type_name = self::get_type_name($subject_type);
+			throw $this->new_syntax_error("The match subject should be String/Int/UInt, $subject_type_name given", $node->subject);
+		}
+
+		$infereds = [];
+		foreach ($node->arms as $arm) {
+			foreach ($arm->patterns as $pattern) {
+				if ($pattern instanceof DefaultExpression) {
+					// the 'default' arm
+					continue;
+				}
+
+				$case_type = $this->infer_expression($pattern);
+				if (!TypeHelper::is_switch_compatible($subject_type, $case_type)) {
+					$subject_type_name = self::get_type_name($subject_type);
+					$case_type_name = self::get_type_name($case_type);
+					throw $this->new_syntax_error("Incompatible matching types, matching type is $subject_type_name, arm type is $case_type_name", $pattern);
+				}
+			}
+
+			$infereds[] = $this->infer_expression($arm->return);
+		}
+
+		$result_type = $infereds ? $this->reduce_types($infereds) : null;
 		return $result_type;
 	}
 
@@ -1672,6 +1736,10 @@ class ASTChecker
 			// case RelayExpression::KIND:
 			// 	$infered = $this->infer_relay_expression($node);
 			// 	break;
+
+			case MatchBlock::KIND:
+				$infered = $this->infer_match_block($node);
+				break;
 			default:
 				$kind = $node::KIND;
 				throw $this->new_syntax_error("Unknow expression kind: '{$kind}'", $node);
@@ -2354,7 +2422,7 @@ class ASTChecker
 	// 		$infered = null;
 	// 	}
 
-	// 	$this->program = $including;
+	// 	$this->set_program($including, __LINE__);
 
 	// 	return $infered;
 	// }
@@ -2447,7 +2515,7 @@ class ASTChecker
 		// }
 		// else
 		if ($callable_decl instanceof ClassKindredDeclaration) {
-			$node->is_instancing = true;
+			$node->instancing = true;
 			$infered = $this->infer_instancing_expr($callee, $callable_decl);
 			// instancing arguments
 			$this->check_call_arguments($node, $callable_decl);
@@ -2746,12 +2814,13 @@ class ASTChecker
 				break;
 
 			case MaskedDeclaration::KIND:
-				if ($member->parameters !== null) {
+				if (!$member->is_property) {
 					throw $this->new_syntax_error("Cannot use the masked function '$member->name' without '()'", $node);
 				}
 				// unbreak
 			case PropertyDeclaration::KIND:
 			case ClassConstantDeclaration::KIND:
+			case EnumCaseDeclaration::KIND:
 			case ObjectMember::KIND:
 
 			case ClassDeclaration::KIND:
@@ -2763,7 +2832,7 @@ class ASTChecker
 			// 	break;
 
 			default:
-				throw $this->new_syntax_error("Unexpected node", $member);
+				throw $this->new_syntax_error("Unexpected expression", $node);
 		}
 
 		return $infered;
@@ -2851,7 +2920,7 @@ class ASTChecker
 				$infered = $this->infer_interpolation($item);
 				if (!TypeHelper::is_xtag_child_type($infered)) {
 					$type_name = self::get_type_name($infered);
-					throw $this->new_syntax_error("Expect String/XView/XView.Array type value, {$type_name} given", $item);
+					throw $this->new_syntax_error("Expect String/IView/IView.Array type value, {$type_name} given", $item);
 				}
 
 				// $item->infered_type = $infered;
@@ -3157,8 +3226,8 @@ class ASTChecker
 			$this->attach_symbol_for_basetype_accessing_identifier($node, $basing_type);
 		}
 		elseif ($basing_type instanceof Identifiable) {
-			$basing_declar = $this->get_actual_class_declaration_for_metatype_expr($basing_type);
-			$node->symbol = $this->require_class_member_symbol($basing_declar, $node);
+			$basing_decl = $this->get_actual_class_declaration_for_metatype_expr($basing_type);
+			$node->symbol = $this->require_class_member_symbol($basing_decl, $node);
 			if (!$this->is_instance_accessable($basing, $node->symbol->declaration)) {
 				throw $this->new_syntax_error("Cannot access private/protected members", $node);
 			}
@@ -3196,7 +3265,8 @@ class ASTChecker
 			$this->attach_symbol_for_metatype_accessing_identifier($node, $basing_type);
 		}
 		elseif ($basing_type instanceof UnionType) {
-			throw $this->new_syntax_error("Cannot accessing the 'UnionType' targets", $node);
+			$type_name = $this->get_type_name($basing_type);
+			throw $this->new_syntax_error("Cannot accessing the '$type_name'", $node);
 		}
 		else {
 			$basing_symbol = $basing_type->symbol;
@@ -3297,12 +3367,12 @@ class ASTChecker
 			if (!$decl->is_checked) {
 				// switch to target program
 				$temp_program = $this->program;
-				$this->program = $classkindred->program;
+				$this->set_program($classkindred->program, __LINE__);
 
 				$this->check_class_member_declaration($decl);
 
 				// switch back
-				$this->program = $temp_program;
+				$this->set_program($temp_program, __LINE__);
 			}
 		}
 
@@ -3317,12 +3387,12 @@ class ASTChecker
 		// 	if (!$decl->is_checked) {
 		// 		// switch to target program
 		// 		$temp_program = $this->program;
-		// 		$this->program = $classkindred->program;
+		// 		$this->set_program($classkindred->program, __LINE__);
 
 		// 		$this->check_class_member_declaration($decl);
 
 		// 		// switch back
-		// 		$this->program = $temp_program;
+		// 		$this->set_program($temp_program, __LINE__);
 		// 	}
 
 		// 	return $symbol;
@@ -3487,22 +3557,22 @@ class ASTChecker
 
 	private function filter_classkindred_declaration(IDeclaration $decl, IType $type, BaseExpression $expr)
 	{
-		if ($decl instanceof BaseVariableDeclaration && $type instanceof MetaType) {
+		if ($decl instanceof IVariableDeclaration && $type instanceof MetaType) {
 			$decl = $type->generic_type->symbol->declaration;
 		}
 
 		if ($decl instanceof ClassKindredDeclaration) {
 			if (!$decl->is_checked) {
 				$temp_program = $this->program;
-				$this->program = $decl->program;
+				$decl->program and $this->set_program($decl->program, __LINE__);
 				$this->check_classkindred_declaration($decl);
-				$this->program = $temp_program;
+				$decl->program and $this->set_program($temp_program, __LINE__);
 			}
 		}
 		else {
 			$message = $expr instanceof PlainIdentifier
 				? "Type of expression not classkindred"
-				: "Declaration of '{$identifier->name}' not classkindred";
+				: "Declaration of '{$decl->name}' not classkindred";
 			throw $this->new_syntax_error($message, $expr);
 		}
 

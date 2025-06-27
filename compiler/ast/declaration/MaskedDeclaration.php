@@ -15,6 +15,10 @@ namespace Tea;
 class MaskedDeclaration extends MethodDeclaration
 {
 	const KIND = 'masked_declaration';
+
+	public $is_property = false;
+
 	public $arguments_map = [];
+
 }
 

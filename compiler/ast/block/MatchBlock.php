@@ -7,38 +7,42 @@
 
 namespace Tea;
 
-class SwitchBlock extends BaseControlBlock implements IElseAble, IExceptAble, IBreakAble
+class MatchBlock extends BaseExpression implements IBlock
 {
-	use ElseTrait, ExceptTrait;
+	use IBlockTrait;
 
-	const KIND = 'switch_block';
+	const KIND = 'match_block';
 
-	public $subject;
+	public BaseExpression $subject;
 
 	/**
-	 * @var SwitchBranch[]
+	 * @var MatchArm[]
 	 */
-	public $branches;
+	public array $arms;
+
+	public ?IType $value_type;
 
 	public function __construct(BaseExpression $subject)
 	{
 		$this->subject = $subject instanceof Parentheses ? $subject->expression : $subject;
 	}
 
-	public function set_branches(array $branches)
+	public function set_arms(array $arms)
 	{
-		$this->branches = $branches;
+		$this->arms = $arms;
 	}
 }
 
-class SwitchBranch extends BaseControlBlock
+class MatchArm extends BaseExpression
 {
-	const KIND = 'switch_branch';
+	const KIND = 'match_arm';
 
 	/**
 	 * @var BaseExpression[]
 	 */
-	public $patterns;
+	public array $patterns;
+
+	public BaseExpression $return;
 
 	public function __construct(array $patterns)
 	{
