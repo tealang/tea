@@ -6,14 +6,14 @@ use tests\xview
 use tests\phpdemo { PHP_CONST_DEMO }
 use tests\xview { BaseView }
 
-public const MY_CONST #Pures.Dict
+public const MY_CONST #Plain.Dict
 public const C1 #UInt
-public const C2 #Pures
+public const C2 #Plain
 
 extern func range(start Int, end Int, step #UInt = 1) Array
 
 public class PHPClassInMixed1 {
-	protected const CONST1 #Pures
+	protected const CONST1 #Plain
 	public const CONST2 #UInt
 	public union_val Int|String|Bool
 	public object Object?
@@ -44,14 +44,14 @@ public class Suit: Colorful {
 
 public func paint(c Colorful) #String
 
-public func fn0(str) #Pures
+public func fn0(str) #Plain
 
 public class TeaDemoClass {
-	static static_prop1 #Pures
+	static static_prop1 #Plain
 
 	prop1 String|Int
 
-	static static_method(some inout Dict) #Pures
+	static static_method(some inout Dict) #Plain
 
 	method1(param1 String|Int) #String|Int
 
@@ -59,14 +59,14 @@ public class TeaDemoClass {
 }
 
 public class DemoList: BaseView {
-	internal const ABC #Pures
+	internal const ABC #Plain
 
 	title String
 	items String.Array
 
 	cells Array
 
-	construct(name String, title #Pures = '', items String.Array = [], each () Cell? = none, error (message) Void = none) #Void
+	construct(name String, title #Plain = '', items String.Array = [], each () Cell? = none, error (message) Void = none) #Void
 
 	render() String
 }

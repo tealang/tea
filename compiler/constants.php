@@ -45,7 +45,7 @@ const
 	_BYTES = 'Bytes',
 	//_RUNES = 'Runes',
 	_STRING = 'String',
-	_PURE_STRING = 'Pures',
+	_PURE_STRING = 'Plain',
 	_INT = 'Int',
 	_UINT = 'UInt',
 	_FLOAT = 'Float',

@@ -2,7 +2,7 @@
 
 namespace tests\phpdemo
 
-public const PHP_CONST_DEMO #Pures
+public const PHP_CONST_DEMO #Plain
 
 public class PHPClassDemo: Interface1 {
 	public get_class_name(caller String = 'anonymous') String

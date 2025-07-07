@@ -615,7 +615,7 @@ class ASTChecker
 					throw $this->new_syntax_error("The infered return type '{$infered_name}' is incompatible with the hinted '{$hinted_name}'", $node);
 				}
 			}
-			elseif ($hinted !== TypeFactory::$_void && $hinted !== TypeFactory::$_generator) {
+			elseif (!$hinted->is_same_with(TypeFactory::$_void) && !$hinted->is_same_or_based_with(TypeFactory::$_generator)) {
 				throw $this->new_syntax_error("Function required a return type '{$hinted->name}'", $node);
 			}
 		}
@@ -960,11 +960,15 @@ class ASTChecker
 
 	private function is_overrided_method_param_compatible_types(IType $super, IType $current)
 	{
+		// supports Contravariance
+		if ($current instanceof UnionType) {
+			return $current->is_accept_type($super);
+		}
+
 		return $super === $current
 			|| $super->symbol === $current->symbol
 			|| $super->symbol->declaration === $current->symbol->declaration
-			|| ($super === TypeFactory::$_int && $current === TypeFactory::$_uint)
-			|| $current instanceof UnionType && $current->is_accept_type($super)  // supports Contravariance
+			|| ($super === TypeFactory::$_int && $current === TypeFactory::$_uint);
 		;
 	}
 
@@ -3503,6 +3507,11 @@ class ASTChecker
 	private function get_class_declaration_for_expr(BaseExpression $expr)
 	{
 		$type = $this->infer_expression($expr);
+
+		if ($type instanceof UnionType) {
+			$type_name = $this->get_type_name($type);
+			throw $this->new_syntax_error("Cannot create instance for '$type_name'", $expr);
+		}
 
 		$symbol = $type->symbol;
 		$decl = $symbol->declaration;

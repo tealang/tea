@@ -323,7 +323,7 @@ public type String {
 	masked rtrim(characters String = #default) #String
 }
 
-public type Pures: String {
+public type Plain: String {
 	// no any
 }
 
