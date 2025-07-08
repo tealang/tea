@@ -11,7 +11,7 @@ class TypeHelper
 {
 	public static function is_simple_xtag_safe_value_type(?IType $type)
 	{
-		return $type instanceof PuresType
+		return $type instanceof PlainType
 			or $type instanceof XViewType
 			or $type->symbol->declaration->is_same_or_based_with_symbol(TypeFactory::$_iview_symbol);
 	}
@@ -87,7 +87,7 @@ class TypeHelper
 	public static function is_switch_compatible(IType $matchig, IType $case)
 	{
 		return $matchig->is_accept_type($case)
-			or ($matchig instanceof PuresType and $case instanceof StringType);
+			or ($matchig instanceof PlainType and $case instanceof StringType);
 	}
 
 	public static function is_number_type(?IType $type)

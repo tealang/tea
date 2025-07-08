@@ -36,6 +36,7 @@ class PHPParser extends BaseParser
 		'null' => _NONE,
 		'mixed' => _ANY,
 		'string' => _STRING,
+		'plain' => _PLAIN,
 		'int' => _INT,
 		'float' => _FLOAT,
 		'bool' => _BOOL,

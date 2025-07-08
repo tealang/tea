@@ -1626,7 +1626,7 @@ class ASTChecker
 				break;
 			case PlainLiteralString::KIND:
 				$infered = TeaHelper::is_pure_string($node->value)
-					? TypeFactory::$_pures
+					? TypeFactory::$_plain
 					: TypeFactory::$_string;
 				break;
 			case EscapedLiteralString::KIND:
@@ -2003,7 +2003,7 @@ class ASTChecker
 			else {
 				// string
 				$is_pure = $left_type instanceof IPureType && $right_type instanceof IPureType;
-				$infered = $is_pure ? TypeFactory::$_pures : TypeFactory::$_string;
+				$infered = $is_pure ? TypeFactory::$_plain : TypeFactory::$_string;
 			}
 		}
 		elseif ($operator->is(OPID::REPEAT)) {
@@ -2018,7 +2018,7 @@ class ASTChecker
 
 			// string
 			$is_pure = $left_type instanceof IPureType;
-			$infered = $is_pure ? TypeFactory::$_pures : TypeFactory::$_string;
+			$infered = $is_pure ? TypeFactory::$_plain : TypeFactory::$_string;
 		}
 		// elseif ($operator->is(OPID::MERGE)) {
 		// 	// Array or Dict
@@ -2862,7 +2862,7 @@ class ASTChecker
 			}
 		}
 
-		return $is_pure ? TypeFactory::$_pures : TypeFactory::$_string;
+		return $is_pure ? TypeFactory::$_plain : TypeFactory::$_string;
 	}
 
 	private function infer_escaped_interpolated_string(EscapedInterpolatedString $node): IType
@@ -3442,7 +3442,7 @@ class ASTChecker
 		$symbol = $this->find_member_symbol_in_class_declaration($class_decl, $name);
 		if ($symbol === null) {
 			if ($node->is_static && $name === _CLASS) {
-				[$decl, $symbol] = $this->factory->create_virtual_class_constant($name, TypeFactory::$_pures, $class_decl);
+				[$decl, $symbol] = $this->factory->create_virtual_class_constant($name, TypeFactory::$_plain, $class_decl);
 			}
 			else {
 				$symbol = $this->try_create_virtual_member_symbol($class_decl, $node);

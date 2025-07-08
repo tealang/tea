@@ -42,7 +42,7 @@ class PHPCoder extends BaseCoder
 		_ANY => '',
 		_NONE => 'null',
 		_STRING => 'string',
-		_PURE_STRING => 'string',
+		_PLAIN => 'string',
 		_INT => 'int',
 		_UINT => 'int',
 		_FLOAT => 'float',
@@ -60,7 +60,7 @@ class PHPCoder extends BaseCoder
 
 	const IS_TEST_MAP = [
 		_STRING => 'is_string',
-		_PURE_STRING => 'is_string',
+		_PLAIN => 'is_string',
 		_INT => 'is_int',
 		_UINT => 'is_uint',
 		_FLOAT => 'is_float',
