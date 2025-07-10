@@ -1,12 +1,10 @@
 <?php
 namespace Tea;
 
-interface IRootDeclaration extends IDeclaration {}
+interface IRootDeclaration {}
 
-abstract class RootDeclaration extends Node implements IRootDeclaration, IStatement
+abstract class RootDeclaration extends BaseDeclaration implements IRootDeclaration, IStatement
 {
-	use DeclarationTrait;
-
 	/**
 	 * @var NamespaceIdentifier
 	 */

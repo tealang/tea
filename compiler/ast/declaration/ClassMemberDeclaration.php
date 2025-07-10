@@ -7,12 +7,10 @@
 
 namespace Tea;
 
-interface IClassMemberDeclaration extends IMemberDeclaration {}
+interface IClassMemberDeclaration {}
 
-abstract class BaseClassMemberDeclaration extends Node implements IClassMemberDeclaration
+abstract class BaseClassMemberDeclaration extends BaseDeclaration implements IClassMemberDeclaration
 {
-	use DeclarationTrait;
-
 	public $value;
 
 	public $modifier;

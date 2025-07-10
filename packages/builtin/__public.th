@@ -77,7 +77,7 @@ extern class stdClass {
 
 extern interface Throwable: Stringable {
 	public getMessage() String
-	public getPrevious() Throwable
+	public getPrevious() Throwable?
 	public getCode() Int
 	public getFile() String
 	public getLine() Int
@@ -86,7 +86,7 @@ extern interface Throwable: Stringable {
 }
 
 extern class Exception: Throwable {
-	public construct(message String, code Int = 0, previous Throwable = none) #Void
+	public construct(message String, code Int = 0, previous Throwable? = none) #Void
 }
 
 extern class ErrorException: Exception {
@@ -187,7 +187,7 @@ extern func array_filter(items Array, callback (item) Any = #default, mode Int =
 
 extern func array_reduce(items Array, callback (carry, item) Any, initial Any = #default) Any
 
-extern func array_slice(it Array, offset Int, length UInt = none) Array
+extern func array_slice(it Array, offset Int, length UInt? = none) Array
 
 extern func array_unshift(it Array, item Any) UInt
 
@@ -396,7 +396,7 @@ public func _dict_get(it Dict, key String|Int) #Any
 public type Dict {
 	masked length #UInt
 
-	masked has(key String|None) #Bool
+	masked has(key String?) #Bool
 
 	masked contains(val) #Bool
 

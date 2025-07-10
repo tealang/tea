@@ -754,22 +754,43 @@ abstract class BaseCoder
 			$buffer = $node->name;
 		}
 
-		if ($node->nullable) {
-			$buffer .= '?';
-		}
+		// if ($node->nullable) {
+		// 	$buffer .= _QUESTION;
+		// }
 
 		return $buffer;
 	}
 
 	public function render_union_type(UnionType $node)
 	{
+		$short_nullable = $this->can_use_short_nullable($node);
+
 		$items = [];
 		foreach ($node->get_members() as $member) {
-			$item = $this->render_type_identifier($member);
+			if ($short_nullable and $member instanceof NoneType) {
+				continue;
+			}
+
+			$item = $member->render($this);
 			in_array($item, $items) or ($items[] = $item);
 		}
 
-		return join(_TYPE_UNION, $items);
+		$expr = join(_TYPE_UNION, $items);
+		if ($short_nullable) {
+			$expr = $this->add_short_nullable_sign($expr);
+		}
+
+		return $expr;
+	}
+
+	protected function add_short_nullable_sign(string $expr)
+	{
+		return $expr . _QUESTION;
+	}
+
+	protected function can_use_short_nullable(UnionType $node)
+	{
+		return count($node->members) === 2 and $node->members[1] instanceof NoneType;
 	}
 
 	protected function render_callable_type(CallableType $node)

@@ -2101,12 +2101,12 @@ class TeaParser extends BaseParser
 	private function scan_nullable_for(IType &$type)
 	{
 		if ($this->skip_token(_QUESTION)) {
-			if ($type instanceof BaseType) {
-				$type = $type->get_nullable_instance();
-			}
-			else {
-				$type->let_nullable();
-			}
+			// if ($type instanceof BaseType) {
+				$type = TypeFactory::to_nullable($type);
+			// }
+			// else {
+			// 	$type->let_nullable();
+			// }
 
 			$type->pos = $this->pos;
 		}
@@ -2494,7 +2494,8 @@ class TeaParser extends BaseParser
 			$this->expect_token_ignore_empty(_PAREN_CLOSE);
 			$nullable = $this->skip_token_ignore_space(_QUESTION);
 			if ($nullable) {
-				$node->let_nullable();
+				// $node->let_nullable();
+				$node = TypeFactory::to_nullable($node);
 			}
 		}
 

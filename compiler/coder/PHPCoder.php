@@ -984,7 +984,7 @@ class PHPCoder extends BaseCoder
 			$code = $this->render_subexpression($expr, OperatorFactory::$concat);
 		}
 		elseif ($type instanceof IterableType and TypeHelper::is_simple_xtag_safe_value_type($type->generic_type)) {
-			if ($type->nullable) {
+			if (TypeHelper::is_nullable_type($type)) {
 				$expr = new NoneCoalescingOperation($expr, new ArrayExpression());
 			}
 
@@ -1474,9 +1474,9 @@ class PHPCoder extends BaseCoder
 	{
 		$code = $node->render($this);
 
-		if ($code && ($node->nullable || $node->has_null)) {
-			$code = '?' . $code;
-		}
+		// if ($code && ($node->nullable || $node->has_null)) {
+		// 	$code = '?' . $code;
+		// }
 
 		return $code;
 	}
@@ -1484,6 +1484,11 @@ class PHPCoder extends BaseCoder
 	public function render_type_identifier(IType $node)
 	{
 		return static::BUILTIN_TYPE_MAP[$node->name] ?? $node->name;
+	}
+
+	protected function add_short_nullable_sign(string $expr)
+	{
+		return _QUESTION . $expr;
 	}
 
 	public function render_classkindred_identifier(ClassKindredIdentifier $node)

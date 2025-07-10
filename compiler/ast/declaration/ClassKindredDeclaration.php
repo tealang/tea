@@ -30,7 +30,7 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 {
 	/**
 	 * the extends class for classes
-	 * @var ClassDeclaration
+	 * @var ClassKindredIdentifier
 	 */
 	public $extends = [];
 
@@ -80,7 +80,7 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 
 	public $feature_flags = 0;
 
-	public $is_linked;
+	public $is_ready;
 
 	public function __construct(?string $modifier, $name)
 	{
@@ -167,7 +167,7 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 	}
 }
 
-class ClassDeclaration extends ClassKindredDeclaration implements ICallableDeclaration
+class ClassDeclaration extends ClassKindredDeclaration implements IDeclaration, ICallableDeclaration
 {
 	const KIND = 'class_declaration';
 

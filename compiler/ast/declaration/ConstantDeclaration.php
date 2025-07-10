@@ -11,8 +11,6 @@ interface IConstantDeclaration extends IValuedDeclaration {}
 
 class ConstantDeclaration extends RootDeclaration implements IConstantDeclaration, IRootDeclaration, IStatement
 {
-	use DeclarationTrait;
-
 	const KIND = 'constant_declaration';
 
 	public $is_static = true;

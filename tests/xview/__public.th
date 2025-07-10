@@ -8,7 +8,7 @@ public class BaseView: IView {
 	protected props #Dict
 	protected subviews #Array
 
-	construct(props Dict = none) #Void
+	construct(props Dict? = none) #Void
 
 	prop(key String, value Any) BaseView
 

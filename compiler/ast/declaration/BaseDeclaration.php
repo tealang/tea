@@ -8,9 +8,12 @@
 namespace Tea;
 
 interface IDeclaration {}
-interface ICallableDeclaration extends IDeclaration {}
-interface IMemberDeclaration extends IDeclaration {}
-interface IValuedDeclaration extends IDeclaration {}
+// interface ICallableDeclaration extends IDeclaration {}
+// interface IMemberDeclaration extends IDeclaration {}
+// interface IValuedDeclaration extends IDeclaration {}
+interface ICallableDeclaration {}
+// interface IMemberDeclaration {}
+interface IValuedDeclaration {}
 
 trait TypingTrait {
 
@@ -33,28 +36,43 @@ trait TypingTrait {
 	 */
 	public $infered_type;
 
-	public function get_hinted_type()
+	/**
+	 * @var IType
+	 */
+	public $asserted_type;
+
+	public function get_hinted_type(): IType
 	{
 		return $this->noted_type ?? $this->declared_type ?? TypeFactory::$_any;
 	}
 
-	public function get_type()
+	public function get_expressed_type(): IType
 	{
 		return $this->noted_type ?? $this->declared_type ?? $this->infered_type ?? TypeFactory::$_any;
 	}
 
-	public function set_type(?IType $type)
+	public function get_asserted_type(): IType
 	{
-		if ($this->noted_type) {
-			$this->noted_type = $type;
-		}
-		elseif ($this->declared_type) {
-			$this->declared_type = $type;
-		}
-		else {
-			$this->infered_type = $type;
-		}
+		return $this->asserted_type ?? $this->noted_type ?? $this->declared_type ?? $this->infered_type ?? TypeFactory::$_any;
 	}
+
+	public function set_asserted_type(IType $type)
+	{
+		$this->asserted_type = $type;
+	}
+
+	// public function set_type(?IType $type)
+	// {
+	// 	if ($this->noted_type) {
+	// 		$this->noted_type = $type;
+	// 	}
+	// 	elseif ($this->declared_type) {
+	// 		$this->declared_type = $type;
+	// 	}
+	// 	else {
+	// 		$this->infered_type = $type;
+	// 	}
+	// }
 }
 
 trait DeclarationTrait {
@@ -130,6 +148,11 @@ trait DeclarationTrait {
 			$decl->unknow_identifiers
 		);
 	}
+}
+
+abstract class BaseDeclaration extends Node implements IDeclaration
+{
+	use DeclarationTrait;
 }
 
 // end

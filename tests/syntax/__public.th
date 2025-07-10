@@ -36,7 +36,7 @@ public class Suit: Colorful {
 	case Hearts = 1
 	case Diamonds = 2
 	case Clubs = 3
-	case Spades = '122'
+	case Spades = 122
 	public const A #Suit
 	public color() String
 	public shape() String
@@ -66,7 +66,7 @@ public class DemoList: BaseView {
 
 	cells Array
 
-	construct(name String, title #Plain = '', items String.Array = [], each () Cell? = none, error (message) Void = none) #Void
+	construct(name String, title #Plain = '', items String.Array = [], each () Cell? = none, error (message) Void? = none) #Void
 
 	render() String
 }

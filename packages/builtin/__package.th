@@ -161,7 +161,7 @@ extern func array_filter(items Array, callback (item) Any = #default, mode Int =
 extern func array_reduce(items Array, callback (carry, item) Any, initial Any = #default) Any
 
 // index array
-extern func array_slice(it Array, offset Int, length UInt = none) Array
+extern func array_slice(it Array, offset Int, length UInt? = none) Array
 extern func array_unshift(it Array, item Any) UInt
 extern func array_shift(it Array) Any
 extern func array_push(it Array, item Any) UInt

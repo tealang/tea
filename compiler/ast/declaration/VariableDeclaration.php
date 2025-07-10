@@ -9,10 +9,8 @@ namespace Tea;
 
 interface IVariableDeclaration extends IValuedDeclaration {}
 
-abstract class BaseVariableDeclaration extends Node implements IVariableDeclaration
+abstract class BaseVariableDeclaration extends BaseDeclaration implements IVariableDeclaration
 {
-	use DeclarationTrait;
-
 	public $value;
 
 	public $is_final;

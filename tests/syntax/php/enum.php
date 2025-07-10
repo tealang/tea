@@ -20,7 +20,7 @@ enum Suit: int implements Colorful
 	case Hearts = 1;
 	case Diamonds = 2;
 	case Clubs = 3;
-	case Spades = '122';
+	case Spades = 122;
 
 	public const A = self::Hearts;
 

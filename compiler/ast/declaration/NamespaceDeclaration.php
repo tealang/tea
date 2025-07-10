@@ -7,7 +7,7 @@
 
 namespace Tea;
 
-class NamespaceDeclaration extends Node implements IRootDeclaration, IMemberDeclaration
+class NamespaceDeclaration extends BaseDeclaration implements IRootDeclaration
 {
 	const KIND = 'namespace_declaration';
 

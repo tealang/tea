@@ -11,37 +11,37 @@ interface IType {}
 
 trait ITypeTrait
 {
-	public $nullable;
+	// public $nullable;
 
-	public $has_null;
+	// public $has_null;
 
-	public function let_assigned_null()
-	{
-		$this->has_null = true;
-	}
+	// public function let_assigned_null()
+	// {
+	// 	$this->has_null = true;
+	// }
 
-	public function let_nullable() {
-		$this->nullable = true;
-		$this->has_null = true;
-	}
+	// public function let_nullable() {
+	// 	$this->nullable = true;
+	// 	$this->has_null = true;
+	// }
 
-	public function remove_nullable() {
-		$this->nullable = false;
-		$this->has_null = false;
-	}
+	// public function remove_nullable() {
+	// 	$this->nullable = false;
+	// 	$this->has_null = false;
+	// }
 
-	public function get_nullable_instance(): IType {
-		if ($this->nullable) {
-			return $this;
-		}
+	// public function get_nullable_instance(): IType {
+	// 	if ($this->nullable) {
+	// 		return $this;
+	// 	}
 
-		$copy = clone $this;
-		$copy->let_nullable();
+	// 	$type = clone $this;
+	// 	$type->let_nullable();
 
-		return $copy;
-	}
+	// 	return $type;
+	// }
 
-	public function is_accept_type(IType $target) {
+	public function is_accept_type(BaseType|PlainIdentifier $target) {
 		if ($target instanceof UnionType) {
 			$accept = false;
 			foreach ($target->get_members() as $target_member) {
@@ -58,7 +58,7 @@ trait ITypeTrait
 		return $accept;
 	}
 
-	public function unite_type(IType $target): IType {
+	public function unite_type(BaseType|PlainIdentifier $target): IType {
 		if ($target instanceof UnionType) {
 			$result = $target->merge_with_single_type($this);
 		}
@@ -73,11 +73,11 @@ trait ITypeTrait
 		return $result;
 	}
 
-	public function is_same_with(IType $target) {
+	public function is_same_with(BaseType|PlainIdentifier $target) {
 		return $this->symbol !== null and $this->symbol === $target->symbol;
 	}
 
-	public function is_same_or_based_with(IType $target) {
+	public function is_same_or_based_with(BaseType|PlainIdentifier $target) {
 		return $this->symbol === $target->symbol;
 	}
 }
@@ -94,24 +94,24 @@ abstract class BaseType extends Node implements IType
 
 	public $symbol;
 
-	public function is_based_with(IType $target) {
+	public function is_based_with(BaseType|PlainIdentifier $target) {
 		return false;
 	}
 
-	public function is_accept_single_type(IType $target) {
-		if ($target->has_null and !$this->nullable and !$this->has_null) {
-			$result = false;
-		}
-		elseif ($target instanceof NoneType) {
-			$result = $this->nullable;
-		}
-		else {
-			$result = $target === $this
+	public function is_accept_single_type(BaseType|PlainIdentifier $target) {
+		// if ($target->has_null and !$this->nullable and !$this->has_null) {
+		// 	$is = false;
+		// }
+		// elseif ($target instanceof NoneType) {
+		// 	$is = $this->nullable;
+		// }
+		// else {
+			$is = $target === $this
 				|| in_array($target->name, static::ACCEPT_TYPES, true)
 				|| $target->symbol->declaration === $this->symbol->declaration;
-		}
+		// }
 
-		return $result;
+		return $is;
 	}
 }
 
@@ -128,7 +128,7 @@ abstract class SingleGenericType extends BaseType
 		$this->generic_type = $generic_type;
 	}
 
-	public function unite_type(IType $target): IType {
+	public function unite_type(BaseType|PlainIdentifier $target): IType {
 		if ($target instanceof UnionType) {
 			$result = $target->merge_with_single_type($this);
 		}
@@ -152,14 +152,15 @@ abstract class SingleGenericType extends BaseType
 		return $result;
 	}
 
-	public function is_accept_single_type(IType $target) {
-		if ($target->has_null and !$this->nullable and !$this->has_null) {
-			$is = false;
-		}
-		elseif ($target instanceof NoneType) {
-			$is = $this->nullable;
-		}
-		elseif ($target === $this) {
+	public function is_accept_single_type(BaseType|PlainIdentifier $target) {
+		// if ($target->has_null and !$this->nullable and !$this->has_null) {
+		// 	$is = false;
+		// }
+		// elseif ($target instanceof NoneType) {
+		// 	$is = $this->nullable;
+		// }
+		// else
+		if ($target === $this) {
 			$is = true;
 		}
 		// for the builtin classes
@@ -183,7 +184,7 @@ abstract class SingleGenericType extends BaseType
 		return $is;
 	}
 
-	public function is_same_with(IType $target) {
+	public function is_same_with(BaseType|PlainIdentifier $target) {
 		if ($this->symbol !== null and $this->symbol === $target->symbol) {
 			if ($this->generic_type === null || $this->generic_type->is_same_with($target->generic_type ?? TypeFactory::$_any)) {
 				return true;
@@ -193,7 +194,7 @@ abstract class SingleGenericType extends BaseType
 		return false;
 	}
 
-	public function is_same_or_based_with(IType $target) {
+	public function is_same_or_based_with(BaseType|PlainIdentifier $target) {
 		return $this->symbol === $target->symbol && $this->generic_type->is_same_or_based_with($target->generic_type);
 	}
 }
@@ -220,21 +221,21 @@ class UnionType extends BaseType
 		return count($this->members);
 	}
 
-	public function remove_nullable() {
-		$this->nullable = false;
-		foreach ($this->members as $key => $type) {
-			if ($type instanceof NoneType) {
-				unset($this->members[$key]);
-			}
-			elseif ($type->nullable or $type->has_null) {
-				$type = clone $type; // not to be affected the source
-				$type->remove_nullable();
+	// public function remove_nullable() {
+	// 	$this->nullable = false;
+	// 	foreach ($this->members as $key => $type) {
+	// 		if ($type instanceof NoneType) {
+	// 			unset($this->members[$key]);
+	// 		}
+	// 		elseif ($type->nullable or $type->has_null) {
+	// 			$type = clone $type; // not to be affected the source
+	// 			$type->remove_nullable();
 
-				// use the cloned one
-				$this->members[$key] = $type;
-			}
-		}
-	}
+	// 			// use the cloned one
+	// 			$this->members[$key] = $type;
+	// 		}
+	// 	}
+	// }
 
 	public function is_all_array_types() {
 		foreach ($this->members as $type) {
@@ -269,7 +270,7 @@ class UnionType extends BaseType
 		return $has;
 	}
 
-	public function unite_type(IType $target): IType {
+	public function unite_type(BaseType|PlainIdentifier $target): IType {
 		$result = $target instanceof UnionType
 			? $this->merge_with_union_type($target)
 			: $this->merge_with_single_type($target);
@@ -277,8 +278,8 @@ class UnionType extends BaseType
 		return $result;
 	}
 
-	public function merge_with_single_type(IType $target) {
-		if ($this->is_contains_single_type($target)) {
+	public function merge_with_single_type(BaseType|PlainIdentifier $target) {
+		if ($this->contains_single_type($target)) {
 			$type = $this;
 		}
 		elseif ($target instanceof SingleGenericType) {
@@ -333,7 +334,7 @@ class UnionType extends BaseType
 		return $type;
 	}
 
-	private function contains_member_type(IType $target)
+	private function contains_member_type(BaseType|PlainIdentifier $target)
 	{
 		$is = false;
 		foreach ($this->members as $member) {
@@ -346,7 +347,26 @@ class UnionType extends BaseType
 		return $is;
 	}
 
-	public function is_contains_single_type(IType $target) {
+	public function contains_type(IType $target)
+	{
+		if ($target instanceof UnionType) {
+			$is = true;
+			foreach ($target->get_members() as $member) {
+				if (!$this->contains_single_type($member)) {
+					$is = false;
+					break;
+				}
+			}
+		}
+		else {
+			$is = $this->contains_single_type($target);
+		}
+
+		return $is;
+	}
+
+	public function contains_single_type(BaseType|PlainIdentifier $target)
+	{
 		$is = false;
 		foreach ($this->members as $member) {
 			if ($member->is_same_with($target)) {
@@ -358,7 +378,8 @@ class UnionType extends BaseType
 		return $is;
 	}
 
-	public function get_members_type_except(IType $target) {
+	public function get_members_type_except(BaseType|PlainIdentifier $target)
+	{
 		$items = [];
 		foreach ($this->members as $member) {
 			if (!$member->is_same_or_based_with($target)) {
@@ -373,13 +394,13 @@ class UnionType extends BaseType
 		return $new_type;
 	}
 
-	public function is_same_with(IType $target) {
+	public function is_same_with(BaseType|PlainIdentifier $target) {
 		if (!$target instanceof UnionType or $this->count() !== $target->count()) {
 			return false;
 		}
 
 		foreach ($target->get_members() as $target_member) {
-			if (!$this->is_contains_single_type($target_member)) {
+			if (!$this->contains_single_type($target_member)) {
 				return false;
 			}
 		}
@@ -387,7 +408,7 @@ class UnionType extends BaseType
 		return true;
 	}
 
-	public function is_based_with(IType $target) {
+	public function is_based_with(BaseType|PlainIdentifier $target) {
 		foreach ($this->members as $member) {
 			if (!$member->is_based_with($target)) {
 				return false;
@@ -398,7 +419,7 @@ class UnionType extends BaseType
 	}
 
 	// check current is a superset type of target type
-	public function is_same_or_based_with(IType $target) {
+	public function is_same_or_based_with(BaseType|PlainIdentifier $target) {
 		$is = true;
 		if ($target instanceof UnionType) {
 			foreach ($target->members as $target_member) {
@@ -428,7 +449,7 @@ class UnionType extends BaseType
 		return $is;
 	}
 
-	public function is_accept_single_type(IType $target) {
+	public function is_accept_single_type(BaseType|PlainIdentifier $target) {
 		$accept = false;
 		foreach ($this->members as $member) {
 			if ($member->is_accept_type($target)) {
@@ -447,7 +468,7 @@ class MetaType extends SingleGenericType {
 
 class VoidType extends BaseType {
 	public $name = _VOID;
-	public function is_accept_single_type(IType $target) {
+	public function is_accept_single_type(BaseType|PlainIdentifier $target) {
 		return $this === $target;
 	}
 }
@@ -456,33 +477,33 @@ class NoneType extends BaseType {
 
 	public $name = _NONE;
 
-	public function get_nullable_instance(): IType {
-		return $this;
-	}
+	// public function get_nullable_instance(): IType {
+	// 	return $this;
+	// }
 
-	public function is_accept_single_type(IType $target) {
-		return false;
+	public function is_accept_single_type(BaseType|PlainIdentifier $target) {
+		return $target instanceof NoneType;
 	}
 }
 
 class AnyType extends BaseType {
 	public $name = _ANY;
 	// public $nullable = true;
-	public function is_accept_single_type(IType $target) {
+	public function is_accept_single_type(BaseType|PlainIdentifier $target) {
 		return true;
 	}
 }
 
 class ObjectType extends BaseType {
 	public $name = _OBJECT;
-	public function is_accept_single_type(IType $target) {
-		if ($target->has_null and !$this->nullable and !$this->has_null) {
-			return false;
-		}
+	public function is_accept_single_type(BaseType|PlainIdentifier $target) {
+		// if ($target->has_null and !$this->nullable and !$this->has_null) {
+		// 	return false;
+		// }
 
-		if ($target instanceof NoneType) {
-			return $this->nullable;
-		}
+		// if ($target instanceof NoneType) {
+		// 	return $this->nullable;
+		// }
 
 		return $target->symbol->declaration instanceof ClassKindredIdentifier;
 	}
@@ -511,7 +532,7 @@ class PlainType extends StringType implements IPureType {
 	const ACCEPT_TYPES = [_INT, _UINT];
 	public $name = _PLAIN;
 
-	public function is_same_or_based_with(IType $target) {
+	public function is_same_or_based_with(BaseType|PlainIdentifier $target) {
 		return $this->symbol === $target->symbol || TypeFactory::$_string->symbol === $target->symbol;
 	}
 }
@@ -525,7 +546,7 @@ class UIntType extends IntType {
 	const ACCEPT_TYPES = [];
 	public $name = _UINT;
 
-	public function is_same_or_based_with(IType $target) {
+	public function is_same_or_based_with(BaseType|PlainIdentifier $target) {
 		return $this->symbol === $target->symbol || TypeFactory::$_int->symbol === $target->symbol;
 	}
 }
@@ -550,7 +571,7 @@ class IterableType extends SingleGenericType {
 	 */
 	// public $key_type;
 
-	public function is_same_or_based_with(IType $target) {
+	public function is_same_or_based_with(BaseType|PlainIdentifier $target) {
 		if ($this->symbol !== $target->symbol and $target->symbol !== TypeFactory::$_iterable->symbol) {
 			$is = false;
 		}
@@ -579,7 +600,7 @@ class DictType extends IterableType {
 	// public $key_type; // just support String for Dict keys now
 }
 
-class CallableType extends BaseType implements ICallableDeclaration {
+class CallableType extends BaseType implements IDeclaration, ICallableDeclaration {
 
 	use TypingTrait;
 
@@ -594,14 +615,15 @@ class CallableType extends BaseType implements ICallableDeclaration {
 		$this->parameters = $parameters;
 	}
 
-	public function is_accept_single_type(IType $target) {
-		if ($target->has_null and !$this->nullable and !$this->has_null) {
-			$is = false;
-		}
-		elseif ($target instanceof NoneType) {
-			$is = $this->nullable;
-		}
-		elseif ($this === TypeFactory::$_callable
+	public function is_accept_single_type(BaseType|PlainIdentifier $target) {
+		// if ($target->has_null and !$this->nullable and !$this->has_null) {
+		// 	$is = false;
+		// }
+		// elseif ($target instanceof NoneType) {
+		// 	$is = $this->nullable;
+		// }
+		// else
+		if ($this === TypeFactory::$_callable
 			|| !$target instanceof CallableType
 			|| $this->declared_type === null) {
 			$is = true;
@@ -634,7 +656,7 @@ class XViewType extends BaseType {
 
 	public $name = _XVIEW;
 
-	public function is_accept_single_type(IType $target) {
+	public function is_accept_single_type(BaseType|PlainIdentifier $target) {
 		$result = parent::is_accept_single_type($target);
 		if ($result === false) {
 			$result = $target->symbol->declaration->is_same_or_based_with_symbol(TypeFactory::$_iview_symbol);

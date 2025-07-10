@@ -46,10 +46,8 @@ abstract class Identifiable extends BaseExpression implements IAssignable
 	}
 }
 
-class AccessingIdentifier extends Identifiable implements IType
+class AccessingIdentifier extends Identifiable
 {
-	use ITypeTrait;
-
 	const KIND = 'accessing_identifier';
 
 	public $basing;
@@ -73,7 +71,7 @@ class AccessingIdentifier extends Identifiable implements IType
 }
 
 // use for rendering dist code
-class NativeIdentifier extends Identifiable implements IType
+class NativeIdentifier extends Identifiable
 {
 	const KIND = 'native_identifier';
 }
@@ -115,13 +113,13 @@ class PlainIdentifier extends Identifiable implements IType
 
 	public function is_accept_single_type(IType $target)
 	{
-		if ($target->has_null and !$this->nullable and !$this->has_null) {
-			$is = false;
-		}
-		elseif ($target instanceof NoneType) {
-			$is = $this->nullable;
-		}
-		else {
+		// if ($target->has_null and !$this->nullable and !$this->has_null) {
+		// 	$is = false;
+		// }
+		// elseif ($target instanceof NoneType) {
+		// 	$is = $this->nullable;
+		// }
+		// else {
 			$is = $target->symbol === $this->symbol
 				// || $target === TypeFactory::$_none
 				// for check BuiltinTypeClassDeclaration like String
@@ -129,7 +127,7 @@ class PlainIdentifier extends Identifiable implements IType
 				|| $this->symbol->declaration === $target->symbol->declaration
 				|| $target->is_based_with($this)
 			;
-		}
+		// }
 
 		return $is;
 	}

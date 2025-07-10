@@ -38,7 +38,9 @@ class DemoList extends BaseView {
 			}
 		}
 
-		$error && $error('some error');
+		if ($error) {
+			$error('some error');
+		}
 	}
 
 	public function render(): string {

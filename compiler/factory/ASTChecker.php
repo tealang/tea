@@ -107,12 +107,10 @@ class ASTChecker
 		$this->set_program($program, __LINE__);
 
 		foreach ($program->declarations as $decl) {
-			if ($decl instanceof ClassKindredDeclaration) {
-				$decl->is_linked || $this->link_classkindred_declaration($decl);
-			}
-			else {
-				$this->resolve_unknown_identifiers($decl);
-			}
+			$this->resolve_unknown_identifiers($decl);
+			// if ($decl instanceof ClassKindredDeclaration) {
+			// 	$decl->is_ready || $this->preprocess_classkindred_declaration($decl);
+			// }
 		}
 
 		$program->initializer && $this->resolve_unknown_identifiers($program->initializer);
@@ -296,7 +294,7 @@ class ASTChecker
 		}
 	}
 
-	private function get_and_check_hinted_type(IDeclaration|AnonymousFunction $node)
+	private function get_and_check_hinted_type(IDeclaration|AnonymousFunction|CallableType $node)
 	{
 		$noted = $node->noted_type;
 		$declared = $node->declared_type;
@@ -428,12 +426,12 @@ class ASTChecker
 		$hinted = $this->get_and_check_hinted_type($node);
 		if ($hinted) {
 			if ($infered) {
-				if ($infered instanceof NoneType) {
-					if ($node->value !== ASTFactory::$default_value_mark) {
-						$hinted = clone $hinted;
-						$hinted->let_assigned_null();
-						$node->set_type($hinted);
-					}
+				// if ($infered instanceof NoneType) {
+					if ($node->value instanceof LiteralDefaultMark) {
+					// 	$hinted = clone $hinted;
+					// 	$hinted->let_assigned_null();
+					// 	$node->set_asserted_type($hinted);
+					// }
 				}
 				else {
 					$this->assert_type_compatible($hinted, $infered, $node->value);
@@ -457,9 +455,9 @@ class ASTChecker
 		$node->infered_type = $infered;
 	}
 
-	private function check_parameters_for_callable_declaration(ICallableDeclaration $callable)
+	private function check_parameters_for_callable_declaration(ICallableDeclaration $node)
 	{
-		$this->check_parameters_for_node($callable);
+		$this->check_parameters_for_node($node);
 	}
 
 	private function check_parameters_for_node($node)
@@ -577,7 +575,7 @@ class ASTChecker
 
 		$this->check_function_kindred($node);
 
-		return TypeFactory::create_callable_type($node->get_type(), $node->parameters);
+		return TypeFactory::create_callable_type($node->get_expressed_type(), $node->parameters);
 	}
 
 	private function check_function_kindred(IScopeBlock $node)
@@ -678,9 +676,12 @@ class ASTChecker
 		$node->infered_type = $infered ?? $hinted ?? TypeFactory::$_any;
 	}
 
-	private function link_classkindred_declaration(ClassKindredDeclaration $node)
+	private function preprocess_classkindred_declaration(ClassKindredDeclaration $node)
 	{
-		$this->resolve_unknown_identifiers($node);
+		$temp_program = $this->program;
+		$node->program and $this->set_program($node->program, __LINE__);
+
+		// $this->resolve_unknown_identifiers($node);
 
 		// when it is currently a class, including inherited classes or implemented interfaces
 		// when it is currently an interface, including inherited interfaces
@@ -705,11 +706,15 @@ class ASTChecker
 		// the members in this class have the highest priority
 		$node->aggregated_members = array_merge($node->aggregated_members, $node->symbols);
 
-		$node->is_linked = true;
+		$node->is_ready = true;
+
+		$this->set_program($temp_program, __LINE__);
 	}
 
 	private function check_classkindred_declaration(ClassKindredDeclaration $node)
 	{
+		$node->is_ready or $this->preprocess_classkindred_declaration($node);
+
 		$node->is_checked = true;
 
 		// first check the members in this class, and the inferred types will be used later
@@ -925,8 +930,9 @@ class ASTChecker
 			throw $this->new_syntax_error("There are not declared type in '{$node->belong_block->name}', but declared '{$super_type_name}' in '{$super->belong_block->name}'", $node);
 		}
 
+		// supports Covariance
 		$compatible = $covariance_mode
-			? $current_type->is_same_or_based_with($super_type)  // supports Covariance
+			? TypeHelper::is_covariant_for($current_type, $super_type)
 			: $current_type->is_same_with($super_type);
 		if (!$compatible) {
 			$current_type_name = $this->get_type_name($current_type);
@@ -1044,7 +1050,7 @@ class ASTChecker
 		$asserted_then_type = null;
 		$asserted_else_type = null;
 
-		$left_original_type = $left_decl->infered_type;
+		$left_original_type = $left_decl->get_asserted_type();
 		$left_type = $left_original_type ?? TypeFactory::$_any;
 		$asserting_type = $type_assertion->right;
 
@@ -1053,8 +1059,7 @@ class ASTChecker
 				$asserted_then_type = $left_type->get_members_type_except($asserting_type);
 			}
 			elseif ($asserting_type instanceof NoneType) {
-				$asserted_then_type = clone $left_type;
-				$asserted_then_type->remove_nullable();
+				$asserted_then_type = TypeHelper::to_non_nullable($left_type);
 			}
 
 			$asserted_else_type = $asserting_type;
@@ -1069,25 +1074,33 @@ class ASTChecker
 
 		// it would infer with the asserted then type
 		if ($asserted_then_type) {
-			$left_decl->set_type($asserted_then_type);
+			$left_decl->set_asserted_type($asserted_then_type);
 		}
 
 		// check block body
 		$result_type = $this->infer_block($node);
 
-		// if assert none, and returned, means removed null
-		if ($node->is_transfered and $asserted_then_type instanceof NoneType and $left_type->has_null) {
-			$left_type->has_null = false;
-		}
-
 		if ($node->else) {
 			// it would infer with the asserted else type
-			$left_decl->set_type($asserted_else_type ?? $left_original_type);
+			$left_decl->set_asserted_type($asserted_else_type ?? $left_original_type);
 			$result_type = $this->reduce_types_with_else_block($node, $result_type);
 		}
 
-		// reset to original type
-		$left_decl->set_type($left_original_type);
+		// if assert none, and returned, means asserted non null
+		if ($left_type instanceof UnionType and $node->is_transfered and $asserted_then_type instanceof NoneType) {
+			if ($is_not) {
+				$left_type = TypeFactory::$_none;
+			}
+			else {
+				$left_type = TypeHelper::to_non_nullable($left_type);
+			}
+
+			$left_decl->set_asserted_type($left_type);
+		}
+		else {
+			// reset to original type
+			$left_decl->set_asserted_type($left_original_type);
+		}
 
 		return $result_type;
 	}
@@ -1149,7 +1162,7 @@ class ASTChecker
 		$subject_type = $this->infer_expression($node->subject);
 		if (!$this->is_weakly_checking && !TypeHelper::is_case_testable_type($subject_type)) {
 			$subject_type_name = self::get_type_name($subject_type);
-			throw $this->new_syntax_error("The switch subject should be String/Int/UInt, $subject_type_name given", $node->subject);
+			throw $this->new_syntax_error("The switch subject type should be String/Int/UInt/None, $subject_type_name given", $node->subject);
 		}
 
 		$infereds = [];
@@ -1835,7 +1848,7 @@ class ASTChecker
 			}
 			else {
 				$type_name = $this->get_type_name($basing_type);
-				throw $this->new_syntax_error("Cannot use key accessing for type {$type_name}", $node);
+				throw $this->new_syntax_error("Cannot use key accessing to type {$type_name}", $node);
 			}
 
 			$member_value_types = [];
@@ -1847,7 +1860,7 @@ class ASTChecker
 		}
 		else {
 			$type_name = $this->get_type_name($basing_type);
-			throw $this->new_syntax_error("Cannot use key accessing for type {$type_name}", $node);
+			throw $this->new_syntax_error("Cannot use key accessing to type {$type_name}", $node);
 		}
 
 		return $infered;
@@ -2099,7 +2112,7 @@ class ASTChecker
 			if ($expr_type === TypeFactory::$_uint) {
 				$infered = TypeFactory::$_int;
 			}
-			elseif ($expr_type instanceof UnionType and $expr_type->is_contains_single_type(TypeFactory::$_uint)) {
+			elseif ($expr_type instanceof UnionType and $expr_type->contains_single_type(TypeFactory::$_uint)) {
 				$infered = $expr_type->merge_with_single_type(TypeFactory::$_int);
 			}
 			else {
@@ -2174,11 +2187,11 @@ class ASTChecker
 		// none has been coalesced
 		if (!$right_infered instanceof NoneType) {
 			// Avoid affecting previously defined
-			if (!$reduced_type instanceof UnionType) {
+			// if (!$reduced_type instanceof UnionType) {
 				$reduced_type = clone $reduced_type;
-			}
+			// }
 
-			$reduced_type->remove_nullable();
+			$reduced_type = TypeHelper::to_non_nullable($reduced_type);
 		}
 
 		return $reduced_type;
@@ -2186,15 +2199,14 @@ class ASTChecker
 
 	private function infer_ternary_expression(TernaryExpression $node): IType
 	{
-		$condition_type = $this->infer_expression($node->condition);
+		$condition = $node->condition;
+		$condition_type = $this->infer_expression($condition);
 
-		// infer with type assert
-		if ($node->condition instanceof BinaryOperation and $node->condition->type_assertion) {
-			// with type assertion
-			$infereds = $this->infer_ternary_expression_with_asserttion($node, $condition_type);
+		[$assertion, $is_not] = $this->get_type_assertion($condition);
+		if ($assertion) {
+			$infereds = $this->infer_ternary_with_assertion($node, $condition_type, $assertion, $is_not);
 		}
 		else {
-			// without type assertion
 			if ($node->then === null) {
 				$then_type = $condition_type;
 			}
@@ -2210,18 +2222,16 @@ class ASTChecker
 		return $this->reduce_types($infereds);
 	}
 
-	private function infer_ternary_expression_with_asserttion(TernaryExpression $node, IType $condition_type): array
+	private function infer_ternary_with_assertion(TernaryExpression $node, IType $condition_type, IsOperation $type_assertion, bool $is_not): array
 	{
-		$type_assertion = $node->condition->type_assertion;
-
 		$left_decl = $type_assertion->left->symbol->declaration;
 		$asserted_then_type = null;
 		$asserted_else_type = null;
 
-		$left_original_type = $left_decl->get_type();
+		$left_original_type = $left_decl->get_asserted_type();
 		$asserting_type = $type_assertion->right;
 
-		if ($type_assertion->not) {
+		if ($is_not) {
 			if ($left_original_type instanceof UnionType) {
 				$asserted_then_type = $left_original_type->get_members_type_except($asserting_type);
 			}
@@ -2230,8 +2240,7 @@ class ASTChecker
 		}
 		else {
 			if ($asserting_type instanceof NoneType) {
-				$asserted_else_type = clone $left_original_type;
-				$asserted_else_type->remove_nullable();
+				$asserted_else_type = TypeHelper::to_non_nullable($left_original_type);
 			}
 			elseif ($left_original_type instanceof UnionType) {
 				$asserted_else_type = $left_original_type->get_members_type_except($asserting_type);
@@ -2245,16 +2254,16 @@ class ASTChecker
 		}
 		else {
 			// it would infer with the asserted then type
-			$asserted_then_type and $left_decl->set_type($asserted_then_type);
+			$asserted_then_type and $left_decl->set_asserted_type($asserted_then_type);
 			$then_type = $this->infer_expression($node->then);
 		}
 
 		// it would infer with the asserted else type
-		$left_decl->set_type($asserted_else_type ?? $left_original_type);
+		$left_decl->set_asserted_type($asserted_else_type ?? $left_original_type);
 		$else_type = $this->infer_expression($node->else);
 
 		// reset to original type
-		$left_decl->set_type($left_original_type);
+		$left_decl->set_asserted_type($left_original_type);
 
 		return [$then_type, $else_type];
 	}
@@ -2331,7 +2340,7 @@ class ASTChecker
 			$decl = $value_expr->symbol->declaration;
 		}
 
-		$infered = $decl->get_type();
+		$infered = $decl->get_expressed_type();
 		return $infered;
 	}
 
@@ -2384,7 +2393,7 @@ class ASTChecker
 	private function infer_constant_identifier(ConstantIdentifier $node): IType
 	{
 		$decl = $this->get_actual_declaration_for_identifier($node);
-		return $decl->get_type();
+		return $decl->get_expressed_type();
 	}
 
 	private function infer_yield_expression(YieldExpression $node): IType
@@ -2477,7 +2486,7 @@ class ASTChecker
 		// if ($callee instanceof PlainIdentifier) {
 		// 	// the direct declaration maybe not of the endmost
 		// 	$direct_decl = $callee->symbol->declaration;
-		// 	$direct_type = $direct_decl->get_type();
+		// 	$direct_type = $direct_decl->get_asserted_type();
 		// 	if ($direct_type instanceof MetaType) {
 		// 		$infered = $direct_type->generic_type;
 		// 	}
@@ -2534,7 +2543,7 @@ class ASTChecker
 		}
 		elseif ($callable_decl instanceof ICallableDeclaration) {
 			// function return type
-			$infered = $callable_decl->get_type();
+			$infered = $callable_decl->get_asserted_type();
 			// function calling arguments
 			$this->check_call_arguments($node, $callable_decl);
 		}
@@ -2578,7 +2587,7 @@ class ASTChecker
 			if ($constructor_decl === null) {
 				if ($arguments) {
 					if (!$this->is_weakly_checking) {
-						// dump($callee_decl->symbols);
+						// dump($node->callee->symbol->declaration);
 						throw $this->new_syntax_error("Cannot use arguments to create a non-construct class instance", $node);
 					}
 
@@ -2620,10 +2629,10 @@ class ASTChecker
 			}
 
 			// check type is match
-			$param_type = $parameter->get_type();
-			if ($param_type === null) {
-				throw $this->new_syntax_error('Unexpected parameter type', $argument);
-			}
+			$param_type = $parameter->get_expressed_type();
+			// if ($param_type === null) {
+			// 	throw $this->new_syntax_error('Unexpected parameter type', $argument);
+			// }
 
 			$infered = $this->infer_expression($argument);
 			if (!$param_type->is_accept_type($infered) && !$this->is_weakly_checking) {
@@ -2635,6 +2644,7 @@ class ASTChecker
 					$key = "'$key'";
 				}
 
+				// dump($param_type, $infered);exit;
 				throw $this->new_syntax_error("Type of argument $key does not matched the parameter, expected {$expected_name}, {$infered_name} given", $argument);
 			}
 
@@ -2686,7 +2696,7 @@ class ASTChecker
 			$first_callback_parameter_on_tail = null;
 			for ($i = count($parameters) - 1; $i >=0; $i--) {
 				$parameter = $parameters[$i];
-				$param_type = $parameter->get_type();
+				$param_type = $parameter->get_expressed_type();
 				if ($param_type instanceof CallableType) {
 					$first_callback_parameter_on_tail = $parameter;
 				}
@@ -2731,7 +2741,7 @@ class ASTChecker
 			$left_type_name = self::get_type_name($left);
 			$right_type_name = self::get_type_name($right);
 
-			// dump($value_node);
+			// dump($left, $right, $value_node);
 			throw $this->new_syntax_error("It's not compatible for type {$left_type_name}, {$kind} with {$right_type_name}", $value_node);
 		}
 	}
@@ -2782,16 +2792,16 @@ class ASTChecker
 			|| $decl instanceof ParameterDeclaration
 			|| $decl instanceof ConstantDeclaration
 			|| $decl instanceof ClassKindredDeclaration) {
-			$type = $decl->get_type();
-			if (!$type) {
-				throw $this->new_syntax_error("Declaration of '{$node->name}' not found", $node);
-			}
+			$type = $decl->get_asserted_type();
+			// if (!$type) {
+			// 	throw $this->new_syntax_error("Declaration of '{$node->name}' not found", $node);
+			// }
 		}
 		elseif ($decl instanceof CallableType) {
 			$type = $decl;
 		}
 		elseif ($decl instanceof ICallableDeclaration) {
-			$return_type = $decl->get_type() ?? TypeFactory::$_any;
+			$return_type = $decl->get_asserted_type();
 			$type = TypeFactory::create_callable_type($return_type, $decl->parameters);
 		}
 		// elseif ($decl instanceof NamespaceDeclaration) {
@@ -2814,7 +2824,7 @@ class ASTChecker
 		switch ($member::KIND) {
 			case MethodDeclaration::KIND:
 			case FunctionDeclaration::KIND:
-				$infered = TypeFactory::create_callable_type($member->get_type(), $member->parameters);
+				$infered = TypeFactory::create_callable_type($member->get_expressed_type(), $member->parameters);
 				break;
 
 			case MaskedDeclaration::KIND:
@@ -2823,12 +2833,15 @@ class ASTChecker
 				}
 				// unbreak
 			case PropertyDeclaration::KIND:
+				$infered = $member->get_asserted_type();
+				break;
+
 			case ClassConstantDeclaration::KIND:
 			case EnumCaseDeclaration::KIND:
 			case ObjectMember::KIND:
 
 			case ClassDeclaration::KIND:
-				$infered = $member->get_type();
+				$infered = $member->get_expressed_type();
 				break;
 
 			// case NamespaceDeclaration::KIND:
@@ -2880,7 +2893,7 @@ class ASTChecker
 	private function infer_variable_identifier(VariableIdentifier $node): IType
 	{
 		$decl = $this->get_actual_declaration_for_identifier($node);
-		return $decl->get_type() ?? TypeFactory::$_any;
+		return $decl->get_asserted_type();
 	}
 
 	private function infer_xtag(XTag $node)
@@ -3144,16 +3157,19 @@ class ASTChecker
 					[$decl, $symbol] = $this->factory->create_virtual_function('__php_unknow_func');
 				}
 				else {
-					$kind = $node::KIND;
-					throw $this->new_syntax_error("Unknow callee kind: '$kind'", $node);
+					$type_name = $this->get_type_name($node->expressed_type);
+					throw $this->new_syntax_error("Unknow callee type: $type_name", $node);
 				}
 			}
 		}
 
+		if ($decl instanceof ObjectMember) {
+			$decl = $decl->value;
+		}
 		// if is a variable, it's value must be a callable declaration
 		// eg. AnonymousFunction
-		if ($decl instanceof IVariableDeclaration or $decl instanceof IConstantDeclaration) {
-			$type = $decl->infered_type;
+		elseif ($decl instanceof IVariableDeclaration or $decl instanceof IConstantDeclaration) {
+			$type = $decl->get_expressed_type();
 			if ($type instanceof MetaType) {
 				$type = $type->generic_type;
 			}
@@ -3168,9 +3184,9 @@ class ASTChecker
 	{
 		$decl = $this->get_actual_declaration_for_identifier($node);
 
-		$return_type = $decl->get_type();
+		$return_type = $decl->get_asserted_type();
 		if ($decl instanceof ICallableDeclaration) {
-			$return_type === null && $this->check_callable_declaration($decl);
+			$decl->is_checked or $this->check_callable_declaration($decl);
 		}
 		elseif ($return_type instanceof ICallableDeclaration) {
 			$decl = $return_type;
@@ -3250,7 +3266,7 @@ class ASTChecker
 		// the master would be an object expression, or variable of MetaType
 		$decl = $identifier->symbol->declaration;
 		if ($decl instanceof VariableDeclaration) {
-			$decl = $decl->get_type()->generic_type->symbol->declaration;
+			$decl = $decl->get_asserted_type()->generic_type->symbol->declaration;
 		}
 
 		return $decl;
@@ -3270,7 +3286,7 @@ class ASTChecker
 		}
 		elseif ($basing_type instanceof UnionType) {
 			$type_name = $this->get_type_name($basing_type);
-			throw $this->new_syntax_error("Cannot accessing the '$type_name'", $node);
+			throw $this->new_syntax_error("Cannot accessing '$node->name' in '$type_name'", $node);
 		}
 		else {
 			$basing_symbol = $basing_type->symbol;
@@ -3371,7 +3387,7 @@ class ASTChecker
 			if (!$decl->is_checked) {
 				// switch to target program
 				$temp_program = $this->program;
-				$this->set_program($classkindred->program, __LINE__);
+				$classkindred->program and $this->set_program($classkindred->program, __LINE__);
 
 				$this->check_class_member_declaration($decl);
 
@@ -3539,7 +3555,7 @@ class ASTChecker
 			throw $this->new_syntax_error("Declaration of identifier '{$identifier->name}' not classkindred", $identifier);
 		}
 
-		$decl->is_linked || $this->link_classkindred_declaration($decl);
+		$decl->is_ready || $this->preprocess_classkindred_declaration($decl);
 		return $decl;
 	}
 
@@ -3669,7 +3685,7 @@ class ASTChecker
 			}
 
 			if ($nullable && $result_type) {
-				$result_type = $result_type->get_nullable_instance();
+				$result_type = TypeFactory::to_nullable($result_type);
 			}
 		}
 
@@ -3727,15 +3743,20 @@ class ASTChecker
 		elseif ($type instanceof ICallableDeclaration) {
 			$args = [];
 			foreach ($type->parameters as $param) {
-				$args[] = static::get_type_name($param->get_type());
+				$args[] = static::get_type_name($param->get_expressed_type());
 			}
 
-			$name = 'callable "(' . join(', ', $args) . ') ' . static::get_type_name($type->get_type()) . '"';
+			$name = '(' . join(', ', $args) . ') ' . static::get_type_name($type->get_asserted_type());
 		}
 		elseif ($type instanceof UnionType) {
 			$names = [];
 			foreach ($type->get_members() as $member) {
-				$names[] = static::get_type_name($member);
+				$expr = static::get_type_name($member);
+				if ($member instanceof CallableType) {
+					$expr = "($expr)";
+				}
+
+				$names[] = $expr;
 			}
 
 			$name = join('|', $names);
@@ -3744,9 +3765,9 @@ class ASTChecker
 			$name = $type ? static::get_identifier_name($type) : '-';
 		}
 
-		if ($type->nullable) {
-			$name .= '?';
-		}
+		// if ($type->nullable) {
+		// 	$name .= '?';
+		// }
 
 		return $name;
 	}

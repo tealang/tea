@@ -8,10 +8,8 @@
 namespace Tea;
 
 // for classs/functions/constants
-class UseDeclaration extends Node implements IMemberDeclaration
+class UseDeclaration extends BaseDeclaration
 {
-	use DeclarationTrait;
-
 	const KIND = 'use_declaration';
 
 	public $program;

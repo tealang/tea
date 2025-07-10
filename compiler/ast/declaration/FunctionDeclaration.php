@@ -12,7 +12,7 @@ interface IFunctionDeclaration extends IScopeBlock {}
 
 trait IScopeBlockTrait
 {
-	use DeclarationTrait, IBlockTrait;
+	use IBlockTrait;
 
 	public $callbacks;
 
@@ -30,7 +30,7 @@ trait IScopeBlockTrait
 	}
 }
 
-class FunctionDeclaration extends RootDeclaration implements IFunctionDeclaration, IRootDeclaration
+class FunctionDeclaration extends RootDeclaration implements IDeclaration, IFunctionDeclaration, IRootDeclaration
 {
 	use IScopeBlockTrait;
 

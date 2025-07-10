@@ -7,9 +7,9 @@
 
 namespace Tea;
 
-class AnonymousFunction extends BaseExpression implements IScopeBlock
+class AnonymousFunction extends BaseExpression implements IDeclaration, IScopeBlock
 {
-	use IScopeBlockTrait;
+	use DeclarationTrait, IScopeBlockTrait;
 
 	const KIND = 'anonymous_function';
 
