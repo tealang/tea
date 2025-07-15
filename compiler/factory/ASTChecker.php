@@ -1958,10 +1958,17 @@ class ASTChecker
 	private function infer_binary_operation(BinaryOperation $node): IType
 	{
 		$operator = $node->operator;
+		$is_none_coalescing = $operator->is(OPID::NONE_COALESCING);
 
 		$left_expr = $node->left;
+		if ($is_none_coalescing and $left_expr instanceof AccessingIdentifier) {
+			$left_type = $this->infer_accessing_identifier($left_expr, true);
+		}
+		else {
+			$left_type = $this->infer_expression($left_expr);
+		}
+
 		$right_expr = $node->right;
-		$left_type = $this->infer_expression($left_expr);
 		$right_type = $this->infer_expression($right_expr);
 
 		if (OperatorFactory::is_number_operator($operator)) {
@@ -2042,7 +2049,7 @@ class ASTChecker
 		// 	$this->assert_type_compatible($left_type, $right_type, $right_expr, 'merge');
 		// 	$infered = $left_type;
 		// }
-		elseif ($operator->is(OPID::NONE_COALESCING)) {
+		elseif ($is_none_coalescing) {
 			$infered = $this->reduce_types([$left_type, $right_type]);
 		}
 		elseif (OperatorFactory::is_bitwise_operator($operator)) {
@@ -2818,9 +2825,9 @@ class ASTChecker
 		return $type;
 	}
 
-	private function infer_accessing_identifier(AccessingIdentifier $node): IType
+	private function infer_accessing_identifier(AccessingIdentifier $node, bool $ignore_none = false): IType
 	{
-		$member = $this->require_accessing_identifier_declaration($node);
+		$member = $this->require_accessing_identifier_declaration($node, $ignore_none);
 		switch ($member::KIND) {
 			case MethodDeclaration::KIND:
 			case FunctionDeclaration::KIND:
@@ -3236,13 +3243,33 @@ class ASTChecker
 		}
 	}
 
-	// includes BuiltinTypeClassDeclaration,
-	private function require_accessing_identifier_declaration(AccessingIdentifier $node): IDeclaration
+	private function require_accessing_identifier_declaration(AccessingIdentifier $node, bool $ignore_none = false): IDeclaration
 	{
 		$basing = $node->basing;
 		$basing_type = $this->infer_expression($basing);
 
-		if ($basing_type instanceof BaseType) {
+		if ($basing_type instanceof UnionType) {
+			if ($ignore_none) {
+				$basing_type = TypeHelper::to_non_nullable($basing_type);
+			}
+
+			if ($basing_type instanceof UnionType) {
+				$type_name = $this->get_type_name($basing_type);
+				throw $this->new_syntax_error("Cannot accessing '$node->name' in '$type_name'", $node);
+			}
+		}
+
+		// if ($basing_type === TypeFactory::$_any) {
+		// 	// let member type to Any on master is Any
+		// 	$this->create_any_symbol_for_accessing_identifier($node);
+		// }
+		// elseif ($basing_type === TypeFactory::$_namespace) {
+		// 	$this->attach_namespace_member_symbol($node->basing->symbol->declaration, $node);
+		// }
+		if ($basing_type instanceof MetaType) {
+			$this->attach_symbol_for_metatype_accessing_identifier($node, $basing_type);
+		}
+		elseif ($basing_type instanceof BaseType) {
 			$this->attach_symbol_for_basetype_accessing_identifier($node, $basing_type);
 		}
 		elseif ($basing_type instanceof Identifiable) {
@@ -3274,40 +3301,24 @@ class ASTChecker
 
 	private function attach_symbol_for_basetype_accessing_identifier(AccessingIdentifier $node, BaseType $basing_type)
 	{
-		// if ($basing_type === TypeFactory::$_any) {
-		// 	// let member type to Any on master is Any
-		// 	$this->create_any_symbol_for_accessing_identifier($node);
-		// }
-		// elseif ($basing_type === TypeFactory::$_namespace) {
-		// 	$this->attach_namespace_member_symbol($node->basing->symbol->declaration, $node);
-		// }
-		if ($basing_type instanceof MetaType) {
-			$this->attach_symbol_for_metatype_accessing_identifier($node, $basing_type);
+		$basing_symbol = $basing_type->symbol;
+		if ($basing_symbol === null) {
+			throw $this->new_syntax_error("Symbol not setted, it's seems a bug in checker", $node);
 		}
-		elseif ($basing_type instanceof UnionType) {
-			$type_name = $this->get_type_name($basing_type);
-			throw $this->new_syntax_error("Cannot accessing '$node->name' in '$type_name'", $node);
-		}
-		else {
-			$basing_symbol = $basing_type->symbol;
-			if ($basing_symbol === null) {
-				throw $this->new_syntax_error("Symbol not setted, it's seems a bug in checker", $node);
-			}
 
-			$basing_decl = $basing_symbol->declaration;
-			// $symbol = $this->find_member_symbol_in_class_declaration($basing_decl, $node->name);
-			// if ($symbol === null) {
-			// 	if ($basing_decl->is_virtual || $this->is_type_as_dynamic_class($basing_type)) {
-			// 		[$decl, $symbol] = $this->factory->create_virtual_property($node->name, $basing_decl);
-			// 	}
-			// 	else {
-			// 		throw $this->new_syntax_error("Member '{$node->name}' not found in '{$basing_decl->name}'", $node);
-			// 	}
-			// }
+		$basing_decl = $basing_symbol->declaration;
+		// $symbol = $this->find_member_symbol_in_class_declaration($basing_decl, $node->name);
+		// if ($symbol === null) {
+		// 	if ($basing_decl->is_virtual || $this->is_type_as_dynamic_class($basing_type)) {
+		// 		[$decl, $symbol] = $this->factory->create_virtual_property($node->name, $basing_decl);
+		// 	}
+		// 	else {
+		// 		throw $this->new_syntax_error("Member '{$node->name}' not found in '{$basing_decl->name}'", $node);
+		// 	}
+		// }
 
-			$symbol = $this->require_class_member_symbol($basing_decl, $node);
-			$node->symbol = $symbol;
-		}
+		$symbol = $this->require_class_member_symbol($basing_decl, $node);
+		$node->symbol = $symbol;
 	}
 
 	private function is_type_as_dynamic_class(IType $type)
