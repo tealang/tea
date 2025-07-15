@@ -434,7 +434,7 @@ class PHPCoder extends BaseCoder
 		return join(', ', $items);
 	}
 
-	public function render_function_body(IScopeBlock $node)
+	public function render_function_body(IFunctionDeclaration $node)
 	{
 		$body = $node->body;
 		$items = [];

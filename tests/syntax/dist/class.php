@@ -117,8 +117,10 @@ class Test5 {
 	public $a_10 = [];
 	public $a_11 = ["f_1" => 123, "f_2" => "string"];
 	public $a_20;
+	public $a_21 = null;
 	public $a_22 = 123;
 	public $a_30;
+	public $a_31 = null;
 	public $a_32 = "hi";
 	public $a_40;
 	public $a_41 = true;

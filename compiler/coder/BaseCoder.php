@@ -1417,7 +1417,7 @@ abstract class BaseCoder
 		return $expr . static::STATEMENT_TERMINATOR;
 	}
 
-	public function render_function_body(IScopeBlock $node)
+	public function render_function_body(IFunctionDeclaration $node)
 	{
 		if (is_array($node->body)) {
 			$code = $this->render_block_nodes($node->body);

@@ -37,8 +37,8 @@ class ASTFactory
 	private $class;
 
 	/**
-	 * current function or closure
-	 * @var IScopeBlock
+	 * current function (includes closure)
+	 * @var IFunctionDeclaration
 	 */
 	private $scope;
 
@@ -47,7 +47,7 @@ class ASTFactory
 	 */
 	private $block;
 
-	private $unit_path_symbol;
+	// private $unit_path_symbol;
 
 	public static function init_ast_system()
 	{
@@ -65,7 +65,7 @@ class ASTFactory
 
 		// the constant 'UNIT_PATH'
 		$decl = new ConstantDeclaration(_PUBLIC, _UNIT_PATH, TypeFactory::$_string);
-		$this->unit_path_symbol = new Symbol($decl);
+		// $this->unit_path_symbol = new Symbol($decl);
 	}
 
 	public function set_as_main()
@@ -299,7 +299,7 @@ class ASTFactory
 		$block->remove_unknow_identifier($identifier);
 
 		while ($block = $block->belong_block) {
-			if ($block instanceof IScopeBlock) {
+			if ($block instanceof IFunctionDeclaration) {
 				$block->remove_unknow_identifier($identifier);
 			}
 		}
@@ -856,7 +856,7 @@ class ASTFactory
 		$block = $this->block;
 
 		do {
-			if ($block instanceof IScopeBlock) {
+			if ($block instanceof IFunctionDeclaration) {
 				throw $this->parser->new_parse_error("Block of label '$label' not found in current function");
 			}
 
@@ -891,7 +891,7 @@ class ASTFactory
 		$block = $this->block;
 
 		do {
-			if ($block instanceof IScopeBlock) {
+			if ($block instanceof IFunctionDeclaration) {
 				throw $this->parser->new_parse_error("Target block not found");
 			}
 
@@ -1069,16 +1069,16 @@ class ASTFactory
 		// reset
 		$this->program = null;
 		$this->declaration = null;
-		$this->block = null;
 		$this->scope = null;
+		$this->block = null;
 	}
 
 	public function begin_class(ClassKindredDeclaration $decl)
 	{
 		$this->class = $decl;
 		$this->declaration = $decl;
-		$this->block = null;
 		$this->scope = null;
+		$this->block = null;
 
 		$this->program->append_declaration($decl);
 	}
@@ -1096,9 +1096,9 @@ class ASTFactory
 			throw $this->parser->new_parse_error("Duplicated class member '{$member->name}'");
 		}
 
-		// if ($member instanceof MethodDeclaration) {
+		if ($member instanceof MethodDeclaration) {
 			$this->scope = $member;
-		// }
+		}
 
 		$this->block = $member;
 		$this->declaration = $member;
@@ -1157,7 +1157,7 @@ class ASTFactory
 	private static function find_super_scope(IBlock $block)
 	{
 		$block= $block->belong_block;
-		if (!$block || $block instanceof IScopeBlock) {
+		if (!$block || $block instanceof IFunctionDeclaration) {
 			return $block;
 		}
 
@@ -1204,7 +1204,7 @@ class ASTFactory
 			return $this->program->symbols[$identifier->name] ?? null;
 		}
 
-		$symbol = $this->seek_symbol_in_encolsing($identifier->name, $seek_block);
+		$symbol = $this->seek_symbol_in_current_function($identifier->name, $seek_block);
 		if ($symbol === null && $seek_block) {
 			// add to lambda check list
 			if ($seek_block instanceof AnonymousFunction) {
@@ -1226,14 +1226,14 @@ class ASTFactory
 		return $attached;
 	}
 
-	private function seek_symbol_in_encolsing(string $name, IBlock &$seek_block): ?Symbol
+	private function seek_symbol_in_current_function(string $name, IBlock &$seek_block): ?Symbol
 	{
 		do {
 			if (isset($seek_block->symbols[$name])) {
 				return $seek_block->symbols[$name];
 			}
 
-			if ($seek_block instanceof IScopeBlock) {
+			if ($seek_block instanceof IFunctionDeclaration) {
 				break;
 			}
 		} while ($seek_block = $seek_block->belong_block);

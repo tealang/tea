@@ -578,7 +578,7 @@ class ASTChecker
 		return TypeFactory::create_callable_type($node->get_expressed_type(), $node->parameters);
 	}
 
-	private function check_function_kindred(IScopeBlock $node)
+	private function check_function_kindred(IFunctionDeclaration $node)
 	{
 		$this->check_parameters_for_callable_declaration($node);
 
@@ -593,7 +593,7 @@ class ASTChecker
 		$node->infered_type =  $infered ?? $hinted ?? TypeFactory::$_void;
 	}
 
-	private function infer_function_body(IScopeBlock $node, ?IType $hinted)
+	private function infer_function_body(IFunctionDeclaration $node, ?IType $hinted)
 	{
 		$prev_func = $this->context_function;
 		$this->context_function = $node; // for find 'super' in methods

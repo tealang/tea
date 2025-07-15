@@ -2,7 +2,7 @@ internal intertrait IBaseView {
 	protected attributes String.Dict = [:]
 	protected subitems String.Array = []  // infered to Any.Array
 
-	construct(id String = none) {
+	construct(id String? = none) {
 		if id is String {
 			this.attributes['id'] = id
 		}

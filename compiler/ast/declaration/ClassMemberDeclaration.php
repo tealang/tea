@@ -48,7 +48,7 @@ class PropertyDeclaration extends BaseClassMemberDeclaration implements IBlock, 
 
 class MethodDeclaration extends BaseClassMemberDeclaration implements IFunctionDeclaration
 {
-	use IScopeBlockTrait;
+	use FunctionTrait;
 
 	const KIND = 'method_declaration';
 

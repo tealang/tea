@@ -23,7 +23,7 @@ var dict = [:]
 set_field('the key', 'the value', dict)
 var_dump(dict)  // ['the key': 'the value']
 
-internal show_file_path(filename String = none) {
+internal show_file_path(filename String? = none) {
 	if filename === none {
 		filename = __FILE__
 	}
