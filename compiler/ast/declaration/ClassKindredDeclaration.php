@@ -26,8 +26,10 @@ const _CLASS_FLAG_MAP = [
 	'stdClass' => ClassFeature::DYNAMIC_PROPERTIES->value,
 ];
 
-abstract class ClassKindredDeclaration extends RootDeclaration
+abstract class ClassKindredDeclaration extends BaseDeclaration implements IRootDeclaration
 {
+	use IRootDeclarationTrait;
+
 	/**
 	 * the extends class for classes
 	 * @var ClassKindredIdentifier

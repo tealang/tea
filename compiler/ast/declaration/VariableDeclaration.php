@@ -9,8 +9,10 @@ namespace Tea;
 
 interface IVariableDeclaration extends IValuedDeclaration {}
 
-abstract class BaseVariableDeclaration extends BaseDeclaration implements IVariableDeclaration
+abstract class BaseVariableDeclaration extends Node implements IDeclaration, IVariableDeclaration
 {
+	use DeclarationTrait;
+
 	public $value;
 
 	public $is_final;
@@ -46,9 +48,8 @@ class InvariantDeclaration extends VariableDeclaration
 
 class SuperVariableDeclaration extends VariableDeclaration implements IRootDeclaration
 {
+	use IRootDeclarationTrait;
 	const KIND = 'super_variable_declaration';
-	public $is_final;
-	public $program;
 }
 
 class ParameterDeclaration extends BaseVariableDeclaration

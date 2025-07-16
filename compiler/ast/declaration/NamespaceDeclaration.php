@@ -7,11 +7,11 @@
 
 namespace Tea;
 
-class NamespaceDeclaration extends BaseDeclaration implements IRootDeclaration
+class NamespaceDeclaration extends Node implements IRootDeclaration
 {
-	const KIND = 'namespace_declaration';
+	use DeclarationTrait;
 
-	public $name;
+	const KIND = 'namespace_declaration';
 
 	/**
 	 * The sub namespaces

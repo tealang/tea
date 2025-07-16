@@ -7,16 +7,11 @@
 
 namespace Tea;
 
-// for classs/functions/constants
-class UseDeclaration extends BaseDeclaration
+class UseDeclaration extends Node implements IDeclaration, IRootDeclaration
 {
+	use DeclarationTrait, IRootDeclarationTrait;
+
 	const KIND = 'use_declaration';
-
-	public $program;
-
-	public $ns;
-
-	public $name;
 
 	public $target_name;
 

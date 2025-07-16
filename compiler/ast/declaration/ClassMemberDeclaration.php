@@ -9,8 +9,10 @@ namespace Tea;
 
 interface IClassMemberDeclaration {}
 
-abstract class BaseClassMemberDeclaration extends BaseDeclaration implements IClassMemberDeclaration
+abstract class BaseClassMemberDeclaration extends Node implements IDeclaration, IClassMemberDeclaration
 {
+	use DeclarationTrait;
+
 	public $value;
 
 	public $modifier;

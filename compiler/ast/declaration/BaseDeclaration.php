@@ -153,6 +153,11 @@ trait DeclarationTrait {
 abstract class BaseDeclaration extends Node implements IDeclaration
 {
 	use DeclarationTrait;
+
+	/**
+	 * @var string
+	 */
+	public $modifier;
 }
 
 // end

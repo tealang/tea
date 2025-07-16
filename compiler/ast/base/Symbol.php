@@ -21,7 +21,7 @@ class Symbol
 	 */
 	public $using;
 
-	public function __construct(BaseDeclaration $decl)
+	public function __construct(IDeclaration $decl)
 	{
 		$this->name = $decl->name;
 		$this->declaration = $decl;

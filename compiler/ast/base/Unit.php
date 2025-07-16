@@ -7,7 +7,7 @@
 
 namespace Tea;
 
-class Unit implements IRootDeclaration
+class Unit
 {
 	public $name;
 

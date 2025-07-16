@@ -30,9 +30,9 @@ trait FunctionTrait
 	}
 }
 
-class FunctionDeclaration extends RootDeclaration implements IDeclaration, IFunctionDeclaration, IRootDeclaration
+class FunctionDeclaration extends BaseDeclaration implements IFunctionDeclaration, IRootDeclaration
 {
-	use FunctionTrait;
+	use IRootDeclarationTrait, FunctionTrait;
 
 	const KIND = 'function_declaration';
 

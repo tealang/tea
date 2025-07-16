@@ -1089,19 +1089,19 @@ class ASTFactory
 		$this->switch_to_initializer();
 	}
 
-	public function begin_class_member(IClassMemberDeclaration $member)
+	public function begin_class_member(IClassMemberDeclaration $decl)
 	{
-		$symbol = new Symbol($member);
+		$symbol = new Symbol($decl);
 		if (!$this->class->append_member_symbol($symbol)) {
-			throw $this->parser->new_parse_error("Duplicated class member '{$member->name}'");
+			throw $this->parser->new_parse_error("Duplicated class member '{$decl->name}'");
 		}
 
-		if ($member instanceof MethodDeclaration) {
-			$this->scope = $member;
+		if ($decl instanceof MethodDeclaration) {
+			$this->scope = $decl;
 		}
 
-		$this->block = $member;
-		$this->declaration = $member;
+		$this->block = $decl;
+		$this->declaration = $decl;
 	}
 
 	public function end_class_member()
@@ -1303,7 +1303,7 @@ class ASTFactory
 		return $symbol;
 	}
 
-	private function create_symbol_for_top_declaration(RootDeclaration $decl, ?NamespaceIdentifier $ns)
+	private function create_symbol_for_top_declaration(IRootDeclaration $decl, ?NamespaceIdentifier $ns)
 	{
 		$special_namespace = $ns !== null && ($this->ns === null || $ns->uri !== $this->ns->uri);
 
