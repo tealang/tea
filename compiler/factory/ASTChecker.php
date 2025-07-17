@@ -37,12 +37,16 @@ class ASTChecker
 	private $program;
 
 	/**
+	 * current function
+	 * @var IFunctionDeclaration
+	 */
+	private $function;
+
+	/**
 	 * current block
 	 * @var IBlock
 	 */
 	private $block;
-
-	private $context_function;
 
 	private static $builtin_checker_instance;
 	private static $native_checker_instance;
@@ -426,12 +430,8 @@ class ASTChecker
 		$hinted = $this->get_and_check_hinted_type($node);
 		if ($hinted) {
 			if ($infered) {
-				// if ($infered instanceof NoneType) {
-					if ($node->value instanceof LiteralDefaultMark) {
-					// 	$hinted = clone $hinted;
-					// 	$hinted->let_assigned_null();
-					// 	$node->set_asserted_type($hinted);
-					// }
+				if ($node->value instanceof LiteralDefaultMark) {
+					//
 				}
 				else {
 					$this->assert_type_compatible($hinted, $infered, $node->value);
@@ -595,8 +595,8 @@ class ASTChecker
 
 	private function infer_function_body(IFunctionDeclaration $node, ?IType $hinted)
 	{
-		$prev_func = $this->context_function;
-		$this->context_function = $node; // for find 'super' in methods
+		$prev_func = $this->function;
+		$this->function = $node; // for find 'super' in methods
 
 		if (is_array($node->body)) {
 			$infered = $this->infer_block($node);
@@ -618,7 +618,7 @@ class ASTChecker
 			}
 		}
 
-		$this->context_function = $prev_func;
+		$this->function = $prev_func;
 		return $infered;
 	}
 
@@ -1900,7 +1900,9 @@ class ASTChecker
 			$left_type = $this->infer_square_accessing($left); // it should be not null
 		}
 		elseif ($left instanceof PlainIdentifier) {
-			$left_type = $left->symbol->declaration->declared_type;
+			$left_decl = $left->symbol->declaration;
+			$left_decl->set_asserted_type($infered);
+			$left_type = $left_decl->declared_type;
 		}
 		elseif ($left instanceof Destructuring) {
 			$left_type = $this->infer_destructuring($left);
@@ -2016,7 +2018,7 @@ class ASTChecker
 				$node->operator = OperatorFactory::$array_concat; // replace to array concat
 				$infered = $left_type;
 			}
-			elseif (!TypeHelper::is_stringable_type($left_type) and !$this->is_weakly_checking) {
+			elseif (!TypeHelper::is_string_concatable_type($left_type) and !$this->is_weakly_checking) {
 				$type_name = $this->get_type_name($left_type);
 				throw $this->new_syntax_error("The concat operation cannot use for '$type_name' type targets", $left_expr);
 			}
@@ -2027,7 +2029,7 @@ class ASTChecker
 			}
 		}
 		elseif ($operator->is(OPID::REPEAT)) {
-			if (!TypeHelper::is_stringable_type($left_type)) {
+			if (!TypeHelper::is_string_concatable_type($left_type)) {
 				$type_name = $this->get_type_name($left_type);
 				throw $this->new_syntax_error("Expected Stringable, {$type_name} given", $left_expr);
 			}
@@ -2916,7 +2918,7 @@ class ASTChecker
 			}
 			elseif ($item instanceof BaseExpression) {
 				$infered = $this->infer_expression($item);
-				if (!TypeHelper::is_scalar_type($infered)) {
+				if (!TypeHelper::is_string_concatable_type($infered)) {
 					$type_name = self::get_type_name($infered);
 					throw $this->new_syntax_error("Expect scalar type value, {$type_name} given", $item);
 				}
@@ -2955,7 +2957,7 @@ class ASTChecker
 			else {
 				// normal expression
 				$infered = $this->infer_expression($item);
-				if (!TypeHelper::is_scalar_type($infered)) {
+				if (!TypeHelper::is_string_concatable_type($infered)) {
 					$type_name = self::get_type_name($infered);
 					throw $this->new_syntax_error("Expect scalar type value, {$type_name} given", $item);
 				}
@@ -2997,7 +2999,7 @@ class ASTChecker
 
 	private function get_symbol_for_super_identifier(PlainIdentifier $identifier)
 	{
-		$current_method = $this->context_function;
+		$current_method = $this->function;
 		$super_identifier = $current_method->belong_block->extends[0] ?? null;
 		if ($super_identifier === null) {
 			// dump($current_method);
@@ -3696,7 +3698,7 @@ class ASTChecker
 			}
 
 			if ($nullable && $result_type) {
-				$result_type = TypeFactory::to_nullable($result_type);
+				$result_type = TypeHelper::to_nullable($result_type);
 			}
 		}
 

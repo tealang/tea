@@ -2102,7 +2102,7 @@ class TeaParser extends BaseParser
 	{
 		if ($this->skip_token(_QUESTION)) {
 			// if ($type instanceof BaseType) {
-				$type = TypeFactory::to_nullable($type);
+				$type = TypeHelper::to_nullable($type);
 			// }
 			// else {
 			// 	$type->let_nullable();
@@ -2495,7 +2495,7 @@ class TeaParser extends BaseParser
 			$nullable = $this->skip_token_ignore_space(_QUESTION);
 			if ($nullable) {
 				// $node->let_nullable();
-				$node = TypeFactory::to_nullable($node);
+				$node = TypeHelper::to_nullable($node);
 			}
 		}
 

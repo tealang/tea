@@ -20,24 +20,24 @@ trait TypingTrait {
 	public $is_virtual;
 
 	/**
-	 * @var IType
+	 * @var ?IType
 	 */
 	public $declared_type;
 
 	/**
 	 * Type that writed in comments
 	 * eg. "@var ...", "@return ...", or tailing type notes
-	 * @var IType
+	 * @var ?IType
 	 */
 	public $noted_type;
 
 	/**
-	 * @var IType
+	 * @var ?IType
 	 */
 	public $infered_type;
 
 	/**
-	 * @var IType
+	 * @var ?IType
 	 */
 	public $asserted_type;
 
@@ -60,19 +60,6 @@ trait TypingTrait {
 	{
 		$this->asserted_type = $type;
 	}
-
-	// public function set_type(?IType $type)
-	// {
-	// 	if ($this->noted_type) {
-	// 		$this->noted_type = $type;
-	// 	}
-	// 	elseif ($this->declared_type) {
-	// 		$this->declared_type = $type;
-	// 	}
-	// 	else {
-	// 		$this->infered_type = $type;
-	// 	}
-	// }
 }
 
 trait DeclarationTrait {

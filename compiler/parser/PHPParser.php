@@ -2340,7 +2340,7 @@ class PHPParser extends BaseParser
 			$identifier = $this->create_classkindred_identifier($name);
 		}
 
-		$nullable and $identifier = TypeFactory::to_nullable($identifier);
+		$nullable and $identifier = TypeHelper::to_nullable($identifier);
 		$identifier->pos = $this->pos;
 
 		return $identifier;
@@ -2350,11 +2350,11 @@ class PHPParser extends BaseParser
 	{
 		if (strpos($note, _DOT)) {
 			$expr = $this->create_dots_style_compound_type($note);
-			$nullable and $expr = TypeFactory::to_nullable($expr);
+			$nullable and $expr = TypeHelper::to_nullable($expr);
 		}
 		elseif (strpos($note, _BRACKET_OPEN)) {
 			$expr = $this->create_bracket_style_type($note);
-			$nullable and $expr = TypeFactory::to_nullable($expr);
+			$nullable and $expr = TypeHelper::to_nullable($expr);
 		}
 		else {
 			$expr = $this->create_type_identifier($note, $nullable);

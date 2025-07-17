@@ -175,18 +175,20 @@ class TypeHelper
 		return $is;
 	}
 
-	public static function is_stringable_type(IType $type)
+	public static function is_string_concatable_type(IType $type)
 	{
 		$is = false;
 		if ($type instanceof StringType
 			or $type instanceof IntType
+			or $type instanceof FloatType
 			or $type instanceof XViewType
+			or $type instanceof NoneType
 			) {
 			$is = true;
 		}
 		elseif ($type instanceof UnionType) {
 			foreach ($type->get_members() as $member) {
-				$is = self::is_stringable_type($member);
+				$is = self::is_string_concatable_type($member);
 				if (!$is) {
 					break;
 				}
@@ -205,13 +207,13 @@ class TypeHelper
 			$is = true;
 		}
 		elseif ($type instanceof UnionType) {
-			$is = self::is_nullable_union_type($type);
+			$is = self::union_contains_none($type);
 		}
 
 		return $is;
 	}
 
-	private static function is_nullable_union_type(UnionType $type)
+	private static function union_contains_none(UnionType $type)
 	{
 		$is = false;
 		foreach ($type->get_members() as $member) {
@@ -221,6 +223,13 @@ class TypeHelper
 		}
 
 		return $is;
+	}
+
+	public static function to_nullable(IType $type)
+	{
+		return self::is_nullable_type($type)
+			? $type
+			: TypeFactory::create_union_type([$type, TypeFactory::$_none]);
 	}
 
 	public static function to_non_nullable(IType $type)

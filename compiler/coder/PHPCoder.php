@@ -1806,9 +1806,9 @@ class PHPCoder extends BaseCoder
 	public function render_as_operation(AsOperation $node, bool $add_parentheses = false)
 	{
 		$tea_type_name = $node->right->name;
-		$native_type_name = static::BUILTIN_TYPE_MAP[$tea_type_name] ?? null;
-
-		if (in_array($tea_type_name, static::CASTABLE_TYPES, true)) {
+		if (in_array($tea_type_name, static::CASTABLE_TYPES, true)
+			and $this->is_need_casting($node)) {
+			$native_type_name = static::BUILTIN_TYPE_MAP[$tea_type_name];
 			$left = $this->render_subexpression($node->left, $node->operator);
 			if ($tea_type_name === _UINT) {
 				$code = "uint_ensure((int)$left)";
@@ -1825,6 +1825,12 @@ class PHPCoder extends BaseCoder
 		}
 
 		return $code;
+	}
+
+	private function is_need_casting(AsOperation $node)
+	{
+		return !($node->right instanceof IterableType
+			and $node->left->expressed_type instanceof IterableType);
 	}
 
 	public function render_is_operation(IsOperation $node)

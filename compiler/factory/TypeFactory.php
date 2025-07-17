@@ -237,11 +237,6 @@ class TypeFactory
 
 		return $type;
 	}
-
-	public static function to_nullable(IType $type)
-	{
-		return $type instanceof NoneType ? $type : self::create_union_type([$type, self::$_none]);
-	}
 }
 
 // end
