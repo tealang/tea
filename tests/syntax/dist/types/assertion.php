@@ -3,7 +3,22 @@ namespace tests\syntax;
 
 require_once dirname(__DIR__, 2) . '/__public.php';
 
+#internal
+class Class1 {
+	public function test() {
+		// no any
+	}
+}
+
 // ---------
+$obj = null;
+
+if ($obj === null) {
+	$obj = new Class1();
+}
+
+$obj->test();
+
 $dict = [
 	'a' => 1,
 	'b' => '1',

@@ -37,7 +37,7 @@ class ClassConstantDeclaration extends BaseClassMemberDeclaration implements ICo
 
 }
 
-class PropertyDeclaration extends BaseClassMemberDeclaration implements IBlock, IVariableDeclaration
+class PropertyDeclaration extends BaseClassMemberDeclaration implements IVariableDeclaration
 {
 	const KIND = 'property_declaration';
 

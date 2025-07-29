@@ -39,7 +39,7 @@ trait TypingTrait {
 	/**
 	 * @var ?IType
 	 */
-	public $asserted_type;
+	public $bound_type;
 
 	public function get_hinted_type(): IType
 	{
@@ -51,14 +51,14 @@ trait TypingTrait {
 		return $this->noted_type ?? $this->declared_type ?? $this->infered_type ?? TypeFactory::$_any;
 	}
 
-	public function get_asserted_type(): IType
+	public function get_bound_type(): IType
 	{
-		return $this->asserted_type ?? $this->noted_type ?? $this->declared_type ?? $this->infered_type ?? TypeFactory::$_any;
+		return $this->bound_type ?? $this->noted_type ?? $this->declared_type ?? $this->infered_type ?? TypeFactory::$_any;
 	}
 
-	public function set_asserted_type(IType $type)
+	public function bind_type(IType $type)
 	{
-		$this->asserted_type = $type;
+		$this->bound_type = $type;
 	}
 }
 

@@ -70,7 +70,7 @@ class TypeHelper
 	public static function is_dict_key_type(?IType $type)
 	{
 		$is = false;
-		if ($type instanceof StringType || $type instanceof IntType) {
+		if ($type instanceof StringType || $type instanceof IntType || $type instanceof NoneType) {
 			$is = true;
 		}
 		elseif ($type instanceof UnionType) {
@@ -207,13 +207,13 @@ class TypeHelper
 			$is = true;
 		}
 		elseif ($type instanceof UnionType) {
-			$is = self::union_contains_none($type);
+			$is = self::is_union_contains_none($type);
 		}
 
 		return $is;
 	}
 
-	private static function union_contains_none(UnionType $type)
+	private static function is_union_contains_none(UnionType $type)
 	{
 		$is = false;
 		foreach ($type->get_members() as $member) {

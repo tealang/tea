@@ -2037,7 +2037,7 @@ class TeaParser extends BaseParser
 					throw $this->new_parse_error("Expected member type identifier");
 				}
 
-				$type = $type->unite_type($member_type);
+				$type = $type->unite($member_type);
 			}
 
 			$this->scan_nullable_for($type);

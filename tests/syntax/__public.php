@@ -34,6 +34,7 @@ const __AUTOLOADS = [
 	'tests\syntax\Test5' => 'dist/class.php',
 	'tests\syntax\Data' => 'dist/function.php',
 	'tests\syntax\TeaDemoClass' => 'dist/main.php',
+	'tests\syntax\Class1' => 'dist/types/assertion.php',
 	'tests\syntax\TestForMetaType0' => 'dist/types/metatype.php',
 	'tests\syntax\TestForMetaType1' => 'dist/types/metatype.php',
 	'tests\syntax\TestForMetaType2' => 'dist/types/metatype.php',

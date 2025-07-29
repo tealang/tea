@@ -58,7 +58,7 @@ trait ITypeTrait
 		return $accept;
 	}
 
-	public function unite_type(BaseType|PlainIdentifier $target): IType {
+	public function unite(BaseType|PlainIdentifier $target): IType {
 		if ($target instanceof UnionType) {
 			$result = $target->merge_with_single_type($this);
 		}
@@ -128,7 +128,7 @@ abstract class SingleGenericType extends BaseType
 		$this->generic_type = $generic_type;
 	}
 
-	public function unite_type(BaseType|PlainIdentifier $target): IType {
+	public function unite(BaseType|PlainIdentifier $target): IType {
 		if ($target instanceof UnionType) {
 			$result = $target->merge_with_single_type($this);
 		}
@@ -140,7 +140,7 @@ abstract class SingleGenericType extends BaseType
 			}
 			else {
 				// just to uniting the generic_type
-				$united = $this_generic_type->unite_type($target_generic_type);
+				$united = $this_generic_type->unite($target_generic_type);
 				$result = clone $this;
 				$result->generic_type = $united;
 			}
@@ -270,12 +270,28 @@ class UnionType extends BaseType
 		return $has;
 	}
 
-	public function unite_type(BaseType|PlainIdentifier $target): IType {
+	public function unite(BaseType|PlainIdentifier $target): IType {
 		$result = $target instanceof UnionType
 			? $this->merge_with_union_type($target)
 			: $this->merge_with_single_type($target);
 
 		return $result;
+	}
+
+	public function deunite(BaseType|PlainIdentifier $target)
+	{
+		$items = [];
+		foreach ($this->members as $member) {
+			if (!$member->is_same_or_based_with($target)) {
+				$items[] = $member;
+			}
+		}
+
+		$new_type = count($items) > 1
+			? TypeFactory::create_union_type($items)
+			: $items[0];
+
+		return $new_type;
 	}
 
 	public function merge_with_single_type(BaseType|PlainIdentifier $target) {
@@ -309,7 +325,7 @@ class UnionType extends BaseType
 		}
 		else {
 			$member = $result->members[$pos];
-			$result->members[$pos] = $member->unite_type($target);
+			$result->members[$pos] = $member->unite($target);
 		}
 
 		return $result;
@@ -376,22 +392,6 @@ class UnionType extends BaseType
 		}
 
 		return $is;
-	}
-
-	public function get_members_type_except(BaseType|PlainIdentifier $target)
-	{
-		$items = [];
-		foreach ($this->members as $member) {
-			if (!$member->is_same_or_based_with($target)) {
-				$items[] = $member;
-			}
-		}
-
-		$new_type = count($items) > 1
-			? TypeFactory::create_union_type($items)
-			: $items[0];
-
-		return $new_type;
 	}
 
 	public function is_same_with(BaseType|PlainIdentifier $target) {
