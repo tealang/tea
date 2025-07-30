@@ -282,30 +282,6 @@ abstract class BaseCoder
 		return join(', ', $items);
 	}
 
-	// protected function render_callback_protocols(array $nodes)
-	// {
-	// 	foreach ($nodes as $node) {
-	// 		$items[] = $this->render_callback_protocol($node);
-	// 	}
-
-	// 	return ' -> ' . join(' -> ', $items);
-	// }
-
-	// protected function render_callback_protocol(CallbackProtocol $node)
-	// {
-	// 	$async = $node->async ? 'async ' : '';
-	// 	$parameters = $this->render_parameters($node->parameters);
-	// 	$type = $this->render_type_expr_for_decl($node);
-
-	// 	return "{$async}{$node->name}($parameters){$type}";
-	// }
-
-	// public function render_expect_declaration(ExpectDeclaration $node)
-	// {
-	// 	$parameters = $this->render_parameters($node->parameters);
-	// 	return "#expect $parameters" . static::STATEMENT_TERMINATOR;
-	// }
-
 	public function render_masked_declaration(MaskedDeclaration $node)
 	{
 		$code = _MASKED . " {$node->name}";

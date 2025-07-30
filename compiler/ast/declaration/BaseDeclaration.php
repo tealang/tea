@@ -8,11 +8,7 @@
 namespace Tea;
 
 interface IDeclaration {}
-// interface ICallableDeclaration extends IDeclaration {}
-// interface IMemberDeclaration extends IDeclaration {}
-// interface IValuedDeclaration extends IDeclaration {}
 interface ICallableDeclaration {}
-// interface IMemberDeclaration {}
 interface IValuedDeclaration {}
 
 trait TypingTrait {

@@ -2350,45 +2350,6 @@ class TeaParser extends BaseParser
 		return $decl;
 	}
 
-	// protected function scan_callback_protocols()
-	// {
-	// 	if (!$this->skip_token_ignore_empty(_NOTIFY)) {
-	// 		return null;
-	// 	}
-
-	// 	$items = [];
-	// 	while ($item = $this->read_callback_protocol()) {
-	// 		$items[] = $item;
-	// 		if (!$this->skip_token_ignore_empty(_NOTIFY)) {
-	// 			break;
-	// 		}
-	// 	}
-
-	// 	return $items;
-	// }
-
-	// protected function read_callback_protocol()
-	// {
-	// 	$is_async = false;
-	// 	$name = $this->scan_token_ignore_empty();
-	// 	if ($name === _ASYNC) {
-	// 		$is_async = true;
-	// 		$name = $this->scan_token_ignore_empty();
-	// 	}
-
-	// 	if (!TeaHelper::is_normal_function_name($name)) {
-	// 		throw $this->new_unexpected_error();
-	// 	}
-
-	// 	$parameters = $this->read_parameters_with_parentheses();
-	// 	$return_type = $this->scan_return_type();
-
-	// 	$node = new CallbackProtocol($is_async, $name, $return_type, ...$parameters);
-	// 	$node->pos = $this->pos;
-
-	// 	return $node;
-	// }
-
 	protected function read_parameters_with_parentheses()
 	{
 		$this->expect_token_ignore_empty(_PAREN_OPEN);
