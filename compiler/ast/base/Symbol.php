@@ -12,7 +12,7 @@ class Symbol
 	public $name;
 
 	/**
-	 * @var BaseDeclaration
+	 * @var IDeclaration
 	 */
 	public $declaration;
 
@@ -23,7 +23,7 @@ class Symbol
 
 	public function __construct(IDeclaration $decl)
 	{
-		$this->name = $decl->name;
+		$this->name = $decl->get_name();
 		$this->declaration = $decl;
 		// $decl->symbol = $this;
 	}

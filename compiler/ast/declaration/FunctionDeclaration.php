@@ -7,7 +7,6 @@
 
 namespace Tea;
 
-// interface IFunctionalScope extends IBlock, ICallableDeclaration {}
 interface IFunctionDeclaration extends IBlock, ICallableDeclaration {}
 
 trait FunctionTrait
@@ -30,9 +29,9 @@ trait FunctionTrait
 	}
 }
 
-class FunctionDeclaration extends BaseDeclaration implements IFunctionDeclaration, IRootDeclaration
+class FunctionDeclaration extends RootDeclaration implements IFunctionDeclaration
 {
-	use IRootDeclarationTrait, FunctionTrait;
+	use FunctionTrait;
 
 	const KIND = 'function_declaration';
 

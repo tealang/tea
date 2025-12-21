@@ -7,11 +7,11 @@
 
 namespace Tea;
 
-interface IVariableDeclaration extends IValuedDeclaration {}
+interface IVariableDeclaration extends IValuableDeclaration {}
 
 abstract class BaseVariableDeclaration extends Node implements IDeclaration, IVariableDeclaration
 {
-	use DeclarationTrait;
+	use BaseDeclarationTrait, TypingTrait;
 
 	public $value;
 

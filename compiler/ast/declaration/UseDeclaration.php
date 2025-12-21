@@ -7,9 +7,9 @@
 
 namespace Tea;
 
-class UseDeclaration extends Node implements IDeclaration, IRootDeclaration
+class UseDeclaration extends Node implements IRootDeclaration
 {
-	use DeclarationTrait, IRootDeclarationTrait;
+	use BaseDeclarationTrait, IRootDeclarationTrait;
 
 	const KIND = 'use_declaration';
 

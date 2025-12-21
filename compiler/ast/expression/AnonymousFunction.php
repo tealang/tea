@@ -9,7 +9,7 @@ namespace Tea;
 
 class AnonymousFunction extends BaseExpression implements IDeclaration, IFunctionDeclaration
 {
-	use DeclarationTrait, FunctionTrait;
+	use BaseDeclarationTrait, TypingTrait, FunctionTrait;
 
 	const KIND = 'anonymous_function';
 

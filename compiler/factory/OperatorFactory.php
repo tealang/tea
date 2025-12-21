@@ -255,27 +255,27 @@ class OperatorFactory
 
 	public static function get_tea_prefix_operator(?string $sign)
 	{
-		return self::$tea_prefix_map[$sign] ?? null;
+		return self::$tea_prefix_map[$sign ?? ''] ?? null;
 	}
 
 	public static function get_tea_postfix_operator(?string $sign)
 	{
-		return self::$tea_postfix_map[$sign] ?? null;
+		return self::$tea_postfix_map[$sign ?? ''] ?? null;
 	}
 
 	public static function get_tea_normal_operator(?string $sign)
 	{
-		return self::$tea_normal_map[$sign] ?? null;
+		return self::$tea_normal_map[$sign ?? ''] ?? null;
 	}
 
 	public static function get_php_prefix_operator(?string $sign)
 	{
-		return self::$php_prefix_map[$sign] ?? null;
+		return self::$php_prefix_map[$sign ?? ''] ?? null;
 	}
 
 	public static function get_php_normal_operator(?string $sign)
 	{
-		return self::$php_normal_map[$sign] ?? null;
+		return self::$php_normal_map[$sign ?? ''] ?? null;
 	}
 
 	private static function prepare_for_tea()

@@ -15,7 +15,7 @@ class EnumDeclaration extends ClassKindredDeclaration
 
 }
 
-class EnumCaseDeclaration extends BaseClassMemberDeclaration implements IValuedDeclaration
+class EnumCaseDeclaration extends BaseClassMemberDeclaration implements IValuableDeclaration
 {
 	const KIND = 'enum_member_declaration';
 

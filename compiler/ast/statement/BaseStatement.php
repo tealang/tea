@@ -12,9 +12,4 @@ interface IStatement {}
 class BaseStatement extends Node implements IStatement
 {
 	public $belong_block;
-
-	/**
-	 * @var int
-	 */
-	public $tailing_newlines;
 }

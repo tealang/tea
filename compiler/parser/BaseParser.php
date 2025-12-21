@@ -104,7 +104,6 @@ abstract class BaseParser
 
 		$block->set_body_with_statements($items);
 		// $block->tailing_comment = $this->scan_line_comment_inline();
-		// $block->tailing_newlines = $this->scan_empty_lines();
 
 		$this->factory->end_block();
 	}

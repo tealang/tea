@@ -9,7 +9,7 @@ namespace Tea;
 
 class Program extends Node
 {
-	use DeclarationTrait;
+	use BaseDeclarationTrait;
 
 	const KIND = 'program';
 

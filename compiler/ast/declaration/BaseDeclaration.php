@@ -7,9 +7,20 @@
 
 namespace Tea;
 
-interface IDeclaration {}
-interface ICallableDeclaration {}
-interface IValuedDeclaration {}
+interface IDeclaration {
+	public function get_name(): ?string;
+}
+
+interface ICallableDeclaration {
+	// public function get_parameters(): array;
+}
+
+interface IValuableDeclaration {
+	// public function get_value(): BaseExpression;
+}
+
+interface IRootDeclaration extends IDeclaration, IStatement {}
+
 
 trait TypingTrait {
 
@@ -58,13 +69,14 @@ trait TypingTrait {
 	}
 }
 
-trait DeclarationTrait {
+trait BaseDeclarationTrait {
 
-	use TypingTrait;
+	// public $label;
 
-	public $label;
-
-	public $is_extern;
+	/**
+	 * @var string
+	 */
+	public $modifier;
 
 	/**
 	 * @var string
@@ -78,6 +90,8 @@ trait DeclarationTrait {
 	//  */
 	// public $symbol;
 
+	public $is_extern;
+
 	public $is_checked = false; // set true when checked by ASTChecker
 
 	// is public or used by other programs
@@ -87,7 +101,10 @@ trait DeclarationTrait {
 
 	public $unknow_identifiers = [];
 
-	public $tailing_newlines;
+	public function get_name(): ?string
+	{
+		return $this->name;
+	}
 
 	public function set_depends_to_unit_level()
 	{
@@ -133,14 +150,32 @@ trait DeclarationTrait {
 	}
 }
 
-abstract class BaseDeclaration extends Node implements IDeclaration
+trait IRootDeclarationTrait
 {
-	use DeclarationTrait;
+	/**
+	 * @var NamespaceIdentifier
+	 */
+	public $ns;
 
 	/**
-	 * @var string
+	 * @var Program
 	 */
-	public $modifier;
+	public $program;
+
+	public function set_namespace(NamespaceIdentifier $ns)
+	{
+		$this->ns = $ns;
+	}
+
+	public function is_root_namespace()
+	{
+		return $this->program->unit === null || $this->is_extern;
+	}
+}
+
+abstract class RootDeclaration extends Node implements IRootDeclaration
+{
+	use BaseDeclarationTrait, TypingTrait, IRootDeclarationTrait;
 }
 
 // end

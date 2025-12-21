@@ -7,12 +7,10 @@
 
 namespace Tea;
 
-interface IConstantDeclaration extends IValuedDeclaration {}
+interface IConstantDeclaration extends IValuableDeclaration {}
 
-class ConstantDeclaration extends BaseDeclaration implements IConstantDeclaration, IRootDeclaration
+class ConstantDeclaration extends RootDeclaration implements IConstantDeclaration
 {
-	use IRootDeclarationTrait;
-
 	const KIND = 'constant_declaration';
 
 	public $is_static = true;

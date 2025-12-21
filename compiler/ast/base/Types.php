@@ -615,6 +615,11 @@ class CallableType extends BaseType implements IDeclaration, ICallableDeclaratio
 		$this->parameters = $parameters;
 	}
 
+	public function get_name(): ?string
+	{
+		return $this->name;
+	}
+
 	public function is_accept_single_type(BaseType|PlainIdentifier $target) {
 		// if ($target->has_null and !$this->nullable and !$this->has_null) {
 		// 	$is = false;

@@ -11,7 +11,7 @@ interface IClassMemberDeclaration {}
 
 abstract class BaseClassMemberDeclaration extends Node implements IDeclaration, IClassMemberDeclaration
 {
-	use DeclarationTrait;
+	use BaseDeclarationTrait, TypingTrait;
 
 	public $value;
 

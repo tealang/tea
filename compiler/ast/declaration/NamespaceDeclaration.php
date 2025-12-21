@@ -9,7 +9,7 @@ namespace Tea;
 
 class NamespaceDeclaration extends Node implements IRootDeclaration
 {
-	use DeclarationTrait;
+	use BaseDeclarationTrait;
 
 	const KIND = 'namespace_declaration';
 

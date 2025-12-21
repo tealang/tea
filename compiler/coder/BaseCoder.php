@@ -134,12 +134,12 @@ abstract class BaseCoder
 
 	protected function get_declaration_modifier(IDeclaration $node, ?string $default_modifier = null)
 	{
-		if ($node->label) {
-			$modifier = _SHARP . $node->label;
-		}
-		else {
+		// if ($node->label) {
+		// 	$modifier = _SHARP . $node->label;
+		// }
+		// else {
 			$modifier = $node->is_extern ? _EXTERN : ($node->modifier ?? $default_modifier);
-		}
+		// }
 
 		return $modifier;
 	}

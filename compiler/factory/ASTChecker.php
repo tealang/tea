@@ -347,7 +347,7 @@ class ASTChecker
 		$node->infered_type = $infered;
 	}
 
-	private function assert_compile_time_value_for(IValuedDeclaration $node)
+	private function assert_compile_time_value_for(IValuableDeclaration $node)
 	{
 		$value = $node->value;
 
@@ -452,11 +452,6 @@ class ASTChecker
 	}
 
 	private function check_parameters_for_callable_declaration(ICallableDeclaration $node)
-	{
-		$this->check_parameters_for_node($node);
-	}
-
-	private function check_parameters_for_node($node)
 	{
 		foreach ($node->parameters as $parameter) {
 			$this->check_variable_declaration($parameter);
@@ -3066,7 +3061,7 @@ class ASTChecker
 	private function find_namespace_declaration_in_unit(Unit $unit, NamespaceIdentifier $ns)
 	{
 		$namepath = $ns->get_namepath();
-		$ns_name = array_shift($namepath);
+		$ns_name = array_shift($namepath) ?? '';
 
 		$decl = $unit->namespaces[$ns_name] ?? null;
 		if ($decl !== null) {

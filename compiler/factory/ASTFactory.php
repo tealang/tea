@@ -1272,7 +1272,7 @@ class ASTFactory
 		return $symbol;
 	}
 
-	private function create_internal_symbol(IDeclaration $decl, ?Symbol $symbol = null)
+	private function create_internal_symbol(IRootDeclaration $decl, ?Symbol $symbol = null)
 	{
 		$decl->program = $this->program;
 
@@ -1286,7 +1286,7 @@ class ASTFactory
 		return $symbol;
 	}
 
-	private function create_external_symbol(IDeclaration $decl, NamespaceIdentifier $ns)
+	private function create_external_symbol(IRootDeclaration $decl, NamespaceIdentifier $ns)
 	{
 		$decl->set_namespace($ns);
 		$decl->program = $this->program;

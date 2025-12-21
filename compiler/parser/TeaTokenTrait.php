@@ -326,24 +326,24 @@ trait TeaTokenTrait
 		return $token;
 	}
 
-	protected function scan_empty_lines()
-	{
-		$num = 0;
-		do {
-			$token = $this->get_token();
-			if ($token === LF) {
-				$num++;
-			}
-			elseif (!TeaHelper::is_space_tab($token)) {
-				break;
-			}
+	// protected function scan_empty_lines()
+	// {
+	// 	$num = 0;
+	// 	do {
+	// 		$token = $this->get_token();
+	// 		if ($token === LF) {
+	// 			$num++;
+	// 		}
+	// 		elseif (!TeaHelper::is_space_tab($token)) {
+	// 			break;
+	// 		}
 
-			$this->scan_token();
-		}
-		while (true);
+	// 		$this->scan_token();
+	// 	}
+	// 	while (true);
 
-		return $num;
-	}
+	// 	return $num;
+	// }
 
 	protected function scan_spaces()
 	{
