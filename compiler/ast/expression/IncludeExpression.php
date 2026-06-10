@@ -11,18 +11,12 @@ class IncludeExpression extends BaseExpression
 {
 	const KIND = 'include_expression';
 
-	public $target;
+	public BaseExpression $target;
 
 	/**
 	 * the including mode
-	 * @var int  T_INCLUDE | T_INCLUDE_ONCE | T_REQUIRE | T_REQUIRE_ONCE
 	 */
-	public $mode;
-
-	/**
-	 * @var Symbol[]
-	 */
-	public $symbols; // use for check
+	public int $mode; // T_INCLUDE | T_INCLUDE_ONCE | T_REQUIRE | T_REQUIRE_ONCE
 
 	public function __construct(BaseExpression $target, int $mode)
 	{

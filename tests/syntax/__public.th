@@ -6,19 +6,24 @@ use tests\xview
 use tests\phpdemo { PHP_CONST_DEMO }
 use tests\xview { BaseView }
 
-public const MY_CONST #Plain.Dict
+public const MY_CONST #Dict<Text>
 public const C1 #UInt
-public const C2 #Plain
+public const C2 #Text
 
 extern func range(start Int, end Int, step #UInt = 1) Array
 
+public trait Trait1 {
+	protected prop_in_trait1 #Text
+}
+
 public class PHPClassInMixed1 {
-	protected const CONST1 #Plain
+	use Trait1
+	protected const CONST1 #Text
 	public const CONST2 #UInt
 	public union_val Int|String|Bool
 	public object Object?
 	public some \Exception
-	public construct(caller String, items Array|Dict#Array|Dict, some Bool? = none) #Void
+	public construct(caller String, items Array|Dict, some Bool? = null) #Void
 	public get_message() String
 }
 
@@ -33,6 +38,7 @@ public trait Rectangle {
 }
 
 public class Suit: Colorful {
+	use Rectangle
 	case Hearts = 1
 	case Diamonds = 2
 	case Clubs = 3
@@ -40,18 +46,19 @@ public class Suit: Colorful {
 	public const A #Suit
 	public color() String
 	public shape() String
+	public value Int
 }
 
 public func paint(c Colorful) #String
 
-public func fn0(str) #Plain
+public func fn0(str) #Text
 
 public class TeaDemoClass {
-	static static_prop1 #Plain
+	static static_prop1 #Text
 
 	prop1 String|Int
 
-	static static_method(some inout Dict) #Plain
+	static static_method(some inout Dict) #Text
 
 	method1(param1 String|Int) #String|Int
 
@@ -59,14 +66,14 @@ public class TeaDemoClass {
 }
 
 public class DemoList: BaseView {
-	internal const ABC #Plain
+	internal const ABC #Text
 
 	title String
-	items String.Array
+	items List<String>
 
 	cells Array
 
-	construct(name String, title #Plain = '', items String.Array = [], each () Cell? = none, error (message) Void? = none) #Void
+	construct(name String, title #Text = '', items List<String> = [], each () Cell? = null, error (message) Void? = null) #Void
 
 	render() String
 }

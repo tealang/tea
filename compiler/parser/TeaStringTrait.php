@@ -80,7 +80,12 @@ trait TeaStringTrait
 	{
 		$items = [];
 		$string = '';
-		while (($token = $this->scan_string_component()) !== null) {
+		while (true) {
+			$token = $this->scan_string_component();
+			if ($token === null) {
+				throw $this->new_parse_error("Missed the quote close mark ($quote_mark).");
+			}
+
 			if ($token === $quote_mark) {
 				if ($string !== '') {
 					$items[] = $string;
@@ -113,7 +118,7 @@ trait TeaStringTrait
 			$string .= $token;
 		}
 
-		throw $this->new_parse_error("Missed the quote close mark ($quote_mark).");
+		return $items;
 	}
 
 	protected function scan_normal_interpolation(): ?BaseExpression

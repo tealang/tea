@@ -7,12 +7,17 @@
 
 namespace Tea;
 
-interface IElseAble {}
+interface IElseAble
+{
+	public function get_else_branches();
+	public function set_else_block(IElseBlock $else): void;
+}
+
 interface IElseBlock {}
 
 trait ElseTrait
 {
-	public $else;
+	public IElseBlock|null $else = null;
 
 	public function get_else_branches()
 	{
@@ -32,7 +37,7 @@ trait ElseTrait
 		return $items;
 	}
 
-	public function set_else_block(IElseBlock $else)
+	public function set_else_block(IElseBlock $else): void
 	{
 		$this->else = $else;
 	}
@@ -42,7 +47,7 @@ abstract class BaseIfBlock extends BaseControlBlock implements IElseAble, IExcep
 {
 	use ElseTrait;
 
-	public $condition;
+	public BaseExpression $condition;
 
 	public function __construct(BaseExpression $condition)
 	{
@@ -59,6 +64,8 @@ class IfBlock extends BaseIfBlock implements IStatement
 
 class ElseIfBlock extends BaseIfBlock implements IElseBlock
 {
+	use ExceptTrait;
+	
 	const KIND = 'elseif_block';
 }
 

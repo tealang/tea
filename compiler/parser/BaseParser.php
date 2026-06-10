@@ -9,59 +9,88 @@ namespace Tea;
 
 abstract class BaseParser
 {
-	public $is_parsing_header = false;
+	public const SOURCE_DIALECT = Program::SOURCE_DIALECT_UNKNOWN;
 
-	public $is_declare_mode = false;
+	public bool $is_parsing_header = false;
 
-	public $is_interface_mode = false;
+	public bool $is_declare_mode = false;
 
-	public $origin_declare_mode;
+	public bool $is_interface_mode = false;
 
-	protected $file;
+	public ?int $origin_declare_mode = null;
+
+	protected string $file;
+
+	/**
+	 * @var string
+	 */
+	protected string $source = '';
 
 	/**
 	 * @var Program
 	 */
-	protected $program;
+	protected Program $program;
 
-	// current token position
-	public $pos = -1;
+	public int $pos = -1;
 
-	protected $pos_before_skiped_comments = 0;
+	protected int $pos_before_skiped_comments = 0;
 
 	/**
-	 * @var UInt.Dict
+	 * @var array<int, int>
 	 */
-	protected $line2pos = [];
+	protected array $line2pos = [];
 
 	/**
 	 * @var array
 	 */
 	protected $tokens;
 
-	// the total tokens
-	protected $tokens_count = 0;
+	protected int $tokens_count = 0;
+
+	/**
+	 * Collected errors during parsing
+	 * @var array<array{message: string, place: string, pos: int, line: int, token: string}>
+	 */
+	protected array $parse_errors = [];
+
+	/**
+	 * Maximum errors to collect before stopping
+	 */
+	protected int $max_errors = 100;
 
 	/**
 	 * @var ASTFactory
 	 */
-	protected $factory;
+	protected ASTFactory $factory;
 
-	public function __construct(ASTFactory $factory, string $file)
+	public function __construct(ASTFactory $factory, string $file, ?string $source = null)
 	{
 		$this->factory = $factory;
 		$this->file = $file;
 
-		$source = $this->read_file($file);
-		$this->tokenize($source);
+		$this->source = $source ?? $this->read_file($file);
+		$this->tokenize($this->source);
 
 		$this->program = $this->factory->create_program($this->file, $this);
 
-		// set to main program when file name is main.tea
 		if ($this->program->name === _MAIN) {
 			$this->factory->set_as_main();
 		}
 	}
+
+	// create parser from source string, useful for unit testing
+	public static function from_string(ASTFactory $factory, string $source, string $filename = 'memory'): static
+	{
+		return new static($factory, $filename, $source);
+	}
+
+	// Abstract methods that must be implemented by child classes
+	// These are called in read_body_for_control_block() and read_body_for_decl()
+	abstract protected function skip_block_begin();
+	abstract protected function expect_block_begin();
+	abstract protected function expect_block_end();
+	abstract protected function read_inner_statement(): ?IStatement;
+	abstract protected function read_expression(?Operator $prev_operator = null): BaseExpression;
 
 	protected function set_declare_mode(bool $mode)
 	{
@@ -180,21 +209,95 @@ abstract class BaseParser
 		$this->pos = $this->pos_before_skiped_comments;
 	}
 
-	public function new_parse_error(string $message, int $trace_start = 0)
+	/**
+	 * Create a parse error and collect it
+	 * @return Exception The error exception (for throwing)
+	 */
+	public function new_parse_error(string $message, int $trace_start = 0): Exception
 	{
 		$place = $this->get_error_place_with_pos($this->pos);
-
-		$message = "Syntax parse error:\n{$place}\n{$message}";
-		DEBUG && $message .= "\n\nTraces:\n" . get_traces($trace_start);
-
-		return new Exception($message);
+		$token_string = $this->get_current_token_string();
+		
+		$error = [
+			'message' => $message,
+			'place' => $place,
+			'pos' => $this->pos,
+			'line' => $this->get_line_number($this->pos),
+			'token' => $token_string,
+		];
+		
+		// Collect error
+		$this->parse_errors[] = $error;
+		
+		// Create exception for potential throwing
+		$full_message = "Syntax parse error:\n{$place}\n{$message}";
+		
+		// Stop if too many errors
+		if (count($this->parse_errors) >= $this->max_errors) {
+			$this->throw_all_errors();
+		}
+		
+		return new Exception($full_message);
 	}
 
-	public function new_unexpected_error()
+	/**
+	 * Create an unexpected token error
+	 * @return Exception The error exception (for throwing)
+	 */
+	public function new_unexpected_error(): Exception
 	{
-		$this->print_token();
 		$token_string = $this->get_current_token_string();
-		return $this->new_parse_error("Unexpected token '$token_string'", 1);
+		return $this->new_parse_error("Unexpected token '$token_string'");
+	}
+
+	/**
+	 * Throw all collected errors as a single exception
+	 * @throws Exception
+	 */
+	public function throw_all_errors(): void
+	{
+		if (empty($this->parse_errors)) {
+			return;
+		}
+
+		$error_count = count($this->parse_errors);
+		$message = "Syntax parse errors ({$error_count} found):\n\n";
+		
+		foreach ($this->parse_errors as $i => $error) {
+			$message .= ($i + 1) . ". {$error['place']}\n";
+			$message .= "   {$error['message']}\n";
+			if ($i < $error_count - 1) {
+				$message .= "\n";
+			}
+		}
+
+		$this->parse_errors = [];
+		throw new Exception($message);
+	}
+
+	/**
+	 * Get collected errors without throwing
+	 * @return array<array{message: string, pos: int, line: int, token: string}>
+	 */
+	public function get_parse_errors(): array
+	{
+		return $this->parse_errors;
+	}
+
+	/**
+	 * Clear collected errors
+	 */
+	public function clear_parse_errors(): void
+	{
+		$this->parse_errors = [];
+	}
+
+	/**
+	 * Check if there are collected errors
+	 */
+	public function has_parse_errors(): bool
+	{
+		return !empty($this->parse_errors);
 	}
 
 	protected function print_token(array|string|null $token = null)
@@ -221,7 +324,7 @@ abstract class BaseParser
 
 			$code = self::tab2spaces($code);
 			$pointer_pre_len = strlen($code) - 1;
-			$pointer_spaces = str_repeat(' ', $pointer_pre_len);
+			$pointer_spaces = str_repeat(' ', $pointer_pre_len < 0 ? 0 : $pointer_pre_len);
 
 			$after = $this->get_to_line_end($pos + 1);
 			$code .= self::tab2spaces($after);
@@ -242,9 +345,9 @@ abstract class BaseParser
 		return str_replace("\t", '    ', $str);
 	}
 
-	protected abstract function get_to_line_end(?int $from = null);
+	protected abstract function get_to_line_end(?int $from = null): string;
 
-	protected abstract function get_current_token_string();
+	protected abstract function get_current_token_string(): array|string|null;
 
 	protected abstract function get_line_number(int $pos): int;
 

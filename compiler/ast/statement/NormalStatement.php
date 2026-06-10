@@ -11,7 +11,7 @@ class NormalStatement extends BaseStatement
 {
 	const KIND = 'normal_statement';
 
-	public $label;
+	public ?string $label = null;
 
 	public ?BaseExpression $expression;
 

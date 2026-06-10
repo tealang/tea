@@ -3,11 +3,14 @@ namespace Tea;
 
 class MetaAttribute extends Node
 {
-	public $identifier;
+	public ClassKindredIdentifier $identifier;
 
-	public $arguments;
+	/**
+	 * @var array
+	 */
+	public array $arguments;
 
-	public $group;
+	public int $group;
 
 	public function __construct(ClassKindredIdentifier $identifier, array $arguments, int $group)
 	{

@@ -10,15 +10,17 @@ namespace Tea;
 // 调用时参数顺序不同可能导致不一致的运算结果，采用类似宏替换在部分场景下可能会导致问题
 // 问题举例：以为对象形式方法调用时，“对象表达式”可能在实际中被作为非第一个参数，如果其它参数与这个参数相关时，导致调用时序不一致
 // 解决方案：用函数包起来，并且预先将“对象表达式”计算出来存储到局部变量中
-// 为降低实现复杂度，可采用约定mask函数和真函数对应参数顺序强制一致，并且每个参数仅被调用一次
+// 为降低实现复杂度，可约定映射成员和目标函数对应参数顺序强制一致，并且每个参数仅被调用一次
 
-class MaskedDeclaration extends MethodDeclaration
+class MemberMappingDeclaration extends MethodDeclaration
 {
-	const KIND = 'masked_declaration';
+	const KIND = 'member_mapping_declaration';
 
-	public $is_property = false;
+	public bool $is_property = false;
 
-	public $arguments_map = [];
+	/**
+	 * @var array<int, int>
+	 */
+	public array $arguments_map = [];
 
 }
-

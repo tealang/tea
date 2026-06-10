@@ -6,6 +6,11 @@ use tests\phpdemo\{ BaseInterface };
 require_once dirname(__DIR__, 1) . '/__public.php';
 
 #internal
+class ExtendsForTest1InNs1 extends \ns1\Test1 {
+	// no any
+}
+
+#internal
 interface IDemo extends BaseInterface {
 	const CONST1 = 'const value';
 	const CLASS_IN_CONST = IterableObject::class;
@@ -250,6 +255,8 @@ class Test5 {
 }
 
 // ---------
+$test = new ExtendsForTest1InNs1();
+
 foreach (new IterableObject() as $k => $v) {
 	echo 'iterable item: ' . $k . ' => ' . $v, LF;
 }

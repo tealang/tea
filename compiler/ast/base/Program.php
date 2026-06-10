@@ -7,57 +7,65 @@
 
 namespace Tea;
 
-class Program extends Node
+class Program extends BaseDeclaration
 {
-	use BaseDeclarationTrait;
-
 	const KIND = 'program';
+
+	const SOURCE_DIALECT_UNKNOWN = 'unknown';
+	const SOURCE_DIALECT_TEA = 'tea';
+	const SOURCE_DIALECT_PHP = 'php';
+	const SOURCE_DIALECT_HEADER = 'header';
 
 	/**
 	 * @var BaseParser
 	 */
-	public $parser;
+	public ?BaseParser $parser = null;
 
-	public $as_main;
+	public string $source_dialect = self::SOURCE_DIALECT_UNKNOWN;
 
-	public $name;
+	public bool $as_main = false;
 
-	public $file;
+	public ?string $file = null;
 
 	/**
 	 * using statements that in current program
 	 * @var UseStatement[]
 	 */
-	public $uses = [];
+	public array $uses = [];
 
 	/**
 	 * targets of use statements in current program
 	 * @var UseDeclaration[]
 	 */
-	public $use_targets = [];
-
-	public $declarations = [];
+	public array $use_targets = [];
 
 	/**
-	 * @var FunctionDeclaration
+	 * @var array<int, BaseDeclaration>
 	 */
-	public $initializer;
+	public array $declarations = [];
 
-	public $symbols = [];
+	/**
+	 * @var FunctionDeclaration|null
+	 */
+	public ?FunctionDeclaration $initializer = null;
 
-	public $unit;
+	/**
+	 * @var array<string, mixed>
+	 */
+	public array $symbols = [];
+
+	public ?Unit $unit = null;
 
 	/**
 	 * for PHP scripts
-	 * @var NamespaceIdentifier
 	 */
-	public $ns;
+	public ?NamespaceIdentifier $ns = null;
 
-	public $depends_native_programs = [];
+	public array $depends_native_programs = [];
 
-	public $is_native = false; // for native programs, e.g. PHP scripts
+	public bool $is_native = false; // for native programs, e.g. PHP scripts
 
-	public $is_external = false;
+	public bool $is_external = false;
 
 	public function __construct(string $file, Unit $unit)
 	{
@@ -66,7 +74,7 @@ class Program extends Node
 		$this->name = $this->generate_name();
 	}
 
-	public function append_declaration(IDeclaration $decl)
+	public function append_declaration(BaseDeclaration $decl)
 	{
 		$this->declarations[(string)$decl->name] = $decl;
 	}

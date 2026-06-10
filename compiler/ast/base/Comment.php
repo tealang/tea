@@ -12,7 +12,7 @@ class LineComment extends Node implements IStatement
 {
 	const KIND = 'line_comment';
 
-	public $content;
+	public string $content;
 
 	public function __construct(string $content)
 	{
@@ -25,7 +25,7 @@ class BlockComment extends Node implements IStatement
 {
 	const KIND = 'block_comment';
 
-	public $content;
+	public string $content;
 
 	public function __construct(string $content)
 	{
@@ -38,7 +38,7 @@ class DocComment extends Node implements IStatement
 {
 	const KIND = 'doc_comment';
 
-	public $content;
+	public string $content;
 
 	public function __construct(string $content)
 	{

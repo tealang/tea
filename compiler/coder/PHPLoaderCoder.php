@@ -29,14 +29,14 @@ class PHPLoaderCoder extends PHPCoder
 		$functions = [];
 
 		foreach ($this->constants as $node) {
-			$item = $node->render($this);
+			$item = $this->render_node($node);
 			if ($item !== null) {
 				$constants[] = $item;
 			}
 		}
 
 		foreach ($this->functions as $node) {
-			$item = $node->render($this);
+			$item = $this->render_node($node);
 			$functions[] = $item . LF;
 		}
 

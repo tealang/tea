@@ -9,23 +9,16 @@ namespace Tea;
 
 class Symbol
 {
-	public $name;
+	public string $name;
 
-	/**
-	 * @var IDeclaration
-	 */
-	public $declaration;
+	public BaseDeclaration $declaration;
 
-	/**
-	 * @var ?UseDeclaration
-	 */
-	public $using;
+	public ?UseDeclaration $using = null;
 
-	public function __construct(IDeclaration $decl)
+	public function __construct(BaseDeclaration $decl)
 	{
 		$this->name = $decl->get_name();
 		$this->declaration = $decl;
-		// $decl->symbol = $this;
 	}
 }
 

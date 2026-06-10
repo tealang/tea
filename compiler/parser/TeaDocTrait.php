@@ -9,6 +9,23 @@ namespace Tea;
 
 trait TeaDocTrait
 {
+	protected function read_leading_phpdoc_comment(?DocComment $doc): ?DocComment
+	{
+		$pos = $this->pos;
+		$token = $this->get_token_ignore_space($pos);
+		$next = $this->get_token_at($pos + 1);
+		if ($token !== _BLOCK_COMMENT_OPEN || !is_string($next) || !str_starts_with($next, '*')) {
+			return $doc;
+		}
+
+		$this->pos = $pos;
+		$content = $this->scan_block_comment(true);
+		$content = preg_replace('/^\*/', '', $content);
+		$content = preg_replace('/\*\/$/', '', $content);
+
+		return $this->create_doc_comment($content ?? '');
+	}
+
 	protected function read_doc_comment()
 	{
 		$opened_pos = $this->pos;

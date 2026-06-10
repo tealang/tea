@@ -11,7 +11,7 @@ class EnumDeclaration extends ClassKindredDeclaration
 {
 	const KIND = 'enum_declaration';
 
-	public ?IType $value_type;
+	public ?BaseType $value_type = null;
 
 }
 
@@ -19,11 +19,12 @@ class EnumCaseDeclaration extends BaseClassMemberDeclaration implements IValuabl
 {
 	const KIND = 'enum_member_declaration';
 
-	public $is_static = true;
-
+	// is_static is always true for enum cases
+	
 	public function __construct(string $name)
 	{
-		$this->name = $name;
+		parent::__construct(null, $name, null);
+		$this->is_static = true;
 	}
 }
 

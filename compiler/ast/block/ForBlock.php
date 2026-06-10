@@ -31,9 +31,9 @@ class ForEachBlock extends BaseControlBlock implements IElseAble, IExceptAble, I
 
 	const KIND = 'foreach_block';
 
-	public $iterable;
-	public $key;
-	public $val;
+	public BaseExpression $iterable;
+	public ?BaseExpression $key = null;
+	public BaseExpression $val;
 
 	public function __construct(BaseExpression $iterable, ?BaseExpression $key, BaseExpression $val)
 	{
@@ -49,9 +49,9 @@ class ForInBlock extends BaseControlBlock implements IElseAble, IExceptAble, IBr
 
 	const KIND = 'forin_block';
 
-	public $key;
-	public $val;
-	public $iterable;
+	public ?ParameterDeclaration $key = null;
+	public ParameterDeclaration $val;
+	public BaseExpression $iterable;
 
 	public function __construct(?ParameterDeclaration $key, ParameterDeclaration $val, BaseExpression $iterable)
 	{
@@ -67,13 +67,13 @@ class ForToBlock extends BaseControlBlock implements IElseAble, IExceptAble, IBr
 
 	const KIND = 'forto_block';
 
-	public $key;
-	public $val;
-	public $start;
-	public $end;
-	public $step;
+	public ?ParameterDeclaration $key = null;
+	public ParameterDeclaration $val;
+	public BaseExpression $start;
+	public BaseExpression $end;
+	public ?int $step = null;
 
-	public $is_downto_mode;
+	public bool $is_downto_mode = false;
 
 	public function __construct(?ParameterDeclaration $key, ParameterDeclaration $val, BaseExpression $start, BaseExpression $end, ?int $step)
 	{

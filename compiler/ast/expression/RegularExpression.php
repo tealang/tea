@@ -11,8 +11,8 @@ class RegularExpression extends BaseExpression
 {
 	const KIND = 'regular_expression';
 
-	public $pattern;
-	public $flags;
+	public string $pattern;
+	public string $flags;
 
 	public function __construct(string $pattern, string $flags)
 	{

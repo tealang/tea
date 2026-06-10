@@ -11,8 +11,8 @@ class RelayExpression extends BaseExpression
 {
 	const KIND = 'relay_expression';
 
-	public $argument;
-	public $callees;
+	public BaseExpression $argument;
+	public array $callees;
 
 	public function __construct(BaseExpression $argument, BaseExpression ...$callees)
 	{

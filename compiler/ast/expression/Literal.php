@@ -9,10 +9,7 @@ namespace Tea;
 
 trait LiteralTraitWithValue
 {
-	/**
-	 * @var string
-	 */
-	public $value;
+	public string $value;
 
 	public function __construct(string $value) {
 		$this->value = $value;
@@ -21,7 +18,7 @@ trait LiteralTraitWithValue
 
 abstract class LiteralExpression extends BaseExpression
 {
-	public $is_const_value = true;
+	public ?bool $is_const_value = true;
 }
 
 class LiteralDefaultMark extends LiteralExpression
@@ -37,7 +34,7 @@ class LiteralNone extends LiteralExpression
 abstract class LiteralString extends LiteralExpression
 {
 	use LiteralTraitWithValue;
-	public $label;
+	public ?string $label = null;
 }
 
 class PlainLiteralString extends LiteralString

@@ -19,10 +19,13 @@ function fn0($str) {
 
 // autoloads
 const __AUTOLOADS = [
+	'tests\syntax\Trait1' => 'php/_mixed1.php',
 	'tests\syntax\PHPClassInMixed1' => 'php/_mixed1.php',
 	'tests\syntax\Colorful' => 'php/enum.php',
 	'tests\syntax\Rectangle' => 'php/enum.php',
 	'tests\syntax\Suit' => 'php/enum.php',
+	'ns1\Test1' => 'php/namespace.php',
+	'tests\syntax\ExtendsForTest1InNs1' => 'dist/class.php',
 	'tests\syntax\IDemo' => 'dist/class.php',
 	'tests\syntax\IDemoTrait' => 'dist/class.php',
 	'tests\syntax\IterableObject' => 'dist/class.php',

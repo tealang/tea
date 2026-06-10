@@ -10,33 +10,43 @@
 
 namespace Tea;
 
-define('TEA_BASE_PATH', dirname(__DIR__) . '/');
-
 const DEBUG = false;
-const OPTION_KEYS = ['init'];
-const USAGE = 'Usage: genphploader tea/tests/PHPDemoUnit';
+const KEY_HELP = 'help';
+const OPTION_KEYS = [KEY_HELP];
+const USAGE = "Usage: genphploader v1/compiler\n       genphploader --help";
 
-require TEA_BASE_PATH . 'compiler/__public.php';
+require dirname(__DIR__) . '/compiler/__public.php';
+
+function fail_with_error(string $message, bool $show_usage = false): void
+{
+	fwrite(STDERR, "\nError: {$message}\n");
+	if ($show_usage) {
+		fwrite(STDERR, "\n" . USAGE . "\n");
+	}
+	exit(1);
+}
 
 try {
 	$opts = process_cli_options($argv, OPTION_KEYS);
+	if (isset($opts[KEY_HELP])) {
+		echo USAGE, LF;
+		exit(0);
+	}
 
 	$dir = $opts[0] ?? null;
 	if ($dir === null) {
-		error("Missed target dir.");
-		halt(USAGE);
+		fail_with_error('Missed target dir.', true);
 	}
 
 	$realpath = realpath($dir);
 	if ($realpath === false) {
-		error("Target dir '{$dir}' not found.");
-		halt(USAGE);
+		fail_with_error("Target dir '{$dir}' not found.", true);
 	}
 
 	$realpath = FileHelper::normalize_path($realpath . DS);
 	$loader_file = $realpath . PUBLIC_LOADER_FILE_NAME;
 	if (!file_exists($loader_file)) {
-		halt(sprintf("The '%s' not found in '%s'.", PUBLIC_LOADER_FILE_NAME, $realpath));
+		fail_with_error(sprintf("The '%s' not found in '%s'.", PUBLIC_LOADER_FILE_NAME, $realpath));
 	}
 
 	$scanner = new PHPUnitScanner();
@@ -45,10 +55,11 @@ try {
 	PHPLoaderMaker::generate_loader_file($realpath, $class_map);
 
 	$count = count($class_map);
-	halt("$count classes found.");
+	echo LF, "$count classes found.", LF, LF;
+	exit(0);
 }
 catch (Exception $e) {
-	halt("Error: {$e->getMessage()}");
+	fail_with_error($e->getMessage());
 }
 
 // end

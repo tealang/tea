@@ -20,67 +20,54 @@ enum ClassFeature: int
 	case MAGIC_CALL_STATIC = 0x2000;
 }
 
-const _CLASS_FLAG_MAP = [
-	'Iterator' => ClassFeature::ITERATOR->value,
-	'ArrayAccess' => ClassFeature::ARRAY_ACCESS->value,
-	'stdClass' => ClassFeature::DYNAMIC_PROPERTIES->value,
-];
-
 abstract class ClassKindredDeclaration extends RootDeclaration
 {
 	/**
 	 * the extends class for classes
-	 * @var ClassKindredIdentifier
+	 * @var ClassKindredIdentifier[]
 	 */
-	public $extends = [];
+	public array $extends = [];
 
 	/**
 	 * the implements interfaces
 	 * @var ClassKindredIdentifier[]
 	 */
-	public $implements = [];
+	public array $implements = [];
 
 	/**
 	 * @var TraitsUsingStatement[]
 	 */
-	public $usings = [];
+	public array $usings = [];
 
 	/**
 	 * @var IClassMemberDeclaration[]
 	 */
-	public $members = [];
-
-	// just for that used traits
-	public $trait_members = [];
-
-	/**
-	 * the aggregated, actually available members,
-	 * including those that inherit from the parent class,
-	 * those implemented by default in the interface, and those defined in this class
-	 * @var array  [name => Symbol]
-	 */
-	public $aggregated_members = [];
+	public array $members = [];
 
 	/**
 	 * The symbols for current class instance
 	 * used for this, super
+	 * @var array<string, mixed>
 	 */
-	public $symbols = [];
+	public array $symbols = [];
 
-	public $belong_block; // aways none
+	/**
+	 * The block this declaration belongs to (always none for class kindred)
+	 */
+	public BaseDeclaration|IBlock|null $belong_block = null;
 
 	// the instance type for type Self
-	public $typing_identifier;
+	public ?TypeReference $typing_identifier = null;
 
-	public $this_class_symbol;
+	public ?Symbol $this_class_symbol = null;
 
-	public $this_object_symbol;
+	public ?Symbol $this_object_symbol = null;
 
-	public $define_mode;
+	public ?int $define_mode = null;
 
-	public $feature_flags = 0;
+	public int $feature_flags = 0;
 
-	public $is_ready;
+	public bool $is_anonymous = false;
 
 	public function __construct(?string $modifier, $name)
 	{
@@ -121,11 +108,24 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 	public function append_member_symbol(Symbol $symbol)
 	{
 		$name = $symbol->name;
-		if (isset($this->symbols[$name])) {
-			return false;
+		$member = $symbol->declaration;
+		$existing = $this->symbols[$name] ?? null;
+		if ($existing !== null) {
+			$existing_member = $existing->declaration;
+			if ($existing_member instanceof PropertyDeclaration && $member instanceof MethodDeclaration) {
+				$property_key = self::get_property_symbol_key($name);
+				$this->symbols[$property_key] = $existing;
+				$this->members[$property_key] = $existing_member;
+				unset($this->symbols[$name], $this->members[$name]);
+			}
+			elseif ($existing_member instanceof MethodDeclaration && $member instanceof PropertyDeclaration) {
+				$name = self::get_property_symbol_key($name);
+			}
+			else {
+				return false;
+			}
 		}
 
-		$member = $symbol->declaration;
 		$member->belong_block = $this;
 
 		$this->members[$name] = $member;
@@ -134,76 +134,35 @@ abstract class ClassKindredDeclaration extends RootDeclaration
 		return true;
 	}
 
+	public static function get_property_symbol_key(string $name): string
+	{
+		return 'property:' . $name;
+	}
+
 	public function is_same_or_based_with_symbol(Symbol $symbol)
 	{
-		$symbol_decl = $symbol->declaration;
-		return $this === $symbol_decl || $this->find_based_with_symbol($symbol) !== null;
+		return TypeHelper::is_classkindred_same_or_based_with_symbol($this, $symbol);
 	}
 
 	public function find_based_with_symbol(Symbol $symbol)
 	{
-		// the bases interfaces
-		$bases = $this instanceof InterfaceDeclaration ? $this->extends : $this->implements;
-
-		$result = null;
-		foreach ($bases as $based) {
-			if ($this->is_identifier_based_with_symbol($based, $symbol)) {
-				$result = $based;
-				break;
-			}
-		}
-
-		return $result;
-	}
-
-	private static function is_identifier_based_with_symbol(PlainIdentifier $based, Symbol $symbol)
-	{
-		$based_symbol = $based->symbol;
-		$is = $based_symbol === $symbol
-			|| $based_symbol->declaration === $symbol->declaration // because Symbols are different in classes and usings
-			|| $based_symbol->declaration->find_based_with_symbol($symbol);
-
-		return $is;
+		return TypeHelper::find_classkindred_based_with_symbol($this, $symbol);
 	}
 }
 
-class ClassDeclaration extends ClassKindredDeclaration implements IDeclaration, ICallableDeclaration
+class ClassDeclaration extends ClassKindredDeclaration implements ICallableDeclaration
 {
 	const KIND = 'class_declaration';
 
-	public $is_abstract;
+	public bool $is_abstract = false;
 
-	public $is_readonly;
+	public bool $is_readonly = false;
 
-	public $is_final;
+	public bool $is_final = false;
 
 	public function find_based_with_symbol(Symbol $symbol)
 	{
-		// check the extends class first
-		if ($this->extends and $result = $this->find_based_with_symbol_in_super($this->extends[0], $symbol)) {
-			// no any
-		}
-		else {
-			$result = parent::find_based_with_symbol($symbol);
-		}
-
-		return $result;
-	}
-
-	private function find_based_with_symbol_in_super(PlainIdentifier $super_identifier, Symbol $symbol)
-	{
-		$super_symbol = $super_identifier->symbol;
-		$result = null;
-
-		// symbol in difference packages would be not same, but declaration is
-		if ($super_symbol === $symbol || $super_symbol->declaration === $symbol->declaration) {
-			$result = $super_identifier;
-		}
-		elseif ($based_identifier = $super_symbol->declaration->find_based_with_symbol($symbol)) {
-			$result = $based_identifier;
-		}
-
-		return $result;
+		return TypeHelper::find_classkindred_based_with_symbol($this, $symbol);
 	}
 }
 

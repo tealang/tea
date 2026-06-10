@@ -9,19 +9,18 @@ namespace Tea;
 
 interface IClassMemberDeclaration {}
 
-abstract class BaseClassMemberDeclaration extends Node implements IDeclaration, IClassMemberDeclaration
+abstract class BaseClassMemberDeclaration extends BaseDeclaration implements IClassMemberDeclaration
 {
-	use BaseDeclarationTrait, TypingTrait;
+	/**
+	 * Default value
+	 */
+	public ?BaseExpression $value = null;
 
-	public $value;
+	public ?string $modifier = null;
 
-	public $modifier;
+	public ?bool $is_static = null;
 
-	public $is_static;
-
-	public $belong_block;
-
-	public function __construct(?string $modifier, string $name, ?IType $type = null)
+	public function __construct(?string $modifier, string $name, ?BaseType $type = null)
 	{
 		$this->modifier = $modifier;
 		$this->name = $name;
@@ -33,19 +32,45 @@ class ClassConstantDeclaration extends BaseClassMemberDeclaration implements ICo
 {
 	const KIND = 'class_constant_declaration';
 
-	public $is_static = true;
-
+	// is_static is always true for class constants
+	
+	public function __construct(?string $modifier, string $name, ?BaseType $type = null)
+	{
+		parent::__construct($modifier, $name, $type);
+		$this->is_static = true;
+	}
 }
 
 class PropertyDeclaration extends BaseClassMemberDeclaration implements IVariableDeclaration
 {
 	const KIND = 'property_declaration';
 
-	public $is_final;
+	public bool $is_final = false;
 
-	// to mark the value is mutable
-	// just for Array|Dict|Object values
-	public $is_mutable = true;
+	/**
+	 * To mark the value is mutable
+	 * Just for Array|Dict|Object values
+	 */
+	public bool $is_mutable = true;
+
+	/**
+	 * PHP 8.1+ readonly property
+	 */
+	public bool $is_readonly = false;
+
+	/**
+	 * PHP 8.4+ property hooks
+	 */
+	public bool $has_hooks = false;
+	public ?BaseExpression $hook_get = null;
+	public string|BaseExpression|null $hook_set = null;
+
+	/**
+	 * PHP 8.4+ asymmetric visibility
+	 */
+	public ?string $promoted_property_set_modifier = null;  // for constructor property promotion
+	public ?string $set_visibility = null;  // explicit set visibility (public/protected/private)
+	public ?string $get_visibility = null;  // explicit get visibility (public/protected/private)
 }
 
 class MethodDeclaration extends BaseClassMemberDeclaration implements IFunctionDeclaration
@@ -54,7 +79,7 @@ class MethodDeclaration extends BaseClassMemberDeclaration implements IFunctionD
 
 	const KIND = 'method_declaration';
 
-	public $is_abstract;
+	public bool $is_abstract = false;
 }
 
 // end

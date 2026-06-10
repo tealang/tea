@@ -11,7 +11,7 @@ class Parentheses extends BaseExpression
 {
 	const KIND = 'parentheses';
 
-	public $expression;
+	public BaseExpression $expression;
 
 	public function __construct(BaseExpression $expression)
 	{

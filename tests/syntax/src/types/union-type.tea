@@ -1,0 +1,50 @@
+
+// Test for union type handling in array access
+// Tests that array access with UInt index returns correct element type
+
+#main
+
+// Test 1: Union type string splitting - accessing array elements correctly
+func test_union_split(type_name String) String {
+    var parts = type_name.split("|")
+    var result = ""
+    var i UInt = 0
+    while i < parts.length {
+        // Array access with UInt index should return the element type (String)
+        result = result .+ parts[i] .+ ", "
+        i += 1
+    }
+    return result
+}
+
+// Test 2: String array access with UInt index
+func test_string_array_access() {
+    var arr = ["Int", "Float", "String"]
+    var i UInt = 0
+    while i < arr.length {
+        // Accessing String array with UInt index should return String
+        var item = arr[i]
+        echo item
+        i += 1
+    }
+}
+
+// Test 3: Nested array access in loop
+func test_nested_array_access() {
+    var types = ["Int|Float", "String|Bool", "Array|Dict"]
+    var i UInt = 0
+    while i < types.length {
+        var parts = types[i].split("|")
+        var j UInt = 0
+        while j < parts.length {
+            echo parts[j]
+            j += 1
+        }
+        i += 1
+    }
+}
+
+echo test_union_split("Int|Float|String")
+test_string_array_access()
+test_nested_array_access()
+

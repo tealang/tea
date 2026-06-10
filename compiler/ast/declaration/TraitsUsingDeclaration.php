@@ -7,16 +7,23 @@
 
 namespace Tea;
 
-class TraitsUsingStatement extends BaseStatement
+class TraitsUsingStatement extends BaseClassMemberDeclaration
 {
 	const KIND = 'traits_using_statement';
 
-	public $items;
+	/**
+	 * @var array
+	 */
+	public array $items;
 
-	public $options;
+	/**
+	 * @var array
+	 */
+	public array $options;
 
 	public function __construct(array $items, ?array $options = [])
 	{
+		parent::__construct(null, 'trait_use_' . spl_object_id($this));
 		$this->items = $items;
 		$this->options = $options;
 	}

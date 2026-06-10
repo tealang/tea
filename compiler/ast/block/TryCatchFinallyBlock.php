@@ -7,7 +7,12 @@
 
 namespace Tea;
 
-interface IExceptAble {}
+interface IExceptAble
+{
+	public function add_catching_block(CatchBlock $block): void;
+	public function set_finally_block(FinallyBlock $block): void;
+}
+
 interface IExceptBlock {}
 
 class TryBlock extends BaseControlBlock implements IExceptAble
@@ -26,11 +31,14 @@ class CatchBlock extends BaseControlBlock
 {
 	const KIND = 'catch_block';
 
-	public $var;
+	public ?VariableDeclaration $var;
 
-	public function __construct(VariableDeclaration $var)
+	public ?BaseType $declared_type;
+
+	public function __construct(?VariableDeclaration $var, ?BaseType $declared_type = null)
 	{
 		$this->var = $var;
+		$this->declared_type = $declared_type;
 	}
 }
 
@@ -41,21 +49,24 @@ class FinallyBlock extends BaseControlBlock
 
 trait ExceptTrait
 {
-	public $catchings = [];
+	/**
+	 * @var CatchBlock[]
+	 */
+	public array $catchings = [];
 
-	public $finally;
+	public ?FinallyBlock $finally = null;
 
 	public function has_exceptional()
 	{
 		return $this->catchings || $this->finally;
 	}
 
-	public function add_catching_block(CatchBlock $block)
+	public function add_catching_block(CatchBlock $block): void
 	{
 		$this->catchings[] = $block;
 	}
 
-	public function set_finally_block(FinallyBlock $block)
+	public function set_finally_block(FinallyBlock $block): void
 	{
 		$this->finally = $block;
 	}

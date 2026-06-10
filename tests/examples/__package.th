@@ -12,15 +12,15 @@ extern func imagefill(image, x Int, y Int, color Int) Bool
 extern func imagerotate(image, angle Float, background_color Int) Any
 extern func imagesx(image) Int
 extern func imagesy(image) Int
-extern func imagettfbbox(size Float, angle Float, fontfile String, text String) Int.Array
-extern func imagettftext(image, size Float, angle Float, x Int, y Int, color Int, fontfile String, text String) Int.Array
+extern func imagettfbbox(size Float, angle Float, fontfile String, text String) List<Int>
+extern func imagettftext(image, size Float, angle Float, x Int, y Int, color Int, fontfile String, text String) List<Int>
 extern func imagepng(image, file String? = none, quality = #default, filters Int = #default) Bool
 extern func imagedestroy(image)
 
 // PDO
 extern class PDOStatement {
-	fetch(fetch_style Int = #default) String.Dict
-	fetchAll(fetch_style Int = #default) String.Dict.Array
+	fetch(fetch_style Int = #default) Dict<String>
+	fetchAll(fetch_style Int = #default) List<Dict<String>>
 }
 
 extern class PDO {

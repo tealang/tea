@@ -53,11 +53,11 @@ public DemoList: BaseView {
 	ABC = '12'
 
 	title String
-	items String.Array
+	items List<String>
 
 	cells Array = []
 
-	construct(name String, title = '', items String.Array = [], each (() Cell)? = none, error ((message) Void)? = none) {
+	construct(name String, title = '', items List<String> = [], each (() Cell)? = none, error ((message) Void)? = none) {
 		this.items = items
 
 		if each {
@@ -73,7 +73,7 @@ public DemoList: BaseView {
 	}
 
 	render() String {
-		var cells XView.Array = []
+		var cells List<XView> = []
 		for key, value in this.items {
 			if key == 0 {
 				cells.push(<li index="0"> ${key}: ${value} </li>)

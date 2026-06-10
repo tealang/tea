@@ -155,7 +155,7 @@ trait TeaXTagTrait
 	private function strip_align_spaces_for_items(XTag $tag, string $align_spaces)
 	{
 		$indent_len = strlen($align_spaces);
-		foreach ($tag->children as $idx => $item) {
+		foreach (($tag->children ?? []) as $idx => $item) {
 			if ($item->indents and str_starts_with($item->indents, $align_spaces)) {
 				$item->indents = substr($item->indents, $indent_len);
 			}

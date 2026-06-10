@@ -1,6 +1,6 @@
 #main
 
-var test_items String.Dict = [:]
+var test_items Dict<String> = [:]
 test_items['get_key'] = filter_input(INPUT_GET, 'get_key') ?? ''
 test_items['post_key'] = filter_input(INPUT_POST, 'post_key') ?? ''
 test_items['cookie_key'] = INPUT_COOKIE::filter_input('cookie_key') ?? ''

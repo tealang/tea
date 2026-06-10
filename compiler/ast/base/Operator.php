@@ -9,17 +9,17 @@ namespace Tea;
 
 class Operator
 {
-	private $id;
+	private int $id;
 
-	public $type;
+	public int $type;
 
-	public $tea_sign;
-	public $tea_prec;	// precedence
-	public $tea_assoc; 	// associativity
+	public ?string $tea_sign = null;
+	public ?int $tea_prec = null;
+	public ?int $tea_assoc = null;
 
-	public $php_sign;
-	public $php_prec;
-	public $php_assoc;
+	public ?string $php_sign = null;
+	public ?int $php_prec = null;
+	public ?int $php_assoc = null;
 
 	public function __construct(int $id)
 	{

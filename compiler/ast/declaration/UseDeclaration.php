@@ -7,23 +7,26 @@
 
 namespace Tea;
 
-class UseDeclaration extends Node implements IRootDeclaration
+class UseDeclaration extends RootDeclaration
 {
-	use BaseDeclarationTrait, IRootDeclarationTrait;
-
 	const KIND = 'use_declaration';
 
-	public $target_name;
+	const IMPORT_CLASS = 'class';
+	const IMPORT_FUNCTION = 'function';
+	const IMPORT_CONST = 'const';
 
-	public $source_name;
+	public ?string $target_name = null;
 
-	public $source_declaration;
+	public ?string $source_name = null;
 
-	public function __construct(NamespaceIdentifier $ns, ?string $target_name = null, ?string $source_name = null)
+	public ?string $import_kind = null;
+
+	public function __construct(NamespaceIdentifier $ns, ?string $target_name = null, ?string $source_name = null, ?string $import_kind = null)
 	{
 		$this->ns = $ns;
 		$this->name = $target_name ?? $ns->get_last_name();
 		$this->target_name = $target_name;
 		$this->source_name = $source_name;
+		$this->import_kind = $import_kind;
 	}
 }

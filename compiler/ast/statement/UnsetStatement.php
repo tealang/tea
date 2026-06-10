@@ -11,7 +11,7 @@ class UnsetStatement extends BaseStatement
 {
 	const KIND = 'unset_statement';
 
-	public $argument;
+	public BaseExpression $argument;
 
 	public function __construct(BaseExpression $argument)
 	{

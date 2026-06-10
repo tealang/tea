@@ -14,9 +14,9 @@ class EchoStatement extends BaseStatement
 	/**
 	 * @var BaseExpression[]
 	 */
-	public $arguments;
+	public array $arguments;
 
-	public $end_newline = true;
+	public bool $end_newline = true;
 
 	public function __construct(array $arguments)
 	{

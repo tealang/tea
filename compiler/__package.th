@@ -1,0 +1,6 @@
+
+namespace Tea
+
+
+extern const TEA_BASE_PATH String
+

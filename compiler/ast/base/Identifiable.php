@@ -9,40 +9,13 @@ namespace Tea;
 
 abstract class Identifiable extends BaseExpression implements IAssignable
 {
-	public $name;
+	public string $name;
 
-	public $symbol;
+	public ?Symbol $symbol = null;
 
 	public function __construct(string $name)
 	{
 		$this->name = $name;
-	}
-
-	public function get_unit()
-	{
-		return $this->symbol->declaration->unit;
-	}
-
-	// public function get_declaration()
-	// {
-	// 	$decl = $this->symbol->declaration;
-	// 	if ($decl instanceof UseDeclaration) {
-	// 		$decl = $decl->source_declaration;
-	// 	}
-
-	// 	return $decl;
-	// }
-
-	public function is_assignable()
-	{
-		$decl = $this->symbol->declaration;
-		return $decl instanceof IVariableDeclaration && !$decl->is_final;
-	}
-
-	public function is_mutable()
-	{
-		$decl = $this->symbol->declaration;
-		return $decl instanceof IVariableDeclaration && $decl->is_mutable;
 	}
 }
 
@@ -50,15 +23,11 @@ class AccessingIdentifier extends Identifiable
 {
 	const KIND = 'accessing_identifier';
 
-	public $basing;
+	public BaseExpression $basing;
 
-	/**
-	 * is static accessing mode
-	 * var bool
-	 */
-	public $is_static;
+	public ?bool $is_static = null;
 
-	public $is_nullsafe;
+	public bool $is_nullsafe = false;
 
 	public function __construct(BaseExpression $basing, string $name, bool $nullsafe = false)
 	{
@@ -76,69 +45,65 @@ class NativeIdentifier extends Identifiable
 	const KIND = 'native_identifier';
 }
 
-class PlainIdentifier extends Identifiable implements IType
+class PlainIdentifier extends Identifiable
 {
-	use ITypeTrait;
+	// use ITypeTrait;
 
 	const KIND = 'plain_identifier';
 
-	public $ns;
+	public ?NamespaceIdentifier $ns = null;
 
-	public $generic_types;
+	public ?array $generic_types = null;
 
-	public static function create_with_symbol(Symbol $symbol)
-	{
-		$identifier = new static($symbol->name);
-		$identifier->symbol = $symbol;
-		return $identifier;
-	}
+	// public function is_based_with(BaseType $target)
+	// {
+	// 	$this_decl = $this->symbol->declaration;
+	// 	if ($this_decl instanceof ClassKindredDeclaration) {
+	// 		$is = $this_decl->find_based_with_symbol($target->symbol) !== null;
+	// 	}
+	// 	else {
+	// 		$is = false;
+	// 	}
 
-	public function is_based_with(IType $target)
-	{
-		$this_decl = $this->symbol->declaration;
-		if ($this_decl instanceof ClassKindredDeclaration) {
-			$is = $this_decl->find_based_with_symbol($target->symbol) !== null;
-		}
-		else {
-			$is = false;
-		}
+	// 	return $is;
+	// }
 
-		return $is;
-	}
+	// public function is_same_or_based_with(BaseType $target)
+	// {
+	// 	return $this->symbol === $target->symbol || $this->is_based_with($target);
+	// }
 
-	public function is_same_or_based_with(IType $target)
-	{
-		return $this->symbol === $target->symbol || $this->is_based_with($target);
-	}
+	// public function is_accept_single_type(BaseType $target)
+	// {
+	// 	// if ($target->has_null and !$this->nullable and !$this->has_null) {
+	// 	// 	$is = false;
+	// 	// }
+	// 	// elseif ($target instanceof NoneType) {
+	// 	// 	$is = $this->nullable;
+	// 	// }
+	// 	// else {
+	// 		$is = $target->symbol === $this->symbol
+	// 			// || $target === TypeFactory::$_none
+	// 			// for check BuiltinTypeClassDeclaration like String
+	// 			// can not use symbol to compare BuiltinTypeClassDeclaration, because of the symbol maybe 'this'
+	// 			|| $this->symbol->declaration === $target->symbol->declaration
+	// 			|| $target->is_based_with($this)
+	// 		;
+	// 	// }
 
-	public function is_accept_single_type(IType $target)
-	{
-		// if ($target->has_null and !$this->nullable and !$this->has_null) {
-		// 	$is = false;
-		// }
-		// elseif ($target instanceof NoneType) {
-		// 	$is = $this->nullable;
-		// }
-		// else {
-			$is = $target->symbol === $this->symbol
-				// || $target === TypeFactory::$_none
-				// for check BuiltinTypeClassDeclaration like String
-				// can not use symbol to compare BuiltinTypeClassDeclaration, because of the symbol maybe 'this'
-				|| $this->symbol->declaration === $target->symbol->declaration
-				|| $target->is_based_with($this)
-			;
-		// }
-
-		return $is;
-	}
+	// 	return $is;
+	// }
 }
 
 class ConstantIdentifier extends PlainIdentifier
 {
 	const KIND = 'constant_identifier';
 
-	public $is_const_value = true;
-
+	public function __construct(string $name)
+	{
+		$this->name = $name;
+		$this->is_const_value = true;
+	}
 }
 
 class VariableIdentifier extends PlainIdentifier
@@ -178,7 +143,7 @@ class ClassKindredIdentifier extends PlainIdentifier
 // 		return $this->ns_names[0];
 // 	}
 
-// 	public function is_compatible_to(IType $type)
+// 	public function is_compatible_to(BaseType $type)
 // 	{
 // 		return $this->symbol === $type->symbol;
 // 	}

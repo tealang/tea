@@ -11,5 +11,8 @@ interface IStatement {}
 
 class BaseStatement extends Node implements IStatement
 {
-	public $belong_block;
+	/**
+	 * The block this statement belongs to
+	 */
+	public BaseDeclaration|IBlock|null $belong_block = null;
 }

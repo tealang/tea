@@ -9,7 +9,10 @@ namespace Tea;
 
 abstract class InterpolatedString extends BaseExpression
 {
-	public $items;
+	/**
+	 * @var array
+	 */
+	public array $items;
 
 	public function __construct(array $items)
 	{
@@ -36,7 +39,7 @@ interface Interpolation {}
 
 trait InterpolationTrait
 {
-	public $content;
+	public BaseExpression $content;
 
 	public function __construct(BaseExpression $content)
 	{

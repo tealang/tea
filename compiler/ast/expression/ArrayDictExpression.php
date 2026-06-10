@@ -9,12 +9,12 @@ namespace Tea;
 
 trait MemberContainerTrait
 {
-	public $items;
-
 	/**
-	 * @var bool
+	 * @var array
 	 */
-	public $is_vertical_layout = false; // for render target code
+	public array $items = [];
+
+	public bool $is_vertical_layout = false; // for render target code
 
 	public function __construct(array $items = [])
 	{
@@ -29,11 +29,6 @@ class ArrayExpression extends BaseExpression implements IArrayLikeExpression
 	use MemberContainerTrait;
 
 	const KIND = 'array_expression';
-
-	/**
-	 * @var array of IExpession
-	 */
-	public $items;
 }
 
 class DictExpression extends BaseExpression implements IArrayLikeExpression
@@ -41,19 +36,14 @@ class DictExpression extends BaseExpression implements IArrayLikeExpression
 	use MemberContainerTrait;
 
 	const KIND = 'dict_expression';
-
-	/**
-	 * @var array of DictMember
-	 */
-	public $items;
 }
 
 class DictMember extends Node
 {
 	const KIND = 'dict_member';
 
-	public $key;
-	public $value;
+	public BaseExpression $key;
+	public BaseExpression $value;
 
 	public function __construct(BaseExpression $key, BaseExpression $value)
 	{

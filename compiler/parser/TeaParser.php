@@ -11,15 +11,20 @@ class TeaParser extends BaseParser
 {
 	use TeaTokenTrait, TeaStringTrait, TeaXTagTrait, TeaDocTrait;
 
+	public const SOURCE_DIALECT = Program::SOURCE_DIALECT_TEA;
+
 	const NS_SEPARATOR = _BACK_SLASH;
 
 	const EXPR_STOPPING_SIGNS = [_PAREN_CLOSE, _BRACKET_CLOSE, _BLOCK_END, _SEMICOLON];
 
 	protected const METHOD_MAP = ['construct' => _CONSTRUCT, 'destruct' => _DESTRUCT];
 
-	protected $root_statements = [];
+	/**
+	 * @var RootDeclaration|IStatement[]
+	 */
+	protected array $root_statements = [];
 
-	protected $is_in_tea_declaration = false;
+	protected bool $is_in_tea_declaration = false;
 
 	public function read_program(): Program
 	{
@@ -27,7 +32,7 @@ class TeaParser extends BaseParser
 
 		while ($this->pos < $this->tokens_count) {
 			$item = $this->read_root_statement();
-			if ($item instanceof IRootDeclaration) {
+			if ($item instanceof RootDeclaration) {
 				// $program->append_declaration($item);
 			}
 			elseif ($item) {
@@ -48,11 +53,13 @@ class TeaParser extends BaseParser
 		return $program;
 	}
 
-	protected function read_root_statement(bool $leading_br = false, ?DocComment $doc = null)
+	protected function read_root_statement(bool $leading_br = false, ?DocComment $doc = null, array $attributes = [])
 	{
+		$doc = $this->read_leading_phpdoc_comment($doc);
+		$attributes = $this->read_leading_meta_attributes($attributes);
 		$token = $this->scan_token_ignore_space();
 		if ($token === LF) {
-			return $this->read_root_statement(true);
+			return $this->read_root_statement(true, $doc, $attributes);
 		}
 		elseif ($token === _SEMICOLON || $token === null) {
 			// empty statement, or at the end of program
@@ -67,11 +74,11 @@ class TeaParser extends BaseParser
 		}
 		elseif ($token === _DOC_MARK) {
 			$doc = $this->read_doc_comment();
-			return $this->read_root_statement($leading_br, $doc);
+			return $this->read_root_statement($leading_br, $doc, $attributes);
 		}
 		elseif ($token === _LINE_COMMENT_MARK) {
 			$this->skip_current_line();
-			return $this->read_root_statement($leading_br, $doc);
+			return $this->read_root_statement($leading_br, $doc, $attributes);
 		}
 		elseif ($token === _FUNC) {
 			$name = $this->expect_identifier_token_ignore_space();
@@ -97,20 +104,92 @@ class TeaParser extends BaseParser
 		if ($node !== null) {
 			$node->leading_br = $leading_br;
 			$node->doc = $doc;
+			if ($node instanceof BaseDeclaration) {
+				$node->attributes = $attributes;
+			}
 		}
 
 		return $node;
 	}
 
-	protected function read_inner_statement(bool $leading_br = false, ?DocComment $doc = null)
+	protected function read_leading_meta_attributes(array $attributes): array
+	{
+		while (true) {
+			$pos = $this->pos;
+			if ($this->get_token_ignore_space($pos) !== _SHARP || $this->get_token_at($pos + 1) !== _BRACKET_OPEN) {
+				return $attributes;
+			}
+
+			$this->scan_token_ignore_space();
+			$this->expect_token(_BRACKET_OPEN);
+			$attributes = $this->read_meta_attributes($attributes);
+		}
+	}
+
+	protected function read_meta_attributes(array $items): array
+	{
+		$group = empty($items) ? 0 : end($items)->group + 1;
+		do {
+			$identifier = $this->read_meta_attribute_identifier();
+			$args = $this->read_meta_attribute_arguments();
+			$attribute = new MetaAttribute($identifier, $args, $group);
+			$attribute->pos = $this->pos;
+			$items[] = $attribute;
+		}
+		while ($this->skip_comma());
+
+		$this->expect_token(_BRACKET_CLOSE);
+
+		return $items;
+	}
+
+	private function read_meta_attribute_identifier(): ClassKindredIdentifier
+	{
+		$is_based_root_ns = false;
+		if ($this->skip_token_ignore_space(static::NS_SEPARATOR)) {
+			$is_based_root_ns = true;
+		}
+
+		$name = $this->expect_identifier_token();
+		$names = $this->read_class_identifier_components([$name]);
+		$name = array_pop($names);
+
+		$identifier = new ClassKindredIdentifier($name);
+		$identifier->pos = $this->pos;
+
+		if ($is_based_root_ns) {
+			array_unshift($names, '');
+		}
+
+		if ($names) {
+			$identifier->set_namespace($this->factory->create_namespace_identifier($names));
+		}
+
+		return $identifier;
+	}
+
+	private function read_meta_attribute_arguments(): array
+	{
+		if (!$this->skip_token_ignore_space(_PAREN_OPEN)) {
+			return [];
+		}
+
+		$args = $this->read_call_expression_arguments();
+		$this->expect_token_ignore_space(_PAREN_CLOSE);
+
+		return $args;
+	}
+
+	protected function read_inner_statement(bool $leading_br = false, ?DocComment $doc = null): ?IStatement
 	{
 		if ($this->get_token_ignore_space() === _BLOCK_END) {
 			return null;
 		}
 
+		$doc = $this->read_leading_phpdoc_comment($doc);
 		$token = $this->scan_token_ignore_space();
 		if ($token === LF) {
-			return $this->read_inner_statement(true);
+			return $this->read_inner_statement(true, $doc);
 		}
 		elseif ($token === _SEMICOLON || $token === null) {
 			return null;
@@ -420,7 +499,7 @@ class TeaParser extends BaseParser
 		$this->assert_not_reserved_word($name);
 
 		$decl = $this->read_constant_declaration_header($name, $modifier, $ns);
-		if (!$decl->declared_type) {
+		if (!$decl->declared_type && !ASTHelper::get_noted_type($decl)) {
 			$this->new_unexpected_error();
 		}
 
@@ -438,17 +517,19 @@ class TeaParser extends BaseParser
 		return $decl;
 	}
 
-	protected function read_masked_declaration()
+	protected function read_member_mapping_declaration(?string $name = null)
 	{
-		// masked name(...) => fn(...)
+		// Member mapping in builtin types: name(...) => fn(...) or name => expr
 
 		// the declaration options
-		$name = $this->scan_token_ignore_space();
+		if ($name === null) {
+			$name = $this->scan_token_ignore_space();
+		}
 		if (!TeaHelper::is_normal_function_name($name)) {
 			throw $this->new_unexpected_error();
 		}
 
-		$decl = $this->factory->create_masked_declaration($name);
+		$decl = $this->factory->create_member_mapping_declaration($name);
 		$decl->pos = $this->pos;
 
 		if ($this->get_token() === _PAREN_OPEN) {
@@ -679,7 +760,7 @@ class TeaParser extends BaseParser
 				throw $this->new_parse_error("Invalid variable name '{$var_name}'", 1);
 			}
 
-			$type = $this->scan_classkindred_identifier();
+			$type = $this->scan_class_type_ref();
 			$sub_block = $this->factory->create_catch_block($var_name, $type);
 			$this->read_body_for_control_block($sub_block);
 			$main_block->add_catching_block($sub_block);
@@ -933,7 +1014,7 @@ class TeaParser extends BaseParser
 				break;
 
 			case _PAREN_OPEN:
-				$expression = $this->read_parentheses_expression(true);
+				$expression = $this->read_parentheses_or_cast_expression();
 				break;
 
 			case _BRACKET_OPEN:
@@ -954,8 +1035,18 @@ class TeaParser extends BaseParser
 				break;
 
 			case _YIELD:
+				$is_from = false;
+				
+				// Check for 'from' keyword for yield from
+				$this->skip_comments();
+				$next_token = $this->get_token_ignore_empty();
+				if ($next_token === _FROM) {
+					$this->scan_token(); // consume 'from'
+					$is_from = true;
+				}
+				
 				$argument = $this->read_expression();
-				$expression = $this->factory->create_yield_expression($argument);
+				$expression = $this->factory->create_yield_expression($argument, $is_from);
 				$expression->pos = $this->pos;
 				return $expression;
 
@@ -1106,6 +1197,55 @@ class TeaParser extends BaseParser
 		$expr = new Parentheses($expression);
 		$expr->pos = $this->pos;
 		return $expr;
+	}
+
+	private function read_parentheses_or_cast_expression(): BaseExpression
+	{
+		$cast_type = $this->scan_cast_type_in_parentheses();
+		if ($cast_type === null) {
+			return $this->read_parentheses_expression(true);
+		}
+
+		$expression = $this->read_expression(OperatorFactory::$as);
+		$expression = new CastOperation($expression, $cast_type);
+		$expression->pos = $this->pos;
+
+		return $expression;
+	}
+
+	private function scan_cast_type_in_parentheses(): ?BaseType
+	{
+		$pos = $this->pos;
+		$name = $this->get_token_ignore_empty($pos);
+		if (!is_string($name)) {
+			return null;
+		}
+
+		$type = $this->get_cast_type_by_name($name);
+		if ($type === null || $this->get_token_ignore_empty($pos) !== _PAREN_CLOSE) {
+			return null;
+		}
+
+		$this->pos = $pos;
+		return $type;
+	}
+
+	private function get_cast_type_by_name(string $name): ?BaseType
+	{
+		$type = TypeFactory::get_type($name);
+		if ($type !== null) {
+			return $type;
+		}
+
+		return match (strtolower($name)) {
+			'string' => TypeFactory::$_string,
+			'int', 'integer' => TypeFactory::$_int,
+			'uint' => TypeFactory::$_uint,
+			'float', 'double', 'real' => TypeFactory::$_float,
+			'bool', 'boolean' => TypeFactory::$_bool,
+			'object' => TypeFactory::$_object,
+			default => null,
+		};
 	}
 
 	protected function read_lambda_for_parentheses(PlainIdentifier $readed_identifier)
@@ -1270,6 +1410,13 @@ class TeaParser extends BaseParser
 	private function read_object_expression()
 	{
 		[$class_decl, $class_symbol] = $this->factory->create_virtual_class('__OBJ__');
+		$class_decl->program = $this->program;
+		$is_vertical_layout = false;
+
+		$next = $this->get_token_ignore_space();
+		if ($next === LF || $next === _LINE_COMMENT_MARK) {
+			$is_vertical_layout = true;
+		}
 
 		while ($key = $this->scan_object_key()) {
 			$this->expect_token_ignore_space(_COLON);
@@ -1282,7 +1429,7 @@ class TeaParser extends BaseParser
 
 			[$member_decl, $member_symbol] = $this->factory->create_object_member($quote_mark, $key);
 			if (!$class_decl->append_member_symbol($member_symbol)) {
-				throw $this->parser->new_parse_error("Duplicated object member '{$member_decl->name}'");
+				throw $this->new_parse_error("Duplicated object member '{$member_decl->name}'");
 			}
 
 			$val = $this->read_expression();
@@ -1306,6 +1453,7 @@ class TeaParser extends BaseParser
 		// example as value for constants, thats a troublesome
 		$object = new ObjectExpression();
 		$object->symbol = $class_symbol;
+		$object->is_vertical_layout = $is_vertical_layout;
 
 		return $object;
 	}
@@ -1337,6 +1485,7 @@ class TeaParser extends BaseParser
 
 	protected function read_bracket_expression()
 	{
+		$opening_pos = $this->pos;
 		$next = $this->get_token_ignore_space();
 		if ($next === _BRACKET_CLOSE and $this->skip_token(_BRACKET_CLOSE)) {
 			// SquareAccessing or empty Array
@@ -1350,6 +1499,7 @@ class TeaParser extends BaseParser
 				$expr->is_const_value = true;
 			}
 
+			$expr->pos = $opening_pos;
 			return $expr;
 		}
 		elseif ($next === _COLON) {
@@ -1358,6 +1508,7 @@ class TeaParser extends BaseParser
 			$this->expect_token(_BRACKET_CLOSE);
 			$expr = new DictExpression();
 			$expr->is_const_value = true;
+			$expr->pos = $opening_pos;
 			return $expr;
 		}
 		elseif ($next === LF || $next === _LINE_COMMENT_MARK) {
@@ -1383,6 +1534,7 @@ class TeaParser extends BaseParser
 		}
 
 		$this->expect_token_ignore_empty(_BRACKET_CLOSE);
+		$expr->pos = $opening_pos;
 
 		return $expr;
 	}
@@ -1500,6 +1652,10 @@ class TeaParser extends BaseParser
 			$this->scan_token_ignore_empty(); // skip .
 			$expr = $this->read_dot_expression($expr);
 		}
+		elseif ($token === _QUESTION_DOT) {
+			$this->scan_token_ignore_empty(); // skip ?.
+			$expr = $this->read_dot_expression($expr, true);
+		}
 		elseif ($token === _SHARP) { //  the type mark operation
 			// Spaces are not allowed
 			if ($this->get_token() !== _SHARP) {
@@ -1536,7 +1692,7 @@ class TeaParser extends BaseParser
 		return $this->read_expression_combination($expr, $prev_operator);
 	}
 
-	protected function read_dot_expression(BaseExpression $basing)
+	protected function read_dot_expression(BaseExpression $basing, bool $nullsafe = false)
 	{
 		// class / object member call
 
@@ -1545,7 +1701,7 @@ class TeaParser extends BaseParser
 			throw $this->new_unexpected_error();
 		}
 
-		$expr = $this->factory->create_accessing_identifier($basing, $member);
+		$expr = $this->factory->create_accessing_identifier($basing, $member, $nullsafe);
 		$expr->pos = $this->pos;
 
 		return $expr;
@@ -1718,7 +1874,9 @@ class TeaParser extends BaseParser
 
 	private function read_as_operation(BaseExpression $expression)
 	{
+		$right_source_name = $this->get_token_ignore_space();
 		if ($this->skip_token(_PAREN_OPEN)) {
+			$right_source_name = $this->get_token_ignore_space();
 			$as_type = $this->scan_type_expression();
 			$this->expect_token(_PAREN_CLOSE);
 			if ($as_type === null) {
@@ -1730,6 +1888,7 @@ class TeaParser extends BaseParser
 		}
 
 		$expression = new AsOperation($expression, $as_type);
+		$expression->right_source_name = $right_source_name;
 		$expression->pos = $this->pos;
 
 		return $expression;
@@ -1780,14 +1939,17 @@ class TeaParser extends BaseParser
 		$has_label = false;
 		$items = [];
 		while ($item = $this->scan_argument()) {
-			if (isset($item->label)) {
+			$label = $item instanceof Literal ? $item->label : null;
+			if ($label !== null) {
 				// the labeled argument
-				if (isset($items[$item->label])) {
-					throw $this->new_parse_error("Parameter '{$item->label}' already has been assigned");
+				if (isset($items[$label])) {
+					throw $this->new_parse_error("Parameter '{$label}' already has been assigned");
 				}
 				else {
-					$items[$item->label] = $item;
-					$item->label = null;
+					$items[$label] = $item;
+					if ($item instanceof Literal) {
+						$item->label = null;
+					}
 				}
 
 				$has_label = true;
@@ -1917,7 +2079,7 @@ class TeaParser extends BaseParser
 		}
 
 		$items = [];
-		while ($identifier = $this->scan_classkindred_identifier()) {
+		while ($identifier = $this->scan_class_type_ref()) {
 			$items[] = $identifier;
 			if (!$this->skip_comma()) {
 				break;
@@ -1931,7 +2093,7 @@ class TeaParser extends BaseParser
 		return $items;
 	}
 
-	protected function scan_classkindred_identifier()
+	protected function scan_class_type_ref()
 	{
 		$is_based_root_ns = false;
 		if ($this->skip_token_ignore_space(static::NS_SEPARATOR)) {
@@ -1951,7 +2113,7 @@ class TeaParser extends BaseParser
 			throw $this->new_parse_error("Cannot use type '$token' as a class/interface");
 		}
 
-		$identifier = $this->read_classkindred_identifier_with($token, $is_based_root_ns);
+		$identifier = $this->read_class_type_ref_with($token, $is_based_root_ns);
 
 		if ($this->skip_token(_GENERIC_OPEN)) {
 			$identifier->generic_types = $this->read_generic_types();
@@ -1961,33 +2123,39 @@ class TeaParser extends BaseParser
 		return $identifier;
 	}
 
-	protected function read_classkindred_identifier_with(string $name, bool $is_based_root_ns = false)
+	protected function read_class_type_ref_with(string $name, bool $is_based_root_ns = false)
 	{
-		$ns_components = $is_based_root_ns ? [''] : [];
+		$names = $this->read_class_identifier_components([$name]);
 
-		while ($this->skip_token(static::NS_SEPARATOR)) {
-			$ns_components[] = $name;
-			$name = $this->expect_identifier_token();
-		}
-
-		$identifier = $this->factory->create_classkindred_identifier($name);
-
-		if ($ns_components) {
-			$ns = $this->create_namespace_identifier($ns_components);
-			$identifier->set_namespace($ns);
-		}
-
+		$name = array_pop($names);
+		$identifier = $this->factory->create_type_reference($name);
 		$identifier->pos = $this->pos;
+
+		if ($is_based_root_ns) {
+			array_unshift($names, '');
+		}
+
+		if ($names) {
+			$this->attach_namespace_for_identifier($identifier, $names);
+		}
 
 		return $identifier;
 	}
 
-	private function create_namespace_identifier(array $names)
+	private function read_class_identifier_components(array $items)
 	{
-		$ns = $this->factory->create_namespace_identifier($names);
-		$ns->pos = $this->pos;
+		while ($this->skip_token(static::NS_SEPARATOR)) {
+			$items[] = $this->expect_identifier_token();
+		}
 
-		return $ns;
+		return $items;
+	}
+
+	private function attach_namespace_for_identifier(TypeReference $identifier, array $ns_components)
+	{
+		$ns = $this->factory->create_namespace_identifier($ns_components);
+		$ns->pos = $this->pos;
+		$identifier->set_namespace($ns);
 	}
 
 	private function read_generic_types()
@@ -2011,15 +2179,18 @@ class TeaParser extends BaseParser
 		return $map;
 	}
 
-	protected function read_type_hints_for_declaration(IDeclaration $decl)
+	protected function read_type_hints_for_declaration(BaseDeclaration|AnonymousFunction $decl)
 	{
 		$decl->declared_type = $this->scan_type_expression();
 		if ($this->skip_token_ignore_space(_SHARP)) {
-			$decl->noted_type = $this->scan_type_expression();
+			$source = static::SOURCE_DIALECT === Program::SOURCE_DIALECT_HEADER
+				? ASTHelper::NOTED_TYPE_SOURCE_HEADER
+				: ASTHelper::NOTED_TYPE_SOURCE_EXPLICIT;
+			ASTHelper::set_noted_type($decl, $this->scan_type_expression(), $source);
 		}
 	}
 
-	protected function scan_type_expression(): ?IType
+	protected function scan_type_expression(): ?BaseType
 	{
 		// the callable type
 		$token = $this->get_token_ignore_space();
@@ -2046,19 +2217,20 @@ class TeaParser extends BaseParser
 		return $type;
 	}
 
-	private function scan_type_identifier(): ?IType
+	private function scan_type_identifier(): ?BaseType
 	{
 		$token = $this->get_token_ignore_space();
 
 		if ($type = TypeFactory::get_type($token)) {
 			$this->scan_token_ignore_space(); // skip
+			$type = $this->read_generic_style_builtin_type($type, $token);
 		}
 		elseif (TeaHelper::is_identifier_name($token)) {
 			$this->scan_token_ignore_space(); // skip
-			$type = $this->read_classkindred_identifier_with($token);
+			$type = $this->read_class_type_ref_with($token);
 		}
 		elseif ($token === static::NS_SEPARATOR) {
-			$type = $this->scan_classkindred_identifier();
+			$type = $this->scan_class_type_ref();
 		}
 		else {
 			return null;
@@ -2072,12 +2244,47 @@ class TeaParser extends BaseParser
 			// the String[][:] style compound type
 			$type = $this->read_bracket_style_compound_type($type);
 		}
-		elseif ($next === _DOT) {
-			// the String.Array.Dict style compound type
+		elseif ($next === _DOT || $next === _QUESTION_DOT) {
+			// Legacy suffix container syntax, kept only as compatibility input.
 			$type = $this->read_dots_style_compound_type($type);
 		}
 
 		return $type;
+	}
+
+	private function read_generic_style_builtin_type(BaseType $type, string $name): BaseType
+	{
+		if (!$this->skip_token_ignore_space(_GENERIC_OPEN)) {
+			return $type;
+		}
+
+		$generic_type = $this->scan_type_expression();
+		if ($generic_type === null) {
+			throw $this->new_parse_error('Expected generic type');
+		}
+
+		if ($this->skip_token_ignore_space(_COMMA)) {
+			throw $this->new_parse_error("Only one generic type is supported for '$name'");
+		}
+
+		$this->expect_generic_close_token();
+
+		return match ($name) {
+			_ARRAY, 'List' => TypeFactory::create_array_type($generic_type),
+			_DICT => TypeFactory::create_dict_type($generic_type),
+			default => throw $this->new_parse_error("Type '$name' does not support generic parameters"),
+		};
+	}
+
+	private function expect_generic_close_token(): void
+	{
+		if ($this->get_token_ignore_space() === '>>') {
+			array_splice($this->tokens, $this->pos + 2, 0, [_GENERIC_CLOSE]);
+			$this->tokens[$this->pos + 1] = _GENERIC_CLOSE;
+			$this->tokens_count++;
+		}
+
+		$this->expect_token_ignore_space(_GENERIC_CLOSE);
 	}
 
 	private function read_simple_type_identifier()
@@ -2089,7 +2296,7 @@ class TeaParser extends BaseParser
 		}
 		elseif (TeaHelper::is_identifier_name($token)) {
 			$this->scan_token_ignore_space(); // skip
-			$type = $this->read_classkindred_identifier_with($token);
+			$type = $this->read_class_type_ref_with($token);
 		}
 		else {
 			throw $this->new_unexpected_error();
@@ -2098,33 +2305,92 @@ class TeaParser extends BaseParser
 		return $type;
 	}
 
-	private function scan_nullable_for(IType &$type)
+	private function scan_nullable_for(BaseType &$type)
 	{
-		if ($this->skip_token(_QUESTION)) {
-			// if ($type instanceof BaseType) {
-				$type = TypeHelper::to_nullable($type);
-			// }
-			// else {
-			// 	$type->let_nullable();
-			// }
+		$token = $this->get_token();
+		// String?.Array is handled by the legacy suffix compatibility path.
+		if ($token === _QUESTION) {
+			$this->scan_token(); // skip ?
+			$sentinel = $this->scan_invalidable_sentinel();
+			$type = $sentinel instanceof LiteralExpression
+				? TypeFactory::create_invalidable_type($type, $sentinel)
+				: TypeHelper::to_nullable($type);
+			$type->pos = $this->pos;
+		}
+		elseif ($token === _EXCLAMATION) {
+			$this->scan_token(); // skip !
+			$sentinel = $this->scan_invalidable_sentinel();
+			if (!$sentinel instanceof LiteralExpression) {
+				throw $this->new_unexpected_error();
+			}
 
+			$type = TypeFactory::create_excludable_type($type, $sentinel);
 			$type->pos = $this->pos;
 		}
 	}
 
-	protected function read_dots_style_compound_type(IType $generic_type): IType
+	private function scan_invalidable_sentinel(): ?LiteralExpression
 	{
-		// e.g. String.Dict
-		// e.g. String.Array
+		$pos = $this->pos;
+		$token = $this->get_token_ignore_space($pos);
+		if ($token === _VAL_NULL || $token === _VAL_NONE) {
+			$this->pos = $pos;
+			return new LiteralNone();
+		}
 
+		if ($token === _VAL_TRUE || $token === _VAL_FALSE) {
+			$this->pos = $pos;
+			return new LiteralBoolean($token === _VAL_TRUE);
+		}
+
+		if ($token === _SINGLE_QUOTE) {
+			$this->pos = $pos;
+			return $this->read_plain_literal_string();
+		}
+
+		if ($token === _NEGATION || $token === _IDENTITY) {
+			$sign = $token;
+			$number = $this->get_token_ignore_space($pos);
+			if (is_numeric($number)) {
+				$this->pos = $pos;
+				return new LiteralInteger($sign . $number);
+			}
+			return null;
+		}
+
+		if (is_numeric($token)) {
+			$this->pos = $pos;
+			return new LiteralInteger($token);
+		}
+
+		return null;
+	}
+
+	protected function read_dots_style_compound_type(BaseType $generic_type): BaseType
+	{
 		$type = $generic_type;
 		$i = 0;
-		while ($this->skip_token(_DOT)) {
+		while (true) {
+			$token = $this->get_token();
+			
+			if ($token === _QUESTION_DOT) {
+				$this->scan_token(); // skip ?.
+				$type = TypeHelper::to_nullable($type);
+				$type->pos = $this->pos;
+				$kind = $this->scan_token();
+			}
+			elseif ($token === _DOT) {
+				$this->scan_token(); // skip .
+				$kind = $this->scan_token();
+			}
+			else {
+				break;
+			}
+
 			if ($i === _STRUCT_DIMENSIONS_MAX) {
 				throw $this->new_parse_error('The dimensions of type identifier exceeds, the max is ' . _STRUCT_DIMENSIONS_MAX);
 			}
 
-			$kind = $this->scan_token();
 			switch ($kind) {
 				case _DOT_SIGN_ARRAY:
 					$type = TypeFactory::create_array_type($type);
@@ -2146,7 +2412,7 @@ class TeaParser extends BaseParser
 		return $type;
 	}
 
-	protected function read_bracket_style_compound_type(IType $generic_type): IType
+	protected function read_bracket_style_compound_type(BaseType $generic_type): BaseType
 	{
 		$type = $generic_type;
 		$i = 0;
@@ -2173,8 +2439,10 @@ class TeaParser extends BaseParser
 		return $type;
 	}
 
-	private function read_class_member_declaration()
+	private function read_class_member_declaration(?DocComment $doc = null, array $attributes = [])
 	{
+		$doc = $this->read_leading_phpdoc_comment($doc);
+		$attributes = $this->read_leading_meta_attributes($attributes);
 		$token = $this->get_token_ignore_space();
 		if ($token === null || $token === _BLOCK_END) {
 			return null;
@@ -2185,7 +2453,7 @@ class TeaParser extends BaseParser
 		if ($token === LF) {
 			// has leading empty line
 			// will ignore doc when has empty lines
-			$decl = $this->read_class_member_declaration();
+			$decl = $this->read_class_member_declaration($doc, $attributes);
 			$decl and $decl->leading_br = $token;
 			return $decl;
 		}
@@ -2194,10 +2462,6 @@ class TeaParser extends BaseParser
 
 		$modifier = null;
 		if (TeaHelper::is_modifier($token)) {
-			if ($token === _MASKED) {
-				return $this->read_masked_declaration();
-			}
-
 			$modifier = $token;
 			$token = $this->scan_token_ignore_space();
 		}
@@ -2214,6 +2478,9 @@ class TeaParser extends BaseParser
 		}
 
 		switch ($token) {
+			case _USE:
+				$decl = $this->read_traits_using_statement();
+				break;
 			case _VAR:
 				$token = $this->expect_identifier_token_ignore_space();
 				$decl = $this->read_property_declaration($token, $modifier, $static);
@@ -2228,14 +2495,18 @@ class TeaParser extends BaseParser
 				break;
 			case _DOC_MARK:
 				$doc = $this->read_doc_comment();
-				$decl = $this->read_class_member_declaration();
-				$decl and $decl->doc = $doc;
+				$decl = $this->read_class_member_declaration($doc, $attributes);
 				break;
 			case _LINE_COMMENT_MARK:
 				$this->skip_current_line();
-				$decl = $this->read_class_member_declaration();
+				$decl = $this->read_class_member_declaration($doc, $attributes);
 				break;
 			default:
+				// Native method/property mapping in builtin types
+				if ($this->is_in_tea_declaration) {
+					return $this->read_member_mapping_declaration($token);
+				}
+				
 				if (!TeaHelper::is_identifier_name($token)) {
 					throw $this->new_unexpected_error();
 				}
@@ -2250,6 +2521,36 @@ class TeaParser extends BaseParser
 					$decl = $this->read_property_declaration($token, $modifier, $static);
 				}
 		}
+
+		if ($decl !== null) {
+			$decl->doc = $doc;
+			if ($decl instanceof BaseDeclaration) {
+				$decl->attributes = $attributes;
+			}
+		}
+
+		return $decl;
+	}
+
+	private function read_traits_using_statement()
+	{
+		$items = [];
+		while ($identifier = $this->scan_class_type_ref()) {
+			$items[] = $identifier;
+			if (!$this->skip_comma()) {
+				break;
+			}
+		}
+
+		if (!$items) {
+			throw $this->new_parse_error('Expected trait name after use');
+		}
+
+		$decl = $this->factory->create_traits_using_statement($items);
+		$decl->pos = $this->pos;
+
+		$this->factory->end_class_member();
+		$this->expect_statement_end();
 
 		return $decl;
 	}
@@ -2372,7 +2673,7 @@ class TeaParser extends BaseParser
 		return $items;
 	}
 
-	protected function scan_parameter()
+	protected function scan_parameter(): ?ParameterDeclaration
 	{
 		$token = $this->get_token_ignore_empty();
 		if ($token === _PAREN_CLOSE) {
@@ -2433,7 +2734,7 @@ class TeaParser extends BaseParser
 		return $parameter;
 	}
 
-	protected function read_callable_protocol()
+	protected function read_callable_protocol(): BaseType
 	{
 		// (Parameters) ReturnType 		// normal
 		// ((Parameters) ReturnType)?   // nullable
@@ -2455,7 +2756,6 @@ class TeaParser extends BaseParser
 			$this->expect_token_ignore_empty(_PAREN_CLOSE);
 			$nullable = $this->skip_token_ignore_space(_QUESTION);
 			if ($nullable) {
-				// $node->let_nullable();
 				$node = TypeHelper::to_nullable($node);
 			}
 		}

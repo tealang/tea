@@ -7,19 +7,20 @@
 
 namespace Tea;
 
-class NamespaceDeclaration extends Node implements IRootDeclaration
+class NamespaceDeclaration extends RootDeclaration
 {
-	use BaseDeclarationTrait;
-
 	const KIND = 'namespace_declaration';
 
 	/**
 	 * The sub namespaces
-	 * @var array <string: NamespaceDeclaration>
+	 * @var array<string, NamespaceDeclaration>
 	 */
-	public $namespaces = [];
+	public array $namespaces = [];
 
-	public $symbols = [];
+	/**
+	 * @var array<string, Symbol>
+	 */
+	public array $symbols = [];
 
 	public function __construct(string $name)
 	{

@@ -1,7 +1,7 @@
----
-The builtin libs for Tea
-copyright: (c)2019 tealang.org
----
+/**
+ * The builtin libs for Tea
+ * copyright: (c)2019 tealang.org
+ */
 
 namespace tea\builtin
 
@@ -28,52 +28,114 @@ extern const FILTER_EMAIL Int
 // the function to get value of $_GET/$_POST/$_COOKIE/$_ENV/$_SERVER
 extern func filter_input(type Int, key String, filter Int = #default, options Dict = #default) String?
 
+// range function for for-in-to loops
+extern func range(start Int, end Int, step Int = 1) List<Int>
+
 // checkers
-extern func isset(expr Any) Bool
+extern func isset(expr Mixed) Bool
+#[TypeAssertion(val is Bool)]
+extern func is_bool(val) Bool
+#[TypeAssertion(val is Float)]
+extern func is_float(val) Bool
+#[TypeAssertion(val is Int)]
 extern func is_int(val) Bool
+#[TypeAssertion(val is String)]
+extern func is_string(val) Bool
+#[TypeAssertion(val is Array|Dict)]
 extern func is_array(val) Bool
 extern func is_numeric(val) Bool
 
 // some basic functions
 extern func exit(status Int|String) Void
-extern func empty(expr Any) Bool
-extern func var_dump(expr0 Any, expr1 Any = #default, expr2 Any = #default, expr3 Any = #default)
+extern func empty(expr Mixed) Bool
+extern func var_dump(expr0 Mixed, expr1 Mixed = #default, expr2 Mixed = #default, expr3 Mixed = #default)
+extern func call_user_func(callable Callable, param1 Mixed = #default, param2 Mixed = #default, param3 Mixed = #default) Mixed
+extern func compact(var_name0 String|Array, var_name1 String|Array = #default, var_name2 String|Array = #default, var_name3 String|Array = #default) Dict
+extern func get_class(object Object = #default) String
 extern func print(expr) Int
 extern func print_r(expr, is_return Bool = #default)
 extern func header(info String, replace = true, http_response_code Int = #default)
+extern func ini_set(option String, value String|Int|Float|Bool|None) String|Bool
 
 // dates & times
 extern func time() Int
 extern func date(format String, timestamp Int = #default) String
+extern func gmdate(format String, timestamp Int = #default) String
 extern func strtotime(datetime, now Int = #default) Int
 
 // php builtin constants
 extern const __DIR__ String
 extern const __FILE__ String
 extern const __LINE__ UInt
-extern const __CLASS__ UInt
-extern const __FUNCTION__ UInt
+extern const __CLASS__ String
+extern const __FUNCTION__ String
+extern const __METHOD__ String
+extern const __NAMESPACE__ String
+extern const __TRAIT__ String
 extern const PHP_INT_MIN Int
 extern const PHP_INT_MAX UInt
 
 // basic standard interfaces/classes
-extern interface Iterator {
-	current() Any
-	key() Int|String
+extern interface Traversable {}
+#[BuiltinFeature(Iterator)]
+extern interface Iterator: Traversable {
+	current() Mixed
+	key() Mixed
 	next()
 	rewind()
 	valid() Bool
 }
+extern interface IteratorAggregate: Traversable {
+	getIterator() Traversable
+}
+extern interface SeekableIterator: Iterator {
+	seek(offset Int)
+}
+extern interface RecursiveIterator: Iterator {
+	hasChildren() Bool
+	getChildren() RecursiveIterator
+}
+extern interface Countable {
+	count() Int
+}
+#[BuiltinFeature(ArrayAccess)]
 extern interface ArrayAccess {
-	offsetExists(offset Any) Bool
-	offsetGet(offset Any) Any
-	offsetSet(offset Any, value Any)
-	offsetUnset(offset Any)
+	offsetExists(offset Mixed) Bool
+	offsetGet(offset Mixed) Mixed
+	offsetSet(offset Mixed, value Mixed)
+	offsetUnset(offset Mixed)
 }
 extern interface Stringable {
 	public __toString() String
 }
+extern interface JsonSerializable {
+	public jsonSerialize() Mixed
+}
+extern interface Serializable {
+	public serialize() String
+	public unserialize(data String)
+}
+extern interface DateTimeInterface {}
+#[BuiltinFeature(DynamicProperties)]
 extern class stdClass {}
+extern class SplFixedArray: ArrayAccess, Countable, IteratorAggregate {}
+extern class SplObjectStorage: ArrayAccess, Countable, Iterator, Serializable {}
+extern class SimpleXMLElement: ArrayAccess {}
+extern class PhpToken {
+	public id Int
+	public text String
+	public line Int
+	public pos Int
+	public getTokenName() String?
+	public is(kind Mixed) Bool
+	public isIgnorable() Bool
+	public __toString() String
+	public static tokenize(code String, flags Int = 0) Array
+}
+extern class DOMDocument {}
+extern class DOMNodeList {}
+extern class DOMElement {}
+extern class DOMAttr {}
 
 // exceptions
 extern interface Throwable: Stringable {
@@ -86,9 +148,15 @@ extern interface Throwable: Stringable {
 	public getTraceAsString() String
 }
 extern class Exception: Throwable {
-	public construct(message String, code Int = 0, previous Throwable? = none)
+	public construct(message String = '', code Int = 0, previous Throwable? = none)
+}
+extern class Error: Throwable {
+	public construct(message String = '', code Int = 0, previous Throwable? = none)
 }
 extern class ErrorException: Exception {}
+extern class AssertionError: Error {}
+extern class TypeError: Error {}
+extern class ValueError: Error {}
 extern class LogicException: Exception {}
 extern class RuntimeException: Exception {}
 
@@ -98,6 +166,9 @@ extern func dirname(path, levels UInt = #default) String
 extern func basename(path, suffix String = #default) String
 extern func realpath(path) String
 extern func chdir(dir) Bool
+extern func fopen(file String, flags String = #default) Any
+extern func fclose(fp Any) Bool
+extern func flock(fp Any, flags UInt) Bool
 extern func unlink(file) Bool
 extern func file_get_contents(file) String
 extern func file_put_contents(file, data String, flags Int = #default) UInt
@@ -115,6 +186,8 @@ extern func ceil(val) Int
 extern func floor(val) Int
 
 // string
+extern func nl2br(text String) String
+extern func number_format(number, decimals Int = #default) Plain
 extern func trim(it String, characters String = #default) String
 extern func rtrim(it String, characters String = #default) String
 extern func ltrim(it String, characters String = #default) String
@@ -122,12 +195,13 @@ extern func ltrim(it String, characters String = #default) String
 // with default charset
 extern func mb_strlen(it String) UInt
 extern func mb_substr(it String, start Int, length Int = #default) String
+extern func mb_strwidth(it String, encoding String = #default) UInt
 
 // first pos in default charset
-extern func mb_strpos(it String, search String, offset Int = 0) UInt  // would return false on not found
+extern func mb_strpos(it String, search String, offset Int = 0) UInt|Bool
 
 // last pos in default charset
-extern func mb_strrpos(it String, search String, offset Int = 0) UInt  // would return false on not found
+extern func mb_strrpos(it String, search String, offset Int = 0) UInt|Bool
 
 extern func mb_strtoupper(it String) String
 extern func mb_strtolower(it String) String
@@ -137,8 +211,10 @@ extern func strlen(it) UInt
 extern func substr(it, start Int, length Int = #default) String
 
 extern func str_contains(it, search) Bool
-extern func strpos(it, search, offset Int = 0) UInt  // would return false on not found
-extern func strrpos(it, search, offset Int = 0) UInt  // would return false on not found
+extern func str_starts_with(it String, prefix String) Bool
+extern func str_ends_with(it String, suffix String) Bool
+extern func strpos(it, search, offset Int = 0) UInt|Bool
+extern func strrpos(it, search, offset Int = 0) UInt|Bool
 extern func strtoupper(it) String
 extern func strtolower(it) String
 
@@ -147,32 +223,45 @@ extern func strtr(it String, from_chars_or_pairs String|Dict, to_chars String? =
 extern func str_replace(search, replacement, it String) String
 
 //
-extern func implode(glue String, pieces) String
-extern func explode(delimiter String, it String) String.Array
+extern func implode(glue String|Array|Dict, pieces = #default) String
+extern func explode(delimiter String, it String) List<String>
 
 extern func str_repeat(input, multiplier Int) String
+extern func urlencode(it String) String
+extern func md5(string String, binary Bool = false) String
 
 // array
 extern func count(array) UInt
 extern func in_array(needle, haystack, strict Bool = false) Bool
 extern func array_reverse(array) Array
-extern func array_map(callback (item) Any, items0 Array, items1 Array? = #default) Array
-extern func array_filter(items Array, callback (item) Any = #default, mode Int = #default) Array
-extern func array_reduce(items Array, callback (carry, item) Any, initial Any = #default) Any
+extern func array_map(callback (item Mixed) Mixed, items0 Array, items1 Array? = #default) Array
+extern func array_filter(items Array, callback (item Mixed) Mixed = #default, mode Int = #default) Array
+extern func array_reduce(items Array, callback (carry Mixed, item Mixed) Mixed, initial Mixed = #default) Mixed
+extern func array_diff(arr1 Array|Dict, arr2 Array|Dict, arr3 Array|Dict = #default) Dict
+extern func array_intersect(arr1 Array|Dict, arr2 Array|Dict, arr3 Array|Dict = #default) Dict
+extern func array_merge(a Array|Dict, b Array|Dict, c Array|Dict = #default) Array|Dict
+extern func array_sum(it Array|Dict) UInt|Int|Float
+extern func current(it Array|Dict) Mixed
 
 // index array
 extern func array_slice(it Array, offset Int, length UInt? = none) Array
-extern func array_unshift(it Array, item Any) UInt
-extern func array_shift(it Array) Any
-extern func array_push(it Array, item Any) UInt
-extern func array_pop(it Array) Any
+extern func array_unshift(it Array, item Mixed) UInt
+extern func array_shift(it Array) Mixed
+extern func array_push(it Array, item Mixed) UInt
+extern func array_pop(it Array) Mixed
+extern func array_fill(start_index Int, count Int, value Mixed) Array
+extern func array_unique(it Array) Array
+extern func sort(it inout Array) Bool
 extern func array_search as list_search(search, it, strict = false) UInt|Bool
 extern func array_search as dict_search(search, it, strict = false) String|Int|Bool
 
 extern func array_key_exists(key, arr) Bool
 
 // assoc array
-extern func array_keys(it) String.Array
+extern func array_combine(keys Array, values Array) Dict|Bool
+extern func array_flip(it Array|Dict) Dict
+extern func array_key_first(it Array|Dict) String|Int|None
+extern func array_keys(it) List<String>
 extern func array_values(it) Array
 extern func array_column(recordset Array|Dict, column_key String?, index_key String? = #default) Array
 extern func array_replace as dict_replace(it Dict, replacement Dict) Dict
@@ -181,10 +270,11 @@ extern func array_replace as dict_replace(it Dict, replacement Dict) Dict
 extern const JSON_UNESCAPED_UNICODE Int
 extern const JSON_PRETTY_PRINT Int
 extern func json_encode(data, flags Int = 0, depth UInt = 512) String
-extern func json_decode(data, assoc Bool = false, depth UInt = 512, flags Int = 0) Any
+extern func json_decode(data, assoc Bool = false, depth UInt = 512, flags Int = 0) Mixed
 
 // html
 extern const ENT_QUOTES Int
+#[HtmlSafe]
 extern func htmlspecialchars(string String, flags Int = #default, encoding String = #default, double_encode = #default) String
 extern func htmlspecialchars_decode(string String, flags Int = #default) String
 
@@ -192,7 +282,7 @@ extern func htmlspecialchars_decode(string String, flags Int = #default) String
 extern const PREG_SPLIT_DELIM_CAPTURE Int
 extern func preg_match(regex Regex, subject String, matches inout Array? = #default, flags Int = #default, offset Int = #default) Bool
 extern func preg_match_all(regex Regex, subject String, matches inout Array? = #default, flags Int = #default, offset Int = #default) Bool
-extern func preg_split(regex Regex , subject String, limit Int = #default, flags Int = #default) String.Array
+extern func preg_split(regex Regex , subject String, limit Int = #default, flags Int = #default) List<String>
 
 // PDO
 extern class PDO {
@@ -203,7 +293,7 @@ extern class PDO {
 	query(statement String, fetchMode Int? = #default) PDOStatement
 	quote(string String, parameter_type Int = #default) String
 	lastInsertId(name String = #default) String
-	getAttribute(attribute Int) Any
+	getAttribute(attribute Int) Mixed
 
 	beginTransaction() Bool
 	commit() Bool
@@ -215,9 +305,9 @@ extern class PDO {
 }
 
 extern class PDOStatement {
-	fetch(mode Int = #default) String.Dict
-	fetchAll(mode Int = #default, column_or_class_or_func Int|String|Callable = #default) String.Dict.Array
-	fetchColumn(column UInt = 0) Any
+	fetch(mode Int = #default) Dict<String>
+	fetchAll(mode Int = #default, column_or_class_or_func Int|String|Callable = #default) List<Dict<String>>
+	fetchColumn(column UInt = 0) Mixed
 	fetchObject(class MetaType = #default, constructorArgs Array = #default) Object|Bool
 }
 

@@ -7,21 +7,27 @@
 
 namespace Tea;
 
-interface IVariableDeclaration extends IValuableDeclaration {}
+interface IVariableDeclaration extends IValuableDeclaration {
+	public function get_bound_type(): BaseType;
+	public function bind_type(BaseType $type);
+}
 
-abstract class BaseVariableDeclaration extends Node implements IDeclaration, IVariableDeclaration
+trait VariableTrait
 {
-	use BaseDeclarationTrait, TypingTrait;
+	/**
+	 * Default value
+	 */
+	public ?BaseExpression $value = null;
 
-	public $value;
+	public bool $is_final = false;
 
-	public $is_final;
+	/**
+	 * To mark the value is mutable
+	 * Just for Array|Dict|Object values
+	 */
+	public bool $is_mutable = true;
 
-	// to mark the value is mutable
-	// just for Array|Dict|Object values
-	public $is_mutable = true;
-
-	public function __construct(string $name, ?IType $type = null, ?BaseExpression $value = null)
+	public function __construct(string $name, ?BaseType $type = null, ?BaseExpression $value = null)
 	{
 		$this->name = $name;
 		$this->declared_type = $type;
@@ -29,26 +35,41 @@ abstract class BaseVariableDeclaration extends Node implements IDeclaration, IVa
 	}
 }
 
+abstract class BaseVariableDeclaration extends BaseDeclaration implements IVariableDeclaration
+{
+	use VariableTrait;
+}
+
 class VariableDeclaration extends BaseVariableDeclaration implements IStatement
 {
 	const KIND = 'variable_declaration';
-	public $block; // defined in which block?
+
+	/**
+	 * Defined in which block
+	 */
+	public ?IBlock $block = null;
 }
 
 class FinalVariableDeclaration extends VariableDeclaration
 {
-	public $is_final = true;
+	// is_final is always true for FinalVariableDeclaration
+	
+	public function __construct(string $name, ?BaseType $type = null, ?BaseExpression $value = null)
+	{
+		parent::__construct($name, $type, $value);
+		$this->is_final = true;
+	}
 }
 
-class InvariantDeclaration extends VariableDeclaration
-{
-	public $is_final = true;
-	public $is_mutable;
-}
+// class InvariantDeclaration extends VariableDeclaration
+// {
+// 	public $is_final = true;
+// 	public $is_mutable;
+// }
 
-class SuperVariableDeclaration extends VariableDeclaration implements IRootDeclaration
+class SuperVariableDeclaration extends RootDeclaration implements IVariableDeclaration
 {
-	use IRootDeclarationTrait;
+	use VariableTrait;
 	const KIND = 'super_variable_declaration';
 }
 
@@ -56,17 +77,37 @@ class ParameterDeclaration extends BaseVariableDeclaration
 {
 	const KIND = 'parameter_declaration';
 
-	public $is_inout;
+	public bool $is_inout = false;
 
-	// is a variadic parameter
-	// to receive multiple arguments in a parameter
-	public $is_variadic;
+	/**
+	 * Is a variadic parameter
+	 * To receive multiple arguments in a parameter
+	 */
+	public bool $is_variadic = false;
 
-	// /**
-	//  * @var RuleOptions
-	//  */
+	/**
+	 * For PHP 8.0+ constructor property promotion
+	 * Stores 'public', 'protected', or 'private'
+	 */
+	public ?string $promoted_property_modifier = null;
+
+	/**
+	 * For PHP 8.4+ constructor promoted property asymmetric visibility.
+	 */
+	public ?string $promoted_property_set_modifier = null;
+
+	public ?string $set_visibility = null;
+
+	public ?string $get_visibility = null;
+
+	/**
+	 * @var RuleOptions
+	 */
 	// public $rule_options;
 
+	/**
+	 * @param RuleOptions $rule_options
+	 */
 	// public function set_rule_options(RuleOptions $rule_options)
 	// {
 	// 	$this->rule_options = $rule_options;

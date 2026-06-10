@@ -39,9 +39,11 @@ class PHPCoder extends BaseCoder
 
 	const BUILTIN_TYPE_MAP = [
 		_VOID => 'void',
+		_MIXED => '',
 		_ANY => '',
 		_NONE => 'null',
 		_STRING => 'string',
+		_TEXT_TYPE => 'string',
 		_PLAIN => 'string',
 		_INT => 'int',
 		_UINT => 'int',
@@ -60,6 +62,7 @@ class PHPCoder extends BaseCoder
 
 	const IS_TEST_MAP = [
 		_STRING => 'is_string',
+		_TEXT_TYPE => 'is_string',
 		_PLAIN => 'is_string',
 		_INT => 'is_int',
 		_UINT => 'is_uint',
@@ -136,7 +139,7 @@ class PHPCoder extends BaseCoder
 		// classes that use traits must be placed at the beginning of the file
 		// otherwise the runtime will prompt that they cannot be found
 		foreach ($decls as $node) {
-			$item = $node->render($this);
+			$item = $this->render_node($node);
 			$item === null || $items[] = $item . LF;
 		}
 
@@ -161,7 +164,7 @@ class PHPCoder extends BaseCoder
 		$this->program->initializer and $this->collect_use_statements($this->program->initializer);
 	}
 
-	protected function collect_use_statements(IDeclaration $decl)
+	protected function collect_use_statements(BaseDeclaration $decl)
 	{
 		foreach ($decl->uses as $use) {
 			// it should be a use statement in __package
@@ -180,7 +183,10 @@ class PHPCoder extends BaseCoder
 		}
 
 		foreach ($decl->unknow_identifiers as $identifier) {
-			$dependence = $identifier->symbol->declaration;
+			$symbol = $identifier instanceof TypeReference
+				? TypeHelper::get_type_symbol($identifier)
+				: ASTHelper::get_identifier_symbol($identifier);
+			$dependence = $symbol->declaration;
 			if ($dependence instanceof FunctionDeclaration && $dependence->program->is_native) {
 				$this->program->append_depends_native_program($dependence->program);
 			}
@@ -208,7 +214,10 @@ class PHPCoder extends BaseCoder
 	{
 		$items = [];
 		foreach ($targets as $target) {
-			$source_name = $target->source_declaration->origin_name ?? $target->source_name;
+			$decl = ASTHelper::get_use_source_declaration($target);
+			$source_name = $decl instanceof BaseDeclaration
+				? ($decl->origin_name ?? $target->source_name)
+				: $target->source_name;
 			if ($source_name) {
 				if (is_array($source_name)) {
 					$source_name = join(static::NS_SEPARATOR, $source_name);
@@ -220,7 +229,6 @@ class PHPCoder extends BaseCoder
 				$item = $target->target_name;
 			}
 
-			$decl = $target->source_declaration;
 			if ($decl instanceof ClassKindredDeclaration) {
 				// no any
 			}
@@ -378,7 +386,7 @@ class PHPCoder extends BaseCoder
 		return parent::render_constant_declaration($node);
 	}
 
-	public function render_masked_declaration(MaskedDeclaration $node)
+	public function render_member_mapping_declaration(MemberMappingDeclaration $node)
 	{
 		return null;
 	}
@@ -420,6 +428,10 @@ class PHPCoder extends BaseCoder
 			$header = sprintf('function (%s)', $parameters);
 		}
 
+		if ($node->is_static) {
+			$header = _STATIC . ' ' . $header;
+		}
+
 		return $header . ' ' . $body;
 	}
 
@@ -427,14 +439,14 @@ class PHPCoder extends BaseCoder
 	{
 		$items = [];
 		foreach ($using_params as $param) {
-			$item = $param->render($this);
+			$item = $this->render_node($param);
 			$items[] = $item;
 		}
 
 		return join(', ', $items);
 	}
 
-	public function render_function_body(IFunctionDeclaration $node)
+	public function render_function_body(IFunctionDeclaration $node): string
 	{
 		$body = $node->body;
 		$items = [];
@@ -445,7 +457,7 @@ class PHPCoder extends BaseCoder
 		}
 		else {
 			// the single expression lambda body
-			$items[] = 'return ' . $body->render($this) . static::STATEMENT_TERMINATOR;
+			$items[] = 'return ' . $this->render_node($body) . static::STATEMENT_TERMINATOR;
 		}
 
 		return $this->wrap_block_code($items);
@@ -478,7 +490,7 @@ class PHPCoder extends BaseCoder
 		}
 
 		if ($node->value) {
-			$expr .= ' = ' . $node->value->render($this);
+			$expr .= ' = ' . $this->render_node($node->value);
 		}
 
 		return $expr;
@@ -486,7 +498,7 @@ class PHPCoder extends BaseCoder
 
 	public function render_unset_statement(UnsetStatement $node)
 	{
-		return 'unset(' . $node->argument->render($this) . ')' . static::STATEMENT_TERMINATOR;
+		return 'unset(' . $this->render_node($node->argument) . ')' . static::STATEMENT_TERMINATOR;
 	}
 
 // ---
@@ -522,9 +534,12 @@ class PHPCoder extends BaseCoder
 	{
 		$items = [];
 		foreach ($identifiers as $identifier) {
-			$target_declaration = $identifier->symbol->declaration;
+			$symbol = $identifier instanceof TypeReference
+				? TypeHelper::get_type_symbol($identifier)
+				: ASTHelper::get_identifier_symbol($identifier);
+			$target_declaration = $symbol->declaration;
 			if ($target_declaration instanceof IntertraitDeclaration) {
-				$name = $identifier->render($this);
+				$name = $this->render_node($identifier);
 				$items[] = $this->get_intertrait_trait_name($name);
 			}
 		}
@@ -649,7 +664,7 @@ class PHPCoder extends BaseCoder
 
 	public function render_switch_block(SwitchBlock $node)
 	{
-		$subject = $node->subject->render($this);
+		$subject = $this->render_node($node->subject);
 
 		$branches = [];
 		foreach ($node->branches as $branch) {
@@ -670,6 +685,34 @@ class PHPCoder extends BaseCoder
 		return $code;
 	}
 
+	public function render_match_block(MatchBlock $node)
+	{
+		$subject = $this->render_node($node->subject);
+		$arms = [];
+		foreach ($node->arms as $arm) {
+			$arms[] = $this->render_match_arm($arm);
+		}
+
+		$body = $this->indents(join(",\n", $arms));
+		return "match ($subject) {\n$body,\n}";
+	}
+
+	public function render_match_arm(MatchArm $node)
+	{
+		$patterns = [];
+		foreach ($node->patterns as $pattern) {
+			$patterns[] = $this->render_node($pattern);
+		}
+
+		$return = $this->render_node($node->return);
+		return join(', ', $patterns) . " => $return";
+	}
+
+	public function render_default_pattern(DefaultPattern $node)
+	{
+		return 'default';
+	}
+
 	protected function render_else_for_switch_block(IElseBlock $node)
 	{
 		if ($node instanceof ElseBlock) {
@@ -679,10 +722,10 @@ class PHPCoder extends BaseCoder
 			// that should be ElseIfBlock
 
 			$items = [];
-			$items[] = sprintf("if (%s) %s", $node->condition->render($this), $this->render_control_structure_body($node));
+			$items[] = sprintf("if (%s) %s", $this->render_node($node->condition), $this->render_control_structure_body($node));
 
 			if ($node->else) {
-				$items[] = $node->else->render($this);
+				$items[] = $this->render_node($node->else);
 			}
 
 			$body = $this->indents(join($items));
@@ -696,7 +739,7 @@ class PHPCoder extends BaseCoder
 		$codes = [];
 		foreach ($node->patterns as $pattern) {
 			if ($pattern) {
-				$expr = $pattern->render($this);
+				$expr = $this->render_node($pattern);
 				$branch = "case {$expr}:";
 			}
 			else {
@@ -716,7 +759,7 @@ class PHPCoder extends BaseCoder
 		$items = [];
 		$node = null;
 		foreach ($nodes as $node) {
-			$item = $node->render($this);
+			$item = $this->render_node($node);
 			$items[] = $item === LF ? $item : $item . LF;
 		}
 
@@ -729,7 +772,7 @@ class PHPCoder extends BaseCoder
 
 	public function render_forin_block(ForInBlock $node)
 	{
-		$iterable = $node->iterable->render($this);
+		$iterable = $this->render_node($node->iterable);
 
 		$temp_assignment = null;
 		if ($node->else) {
@@ -744,10 +787,10 @@ class PHPCoder extends BaseCoder
 		$code = $this->build_foreach_statement($node, $iterable);
 
 		if ($node->else) {
-			$code = $this->indents($code);
-			$code = "{$temp_assignment}if ($iterable && count($iterable) > 0) {\n$code\n}";
-			$code .= $node->else->render($this);
-		}
+				$code = $this->indents($code);
+				$code = "{$temp_assignment}if ($iterable && count($iterable) > 0) {\n$code\n}";
+				$code .= $this->render_node($node->else);
+			}
 
 		if ($node->has_exceptional()) {
 			$code = $this->wrap_with_except_block($node, $code);
@@ -758,8 +801,8 @@ class PHPCoder extends BaseCoder
 
 	public function render_forto_block(ForToBlock $node)
 	{
-		$start = $node->start->render($this);
-		$end = $node->end->render($this);
+		$start = $this->render_node($node->start);
+		$end = $this->render_node($node->end);
 
 		$code = '';
 		if (!$node->start->is_const_value && !$node->start instanceof PlainIdentifier) {
@@ -790,10 +833,10 @@ class PHPCoder extends BaseCoder
 
 		if ($node->else) {
 			$for_code = $this->indents($for_code);
-			$op = $node->is_downto_mode ? '>=' : '<=';
-			$code .= "if ($start $op $end) {\n$for_code\n}";
-			$code .= $node->else->render($this);
-		}
+				$op = $node->is_downto_mode ? '>=' : '<=';
+				$code .= "if ($start $op $end) {\n$for_code\n}";
+				$code .= $this->render_node($node->else);
+			}
 		else {
 			$code .= $for_code;
 		}
@@ -812,11 +855,11 @@ class PHPCoder extends BaseCoder
 
 	private function build_foreach_statement(BaseControlBlock $node, string $iterable)
 	{
-		$val = $node->val->render($this);
+		$val = $this->render_node($node->val);
 		$body = $this->render_control_structure_body($node);
 
 		if ($node->key) {
-			$key = $node->key->render($this);
+			$key = $this->render_node($node->key);
 			$code = sprintf('foreach (%s as %s => %s) %s', $iterable, $key, $val, $body);
 		}
 		else {
@@ -828,7 +871,7 @@ class PHPCoder extends BaseCoder
 
 	public function render_while_block(WhileBlock $node)
 	{
-		$test = $node->condition->render($this);
+		$test = $this->render_node($node->condition);
 		$body = $this->render_control_structure_body($node);
 
 		// if ($node->do_the_first) {
@@ -893,10 +936,10 @@ class PHPCoder extends BaseCoder
 	public function render_assignment_operation(AssignmentOperation $node)
 	{
 		$left = $node->left;
-		$right = $node->right->render($this);
+		$right = $this->render_node($node->right);
 
 		if ($left instanceof SquareAccessing) {
-			$expr = $left->basing->render($this);
+			$expr = $this->render_node($left->basing);
 			if ($left->is_prefix) {
 				return "array_unshift({$expr}, {$right})";
 			}
@@ -904,7 +947,7 @@ class PHPCoder extends BaseCoder
 			$left =  "{$expr}[]";
 		}
 		else {
-			$left = $left->render($this);
+			$left = $this->render_node($left);
 		}
 
 		$op = $this->get_operator_sign($node->operator);
@@ -971,16 +1014,21 @@ class PHPCoder extends BaseCoder
 	public function render_xtag_attr_interpolation(XTagAttrInterpolation $node)
 	{
 		$expr = $node->content;
-		$code = $this->render_expression_with_html_escaping($expr);
+		$code = OutputSafety::can_skip_html_escape($expr, OutputSafety::HTML_ATTRIBUTE)
+			? $this->render_subexpression($expr, OperatorFactory::$concat)
+			: $this->render_expression_with_html_escaping($expr);
 		return $code;
 	}
 
 	public function render_xtag_child_interpolation(XTagChildInterpolation $node)
 	{
 		$expr = $node->content;
-		$type = $expr->expressed_type;
+		$type = ASTHelper::get_expressed_type($expr);
 
-		if (TypeHelper::is_simple_xtag_safe_value_type($type)) {
+		if (OutputSafety::can_skip_html_escape($expr, OutputSafety::HTML_TEXT)) {
+			$code = $this->render_subexpression($expr, OperatorFactory::$concat);
+		}
+		elseif (TypeHelper::is_simple_xtag_safe_value_type($type)) {
 			$code = $this->render_subexpression($expr, OperatorFactory::$concat);
 		}
 		elseif ($type instanceof IterableType and TypeHelper::is_simple_xtag_safe_value_type($type->generic_type)) {
@@ -1010,11 +1058,51 @@ class PHPCoder extends BaseCoder
 
 	private function render_expression_with_html_escaping(BaseExpression $expr)
 	{
-		$code = $expr->render($this);
-		$fn = TypeHelper::is_nullable_type($expr->expressed_type)
+		if ($expr instanceof TernaryExpression && $expr->then !== null) {
+			$condition = $this->render_node($expr->condition);
+			$then = $this->render_xtag_text_expression($expr->then);
+			$else = $this->render_xtag_text_falsy_branch($expr);
+			return "({$condition} ? {$then} : {$else})";
+		}
+
+		$code = $this->render_node($expr);
+		$fn = TypeHelper::is_nullable_type(ASTHelper::get_expressed_type($expr))
 			? '\html_escape'
 			: '\htmlspecialchars';
 		return "{$fn}({$code})";
+	}
+
+	private function render_xtag_text_expression(BaseExpression $expr): string
+	{
+		return OutputSafety::can_skip_html_escape($expr, OutputSafety::HTML_TEXT)
+			? $this->render_subexpression($expr, OperatorFactory::$concat)
+			: $this->render_expression_with_html_escaping($expr);
+	}
+
+	private function render_xtag_text_falsy_branch(TernaryExpression $expr): string
+	{
+		if ($this->is_same_falsy_branch_expression($expr->condition, $expr->else)) {
+			return $this->render_subexpression($expr->else, OperatorFactory::$concat);
+		}
+
+		return $this->render_xtag_text_expression($expr->else);
+	}
+
+	private function is_same_falsy_branch_expression(BaseExpression $condition, BaseExpression $branch): bool
+	{
+		$condition = $this->unwrap_falsy_branch_expression($condition);
+		$branch = $this->unwrap_falsy_branch_expression($branch);
+
+		return $this->render_node($condition) === $this->render_node($branch);
+	}
+
+	private function unwrap_falsy_branch_expression(BaseExpression $expr): BaseExpression
+	{
+		while ($expr instanceof Parentheses || $expr instanceof AsOperation) {
+			$expr = $expr instanceof Parentheses ? $expr->expression : $expr->left;
+		}
+
+		return $expr;
 	}
 
 	protected function build_xtag_attribute_components(XTag $node)
@@ -1074,15 +1162,15 @@ class PHPCoder extends BaseCoder
 					}
 				}
 				else {
-					$type = $content->expressed_type;
-					if (TypeHelper::is_nullable_type($type) or $type instanceof BoolType) {
+					$type = ASTHelper::get_expressed_type($content);
+					if ($this->is_instable_xtag_attribute_value($content, $type)) {
 						// the null or false value cannot be presented
 						$instable_map[$key] = $content;
 						array_pop($items);
 						continue;
 					}
 					else {
-						$items[] = TypeHelper::is_pure_type($type) ? $content : $val;
+						$items[] = $val;
 					}
 				}
 			}
@@ -1099,6 +1187,42 @@ class PHPCoder extends BaseCoder
 		}
 
 		return $items;
+	}
+
+	private function is_instable_xtag_attribute_value(BaseExpression $expr, BaseType $type): bool
+	{
+		if (TypeHelper::is_nullable_type($type) || $type instanceof BoolType) {
+			return true;
+		}
+
+		return $this->should_use_nullable_xtag_escaping($expr);
+	}
+
+	private function should_use_nullable_xtag_escaping(BaseExpression $expr): bool
+	{
+		if (TypeHelper::is_nullable_type(ASTHelper::get_expressed_type($expr))) {
+			return true;
+		}
+
+		$decl_type = $this->get_identifiable_original_type($expr);
+		return $decl_type instanceof BaseType && TypeHelper::is_nullable_type($decl_type);
+	}
+
+	private function get_identifiable_original_type(BaseExpression $expr): ?BaseType
+	{
+		if (!$expr instanceof Identifiable) {
+			return null;
+		}
+
+		$decl = ASTHelper::get_identifier_symbol($expr)->declaration ?? null;
+		if (!$decl instanceof IVariableDeclaration) {
+			return null;
+		}
+
+		return ASTHelper::get_noted_type($decl)
+			?? $decl->declared_type
+			?? $decl->infered_type
+			?? ($decl->value !== null ? ASTHelper::get_expressed_type($decl->value) : null);
 	}
 
 	private function create_building_attributes_expression(array $fixed_map, ?BaseExpression $dynamic_expr = null)
@@ -1135,7 +1259,8 @@ class PHPCoder extends BaseCoder
 	private function is_safe_xtag_interpolated(InterpolatedString $node) {
 		$safe = true;
 		foreach ($node->items as $item) {
-			if (is_object($item) and !TypeHelper::is_pure_type($item->expressed_type)) {
+			if ($item instanceof StringInterpolation
+				&& !OutputSafety::can_skip_html_escape($item->content, OutputSafety::HTML_ATTRIBUTE)) {
 				$safe = false;
 				break;
 			}
@@ -1179,7 +1304,7 @@ class PHPCoder extends BaseCoder
 		return $name;
 	}
 
-	private function get_normalized_name_with_declaration(IDeclaration $node)
+	private function get_normalized_name_with_declaration(BaseDeclaration $node)
 	{
 		$name = $node->origin_name ?? $node->name;
 		return $node->is_extern ? $name : $this->get_normalized_name($name);
@@ -1187,9 +1312,9 @@ class PHPCoder extends BaseCoder
 
 	public function render_accessing_identifier(AccessingIdentifier $node)
 	{
-		$decl = $node->symbol->declaration;
-		if ($decl instanceof MaskedDeclaration) {
-			return $this->render_masked_accessing_identifier($node);
+		$decl = ASTHelper::get_identifier_symbol($node)->declaration;
+		if ($decl instanceof MemberMappingDeclaration) {
+			return $this->render_member_mapping_accessing_identifier($node);
 		}
 
 		$name = $decl->name;
@@ -1204,9 +1329,9 @@ class PHPCoder extends BaseCoder
 			$name = $this->get_normalized_name($name);
 		}
 
-		if ($node->basing instanceof CallExpression && $node->basing->instancing) {
+		if ($node->basing instanceof CallExpression && $this->is_instancing_call($node->basing)) {
 			// for the class new expression
-			$basing = $node->basing->render($this);
+			$basing = $this->render_node($node->basing);
 			$basing = "($basing)";
 		}
 		else {
@@ -1259,46 +1384,46 @@ class PHPCoder extends BaseCoder
 		return $basing . $operator . $name;
 	}
 
-	protected function render_masked_accessing_identifier(AccessingIdentifier $node)
+	protected function render_member_mapping_accessing_identifier(AccessingIdentifier $node)
 	{
-		$decl = $node->symbol->declaration;
-		$masked = $decl->body;
+		$decl = ASTHelper::get_identifier_symbol($node)->declaration;
+		$mapping_body = $decl->body;
 
-		if ($masked instanceof CallExpression) {
+		if ($mapping_body instanceof CallExpression) {
 			$actual_arguments = [];
 			foreach ($decl->arguments_map as $idx) {
 				// assert($idx === 0);
 				$actual_arguments[] = $node->basing;
 			}
 
-			$actual_call = clone $masked;
+			$actual_call = clone $mapping_body;
 			$actual_call->arguments = $actual_arguments;
 			$actual_call->callee->pos = $node->pos; // just for debug
 
 			return $this->render_basecall_expression($actual_call);
 		}
-		elseif ($masked instanceof PlainIdentifier) {
-			if ($masked->name === _THIS) {
-				return $node->basing->render($this);
+		elseif ($mapping_body instanceof PlainIdentifier) {
+			if ($mapping_body->name === _THIS) {
+				return $this->render_node($node->basing);
 			}
 			else {
-				return $masked->render($this);
+				return $this->render_node($mapping_body);
 			}
 		}
-		elseif ($masked->is_const_value) {
-			return $masked->render($this);
+		elseif ($mapping_body->is_const_value) {
+			return $this->render_node($mapping_body);
 		}
 		else {
-			throw new Exception("Unknow masked contents.", $decl);
+			throw new Exception("Unknow member mapping body.", $decl);
 		}
 	}
 
-	protected function render_masked_call(CallExpression $node)
+	protected function render_member_mapping_call(CallExpression $node)
 	{
-		$decl = $node->callee->symbol->declaration;
-		$masked = $decl->body;
+		$decl = ASTHelper::get_identifier_symbol($node->callee)->declaration;
+		$mapping_body = $decl->body;
 
-		$masking_arguments = $node->normalized_arguments ?? $node->arguments;
+		$source_arguments = ASTHelper::get_normalized_arguments($node) ?? $node->arguments;
 
 		$actual_arguments = [];
 		foreach ($decl->arguments_map as $dest_idx => $src) {
@@ -1316,20 +1441,20 @@ class PHPCoder extends BaseCoder
 
 			// because offset 0 in arguments_map is 'this'
 			$actual_index = $src - 1;
-			if (isset($masking_arguments[$actual_index])) {
-				$arg_value = $masking_arguments[$actual_index];
+			if (isset($source_arguments[$actual_index])) {
+				$arg_value = $source_arguments[$actual_index];
 			}
 			elseif (isset($decl->parameters[$actual_index]->value)) {
 				$arg_value = $decl->parameters[$actual_index]->value;
 			}
 			else {
-				throw new Exception("Unexpected render error for masked call '{$node->callee->name}'.");
+				throw new Exception("Unexpected render error for member mapping call '{$node->callee->name}'.");
 			}
 
 			if ($arg_value === ASTFactory::$default_value_mark) {
 				// is should be the last real argument, so we check it is correct
 				if (count($decl->arguments_map) !== count($actual_arguments) + 1) {
-					throw new Exception("Unexpected arguments error for masked call '{$node->callee->name}'.");
+					throw new Exception("Unexpected arguments error for member mapping call '{$node->callee->name}'.");
 				}
 			}
 			else {
@@ -1337,7 +1462,7 @@ class PHPCoder extends BaseCoder
 			}
 		}
 
-		$actual_call = clone $masked;
+		$actual_call = clone $mapping_body;
 		$actual_call->arguments = $actual_arguments;
 		$actual_call->callee->pos = $node->callee->pos; // just for debug
 
@@ -1349,6 +1474,17 @@ class PHPCoder extends BaseCoder
 		return $this->render_basecall_expression($node);
 	}
 
+	public function render_new_expression(InstancingExpression $node)
+	{
+		return $this->render_basecall_expression($node);
+	}
+
+	public function render_first_class_callable_expression(FirstClassCallableExpression $node)
+	{
+		$callee_code = $this->render_basing_expression($node->callee);
+		return "{$callee_code}(...)";
+	}
+
 	public function render_pipecall_expression(PipeCallExpression $node)
 	{
 		return $this->render_basecall_expression($node);
@@ -1356,8 +1492,8 @@ class PHPCoder extends BaseCoder
 
 	public function render_basecall_expression(BaseCallExpression $node)
 	{
-		if ($node->infered_callee_declaration instanceof MaskedDeclaration) {
-			return $this->render_masked_call($node);
+		if (ASTHelper::get_callee_declaration($node) instanceof MemberMappingDeclaration) {
+			return $this->render_member_mapping_call($node);
 		}
 
 		$callee = $node->callee;
@@ -1365,23 +1501,49 @@ class PHPCoder extends BaseCoder
 
 		// object member as callee, must be got it's result, then handling call
 		if ($callee instanceof AccessingIdentifier
-			and !$callee->symbol->declaration instanceof ICallableDeclaration
+			and !(ASTHelper::get_identifier_symbol($callee)->declaration instanceof ICallableDeclaration)
 			// and $callee->symbol->declaration !== ASTFactory::$virtual_property_for_any
 		) {
 			$callee_code = "($callee_code)";
 		}
 
-		$arguments = $node->normalized_arguments ?? $node->arguments;
-		$arguments = $this->render_arguments($arguments);
+		$arguments = ASTHelper::get_normalized_arguments($node) ?? $node->arguments;
+		$arguments_code = $this->render_arguments($arguments);
+		
+		// Add named arguments (PHP 8.0+)
+		$named_args_code = '';
+		if ($node->named_arguments) {
+			$named_items = [];
+			foreach ($node->named_arguments as $named_arg) {
+				$named_items[] = $named_arg->name . ': ' . $this->render_node($named_arg->value);
+			}
+			$named_args_code = implode(', ', $named_items);
+		}
+		
+		// Combine positional and named arguments
+		$all_args = [];
+		if ($arguments_code) {
+			$all_args[] = $arguments_code;
+		}
+		if ($named_args_code) {
+			$all_args[] = $named_args_code;
+		}
+		$args_string = implode(', ', $all_args);
 
-		if ($node->instancing) {
-			$code = "new {$callee_code}($arguments)";
+		if ($this->is_instancing_call($node)) {
+			$code = "new {$callee_code}($args_string)";
 		}
 		else {
-			$code = "{$callee_code}($arguments)";
+			$code = "{$callee_code}($args_string)";
 		}
 
 		return $code;
+	}
+
+	private function is_instancing_call(BaseCallExpression $node): bool
+	{
+		return $node instanceof InstancingExpression
+			|| ASTHelper::get_callee_declaration($node) instanceof ClassKindredDeclaration;
 	}
 
 	protected function render_arguments(array $nodes)
@@ -1391,7 +1553,7 @@ class PHPCoder extends BaseCoder
 		$items = [];
 		foreach ($nodes as $arg) {
 			if ($arg) {
-				$item = $arg->render($this);
+				$item = $this->render_node($arg);
 			}
 			else {
 				$item = static::VAL_NONE;
@@ -1408,13 +1570,18 @@ class PHPCoder extends BaseCoder
 	{
 		$arg = $node->value;
 		if ($arg instanceof AccessingIdentifier) {
-			$basing = $arg->basing->render($this);
+			$basing = $this->render_node($arg->basing);
 
 			// format for call_use_func
 			return "[$basing, '{$arg->name}']";
 		}
 
-		return $arg->render($this);
+		return $this->render_node($arg);
+	}
+
+	public function render_named_argument(NamedArgument $node)
+	{
+		return $node->name . ': ' . $this->render_node($node->value);
 	}
 
 	public function render_constant_identifier(ConstantIdentifier $node)
@@ -1432,9 +1599,9 @@ class PHPCoder extends BaseCoder
 		return $this->add_variable_prefix($node->name);
 	}
 
-	public function render_plain_identifier(PlainIdentifier $node)
+	public function render_plain_identifier(PlainIdentifier $node): string
 	{
-		$decl = $node->symbol->declaration;
+		$decl = ASTHelper::get_identifier_symbol($node)->declaration;
 
 		// variable
 		if ($decl instanceof IVariableDeclaration) {
@@ -1470,9 +1637,9 @@ class PHPCoder extends BaseCoder
 		return $node->name;
 	}
 
-	public function render_type_expr(IType $node)
+	public function render_type_expr(BaseType $node)
 	{
-		$code = $node->render($this);
+		$code = $this->render_node($node);
 
 		// if ($code && ($node->nullable || $node->has_null)) {
 		// 	$code = '?' . $code;
@@ -1481,9 +1648,40 @@ class PHPCoder extends BaseCoder
 		return $code;
 	}
 
-	public function render_type_identifier(IType $node)
+	public function render_type_identifier(BaseType $node)
 	{
+		if ($node instanceof InvalidableType) {
+			return $this->render_invalidable_type_identifier($node);
+		}
+		if ($node instanceof ExcludableType) {
+			return $this->render_node($node->base_type);
+		}
+
 		return static::BUILTIN_TYPE_MAP[$node->name] ?? $node->name;
+	}
+
+	protected function render_invalidable_type_identifier(InvalidableType $node): string
+	{
+		if ($node->sentinel instanceof LiteralNone) {
+			$valid_code = $this->render_node($node->valid_type);
+			if ($valid_code === '') {
+				return '';
+			}
+
+			if ($node->valid_type instanceof UnionType) {
+				return $valid_code . '|null';
+			}
+
+			return _QUESTION . $valid_code;
+		}
+
+		if ($node->sentinel instanceof LiteralBoolean
+			&& ($node->sentinel->value === false || $node->sentinel->value === '' || $node->sentinel->value === '0')) {
+			$valid_code = $this->render_node($node->valid_type);
+			return $valid_code === '' ? '' : $valid_code . '|false';
+		}
+
+		return '';
 	}
 
 	protected function add_short_nullable_sign(string $expr)
@@ -1491,7 +1689,7 @@ class PHPCoder extends BaseCoder
 		return _QUESTION . $expr;
 	}
 
-	public function render_classkindred_identifier(ClassKindredIdentifier $node)
+	public function render_classkindred_identifier(ClassKindredIdentifier|TypeReference $node)
 	{
 		if ($node->ns) {
 			$name = $this->get_normalized_name($node->name);
@@ -1504,9 +1702,11 @@ class PHPCoder extends BaseCoder
 		return $name;
 	}
 
-	private function get_classkindred_identifier_name(PlainIdentifier $node)
+	private function get_classkindred_identifier_name(PlainIdentifier|TypeReference $node)
 	{
-		$decl = $node->symbol->declaration;
+		$decl = $node instanceof TypeReference
+			? TypeHelper::get_type_symbol($node)->declaration
+			: ASTHelper::get_identifier_symbol($node)->declaration;
 		if ($decl->is_root_namespace()) {
 			$name = $this->get_identifier_name_for_root_namespace_declaration($decl);
 		}
@@ -1547,7 +1747,7 @@ class PHPCoder extends BaseCoder
 		$items = [];
 		foreach ($node->members as $member) {
 			if ($member->value) {
-				$value = $member->value->render($this);
+				$value = $this->render_node($member->value);
 			}
 			else {
 				$value = static::VAL_NONE;
@@ -1566,7 +1766,7 @@ class PHPCoder extends BaseCoder
 	{
 		$code = $this->add_variable_prefix($node->name);
 		if ($node->value) {
-			$code .= ' = ' . $node->value->render($this);
+			$code .= ' = ' . $this->render_node($node->value);
 		}
 		else {
 			$code .= ' = null';
@@ -1586,7 +1786,7 @@ class PHPCoder extends BaseCoder
 			$code = $this->render_as_operation($expr, true);
 		}
 		else {
-			$code = $expr->render($this);
+			$code = $this->render_node($expr);
 		}
 
 		return $code;
@@ -1614,7 +1814,7 @@ class PHPCoder extends BaseCoder
 			return "{$basing}[]";
 		}
 
-		$key = $node->key->render($this);
+		$key = $this->render_node($node->key);
 
 		// the auto-cast type to String
 		// if (!TypeHelper::is_dict_key_type($node->key->expressed_type)) {
@@ -1712,16 +1912,16 @@ class PHPCoder extends BaseCoder
 	{
 		$items = $node->items;
 		if (count($items) === 1 and $items[0] instanceof StringInterpolation) {
-			return $items[0]->render($this);
+			return $this->render_node($items[0]);
 		}
 
 		$parts = ['"'];
 		foreach ($items as $item) {
-			if ($item instanceof StringInterpolation) {
-				if ($this->is_simple_expression($item->content)) {
-					$expr = $item->content->render($this);
-					$parts[] = "{{$expr}}";
-				}
+				if ($item instanceof StringInterpolation) {
+					if ($this->is_simple_expression($item->content)) {
+						$expr = $this->render_node($item->content);
+						$parts[] = "{{$expr}}";
+					}
 				else {
 					$expr = $this->render_string_interpolation($item);
 					if (count($parts) === 1) {
@@ -1752,7 +1952,7 @@ class PHPCoder extends BaseCoder
 	private function is_simple_expression(BaseExpression $item)
 	{
 		if ($item instanceof PlainIdentifier) {
-			if ($item->symbol->declaration instanceof IVariableDeclaration) {
+			if (ASTHelper::get_identifier_symbol($item)->declaration instanceof IVariableDeclaration) {
 				return true;
 			}
 		}
@@ -1760,7 +1960,7 @@ class PHPCoder extends BaseCoder
 			return true;
 		}
 		elseif ($item instanceof AccessingIdentifier) {
-			$decl = $item->symbol->declaration;
+			$decl = ASTHelper::get_identifier_symbol($item)->declaration;
 			if ($decl instanceof PropertyDeclaration and !$decl->is_static) {
 				return true;
 			}
@@ -1821,7 +2021,7 @@ class PHPCoder extends BaseCoder
 			}
 		}
 		else {
-			$code = $node->left->render($this); // not to do anything for non-castable
+			$code = $this->render_node($node->left); // not to do anything for non-castable
 		}
 
 		return $code;
@@ -1830,13 +2030,43 @@ class PHPCoder extends BaseCoder
 	private function is_need_casting(AsOperation $node)
 	{
 		return !($node->right instanceof IterableType
-			and $node->left->expressed_type instanceof IterableType);
+			and ASTHelper::get_expressed_type($node->left) instanceof IterableType);
+	}
+
+	public function render_cast_operation(CastOperation $node, bool $add_parentheses = false): string
+	{
+		$tea_type_name = $node->right->name;
+		if (!isset(static::BUILTIN_TYPE_MAP[$tea_type_name])) {
+			return $this->render_node($node->left);
+		}
+
+		$native_type_name = static::BUILTIN_TYPE_MAP[$tea_type_name];
+		$left = $this->render_subexpression($node->left, $node->operator);
+		if ($tea_type_name === _UINT) {
+			return "uint_ensure((int)$left)";
+		}
+
+		return $add_parentheses
+			? "(($native_type_name)$left)"
+			: "($native_type_name)$left";
 	}
 
 	public function render_is_operation(IsOperation $node)
 	{
 		$left = $this->render_subexpression($node->left, $node->operator);
-		$func_name = static::IS_TEST_MAP[$node->right->name] ?? null;
+		if ($node->right instanceof InvalidType) {
+			$left_type = ASTHelper::get_expressed_type($node->left);
+			if (!$left_type instanceof InvalidableType) {
+				throw new Exception("Invalid marker requires Invalidable left type");
+			}
+
+			$operator = $node->not ? '!==' : '===';
+			return "{$left} {$operator} " . $this->render_node($left_type->sentinel);
+		}
+
+		$func_name = $node->right instanceof BaseType
+			? (static::IS_TEST_MAP[$node->right->name] ?? null)
+			: null;
 
 		if ($func_name) {
 			$code = "{$func_name}($left)";
@@ -1849,7 +2079,9 @@ class PHPCoder extends BaseCoder
 			$code = "{$left} $operator null";
 		}
 		else {
-			$right = $this->get_classkindred_identifier_name($node->right);
+			$right = $node->right instanceof BaseType
+				? $this->get_classkindred_identifier_name($node->right)
+				: $this->render_node($node->right);
 			$code = "{$left} instanceof {$right}";
 			if ($node->not) {
 				$code = '!' . $code;
@@ -1864,7 +2096,7 @@ class PHPCoder extends BaseCoder
 		$operator = $node->operator;
 		$expression = $node->expression;
 
-		$expr_code = $expression->render($this);
+		$expr_code = $this->render_node($expression);
 		if ($this->is_need_parentheses_for_operation_item($expression, $operator, true)) {
 			$expr_code = "($expr_code)";
 		}
@@ -1880,8 +2112,8 @@ class PHPCoder extends BaseCoder
 	public function render_binary_operation(BinaryOperation $node)
 	{
 		$operator = $node->operator;
-		$left = $node->left->render($this);
-		$right = $node->right->render($this);
+		$left = $this->render_node($node->left);
+		$right = $this->render_node($node->right);
 
 		if ($operator->is(OPID::ARRAY_CONCAT)) {
 			// concat Arrays
@@ -1929,7 +2161,7 @@ class PHPCoder extends BaseCoder
 					$curr_operator = OperatorFactory::$identical;
 				}
 				elseif ($expr->not) {
-					$curr_operator = OperatorFactory::$not;
+					$curr_operator = OperatorFactory::$bool_not;
 				}
 			}
 
@@ -1947,7 +2179,7 @@ class PHPCoder extends BaseCoder
 
 	protected function render_subexpression(BaseExpression $expr, Operator $operator)
 	{
-		$code = $expr->render($this);
+		$code = $this->render_node($expr);
 		if ($expr instanceof MultiOperation
 			&& $expr->operator->php_prec >= $operator->php_prec) {
 			$code = '(' . $code . ')';
@@ -1956,22 +2188,118 @@ class PHPCoder extends BaseCoder
 		return $code;
 	}
 
+	private function render_casted_access_for_none_coalescing(BinaryOperation $node): ?array
+	{
+		if (!$node->left instanceof KeyAccessing) {
+			return null;
+		}
+
+		$cached_keys = [];
+		$test_code = $this->render_key_accessing_for_isset_with_cached_keys($node->left, $cached_keys);
+		if (!$cached_keys) {
+			return null;
+		}
+
+		$value_expr = clone $node;
+		$value_expr->left = $this->clone_key_accessing_with_cached_keys($node->left, $cached_keys);
+
+		return [$test_code, $this->render_node($value_expr)];
+	}
+
+	private function render_key_accessing_for_isset_with_cached_keys(KeyAccessing $node, array &$cached_keys): string
+	{
+		$basing = $this->render_basing_for_cached_key_isset($node->basing, $cached_keys);
+
+		if ($node->key === null) {
+			return "{$basing}[]";
+		}
+
+		$key_code = $this->render_key_for_cached_key_isset($node, $cached_keys);
+		return "{$basing}[{$key_code}]";
+	}
+
+	private function render_basing_for_cached_key_isset(BaseExpression $node, array &$cached_keys): string
+	{
+		if ($node instanceof KeyAccessing) {
+			return $this->render_key_accessing_for_isset_with_cached_keys($node, $cached_keys);
+		}
+
+		return $this->render_basing_expression($node);
+	}
+
+	private function render_key_for_cached_key_isset(KeyAccessing $node, array &$cached_keys): string
+	{
+		if (!$this->should_cache_none_coalescing_key($node->key)) {
+			return $this->render_node($node->key);
+		}
+
+		$temp_name = $this->generate_temp_variable_name();
+		$cached_keys[spl_object_id($node)] = $temp_name;
+
+		return $temp_name . ' = ' . $this->render_node($node->key);
+	}
+
+	private function should_cache_none_coalescing_key(BaseExpression $key): bool
+	{
+		return $key->is_const_value !== true && !$key instanceof Identifiable;
+	}
+
+	private function clone_key_accessing_with_cached_keys(KeyAccessing $node, array $cached_keys): KeyAccessing
+	{
+		$clone = clone $node;
+		if ($clone->basing instanceof KeyAccessing) {
+			$clone->basing = $this->clone_key_accessing_with_cached_keys($clone->basing, $cached_keys);
+		}
+
+		$temp_name = $cached_keys[spl_object_id($node)] ?? null;
+		if ($temp_name !== null) {
+			$clone->key = new NativeIdentifier($temp_name);
+		}
+
+		return $clone;
+	}
+
 	public function render_none_coalescing_operation(NoneCoalescingOperation $node)
 	{
 		$right_expr = $node->right;
-		$right_code = $right_expr->render($this);
+		$right_code = $this->render_node($right_expr);
 
-		if ($right_expr instanceof NoneCoalescingOperation && $right_expr->left instanceof AsOperation) {
-			$right_code = "($right_code)";
+		if ($right_expr instanceof NoneCoalescingOperation) {
+			if ($right_expr->left instanceof AsOperation) {
+				$right_code = "($right_code)";
+			}
+			elseif ($right_expr->left instanceof CastOperation) {
+				$right_code = "($right_code)";
+			}
 		}
 
 		$left_expr = $node->left;
-		$left_code = $left_expr->render($this);
 		if ($left_expr instanceof AsOperation) {
-			$test = $left_expr->left->render($this);
+			$cached_access = $this->render_casted_access_for_none_coalescing($left_expr);
+			if ($cached_access) {
+				[$test, $left_code] = $cached_access;
+			}
+			else {
+				$left_code = $this->render_node($left_expr);
+				$test = $this->render_node($left_expr->left);
+			}
+
+			$code = sprintf("isset(%s) ? %s : %s", $test, $left_code, $right_code);
+		}
+		elseif ($left_expr instanceof CastOperation) {
+			$cached_access = $this->render_casted_access_for_none_coalescing($left_expr);
+			if ($cached_access) {
+				[$test, $left_code] = $cached_access;
+			}
+			else {
+				$left_code = $this->render_node($left_expr);
+				$test = $this->render_node($left_expr->left);
+			}
+
 			$code = sprintf("isset(%s) ? %s : %s", $test, $left_code, $right_code);
 		}
 		else {
+			$left_code = $this->render_node($left_expr);
 			$code = "$left_code ?? $right_code";
 		}
 

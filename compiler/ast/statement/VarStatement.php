@@ -14,7 +14,7 @@ class VarStatement extends BaseStatement
 	/**
 	 * @var VariableDeclaration[]
 	 */
-	public $members;
+	public array $members;
 
 	public function __construct(array $members)
 	{

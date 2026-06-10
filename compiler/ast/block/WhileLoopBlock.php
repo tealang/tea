@@ -9,9 +9,9 @@ namespace Tea;
 
 class WhileLikeBlock extends BaseControlBlock implements IExceptAble, IBreakAble, IContinueAble
 {
-	use ExceptTrait;
+	use ElseTrait, ExceptTrait;
 
-	public $condition;
+	public BaseExpression $condition;
 
 	public function set_else_block(IElseBlock $else)
 	{

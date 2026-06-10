@@ -9,13 +9,25 @@ namespace Tea;
 
 class HeaderParser extends TeaParser
 {
-	public $is_parsing_header = true;
+	public const SOURCE_DIALECT = Program::SOURCE_DIALECT_HEADER;
 
-	protected function read_root_statement(bool $leading_br = false, ?DocComment $doc = null)
+	private const BUILTIN_FEATURE_ATTRIBUTE = 'BuiltinFeature';
+
+	private const BUILTIN_FEATURE_FLAGS = [
+		'Iterator' => ClassFeature::ITERATOR->value,
+		'ArrayAccess' => ClassFeature::ARRAY_ACCESS->value,
+		'DynamicProperties' => ClassFeature::DYNAMIC_PROPERTIES->value,
+	];
+
+	public bool $is_parsing_header = true;
+
+	protected function read_root_statement(bool $leading_br = false, ?DocComment $doc = null, array $attributes = [])
 	{
+		$doc = $this->read_leading_phpdoc_comment($doc);
+		$attributes = $this->read_leading_meta_attributes($attributes);
 		$token = $this->scan_token_ignore_space();
 		if ($token === LF) {
-			return $this->read_root_statement($token);
+			return $this->read_root_statement($token, $doc, $attributes);
 		}
 		elseif ($token === _SEMICOLON || $token === null) {
 			// just an empty statement, or at the end of program
@@ -29,11 +41,11 @@ class HeaderParser extends TeaParser
 		}
 		elseif ($token === _DOC_MARK) {
 			$doc = $this->read_doc_comment();
-			return $this->read_root_statement($leading_br, $doc);
+			return $this->read_root_statement($leading_br, $doc, $attributes);
 		}
 		elseif ($token === _LINE_COMMENT_MARK) {
 			$this->skip_current_line();
-			return $this->read_root_statement($leading_br, $doc);
+			return $this->read_root_statement($leading_br, $doc, $attributes);
 		}
 		elseif ($token === _EXTERN) {
 			$node = $this->read_extern_declaration();
@@ -42,7 +54,7 @@ class HeaderParser extends TeaParser
 			$node = $this->read_header_declaration_with_modifier($token);
 		}
 		elseif ($token === _USE) {
-			$this->read_use_statement();
+			$this->read_use_statement($attributes);
 			return;
 		}
 		elseif ($token === _NAMESPACE) {
@@ -57,9 +69,95 @@ class HeaderParser extends TeaParser
 		if ($node !== null) {
 			$node->leading_br = $leading_br;
 			$node->doc = $doc;
+			if ($node instanceof BaseDeclaration) {
+				$this->apply_declaration_attributes($node, $attributes);
+			}
 		}
 
 		return $node;
+	}
+
+	private function apply_declaration_attributes(BaseDeclaration $node, array $attributes): void
+	{
+		$node->attributes = $attributes;
+
+		if ($node instanceof ClassKindredDeclaration) {
+			$this->apply_builtin_feature_attributes($node, $attributes);
+		}
+
+		if ($node instanceof IFunctionDeclaration) {
+			$this->apply_type_assertion_attributes($node, $attributes);
+		}
+	}
+
+	private function apply_builtin_feature_attributes(ClassKindredDeclaration $node, array $attributes): void
+	{
+		foreach ($attributes as $attribute) {
+			if ($attribute->identifier->name !== self::BUILTIN_FEATURE_ATTRIBUTE) {
+				continue;
+			}
+
+			foreach ($attribute->arguments as $argument) {
+				$feature_name = $this->read_builtin_feature_name($argument);
+				$flags = self::BUILTIN_FEATURE_FLAGS[$feature_name] ?? null;
+				if ($flags === null) {
+					throw $this->new_parse_error("Unknown builtin feature '{$feature_name}'");
+				}
+
+				$node->unite_feature_flags($flags);
+			}
+		}
+	}
+
+	private function read_builtin_feature_name(BaseExpression|BaseType $argument): string
+	{
+		if ($argument instanceof PlainIdentifier || $argument instanceof TypeReference) {
+			return $argument->name;
+		}
+
+		if ($argument instanceof LiteralString) {
+			return $argument->value;
+		}
+
+		throw $this->new_parse_error('BuiltinFeature argument should be a feature name');
+	}
+
+	private function apply_type_assertion_attributes(IFunctionDeclaration $node, array $attributes): void
+	{
+		foreach ($attributes as $attribute) {
+			$assertion = $this->read_type_assertion_from_attribute($attribute);
+			if ($assertion === null) {
+				continue;
+			}
+
+			[$type, $parameter_name] = $assertion;
+			foreach ($node->parameters as $index => $parameter) {
+				if ($parameter->name === $parameter_name) {
+					$assertions = ASTHelper::get_php_true_assertions($node);
+					$assertions[$index] = $type;
+					ASTHelper::set_php_true_assertions($node, $assertions);
+					break;
+				}
+			}
+		}
+	}
+
+	private function read_type_assertion_from_attribute(MetaAttribute $attribute): ?array
+	{
+		if ($attribute->identifier->name !== 'TypeAssertion') {
+			return null;
+		}
+
+		$argument = $attribute->arguments[0] ?? null;
+		if (!$argument instanceof IsOperation || $argument->not) {
+			return null;
+		}
+
+		if (!$argument->left instanceof PlainIdentifier || !$argument->right instanceof BaseType) {
+			return null;
+		}
+
+		return [$argument->right, $argument->left->name];
 	}
 
 	protected function read_header_declaration_with_modifier(string $modifier)
@@ -93,6 +191,10 @@ class HeaderParser extends TeaParser
 				[$origin_name, $name] = $this->read_header_declaration_names();
 				$decl = $this->read_function_declaration_with($name, $modifier);
 				break;
+			case _TYPE:
+				[$origin_name, $name] = $this->read_header_declaration_names();
+				$decl = $this->read_type_declaration_with($name, $modifier);
+				break;
 			case _CONST:
 				[$origin_name, $name] = $this->read_header_declaration_names();
 				$decl = $this->read_constant_declaration_without_value($name, $modifier);
@@ -125,7 +227,7 @@ class HeaderParser extends TeaParser
 		if ($this->skip_token_ignore_space(_ASSIGN)) {
 			$decl->value = $this->read_compile_time_value();
 		}
-		elseif (!$decl->declared_type and !$decl->noted_type) {
+		elseif (!$decl->declared_type and !ASTHelper::get_noted_type($decl)) {
 			throw $this->new_parse_error('Expected type or value assign expression for define constant.');
 		}
 
@@ -162,6 +264,9 @@ class HeaderParser extends TeaParser
 		$root_namespace = $this->factory->root_namespace;
 		$this->is_declare_mode = true;
 
+		$origin_name = null;
+		$decl = null;
+
 		switch ($token) {
 			case _CLASS:
 				[$origin_name, $name] = $this->read_header_declaration_names();
@@ -178,10 +283,15 @@ class HeaderParser extends TeaParser
 				break;
 			case _TRAIT:
 				[$origin_name, $name] = $this->read_header_declaration_names();
+				$decl = $this->read_trait_declaration($name, $modifier, $root_namespace);
 				break;
 			case _FUNC:
 				[$origin_name, $name] = $this->read_header_declaration_names();
 				$decl = $this->read_function_declaration_with($name, $modifier, $root_namespace);
+				break;
+			case _TYPE:
+				[$origin_name, $name] = $this->read_header_declaration_names();
+				$decl = $this->read_type_declaration_with($name, $modifier);
 				break;
 			case _CONST:
 				[$origin_name, $name] = $this->read_header_declaration_names();
@@ -198,13 +308,6 @@ class HeaderParser extends TeaParser
 
 		$decl->origin_name = $origin_name;
 		$decl->is_extern = true;
-
-		if ($decl instanceof ClassKindredDeclaration) {
-			$flags = _CLASS_FLAG_MAP[$name] ?? null;
-			if ($flags !== null) {
-				$decl->unite_feature_flags($flags);
-			}
-		}
 
 		return $decl;
 	}
@@ -335,7 +438,7 @@ class HeaderParser extends TeaParser
 		return join(_DOT, $components);
 	}
 
-	protected function read_use_statement()
+	protected function read_use_statement(array $attributes = [])
 	{
 		if (!$this->is_parsing_header) {
 			throw $this->new_parse_error("The 'use' statements can only be used in header files");
@@ -351,7 +454,7 @@ class HeaderParser extends TeaParser
 			$targets = [];
 		}
 
-		$this->factory->create_use_statement($ns, $targets);
+		$this->factory->create_use_statement($ns, $targets, $attributes);
 	}
 
 	private function read_use_targets(NamespaceIdentifier $ns): array

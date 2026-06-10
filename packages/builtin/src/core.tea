@@ -1,7 +1,7 @@
----
-The builtin libs for Tea
-copyright: (c)2019 tealang.org
----
+/**
+ * The builtin libs for Tea
+ * copyright: (c)2019 tealang.org
+ */
 
 public LF = "\n"
 
@@ -19,6 +19,7 @@ public uint_ensure(num Int) {
 	return num
 }
 
+#[HtmlSafe]
 public html_escape(str String?) String {
 	return str is None ? '' : htmlspecialchars(str)
 }
@@ -35,15 +36,23 @@ public html_unescape(str String?) String {
 // 	clone() Object
 // }
 
-public type MetaType {}
+public type MetaType {
+}
 
-public type UnionType {}
+public type UnionType {
+}
 
-public type Void {}
+public type Void {
+}
 
-public type None {}
+public type None {
+}
 
-public type Any {}
+public type Any {
+}
+
+public type Mixed {
+}
 
 public _std_split(it String, separator String) {
 	return explode(separator, it)
@@ -55,47 +64,55 @@ public _std_replace(it String, search, replacement) {
 
 // processing using byte mode
 public type Bytes {
-	masked length => strlen(this)
-	masked find(str String, offset Int = #default) => strpos(this, str, offset)
-	masked find_last(str String, offset Int = #default) => strrpos(this, str, offset)
-	masked copy(start Int, length UInt = #default) => substr(this, start, length)
+	length => strlen(this)
+	find(str String, offset Int = #default) => strpos(this, str, offset)
+	find_last(str String, offset Int = #default) => strrpos(this, str, offset)
+	copy(start Int, length UInt = #default) => substr(this, start, length)
+    
 }
 
 // processing through default charset using char/rune mode
 public type String {
-	masked length => mb_strlen(this)
-	masked find(str String, offset Int = #default) => mb_strpos(this, str, offset)
-	masked find_last(str String, offset Int = #default) => mb_strrpos(this, str, offset)
-	masked copy(start Int, length UInt = #default) => mb_substr(this, start, length)
-	masked contains(val String) => str_contains(this, val)
-	masked lowercase() => mb_strtolower(this)
-	masked uppercase() => mb_strtoupper(this)
-	masked split(separator String) => _std_split(this, separator)
-	masked replace(search, replacement) => _std_replace(this, search, replacement)
+	length => mb_strlen(this)
+	find(str String, offset Int = #default) => mb_strpos(this, str, offset)
+	find_last(str String, offset Int = #default) => mb_strrpos(this, str, offset)
+	copy(start Int, length UInt = #default) => mb_substr(this, start, length)
+	contains(val String) => str_contains(this, val)
+	lowercase() => mb_strtolower(this)
+	uppercase() => mb_strtoupper(this)
+	split(separator String) => _std_split(this, separator)
+	replace(search, replacement) => _std_replace(this, search, replacement)
 
-	masked trim(characters String = #default) => trim(this, characters)
-	masked ltrim(characters String = #default) => ltrim(this, characters)
-	masked rtrim(characters String = #default) => rtrim(this, characters)
+	trim(characters String = #default) => trim(this, characters)
+	ltrim(characters String = #default) => ltrim(this, characters)
+	rtrim(characters String = #default) => rtrim(this, characters)
+
+
+    starts_with(prefix String) => str_starts_with(this, prefix)
+    ends_with(suffix String) => str_ends_with(this, suffix)
 }
 
 public type Plain: String {
-	//
 }
 
 public type Int {
-	masked abs() UInt => int_abs(this)
+	abs() UInt => int_abs(this)
+    
 }
 
-public type UInt: Int {}
+public type UInt: Int {
+}
 
 public type Float {
-	masked abs() => abs(this)
-	masked ceil() => ceil(this)
-	masked floor() => floor(this)
-	masked round(precision = 0) => round(this, precision)
+	abs() => abs(this)
+	ceil() => ceil(this)
+	floor() => floor(this)
+	round(precision = 0) => round(this, precision)
+    
 }
 
-public type Bool {}
+public type Bool {
+}
 
 // public _last_index(array Array) UInt {
 // 	return count(array) - 1
@@ -114,7 +131,7 @@ public _array_find(it Array, val)  {
 	// return key === false ? false : key
 }
 
-public _std_array_map(it Array, callback (item Any) Any) {
+public _std_array_map(it Array, callback (item) Mixed) {
 	return array_map(callback, it)
 }
 
@@ -123,31 +140,32 @@ public _std_join(it Array|Dict, separator String) {
 }
 
 public type Array {
-	masked length UInt => count(this)
-	// masked end UInt => _last_index(this)
+	length UInt => count(this)
+	// member mapping end UInt => _last_index(this)
 
-	masked has(key Int) => _has(this, key)
-	masked contains(val) => _vals_contains(this, val)
-	masked find(val) => _array_find(this, val) // find the index for supported value
+	has(key Int) => _has(this, key)
+	contains(val) => _vals_contains(this, val)
+	find(val) => _array_find(this, val) // find the index for supported value
 
-	masked join(separator String = LF) => _std_join(this, separator)
+	join(separator String = LF) => _std_join(this, separator)
 
-	masked copy(start Int, length UInt = #default) => array_slice(this, start, length)
-	masked reversed() => array_reverse(this)
+	copy(start Int, length UInt = #default) => array_slice(this, start, length)
+	reversed() => array_reverse(this)
 
-	masked unshift(item) => array_unshift(this, item)
-	masked shift() => array_shift(this)
-	masked push(item) => array_push(this, item)
-	masked pop() => array_pop(this)
+	unshift(item) => array_unshift(this, item)
+	shift() => array_shift(this)
+	push(item) => array_push(this, item)
+	pop() => array_pop(this)
 
 	// callback(item)
-	masked map(callback (item) Any) => _std_array_map(this, callback)
+	map(callback (item) Mixed) => _std_array_map(this, callback)
 
 	// callback(item) Bool
-	masked filter(callback (item) Any) => array_filter(this, callback)
+	filter(callback (item) Mixed) => array_filter(this, callback)
 
 	// callback(carry, item)
-	masked reduce(callback (carry, item) Any, initial Any = #default) => array_reduce(this, callback, initial)
+	reduce(callback (carry, item) Mixed, initial Mixed = #default) => array_reduce(this, callback, initial)
+    
 }
 
 // key maybe Int，cast to String
@@ -161,53 +179,56 @@ public _dict_get(it Dict, key String|Int) {
 }
 
 public type Dict {
-	masked length => count(this)
+	length => count(this)
 
-	masked has(key String|None) => _has(this, key)
-	masked contains(val) => _vals_contains(this, val)
-	masked find(val) => _dict_find(this, val) // find the key with supported value
+	has(key String|None) => _has(this, key)
+	contains(val) => _vals_contains(this, val)
+	find(val) => _dict_find(this, val) // find the key with supported value
 
-	masked join(separator String = LF) => _std_join(this, separator)
+	join(separator String = LF) => _std_join(this, separator)
 
-	masked get(key String|Int) => _dict_get(this, key)
-	masked keys() => array_keys(this)
-	masked values() => array_values(this)
+	get(key String|Int) => _dict_get(this, key)
+	keys() => array_keys(this)
+	values() => array_values(this)
 
-	masked replace(replacement Dict) => dict_replace(this, replacement)
+	replace(replacement Dict) => dict_replace(this, replacement)
+    
 }
 
 public type Object {
 	//
+    
 }
 
 public _regex_test(regex Regex, subject String) Bool {
 	return preg_match(regex, subject) ? true : false
 }
 
-public _regex_capture(regex Regex, subject String) String.Array? {
-	var result String.Array
+public _regex_capture(regex Regex, subject String) List<String>? {
+	var result List<String>
 	count = preg_match(regex, subject, result)
 	return count === 0 ? none : result
 }
 
-public _regex_capture_all(regex Regex, subject String) String.Array.Array? {
-	var results String.Array.Array
+public _regex_capture_all(regex Regex, subject String) List<List<String>>? {
+	var results List<List<String>>
 	count = preg_match_all(regex, subject, results)
 	return results
 }
 
 public type Regex {
 	// match in target string, returns is matched
-	masked test(string String) => _regex_test(this, string)
+	test(string String) => _regex_test(this, string)
 
 	// use this pattern to separate a string, returns the separated items
-	masked separate(string String) => preg_split(this, string)
+	separate(string String) => preg_split(this, string)
 
 	// match the target string and returns the first matching item
-	masked capture(string String) => _regex_capture(this, string)
+	capture(string String) => _regex_capture(this, string)
 
 	// match the target string and returns all matching items
-	masked capture_all(string String) => _regex_capture_all(this, string)
+	capture_all(string String) => _regex_capture_all(this, string)
+    
 }
 
 // use for processing XView
@@ -228,14 +249,18 @@ public _build_attributes(items Dict, additions Dict? = none) String {
 	return implode(' ', list)
 }
 
-public type XView {}   // accept IView
+public type XView {   // accept IView
+}
 
-public type Callable {}
+public type Callable {
+}
 
-public type Iterable {} // accept Iterator
+public type Iterable { // accept Iterator
+}
 
 public interface IView {}
 
-public type Self {}
+public type Self {
+}
 
 // end

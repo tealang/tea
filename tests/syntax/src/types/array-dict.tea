@@ -2,10 +2,10 @@
 #main
 
 // dots style
-var str_dict_list String.Dict.Array = [['a': 'abc', 'b': '123.1']]
+var str_dict_list List<Dict<String>> = [['a': 'abc', 'b': '123.1']]
 unset str_dict_list[0]['a']
 
-var int_dict Int.Dict = [:]
+var int_dict Dict<Int> = [:]
 
 // [] [:] style
 var str_list String[] = []
@@ -22,7 +22,7 @@ float_dict_array[] = ['abc': 123.12]   // okay
 // float_dict_array[] = ['abc': 'ddd']   // error
 
 // auto style
-arr = [] // Any.Array
+arr = [] // List<Any>
 arr.push([1, 2, 3])
 arr.push("hello")
 
@@ -33,7 +33,7 @@ arr2 = [4, 5, 6]
 arr3 = arr1 .+ arr2
 
 var dict = [:]
-dict[1.1#String] = 1
+dict[(string) 1.1] = 1
 
 var_dump(dict)
 
@@ -44,13 +44,13 @@ var key3 = false
 
 dict1 = [
 	key: "abc", // some comments
-	key1#String: "abc", // some comments
-	key3#String: "abc", // some comments
+	(string) key1: "abc", // some comments
+	(string) key3: "abc", // some comments
 	"k1": "v1", /* some comments */
 ]
 
 dict2 = [
-	key2#String: "abc", /* some comments
+	(string) key2: "abc", /* some comments
 	 */
 	"k1": "v1", // some comments
 ]
@@ -67,7 +67,7 @@ var users = [
 
 var id2name = [:]
 for user in users {
-	id2name[user['id']#String] = user['name']
+	id2name[(string) user['id']] = user['name']
 }
 
 // array map
@@ -84,11 +84,9 @@ var_dump(reduced)
 
 // array filter
 var filtered = [0, 1, 2, 3, 4, 5].filter((item) => {
-	if item#Int % 2 == 0 {
+	if (int) item % 2 == 0 {
 		return true
 	}
 })
 
 var_dump(filtered)
-
-

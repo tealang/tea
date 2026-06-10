@@ -7,21 +7,23 @@
 
 namespace Tea;
 
-class AnonymousFunction extends BaseExpression implements IDeclaration, IFunctionDeclaration
+class AnonymousFunction extends BaseExpression implements IDeclaration, IFunctionDeclaration, IUnknownIdentifierContainer
 {
-	use BaseDeclarationTrait, TypingTrait, FunctionTrait;
+	use BaseDeclarationTrait, FunctionTrait;
 
 	const KIND = 'anonymous_function';
 
 	/**
 	 * @var ParameterDeclaration[]
 	 */
-	public $using_params = [];
+	public array $using_params = [];
 
-	public function __construct(?IType $return_type = null, ?array $parameters = null)
+	public bool $is_static = false;
+
+	public function __construct(?BaseType $return_type = null, ?array $parameters = null)
 	{
 		$this->declared_type = $return_type;
-		$this->parameters = $parameters;
+		$this->parameters = $parameters ?? [];
 	}
 }
 
@@ -29,4 +31,3 @@ class AnonymousFunction extends BaseExpression implements IDeclaration, IFunctio
 // {
 // 	const KIND = 'coroutine_block';
 // }
-

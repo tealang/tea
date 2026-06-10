@@ -21,7 +21,7 @@ fn1((str) => fn0(str))
 
 // parameter reference
 // omit modifier, and the default modifier is internal
-func fn2(dict inout Int.Dict) {
+func fn2(dict inout Dict<Int>) {
 	dict['num'] += 1
 }
 
@@ -42,7 +42,7 @@ internal fn3(some Any, done (caller String) String, error ((message) Void)? = no
 var out_num = 1
 echo fn3(123, (a) => {
 		out_num += 1
-		return a#String .+ ' has called'
+		return (string) a .+ ' has called'
 	},
 	(error) => {}
 )

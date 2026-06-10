@@ -9,12 +9,12 @@ namespace Tea;
 
 abstract class BaseOperation extends BaseExpression
 {
-	public $operator;
+	public Operator $operator;
 }
 
 abstract class UnaryOperation extends BaseOperation
 {
-	public $expression;
+	public BaseExpression $expression;
 
 	public function __construct(BaseExpression $expression, Operator $operator)
 	{
@@ -49,12 +49,10 @@ class BinaryOperation extends MultiOperation
 {
 	const KIND = 'binary_operation';
 
-	public $type_assertion;  // for type assert in Checker
+	public BaseExpression $left;
+	public $right; // BaseExpression|BaseType, depends on subclass
 
-	public $left;
-	public $right;
-
-	public function __construct(BaseExpression $left, BaseExpression $right, Operator $operator)
+	public function __construct(BaseExpression $left, $right, Operator $operator)
 	{
 		$this->left = $left;
 		$this->right = $right;
@@ -71,11 +69,21 @@ class AsOperation extends BinaryOperation
 {
 	const KIND = 'as_operation';
 
-	public function __construct(BaseExpression $left, IType $right)
+	public ?string $right_source_name = null;
+
+	public function __construct(BaseExpression $left, BaseType $right)
 	{
-		$this->left = $left;
-		$this->right = $right;
-		$this->operator = OperatorFactory::$as;
+		parent::__construct($left, $right, OperatorFactory::$as);
+	}
+}
+
+class CastOperation extends BinaryOperation
+{
+	const KIND = 'cast_operation';
+
+	public function __construct(BaseExpression $left, BaseType $right)
+	{
+		parent::__construct($left, $right, OperatorFactory::$as);
 	}
 }
 
@@ -83,14 +91,12 @@ class IsOperation extends BinaryOperation
 {
 	const KIND = 'is_operation';
 
-	public $not;
+	public bool $not;
 
-	public function __construct(BaseExpression $left, IType $right, bool $not = false)
+	public function __construct(BaseExpression $left, BaseType|BaseExpression $right, bool $not = false)
 	{
-		$this->left = $left;
-		$this->right = $right;
+		parent::__construct($left, $right, OperatorFactory::$is);
 		$this->not = $not;
-		$this->operator = OperatorFactory::$is;
 	}
 }
 
@@ -100,9 +106,7 @@ class NoneCoalescingOperation extends BinaryOperation
 
 	public function __construct(BaseExpression $left, BaseExpression $right)
 	{
-		$this->left = $left;
-		$this->right = $right;
-		$this->operator = OperatorFactory::$none_coalescing;
+		parent::__construct($left, $right, OperatorFactory::$none_coalescing);
 	}
 }
 
@@ -110,9 +114,9 @@ class TernaryExpression extends MultiOperation
 {
 	const KIND = 'ternary_expression';
 
-	public $condition;
-	public $then;
-	public $else;
+	public BaseExpression $condition;
+	public ?BaseExpression $then = null;
+	public BaseExpression $else;
 
 	public function __construct(BaseExpression $condition, ?BaseExpression $then, BaseExpression $else)
 	{

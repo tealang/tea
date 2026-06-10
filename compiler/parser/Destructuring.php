@@ -14,7 +14,7 @@ class Destructuring extends BaseExpression implements IAssignable
 	/**
 	 * @var BaseExpression[]
 	 */
-	public $items;
+	public array $items;
 
 	public function __construct(array $items)
 	{

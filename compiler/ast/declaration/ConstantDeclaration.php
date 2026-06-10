@@ -13,9 +13,9 @@ class ConstantDeclaration extends RootDeclaration implements IConstantDeclaratio
 {
 	const KIND = 'constant_declaration';
 
-	public $is_static = true;
+	public bool $is_static = true;
 
-	public $value;
+	public ?BaseExpression $value = null;
 
 	public function __construct(?string $modifier, string $name, ?BaseType $type = null, ?BaseExpression $value = null)
 	{

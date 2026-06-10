@@ -11,7 +11,7 @@ class NamespaceStatement extends BaseStatement
 {
 	const KIND = 'namespace_statement';
 
-	public $ns;
+	public NamespaceIdentifier $ns;
 
 	public function __construct(NamespaceIdentifier $ns)
 	{

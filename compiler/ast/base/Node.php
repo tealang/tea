@@ -11,27 +11,39 @@ abstract class Node
 {
 	const KIND = null;
 
-	public $pos; 	// the first token position of current node
-
-	// is there a line break at the head
-	public $leading_br = false;
-
-	// is there a line break at the end
-	public $tailing_br = false;
+	/**
+	 * The first token position of current node
+	 */
+	public int $pos = 0;
 
 	/**
-	 * @var DocComment
+	 * Is there a line break at the head
 	 */
-	public $doc;
+	public bool $leading_br = false;
 
-	// tailing inline comment
-	public $tailing_comment;
+	/**
+	 * Is there a line break at the end
+	 */
+	public bool $tailing_br = false;
 
-	public $indents;
+	/**
+	 * Doc comment
+	 */
+	public ?DocComment $doc = null;
 
-	public function render(BaseCoder $coder)
+	/**
+	 * Tailing inline comment
+	 */
+	public ?string $tailing_comment = null;
+
+	/**
+	 * Indentation string
+	 */
+	public ?string $indents = null;
+
+	public function render(BaseCoder $coder): ?string
 	{
-		return $coder->{'render_' . static::KIND}($this);
+		return $coder->render_node($this);
 	}
 }
 

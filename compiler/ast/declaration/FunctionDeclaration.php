@@ -7,25 +7,41 @@
 
 namespace Tea;
 
-interface IFunctionDeclaration extends IBlock, ICallableDeclaration {}
+interface IFunctionDeclaration extends IBlock, ICallableDeclaration {
+	public function set_parameters(array $parameters): void;
+	public function set_declared_type(?BaseType $type): void;
+}
 
 trait FunctionTrait
 {
 	use IBlockTrait;
 
-	public $callbacks;
+	/**
+	 * @var CallbackArgument[]
+	 */
+	public array $callbacks = [];
 
-	public $parameters = [];
+	/**
+	 * @var ParameterDeclaration[]
+	 */
+	public array $parameters = [];
 
 	// the function/method is mutating global variables, object properties, resources
-	public $is_mutating;
-
-	// set true when checking AST
-	public $is_checking;
+	public bool $is_mutating = false;
 
 	public function set_body_with_expression(BaseExpression $expression)
 	{
 		$this->body = $expression;
+	}
+
+	public function set_parameters(array $parameters): void
+	{
+		$this->parameters = $parameters;
+	}
+
+	public function set_declared_type(?BaseType $type): void
+	{
+		$this->declared_type = $type;
 	}
 }
 
@@ -35,9 +51,9 @@ class FunctionDeclaration extends RootDeclaration implements IFunctionDeclaratio
 
 	const KIND = 'function_declaration';
 
-	public $is_static = false;
+	public bool $is_static = false;
 
-	public function __construct(?string $modifier, string $name, ?IType $return_type = null)
+	public function __construct(?string $modifier, string $name, ?BaseType $return_type = null)
 	{
 		if ($modifier === _PUBLIC) {
 			$this->is_unit_level = true;

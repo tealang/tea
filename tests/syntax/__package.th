@@ -1,6 +1,6 @@
----
-The syntax tests for Tea
----
+/**
+ * The syntax tests for Tea
+ */
 
 namespace tests\syntax
 
@@ -10,5 +10,4 @@ use tests\phpdemo { BaseInterface, PHPClassDemo, PHP_CONST_DEMO, php_function_de
 
 
 extern func range(start Int, end Int, step = 1) Array
-
 

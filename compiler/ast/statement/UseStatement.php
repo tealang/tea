@@ -11,13 +11,15 @@ class UseStatement extends BaseStatement
 {
 	const KIND = 'use_statement';
 
-	public $ns;
-	public $targets;
+	public NamespaceIdentifier $ns;
+	public array $targets;
+	public array $attributes = [];
 
-	public function __construct(NamespaceIdentifier $ns, array $targets = [])
+	public function __construct(NamespaceIdentifier $ns, array $targets = [], array $attributes = [])
 	{
 		$this->ns = $ns;
 		$this->targets = $targets;
+		$this->attributes = $attributes;
 	}
 
 	public function append_target(UseDeclaration $target)

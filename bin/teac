@@ -10,9 +10,7 @@
 
 namespace Tea;
 
-define('TEA_BASE_PATH', dirname(__DIR__) . '/');
-
-require TEA_BASE_PATH . 'compiler/__public.php';
+require dirname(__DIR__) . '/compiler/__public.php';
 
 // stats start
 UsageTracer::start();
@@ -20,18 +18,32 @@ UsageTracer::start();
 const DEBUG = 0;
 
 const KEY_INIT = 'init';
-const OPTION_KEYS = [KEY_INIT];
+const KEY_HELP = 'help';
+const KEY_DEBUG = 'd';
+const KEY_TRACE = 't';
+const KEY_PARSE_ONLY = 'parse-only';
+const OPTION_KEYS = [KEY_INIT, KEY_HELP, KEY_DEBUG, KEY_TRACE, KEY_PARSE_ONLY];
 
-const USAGE = 'Usage: teac tea/tests/examples
-Usage: teac --init myproject/hello';
+const USAGE = '
+Compiling: teac tea/tests/examples
+Debug compiling mode: teac -d tea/tests/examples
+Per-issue trace mode: teac -t5 tea/tests/examples
+Parse-only mode: teac --parse-only tea/tests/examples
+Initialize a new package: teac --init myproject/hello
+';
 
+$opts = [];
 try {
 	$opts = process_cli_options($argv, OPTION_KEYS);
 
+	// help
+	if (isset($opts[KEY_HELP])) {
+		halt(USAGE);
+	}
+
 	$target = $opts[0] ?? null;
 	if ($target === null) {
-		error("Missed target for compile.");
-		halt(USAGE);
+		throw new Exception("Error: Missed target for compile.\n\n" . USAGE);
 	}
 
 	// init
@@ -42,10 +54,22 @@ try {
 	}
 
 	// compile
+	if (isset($opts[KEY_TRACE])) {
+		$trace_opt = $opts[KEY_TRACE];
+		$trace_limit = 5;
+		if ($trace_opt !== true) {
+			$trace_opt = (string)$trace_opt;
+			if ($trace_opt === '' || !ctype_digit($trace_opt) || (int)$trace_opt <= 0) {
+				throw new Exception("Invalid trace option '-t{$trace_opt}', expected a positive integer like -t5.");
+			}
+			$trace_limit = (int)$trace_opt;
+		}
+		putenv('TEA_CHECK_TRACE_LIMIT=' . $trace_limit);
+	}
+
 	$realpath = realpath($target);
 	if ($realpath === false) {
-		error("Target '{$target}' not found.");
-		halt(USAGE);
+		throw new Exception("Error: Target '{$target}' not found.\n\n" . USAGE);
 	}
 
 	if (!is_dir($realpath)) {
@@ -55,13 +79,25 @@ try {
 	echo LF;
 
 	$compiler = new Compiler();
-	$count = $compiler->make($realpath);
+	if (isset($opts[KEY_PARSE_ONLY])) {
+		$count = $compiler->parse_only($realpath);
+		echo "\n$count programs parsed.\n\n";
+	}
+	else {
+		$count = $compiler->make($realpath);
 
-	echo "\n$count programs compiled.\n\n";
+		echo "\n$count programs compiled.\n\n";
+	}
 }
-catch (\Exception $e) {
-	echo $e->getTraceAsString(), LF, LF;
-	halt(LF . $e->getMessage());
+catch (\Throwable $ex) {
+	if (isset($opts[KEY_DEBUG])) {
+		$trace = $ex->getTraceAsString();
+		$trace = str_replace(TEA_BASE_PATH, '', $trace);
+		echo $trace, LF, LF;	
+	}
+
+	echo LF, $ex->getMessage(), LF, LF;
+	exit(1);
 }
 
 // stats end

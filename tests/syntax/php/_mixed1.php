@@ -1,7 +1,13 @@
 <?php
 namespace tests\syntax;
 
+trait Trait1 {
+	protected $prop_in_trait1 = 'abc';
+}
+
 class PHPClassInMixed1 {
+	use Trait1;
+
 	// const1
 	protected const CONST1 = 'user';
 
@@ -28,6 +34,8 @@ class PHPClassInMixed1 {
 		list($a, $b) = $items;
 		[$c, $d] = $items;
 		var_dump($a, $b, $c, $d);
+
+		var_dump($this->prop_in_trait1);
 	}
 
 	function get_message(): string {

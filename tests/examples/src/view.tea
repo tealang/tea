@@ -1,6 +1,6 @@
 internal intertrait IBaseView {
-	protected attributes String.Dict = [:]
-	protected subitems String.Array = []  // infered to Any.Array
+	protected attributes Dict<String> = [:]
+	protected subitems List<String> = []  // infered to List<Any>
 
 	construct(id String? = none) {
 		if id is String {

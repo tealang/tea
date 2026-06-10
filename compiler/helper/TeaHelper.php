@@ -114,12 +114,12 @@ class TeaHelper
 
 	public static function is_domain_component(?string $token)
 	{
-		return preg_match('/^[a-z][a-z0-9\-]*[a-z0-9]$/i', $token);
+		return preg_match('/^[a-z_](?:[a-z0-9_\-]*[a-z0-9_])?$/i', $token);
 	}
 
 	public static function is_subnamespace_name(?string $token)
 	{
-		return preg_match('/^[a-z][a-z0-9]+$/i', $token);
+		return preg_match('/^[a-z_][a-z0-9_]*$/i', $token);
 	}
 
 	public static function is_assign_operator_token(?string $token)

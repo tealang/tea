@@ -7,7 +7,7 @@
 
 namespace Tea;
 
-const TEA_TOKENS_SPLIT_PATTERN = '/(\s|\{|\}|\$\{|\(|\)|\[|\]|\'|\"|\,|\.\+|\.\*|\.=|\.|\\\|\/\*|\*\/|\/\/|\/>|\/=|\/|\;|\+=|---|-->|->|-=|--|-|~|=>|<=|>=|>>=|<<=|>>|<<|<|>|===|\!==|\!=|\!|==|\*=|&=|\|=|\^=|\*\*=|\^|\?\?=|\?\?|\?|=|@|#|&|::|:|\|)/';
+const TEA_TOKENS_SPLIT_PATTERN = '/(\s|\{|\}|\$\{|\(|\)|\[|\]|\'|\"|\,|\?\.|\.\+|\.\*|\.=|\.|\\\|\/\*|\*\/|\/\/|\/>|\/=|\/|\;|\+=|---|-->|->|-=|--|-|~|<=>|=>|<=|>=|>>=|<<=|>>|<<|<|>|===|\!==|\!=|\!|==|\*=|&=|\|=|\^=|\*\*=|\^|\?\?=|\?\?|\?|=|@|#|&|::|:|\|)/';
 
 trait TeaTokenTrait
 {
@@ -35,7 +35,7 @@ trait TeaTokenTrait
 		$this->tokens_count = count($tokens);
 	}
 
-	protected function get_current_token_string()
+	protected function get_current_token_string(): array|string|null
 	{
 		return $this->tokens[$this->pos] ?? null;
 	}
@@ -187,7 +187,7 @@ trait TeaTokenTrait
 		}
 	}
 
-	private function get_to_token(string $to, ?int $from = null)
+	private function get_to_token(string $to, ?int $from = null): string
 	{
 		$i = $from ?? $this->pos + 1;
 
@@ -206,7 +206,7 @@ trait TeaTokenTrait
 		return $tmp;
 	}
 
-	protected function get_to_line_end(?int $from = null)
+	protected function get_to_line_end(?int $from = null): string
 	{
 		return $this->get_to_token(LF, $from);
 	}

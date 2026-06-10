@@ -33,6 +33,9 @@ switch ($num) {
 		if ($num > 10) {
 			echo 'num is greater than 10.', LF;
 		}
+		else {
+			// no any
+		}
 }
 // ---------
 

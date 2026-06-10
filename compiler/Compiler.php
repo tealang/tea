@@ -31,10 +31,6 @@ class Compiler
 
 	private $unit_loader_file;
 
-	// the project dir name, or vendor/units
-	// use to find the depencences
-	private $container_name;
-
 	// the workspace path to load units
 	private $work_path;
 
@@ -48,55 +44,56 @@ class Compiler
 
 	private $search_dirs = ['', 'units', 'vendor'];
 
-	/**
-	 * @var Program
-	 */
-	private $header_program;
-
-	/**
-	 * @var Program.Array
-	 */
-	private $normal_programs = [];
-
-	/**
-	 * @var Program.Array
-	 */
-	private $native_programs = [];
-
-	/**
-	 * @var string
-	 */
-	private $normal_program_files = [];
-
-	/**
-	 * @var string
-	 */
-	private $native_program_files = [];
-
-	private $is_src_dir = true;
-
-	/**
-	 * the instance of current Unit
-	 * @var Unit
-	 */
-	private $unit;
-
-	// the dependence units cache
-	private $units_pool = [];
-
-	/**
-	 * @var ASTFactory
-	 */
-	private $ast_factory;
-
-
-	private $builtin_unit;
-
-	// the builtin symbols cache
-	private $builtin_symbols;
-
 	// autoload classes/interfaces/traits for render Autoload
 	private $autoloads_map = [];
+
+	// runtime properties
+	private Unit $unit;
+	private ASTFactory $ast_factory;
+	private ?Unit $builtin_unit = null;
+	private Program $header_program;
+	private Program $program;
+
+	/**
+	 * Collected parse errors from all files
+	 * @var array<array{message: string, place: string, pos: int, line: int, token: string}>
+	 */
+	private array $collected_parse_errors = [];
+
+	/**
+	 * Collected check errors from all programs
+	 * @var array<array{unit: string, stage: string, place: string, message: string, trace: string[]}>
+	 */
+	private array $collected_check_errors = [];
+
+	private array $collected_check_warnings = [];
+
+	/**
+	 * @var string[]
+	 */
+	private array $native_program_files = [];
+
+	/**
+	 * @var Program[]
+	 */
+	private array $native_programs = [];
+
+	/**
+	 * @var string[]
+	 */
+	private array $normal_program_files = [];
+
+	/**
+	 * @var Program[]
+	 */
+	private array $normal_programs = [];
+
+	/**
+	 * @var array<string, Unit>
+	 */
+	private array $units_pool = [];
+
+	private bool $is_src_dir = true;
 
 	public function __construct()
 	{
@@ -135,16 +132,24 @@ class Compiler
 	private function load_builtin_package(string $unit_path = BUILTIN_PATH)
 	{
 		$this->builtin_unit = new Unit($unit_path);
+		$this->builtin_unit->is_trusted = true;
 
 		$ast_factory = new ASTFactory($this->builtin_unit);
 
+		$public_header_file = $unit_path . PUBLIC_HEADER_FILE_NAME;
+		if (file_exists($public_header_file)) {
+			$program = $this->parse_tea_header($public_header_file, $ast_factory);
+			// lets render namespace as root
+			$program->unit = null;
+			return;
+		}
+
+		// fallback for legacy builtin package without __public.th
 		$unit_header_file = $unit_path . UNIT_HEADER_FILE_NAME;
 		$program = $this->parse_tea_header($unit_header_file, $ast_factory);
-		// lets render namespace as root
 		$program->unit = null;
 
 		$program = $this->parse_tea_program(BUILTIN_CORE_PROGRAM, $ast_factory);
-		// lets render namespace as root
 		$program->unit = null;
 	}
 
@@ -154,13 +159,7 @@ class Compiler
 
 		// for generate the autoload maps
 		$this->unit_path_prefix_len = strlen($unit_path);
-
-		$this->native_program_files = $this->scan_program_files($unit_path, PHP_EXT_NAME);
-
-		$src_path = $unit_path . SRC_DIR_NAME . DS;
-		if (is_dir($src_path)) {
-			$this->normal_program_files = $this->scan_program_files($src_path, TEA_EXT_NAME);
-		}
+		$this->prepare_program_file_lists($unit_path);
 
 		$this->parse_unit_header();
 		$this->parse_programs();
@@ -178,6 +177,44 @@ class Compiler
 		return count($this->normal_programs);
 	}
 
+	public function parse_only(string $unit_path): int
+	{
+		$unit_path = $this->init_unit($unit_path);
+		$this->unit_path_prefix_len = strlen($unit_path);
+		$this->prepare_program_file_lists($unit_path);
+
+		$this->parse_unit_header();
+		$this->parse_programs();
+
+		return count($this->native_programs) + count($this->normal_programs);
+	}
+
+	private function prepare_program_file_lists(string $unit_path): void
+	{
+		// Scan files based on directory structure
+		$src_path = $unit_path . SRC_DIR_NAME . DS;
+		if (is_dir($src_path)) {
+			// If src/ directory exists:
+			// - Scan src/ for Tea files (.tea)
+			// - Scan src/ for PHP files (.php)
+			// - Also scan php/ directory if exists
+			$this->normal_program_files = $this->scan_program_files($src_path, TEA_EXT_NAME);
+			$this->native_program_files = $this->scan_program_files($src_path, PHP_EXT_NAME);
+
+			// Also scan php/ directory if exists (for backward compatibility)
+			$php_path = $unit_path . 'php' . DS;
+			if (is_dir($php_path)) {
+				$php_files = $this->scan_program_files($php_path, PHP_EXT_NAME);
+				$this->native_program_files = array_merge($this->native_program_files ?? [], $php_files);
+			}
+		}
+		else {
+			// If no src/ directory, scan the entire package directory
+			$this->normal_program_files = $this->scan_program_files($unit_path, TEA_EXT_NAME);
+			$this->native_program_files = $this->scan_program_files($unit_path, PHP_EXT_NAME);
+		}
+	}
+
 	private function parse_programs()
 	{
 		self::echo_start('Parsing programs...', LF);
@@ -187,13 +224,24 @@ class Compiler
 		// parse native programs
 		if ($this->native_program_files) {
 			foreach ($this->native_program_files as $file) {
-				$program = $this->parse_php_program($file);
-				if (!$program->ns or $program->ns->uri !== $unit_uri) {
-					$program->is_external = true;
-					continue;
-				}
+				try {
+					$program = $this->parse_php_program($file);
+					if (!$program->ns or $program->ns->uri !== $unit_uri) {
+						$program->is_external = true;
+						// continue;
+					}
 
-				$this->native_programs[] = $program;
+					$this->native_programs[] = $program;
+				} catch (Exception $e) {
+					// Collect error message and continue parsing other files
+					$this->collected_parse_errors[] = [
+						'message' => $e->getMessage(),
+						'place' => str_replace($this->unit->path, '', $file),
+						'pos' => 0,
+						'line' => 0,
+						'token' => '',
+					];
+				}
 			}
 
 			self::echo_success(count($this->native_programs) . ' PHP programs parsed.');
@@ -201,10 +249,45 @@ class Compiler
 
 		// parse tea programs
 		foreach ($this->normal_program_files as $file) {
-			$this->normal_programs[] = $this->parse_tea_program($file, $this->ast_factory);
+			try {
+				$this->normal_programs[] = $this->parse_tea_program($file, $this->ast_factory);
+			} catch (Exception $e) {
+				// Collect error message and continue parsing other files
+				$this->collected_parse_errors[] = [
+					'message' => $e->getMessage(),
+					'place' => str_replace($this->unit->path, '', $file),
+					'pos' => 0,
+					'line' => 0,
+					'token' => '',
+				];
+			}
 		}
 
 		self::echo_success(count($this->normal_programs) . " Tea programs parsed.\n");
+		
+		// Throw all collected parse errors after parsing all files
+		$this->throw_collected_parse_errors();
+	}
+
+	private function throw_collected_parse_errors(): void
+	{
+		if (empty($this->collected_parse_errors)) {
+			return;
+		}
+
+		$error_count = count($this->collected_parse_errors);
+		$message = "Syntax parse errors ({$error_count} found):\n\n";
+		
+		foreach ($this->collected_parse_errors as $i => $error) {
+			$message .= ($i + 1) . ". {$error['place']}\n";
+			$message .= "   {$error['message']}\n";
+			if ($i < $error_count - 1) {
+				$message .= "\n";
+			}
+		}
+
+		$this->collected_parse_errors = [];
+		throw new Exception($message);
 	}
 
 	private function parse_unit_header()
@@ -239,13 +322,14 @@ class Compiler
 	private function check_ast()
 	{
 		self::echo_start('Initing...', LF);
+		SemanticContext::reset_check_state();
 
 		$builtin_unit = $this->builtin_unit;
 
 		// if current it is not the builtin unit, the builtin unit needs to be checked first
 		if ($builtin_unit) {
 			ASTChecker::init_checkers($builtin_unit);
-			$program = $builtin_unit->programs['__package'];
+			$program = $builtin_unit->programs[PUBLIC_HEADER_NAME] ?? $builtin_unit->programs['__package'];
 			$normal_checker = ASTChecker::get_checker($program);
 			$this->check_ast_for_unit($builtin_unit, $normal_checker);
 		}
@@ -253,7 +337,7 @@ class Compiler
 		ASTChecker::init_checkers($this->unit, $builtin_unit);
 
 		// check depends
-		foreach ($this->unit->use_units as $dep_unit) {
+		foreach ($this->collect_dependency_units($this->unit) as $dep_unit) {
 			$program = $dep_unit->programs[PUBLIC_HEADER_NAME];
 			$normal_checker = ASTChecker::get_checker($program);
 			$this->check_ast_for_unit($dep_unit, $normal_checker);
@@ -263,7 +347,42 @@ class Compiler
 		$normal_checker = ASTChecker::get_checker($this->header_program);
 		$this->check_ast_for_unit($this->unit, $normal_checker);
 
+		$this->throw_collected_check_errors();
+		$this->print_collected_check_warnings();
+
 		self::echo_success('Programs checked.' . LF);
+	}
+
+	/**
+	 * @return Unit[]
+	 */
+	private function collect_dependency_units(Unit $unit): array
+	{
+		$seen = [$unit->path => true];
+		$dependencies = [];
+		$this->collect_dependency_units_for($unit, $seen, $dependencies);
+		return $dependencies;
+	}
+
+	/**
+	 * @param array<string, bool> $seen
+	 * @param Unit[] $dependencies
+	 */
+	private function collect_dependency_units_for(Unit $unit, array &$seen, array &$dependencies): void
+	{
+		foreach ($unit->use_units as $dep_unit) {
+			if (!$dep_unit instanceof Unit) {
+				continue;
+			}
+
+			if (isset($seen[$dep_unit->path])) {
+				continue;
+			}
+
+			$seen[$dep_unit->path] = true;
+			$this->collect_dependency_units_for($dep_unit, $seen, $dependencies);
+			$dependencies[] = $dep_unit;
+		}
 	}
 
 	private function check_ast_for_unit(Unit $unit, ASTChecker $normal_checker)
@@ -272,40 +391,135 @@ class Compiler
 
 		$native_checker = ASTChecker::get_native_checker();
 		$programs = $unit->programs;
+		$blocked_programs = [];
 
 		// 1st, process all namespace usings
 		self::echo_start("  Process namespace usings...", "\n");
 		foreach ($programs as $program) {
-			if ($program->is_native) {
-				$native_checker->check_all_usings($program);
+			try {
+				if ($program->is_native) {
+					$native_checker->check_all_usings($program);
+				}
+				else {
+					$normal_checker->check_all_usings($program);
+				}
 			}
-			else {
-				$normal_checker->check_all_usings($program);
+			catch (Exception $e) {
+				$blocked_programs[spl_object_id($program)] = true;
+				$this->collect_check_error($unit, $program, 'check_usings', $e);
 			}
 		}
 
 		// 2nd, link symbols, and collecting auto namespace usings
 		self::echo_start("  Link symbols...", "\n");
 		foreach ($programs as $program) {
-			// self::echo_start(" - {$program->file}", "\n");
-			$checker = $program->is_native ? $native_checker : $normal_checker;
-			$checker->link_declarations($program);
+			if (isset($blocked_programs[spl_object_id($program)])) {
+				continue;
+			}
+
+			try {
+				// self::echo_start(" - {$program->file}", "\n");
+				$checker = $program->is_native ? $native_checker : $normal_checker;
+				$checker->link_declarations($program);
+			}
+			catch (Exception $e) {
+				$blocked_programs[spl_object_id($program)] = true;
+				$this->collect_check_error($unit, $program, 'link', $e);
+			}
 		}
 
-		// 3td, check details
+		// 3rd, preprocess declarations to build inheritance / trait aggregation before semantic checks
+		self::echo_start("  Preprocess declarations...", "\n");
+		foreach ($programs as $program) {
+			if (isset($blocked_programs[spl_object_id($program)])) {
+				continue;
+			}
+
+			try {
+				$checker = $program->is_native ? $native_checker : $normal_checker;
+				$checker->preprocess_declarations($program);
+			}
+			catch (Exception $e) {
+				$blocked_programs[spl_object_id($program)] = true;
+				$this->collect_check_error($unit, $program, 'preprocess', $e);
+			}
+		}
+
+		// 4th, check details
 		self::echo_start("  Check details...", "\n");
 		$package_program = $programs['__package'] ?? null;
-		if ($package_program) {
-			$normal_checker->check_program($package_program);
+		if ($package_program && !isset($blocked_programs[spl_object_id($package_program)])) {
+			try {
+				$normal_checker->check_program($package_program);
+				$this->collect_check_warnings($unit, $package_program, 'check_package', $normal_checker);
+			}
+			catch (Exception $e) {
+				$this->collect_check_error($unit, $package_program, 'check_package', $e);
+			}
 		}
 
 		foreach ($programs as $program) {
-			$program->is_native and $native_checker->check_program($program);
+			if (!$program->is_native || isset($blocked_programs[spl_object_id($program)])) {
+				continue;
+			}
+
+			try {
+				$native_checker->check_program($program);
+				$this->collect_check_warnings($unit, $program, 'check_native', $native_checker);
+			}
+			catch (Exception $e) {
+				$this->collect_check_error($unit, $program, 'check_native', $e);
+			}
 		}
 
 		foreach ($programs as $program) {
-			!$program->is_native and $normal_checker->check_program($program);
+			if ($program->is_native || isset($blocked_programs[spl_object_id($program)])) {
+				continue;
+			}
+
+			try {
+				$normal_checker->check_program($program);
+				$this->collect_check_warnings($unit, $program, 'check_normal', $normal_checker);
+			}
+			catch (Exception $e) {
+				$this->collect_check_error($unit, $program, 'check_normal', $e);
+			}
 		}
+	}
+
+	private function collect_check_error(Unit $unit, Program $program, string $stage, Exception $e): void
+	{
+		$this->collected_check_errors[] = CompilerErrorReporter::create_exception_issue($unit, $program, $stage, $e);
+	}
+
+	private function collect_check_warnings(Unit $unit, Program $program, string $stage, ASTChecker $checker): void
+	{
+		$warnings = $checker->consume_check_warnings();
+		foreach (CompilerErrorReporter::create_warning_issues($unit, $program, $stage, $warnings) as $warning) {
+			$this->collected_check_warnings[] = $warning;
+		}
+	}
+
+	private function throw_collected_check_errors(): void
+	{
+		if (empty($this->collected_check_errors)) {
+			return;
+		}
+
+		$message = CompilerErrorReporter::format_check_issues($this->collected_check_errors, 'Syntax check failed.');
+		$this->collected_check_errors = [];
+		throw new Exception($message);
+	}
+
+	private function print_collected_check_warnings(): void
+	{
+		if (empty($this->collected_check_warnings)) {
+			return;
+		}
+
+		$warnings = CompilerErrorReporter::format_check_issues($this->collected_check_warnings, 'Syntax check warnings.');
+		$this->collected_check_warnings = [];
+		echo LF . $warnings . LF;
 	}
 
 	private function load_dependences_for_unit(Unit $unit)
@@ -313,11 +527,17 @@ class Compiler
 		$current_unit_uri = $this->unit->ns->uri;
 
 		foreach ($unit->use_units as $uri => $target) {
+			$is_trusted = $unit->trusted_use_units[$uri] ?? false;
 			if ($target instanceof Unit) {
-				//
+				if ($is_trusted) {
+					$target->is_trusted = true;
+				}
 			}
 			elseif ($target->uri !== '' and $target->uri !== $current_unit_uri) {
 				$use_unit = $this->load_unit_for_namespace($target);
+				if ($is_trusted) {
+					$use_unit->is_trusted = true;
+				}
 				$unit->use_units[$uri] = $use_unit;
 			}
 			else {
@@ -353,9 +573,6 @@ class Compiler
 		// }
 
 		$unit = new Unit($unit_path);
-
-		// This mechanism is not flexible, change to the basic namespace mechanism
-		$unit->symbols = $this->builtin_symbols;
 
 		$loader_file = $unit_dir . DS . PUBLIC_LOADER_FILE_NAME; // for render the require statements
 		$this->loaders[$uri] = [$path_based_type, $loader_file];
@@ -471,7 +688,7 @@ class Compiler
 		foreach ($this->normal_programs as $program) {
 			foreach ($program->declarations as $node) {
 				if ($node->is_unit_level && !$node instanceof ClassKindredDeclaration) {
-					$node->set_depends_to_unit_level();
+					ASTHelper::set_depends_to_unit_level($node);
 				}
 			}
 		}
@@ -500,8 +717,16 @@ class Compiler
 		self::echo_success(count($this->normal_programs) . ' programs rendered.');
 	}
 
-	private function render_loader_file(PHPCoder $coder)
+	private function render_loader_file(PHPLoaderCoder $coder)
 	{
+		if (file_exists($this->unit_loader_file)) {
+			$existing_loader = file_get_contents($this->unit_loader_file);
+			if ($existing_loader !== false && strpos($existing_loader, PHPLoaderMaker::GENERATES_TAG) !== false) {
+				PHPLoaderMaker::generate_loader_file($this->unit_path, $this->autoloads_map, $this->unit->dist_ns_uri);
+				return;
+			}
+		}
+
 		$dist_code = $coder->render_loader_program($this->header_program, $this->normal_programs, $this->loaders);
 
 		// the autoloads for classes/interfaces/traits
@@ -578,7 +803,8 @@ class Compiler
 		foreach ($program->declarations as $node) {
 			if ($node instanceof ClassKindredDeclaration
 				&& !$node instanceof BuiltinTypeClassDeclaration
-				&& !$node->is_extern) {
+				// && !$node->is_extern
+			) {
 				$name = $name_prefix . $node->name;
 				$this->autoloads_map[$name] = $dist_file_path;
 
@@ -647,19 +873,34 @@ class Compiler
 	private function parse_tea_header(string $file, ASTFactory $ast_factory)
 	{
 		$parser = new HeaderParser($ast_factory, $file);
-		return $parser->read_program();
+		$program = $parser->read_program();
+		// Collect errors but don't throw yet
+		if ($parser->has_parse_errors()) {
+			$this->collected_parse_errors = array_merge($this->collected_parse_errors, $parser->get_parse_errors());
+		}
+		return $program;
 	}
 
 	private function parse_tea_program(string $file, ASTFactory $ast_factory)
 	{
 		$parser = new TeaParser($ast_factory, $file);
-		return $parser->read_program();
+		$program = $parser->read_program();
+		// Collect errors but don't throw yet
+		if ($parser->has_parse_errors()) {
+			$this->collected_parse_errors = array_merge($this->collected_parse_errors, $parser->get_parse_errors());
+		}
+		return $program;
 	}
 
 	private function parse_php_program(string $file)
 	{
 		$parser = new PHPParser($this->ast_factory, $file);
-		return $parser->read_program();
+		$program = $parser->read_program();
+		// Collect errors but don't throw yet
+		if ($parser->has_parse_errors()) {
+			$this->collected_parse_errors = array_merge($this->collected_parse_errors, $parser->get_parse_errors());
+		}
+		return $program;
 	}
 
 	private static function echo_start(string $message, string $ending = "\t")
@@ -679,8 +920,7 @@ class Compiler
 
 	private static function end_error(string $message)
 	{
-		echo "\nError: ", $message, "\n\n";
-		exit;
+		throw new Exception("Error: {$message}");
 	}
 }
 

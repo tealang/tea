@@ -37,14 +37,18 @@ const
 
 	// builtin types
 	_UNIONTYPE = 'UnionType',
+	_INTERSECTIONTYPE = 'IntersectionType',
 	_METATYPE = 'MetaType',
 	_VOID = 'Void',
 	_NONE = 'None',
+	_INVALID = 'Invalid',
 	_ANY = 'Any',
+	_MIXED = 'Mixed',
 	// _SCALAR = 'Scalar',
 	_BYTES = 'Bytes',
 	//_RUNES = 'Runes',
 	_STRING = 'String',
+	_TEXT_TYPE = 'Text',
 	_PLAIN = 'Plain',
 	_INT = 'Int',
 	_UINT = 'UInt',
@@ -105,7 +109,7 @@ const
 	// _LESS_THAN = '<', _GREATER_THAN = '>',
 	// _LESS_THAN_OR_EQUAL_TO = '<=', _GREATER_THAN_OR_EQUAL_TO = '>=',
 	// _SPACESHIP = '<=>',
-	_NONE_COALESCING = '??', _QUESTION = '?',
+	_NONE_COALESCING = '??', _QUESTION = '?', _QUESTION_DOT = '?.',
 	_DOT = '.',
 	_DOUBLE_COLON = '::',
 	// _PUT = '<-', _NOTIFY = '->',
@@ -138,6 +142,7 @@ const
 	_MUT = 'mut',
 	_INOUT = 'inout',
 	_YIELD = 'yield',
+	_FROM = 'from',
 	_UNSET = 'unset',
 	_IF = 'if', _ELSE = 'else', _ELSEIF = 'elseif',
 	_SWITCH = 'switch', _CASE = 'case',
@@ -155,7 +160,6 @@ const
 	// _ASYNC = 'async', _AWAIT = 'await',
 	_STATIC = 'static',
 	_FINAL = 'final',
-	_MASKED = 'masked',
 	_EXTERN = 'extern',
 	_PUBLIC = 'public',
 	_INTERNAL = 'internal',
@@ -188,6 +192,7 @@ const _BUILTIN_TYPE_NAMES = [
 	_VOID,
 	_NONE,
 	_STRING,
+	_TEXT_TYPE,
 	_PLAIN,
 	_INT,
 	_UINT,
@@ -209,9 +214,9 @@ const _CTRL_STRUCTURE_NAMES = [
 	_ECHO, _RETURN, _EXIT, _BREAK, _CONTINUE, _THROW,
 ];
 
-const _ACCESSING_MODIFIERS = [_MASKED, _PUBLIC, _INTERNAL, _PROTECTED, _PRIVATE];
+const _ACCESSING_MODIFIERS = [_PUBLIC, _INTERNAL, _PROTECTED, _PRIVATE];
 
-const _BUILTIN_IDENTIFIERS = [_TYPE_SELF, _THIS, _SUPER, _VAL_NONE, _VAL_TRUE, _VAL_FALSE, _UNIT_PATH];
+const _BUILTIN_IDENTIFIERS = [_TYPE_SELF, _THIS, _SUPER, _VAL_NONE, _VAL_NULL, _VAL_TRUE, _VAL_FALSE, _UNIT_PATH];
 
 const _OTHER_KEY_WORDS = [
 	_STATIC,

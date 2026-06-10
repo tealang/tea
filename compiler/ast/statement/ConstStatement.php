@@ -14,7 +14,7 @@ class ConstStatement extends BaseStatement
 	/**
 	 * @var ConstantDeclaration[]
 	 */
-	public $members;
+	public array $members;
 
 	public function __construct(array $members)
 	{

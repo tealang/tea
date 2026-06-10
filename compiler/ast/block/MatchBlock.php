@@ -20,7 +20,7 @@ class MatchBlock extends BaseExpression implements IBlock
 	 */
 	public array $arms;
 
-	public ?IType $value_type;
+	public ?BaseType $value_type;
 
 	public function __construct(BaseExpression $subject)
 	{

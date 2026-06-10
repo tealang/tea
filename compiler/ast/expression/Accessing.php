@@ -9,19 +9,18 @@ namespace Tea;
 
 abstract class BracketAccessing extends BaseExpression
 {
-	/**
-	 * @var BaseExpression
-	 */
-	public $basing;
+	public BaseExpression $basing;
 
 	public function get_final_basing()
 	{
 		$basing = $this->basing;
-		while ($basing instanceof BracketAccessing) {
+		while (true) {
+			if (!$basing instanceof BracketAccessing) {
+				return $basing;
+			}
+
 			$basing = $basing->basing;
 		}
-
-		return $basing;
 	}
 }
 
@@ -30,10 +29,7 @@ class SquareAccessing extends BracketAccessing implements IAssignable
 {
 	const KIND = 'square_accessing';
 
-	/**
-	 * @var bool
-	 */
-	public $is_prefix;
+	public bool $is_prefix;
 
 	public function __construct(BaseExpression $basing, bool $is_prefix)
 	{
@@ -46,10 +42,7 @@ class KeyAccessing extends BracketAccessing implements IAssignable
 {
 	const KIND = 'key_accessing';
 
-	/**
-	 * @var BaseExpression
-	 */
-	public $key;
+	public BaseExpression $key;
 
 	public function __construct(BaseExpression $basing, BaseExpression $key)
 	{

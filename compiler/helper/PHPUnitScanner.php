@@ -46,7 +46,7 @@ class PHPUnitScanner
 			preg_match('/namespace\s+([a-z0-9_\\\\]+)/i', $code, $matches);
 			$namespace = $matches[1] ?? null;
 
-			preg_match_all('/\n\s?(?:(?:abstract\s+|final\s+)?class|interface|trait)\s+([a-z0-9_]+)/i',
+			preg_match_all('/\n\s?(?:(?:abstract\s+|final\s+)?class|interface|trait|enum)\s+([a-z0-9_]+)/i',
 				$code,
 				$matches,
 				PREG_PATTERN_ORDER

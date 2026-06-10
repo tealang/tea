@@ -13,12 +13,12 @@ class SwitchBlock extends BaseControlBlock implements IElseAble, IExceptAble, IB
 
 	const KIND = 'switch_block';
 
-	public $subject;
+	public BaseExpression $subject;
 
 	/**
 	 * @var SwitchBranch[]
 	 */
-	public $branches;
+	public array $branches;
 
 	public function __construct(BaseExpression $subject)
 	{
@@ -38,7 +38,7 @@ class SwitchBranch extends BaseControlBlock
 	/**
 	 * @var BaseExpression[]
 	 */
-	public $patterns;
+	public array $patterns;
 
 	public function __construct(array $patterns)
 	{

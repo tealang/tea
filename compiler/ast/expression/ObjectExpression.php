@@ -13,14 +13,14 @@ class ObjectExpression extends BaseExpression
 
 	const KIND = 'object_expression';
 
-	public $symbol;
+	public ?Symbol $symbol = null;
 }
 
 class ObjectMember extends PropertyDeclaration
 {
 	const KIND = 'object_member';
 
-	public $key_quote_mark;
+	public ?string $key_quote_mark = null;
 
 	public function __construct(string $name, ?string $key_quote_mark = null)
 	{

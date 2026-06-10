@@ -16,90 +16,104 @@ interface ICallableDeclaration {
 }
 
 interface IValuableDeclaration {
-	// public function get_value(): BaseExpression;
+	public function get_expressed_type(): BaseType;
 }
 
-interface IRootDeclaration extends IDeclaration, IStatement {}
-
+interface IUnknownIdentifierContainer {
+	public function append_unknow_identifier(PlainIdentifier|TypeReference $identifier);
+	public function remove_unknow_identifier(PlainIdentifier|TypeReference $identifier);
+}
 
 trait TypingTrait {
 
-	public $is_virtual;
+	public bool $is_virtual = false;
 
-	/**
-	 * @var ?IType
-	 */
-	public $declared_type;
+	public ?BaseType $declared_type = null;
 
-	/**
-	 * Type that writed in comments
-	 * eg. "@var ...", "@return ...", or tailing type notes
-	 * @var ?IType
-	 */
-	public $noted_type;
+	public ?BaseType $noted_type = null;
 
-	/**
-	 * @var ?IType
-	 */
-	public $infered_type;
+	public ?string $noted_type_source = null;
 
-	/**
-	 * @var ?IType
-	 */
-	public $bound_type;
+	public bool $noted_type_from_phpdoc = false;
 
-	public function get_hinted_type(): IType
+	public bool $noted_type_nullable_inherited = false;
+
+	public ?BaseType $infered_type = null;
+
+	public function get_hinted_type(): BaseType
 	{
 		return $this->noted_type ?? $this->declared_type ?? TypeFactory::$_any;
 	}
 
-	public function get_expressed_type(): IType
+	public function get_expressed_type(): BaseType
 	{
 		return $this->noted_type ?? $this->declared_type ?? $this->infered_type ?? TypeFactory::$_any;
 	}
 
-	public function get_bound_type(): IType
+	public function get_bound_type(): BaseType
 	{
-		return $this->bound_type ?? $this->noted_type ?? $this->declared_type ?? $this->infered_type ?? TypeFactory::$_any;
+		return TypeHelper::get_bound_type($this);
 	}
 
-	public function bind_type(IType $type)
+	public function bind_type(BaseType $type)
 	{
-		$this->bound_type = $type;
+		TypeHelper::set_raw_bound_type($this, $type);
 	}
 }
 
 trait BaseDeclarationTrait {
 
+	use TypingTrait;
+
 	// public $label;
 
 	/**
-	 * @var string
+	 * @var string|null
 	 */
-	public $modifier;
+	public ?string $modifier = null;
 
 	/**
 	 * @var string
 	 */
-	public $name;
+	public string $name;
 
-	public $origin_name;
+	public ?string $origin_name = null;
 
 	// /**
 	//  * @var Symbol
 	//  */
 	// public $symbol;
 
-	public $is_extern;
-
-	public $is_checked = false; // set true when checked by ASTChecker
+	public bool $is_extern = false;
 
 	// is public or used by other programs
-	public $is_unit_level = false;
+	public bool $is_unit_level = false;
 
-	public $uses = [];
+	/**
+	 * @var UseDeclaration[]
+	 */
+	public array $uses = [];
 
-	public $unknow_identifiers = [];
+	/**
+	 * PHP 8 attributes / Tea meta attributes attached to this declaration
+	 * @var MetaAttribute[]
+	 */
+	public array $attributes = [];
+
+	/**
+	 * @var array<int, PlainIdentifier|TypeReference>
+	 */
+	public array $unknow_identifiers = [];
+
+	/**
+	 * The block this declaration belongs to
+	 */
+	public BaseDeclaration|IBlock|null $belong_block = null;
+
+	/**
+	 * The program this declaration belongs to
+	 */
+	public ?Program $program = null;
 
 	public function get_name(): ?string
 	{
@@ -108,13 +122,7 @@ trait BaseDeclarationTrait {
 
 	public function set_depends_to_unit_level()
 	{
-		foreach ($this->unknow_identifiers as $identifier) {
-			$decl = $identifier->symbol->declaration;
-			if (!$decl->is_unit_level) {
-				$decl->is_unit_level = true;
-				$decl->set_depends_to_unit_level();
-			}
-		}
+		ASTHelper::set_depends_to_unit_level($this);
 	}
 
 	public function append_use_declaration(UseDeclaration $use)
@@ -124,12 +132,12 @@ trait BaseDeclarationTrait {
 		}
 	}
 
-	public function append_unknow_identifier(PlainIdentifier $identifier)
+	public function append_unknow_identifier(PlainIdentifier|TypeReference $identifier)
 	{
 		$this->unknow_identifiers[] = $identifier;
 	}
 
-	public function remove_unknow_identifier(PlainIdentifier $identifier)
+	public function remove_unknow_identifier(PlainIdentifier|TypeReference $identifier)
 	{
 		$idx = array_search($identifier, $this->unknow_identifiers, true);
 		if ($idx !== false) {
@@ -137,7 +145,7 @@ trait BaseDeclarationTrait {
 		}
 	}
 
-	public function append_unknow_identifiers_from_declaration(IDeclaration $decl)
+	public function append_unknow_identifiers_from_declaration(BaseDeclaration $decl)
 	{
 		if (!$decl->unknow_identifiers) {
 			return;
@@ -150,17 +158,16 @@ trait BaseDeclarationTrait {
 	}
 }
 
-trait IRootDeclarationTrait
+abstract class BaseDeclaration extends Node implements IDeclaration, IUnknownIdentifierContainer
 {
-	/**
-	 * @var NamespaceIdentifier
-	 */
-	public $ns;
+	use BaseDeclarationTrait;
+}
 
-	/**
-	 * @var Program
-	 */
-	public $program;
+abstract class RootDeclaration extends BaseDeclaration implements IStatement
+{
+	public ?NamespaceIdentifier $ns = null;
+
+	public ?Program $program = null;
 
 	public function set_namespace(NamespaceIdentifier $ns)
 	{
@@ -171,11 +178,6 @@ trait IRootDeclarationTrait
 	{
 		return $this->program->unit === null || $this->is_extern;
 	}
-}
-
-abstract class RootDeclaration extends Node implements IRootDeclaration
-{
-	use BaseDeclarationTrait, TypingTrait, IRootDeclarationTrait;
 }
 
 // end

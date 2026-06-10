@@ -9,44 +9,49 @@ namespace Tea;
 
 class Unit
 {
-	public $name;
+	public ?string $name = null;
 
-	public $ns;
+	public ?NamespaceIdentifier $ns = null;
 
 	// cache for render
-	public $dist_ns_uri;
+	public ?string $dist_ns_uri = null;
 
 	// current module path, include ends with DS
-	public $path;
+	public string $path;
 
-	public $loader; // the program to load PHP classes/functions/consts
+	public ?Program $loader = null; // the program to load PHP classes/functions/consts
 
-	public $as_main = false;
+	public bool $as_main = false;
+
+	// Builtin and current package declarations are checked from source, unlike foreign headers.
+	public bool $is_trusted = false;
 
 	/**
-	 * @var NamespaceDeclaration.Dict
+	 * @var NamespaceDeclaration[]
 	 */
-	public $namespaces = [];
+	public array $namespaces = [];
 
 	/**
 	 * @var Program[]
 	 */
-	public $programs = [];
+	public array $programs = [];
 
 	/**
-	 * @var TopSymbol.Dict
+	 * @var array<string, Symbol>|null
 	 */
-	public $symbols = [];
+	public ?array $symbols = null; // can be null during loading
 
 	/**
-	 * @var Unit.Dict
+	 * @var Unit[]
 	 */
-	public $use_units = []; // units that used in programs
+	public array $use_units = []; // units that used in programs
 
 	/**
-	 * @var ASTFactory
+	 * @var array<string, bool>
 	 */
-	public $factory;
+	public array $trusted_use_units = [];
+
+	public ?ASTFactory $factory = null;
 
 	public function __construct(string $path)
 	{

@@ -11,29 +11,13 @@ class NamespaceIdentifier extends Node
 {
 	const KIND = 'namespace_identifier';
 
-	/**
-	 * @var string
-	 */
-	public $uri;
+	public string $uri = '';
 
-	/**
-	 * @var array
-	 */
-	public $names;
-
-	/**
-	 * @var Unit
-	 */
-	public $based_unit;
+	public array $names = [];
 
 	public function __construct(array $names)
 	{
 		$this->set_names($names);
-	}
-
-	public function set_based_unit(Unit $unit)
-	{
-		$this->based_unit = $unit;
 	}
 
 	public function set_names(array $names)
@@ -49,11 +33,7 @@ class NamespaceIdentifier extends Node
 
 	public function get_last_name()
 	{
-		$last_name = $this->names
-			? $this->names[count($this->names) - 1]
-			: ($this->based_unit ? $this->based_unit->ns->get_last_name() : null);
-
-		return $last_name;
+		return $this->names ? $this->names[count($this->names) - 1] : null;
 	}
 
 	public function get_namepath()

@@ -11,9 +11,9 @@ class Ton extends BaseExpression
 {
 	const KIND = 'ton';
 
-	public $name;
-	public $attributes;
-	public $elements;
+	public ?string $name = null;
+	public array $attributes = [];
+	public ?array $elements = null;
 
 	public function __construct(?string $name, array $attributes = [], ?array $elements = null)
 	{

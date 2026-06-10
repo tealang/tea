@@ -16,34 +16,29 @@ class XTag extends XTagElement
 {
 	const KIND = 'xtag';
 
-	/**
-	 * @var string
-	 */
-	public $name;
+	public string $name;
 
 	/**
 	 * fixed attribute map
-	 * @array
 	 */
-	public $fixed_attributes = [];
+	public array $fixed_attributes = [];
 
 	/**
 	 * activity attributes expression
-	 * @BaseExpression
 	 */
-	public $dynamic_attributes;
+	public ?BaseExpression $dynamic_attributes = null;
 
 	/**
-	 * @var XTagElement[]
+	 * @var XTagElement[]|null
 	 */
-	public $children; // text or XTag, let null when tag is self-closed
+	public ?array $children = null; // text or XTag, let null when tag is self-closed
 
-	public $is_self_closing_tag;
+	public bool $is_self_closing_tag = false;
 
 	// is there a line break at the inner block opened
-	public $inner_br = false;
+	public bool $inner_br = false;
 
-	public $closing_indents;
+	public ?string $closing_indents = null;
 
 	public function __construct(string $name)
 	{
@@ -67,7 +62,7 @@ class XTagText extends XTagElement
 {
 	const KIND = 'xtag_text';
 
-	public $content;
+	public string $content;
 
 	public function __construct(string $content)
 	{
@@ -79,7 +74,7 @@ class XTagComment extends XTagElement
 {
 	const KIND = 'xtag_comment';
 
-	public $content;
+	public string $content;
 
 	public function __construct(string $content)
 	{

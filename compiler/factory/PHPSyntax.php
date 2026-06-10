@@ -41,15 +41,15 @@ class PHPSyntax
 			OPID::BITWISE_NOT => ['~', OP_PREFIX, OP_NA],
 		],
 		[
-			OPID::MULTIPLICATION => ['*', OP_BIN, OP_L],
-			OPID::DIVISION => ['/', OP_BIN, OP_L],
-			OPID::REMAINDER => ['%', OP_BIN, OP_L],
-		],
-		[
 			OPID::IS => ['instanceof', OP_BIN, OP_L],
 		],
 		[
 			OPID::BOOL_NOT => ['!', OP_PREFIX, OP_NA],
+		],
+		[
+			OPID::MULTIPLICATION => ['*', OP_BIN, OP_L],
+			OPID::DIVISION => ['/', OP_BIN, OP_L],
+			OPID::REMAINDER => ['%', OP_BIN, OP_L],
 		],
 		[
 			OPID::ADDITION => ['+', OP_BIN, OP_L],
