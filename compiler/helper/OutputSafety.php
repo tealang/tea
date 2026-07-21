@@ -22,12 +22,16 @@ class OutputSafety
 {
 	public const HTML_TEXT = 'html_text';
 	public const HTML_ATTRIBUTE = 'html_attribute';
-	private const HTML_SAFE_ATTRIBUTE = 'HtmlSafe';
 
 	private static ?\SplObjectStorage $value_trusts = null;
 	private static array $html_safe_bound_value_stack = [];
 
 	public static function reset_semantic_state(): void
+	{
+		self::reset_check_state();
+	}
+
+	public static function reset_check_state(): void
 	{
 		self::$value_trusts = null;
 		self::$html_safe_bound_value_stack = [];
@@ -130,7 +134,7 @@ class OutputSafety
 
 		$program = $decl->program;
 		return !$decl->is_extern
-			&& ($program === null || $program->source_dialect !== Program::SOURCE_DIALECT_HEADER);
+			&& ($program === null || !Program::is_header_source_dialect($program->source_dialect));
 	}
 
 	private static function is_trusted_numeric_bound_value(Identifiable $expr): bool
@@ -178,10 +182,6 @@ class OutputSafety
 		}
 
 		if ($expr instanceof AsOperation) {
-			if ($expr->right_source_name === _PLAIN && $expr->right instanceof PlainType) {
-				return true;
-			}
-
 			return self::is_html_safe_expression($expr->left);
 		}
 
@@ -239,7 +239,7 @@ class OutputSafety
 	{
 		$decl = ASTHelper::get_callee_declaration($expr);
 		return $decl instanceof BaseDeclaration
-			&& self::has_attribute($decl, self::HTML_SAFE_ATTRIBUTE);
+			&& self::has_attribute($decl, LanguageMetadataRegistry::ATTRIBUTE_HTML_SAFE);
 	}
 
 	private static function is_html_safe_bound_value(Identifiable $expr): bool

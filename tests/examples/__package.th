@@ -32,5 +32,5 @@ extern class PDO {
 	quote(string String, parameter_type Int = #default) String
 	lastInsertId(name String = #default) String
 	errorCode() String
-	errorInfo() Array
+	errorInfo() List
 }

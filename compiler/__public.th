@@ -45,7 +45,6 @@ public const _MIXED #Text
 public const _BYTES #Text
 public const _STRING #Text
 public const _TEXT_TYPE #Text
-public const _PLAIN #Text
 public const _INT #Text
 public const _UINT #Text
 public const _FLOAT #Text
@@ -108,7 +107,7 @@ public const _DOT #Text
 public const _DOUBLE_COLON #Text
 public const _DOUBLE_ARROW #String
 public const _ASSIGN #Text
-public const _ASSIGN_OPERATORS #List<Text|String>
+public const _ASSIGN_OPERATORS #List<String>
 public const _SINGLE_QUOTE #Text
 public const _DOUBLE_QUOTE #String
 public const _XTAG_OPEN #String
@@ -220,7 +219,7 @@ public class LogicException: \LogicException {
 	public code #UInt
 }
 
-public func array_key_last(items Array|Dict) #Mixed
+public func array_key_last(items List|Dict) #Mixed
 
 public func halt(msg String) #Void
 
@@ -232,7 +231,7 @@ public func dump(args) #Void
 
 public func strip_unit_path(file String) #String
 
-public func process_cli_options(argv Array|Dict, allow_list Array|Dict = []) #Array
+public func process_cli_options(argv List|Dict, allow_list List|Dict = []) #List
 
 public func get_traces(trace_start Int = 0) #String
 
@@ -275,7 +274,7 @@ public class NativeIdentifier: Identifiable {
 public class PlainIdentifier: Identifiable {
 	public const KIND #Text
 	public ns NamespaceIdentifier?
-	public generic_types Array|Dict|Null
+	public generic_types (List|Dict)?
 }
 
 public class ConstantIdentifier: PlainIdentifier {
@@ -296,12 +295,12 @@ public class ClassKindredIdentifier: PlainIdentifier {
 public class NamespaceIdentifier: Node {
 	public const KIND #Text
 	public uri String
-	public names Array|Dict
-	public construct(names Array|Dict) #Void
-	public set_names(names Array|Dict) #Void
+	public names List|Dict
+	public construct(names List|Dict) #Void
+	public set_names(names List|Dict) #Void
 	public is_global_space() #Bool
 	public get_last_name() #Mixed
-	public get_namepath() #Array|Dict
+	public get_namepath() #List|Dict
 }
 
 public class Node {
@@ -335,21 +334,23 @@ public class Program: BaseDeclaration {
 	public const SOURCE_DIALECT_TEA #Text
 	public const SOURCE_DIALECT_PHP #Text
 	public const SOURCE_DIALECT_HEADER #Text
+	public const SOURCE_DIALECT_GENERATED_HEADER #Text
 	public parser BaseParser?
 	public source_dialect String
 	public as_main Bool
 	public file String?
-	public uses Array|Dict#List<UseStatement>
-	public use_targets Array|Dict#List<UseDeclaration>
-	public declarations Array|Dict#List<BaseDeclaration>
+	public uses List|Dict#List<UseStatement>
+	public use_targets List|Dict#List<UseDeclaration>
+	public declarations List|Dict#List<BaseDeclaration>
 	public initializer FunctionDeclaration?
-	public symbols Array|Dict#Dict<Mixed>
+	public symbols List|Dict#Dict<Mixed>
 	public unit Unit?
 	public ns NamespaceIdentifier?
-	public depends_native_programs Array|Dict
+	public depends_native_programs List|Dict
 	public is_native Bool
 	public is_external Bool
 	public construct(file String, unit Unit) #Void
+	public static is_header_source_dialect(dialect String) Bool
 	public append_declaration(decl BaseDeclaration) #Void
 	public append_depends_native_program(program Program) #Void
 	public count_subdirectory_levels() #UInt
@@ -376,7 +377,6 @@ public trait ITypeTrait {
 public class BaseType: Node {
 	use ITypeTrait
 	public const KIND #Text
-	public const ACCEPT_TYPES #Array
 	public name String
 	public symbol Symbol?
 	public is_based_with(target BaseType) #Bool
@@ -386,7 +386,7 @@ public class BaseType: Node {
 public class TypeReference: BaseType {
 	public const KIND #Text
 	public ns NamespaceIdentifier?
-	public generic_types Array|Dict#List<BaseType>
+	public generic_types List|Dict#List<BaseType>
 	public construct(name String) #Void
 	public set_namespace(ns NamespaceIdentifier) #Void
 	public unite(target BaseType) BaseType
@@ -407,8 +407,8 @@ public class SingleGenericType: BaseType {
 public class UnionType: BaseType {
 	public const KIND #Text
 	public name String
-	public members Array|Dict#List<BaseType>
-	public construct(members Array|Dict = []) #Void
+	public members List|Dict#List<BaseType>
+	public construct(members List|Dict = []) #Void
 	public get_members() #List<BaseType>
 	public count() #UInt
 	public is_all_array_types() #Bool
@@ -483,34 +483,28 @@ public interface IPureType {
 }
 
 public class BytesType: BaseType, IScalarType {
-	public const ACCEPT_TYPES #List<Text>
 	public name String
 }
 
 public class StringType: BaseType, IScalarType {
-	public const ACCEPT_TYPES #List<Text>
 	public name String
 }
 
-public class PlainType: StringType, IPureType {
-	public const ACCEPT_TYPES #List<Text>
+public class TextType: StringType, IPureType {
 	public name String
 	public is_same_or_based_with(target BaseType) #Bool
 }
 
 public class IntType: BaseType, IScalarType, IPureType {
-	public const ACCEPT_TYPES #List<Text>
 	public name String
 }
 
 public class UIntType: IntType {
-	public const ACCEPT_TYPES #Array
 	public name String
 	public is_same_or_based_with(target BaseType) #Bool
 }
 
 public class FloatType: BaseType, IScalarType, IPureType {
-	public const ACCEPT_TYPES #List<Text>
 	public name String
 }
 
@@ -529,15 +523,15 @@ public class ArrayType: IterableType {
 
 public class DictType: IterableType {
 	public name String
-	public known_member_types Array|Dict#Dict<BaseType>
+	public known_member_types List|Dict#Dict<BaseType>
 	public unite(target BaseType) BaseType
 }
 
 public class CallableType: BaseType, IDeclaration, ICallableDeclaration {
 	use TypingTrait
 	public name String
-	public parameters Array|Dict#List<ParameterDeclaration>
-	public construct(return_type BaseType? = null, parameters Array|Dict = []) #Void
+	public parameters List|Dict#List<ParameterDeclaration>
+	public construct(return_type BaseType? = null, parameters List|Dict = []) #Void
 	public get_name() String?
 	public is_accept_single_type(target BaseType) #Bool
 }
@@ -558,8 +552,8 @@ public class SelfType: BaseType {
 public class IntersectionType: BaseType {
 	public const KIND #Text
 	public name String
-	public members Array|Dict#List<BaseType>
-	public construct(members Array|Dict = []) #Void
+	public members List|Dict#List<BaseType>
+	public construct(members List|Dict = []) #Void
 	public get_members() #List<BaseType>
 	public count() #UInt
 	public render(coder BaseCoder) String
@@ -574,11 +568,11 @@ public class Unit {
 	public loader Program?
 	public as_main Bool
 	public is_trusted Bool
-	public namespaces Array|Dict#List<NamespaceDeclaration>
-	public programs Array|Dict#List<Program>
-	public symbols Array|Dict|Null
-	public use_units Array|Dict#List<Unit>
-	public trusted_use_units Array|Dict#Dict<Bool>
+	public namespaces List|Dict#List<NamespaceDeclaration>
+	public programs List|Dict#List<Program>
+	public symbols (List|Dict)?
+	public use_units List|Dict#List<Unit>
+	public trusted_use_units List|Dict#Dict<Bool>
 	public factory ASTFactory?
 	public construct(path String) #Void
 	public append_program(program Program) #Void
@@ -596,10 +590,10 @@ public class BaseControlBlock: BaseStatement, IBlock {
 public class ForBlock: BaseControlBlock, IElseAble, IExceptAble, IBreakAble, IContinueAble {
 	use ElseTrait, ExceptTrait
 	public const KIND #Text
-	public args1 Array|Dict
-	public args2 Array|Dict
-	public args3 Array|Dict
-	public construct(args1 Array|Dict, args2 Array|Dict, args3 Array|Dict) #Void
+	public args1 List|Dict
+	public args2 List|Dict
+	public args3 List|Dict
+	public construct(args1 List|Dict, args2 List|Dict, args3 List|Dict) #Void
 }
 
 public class ForEachBlock: BaseControlBlock, IElseAble, IExceptAble, IBreakAble, IContinueAble {
@@ -634,38 +628,38 @@ public class ForToBlock: BaseControlBlock, IElseAble, IExceptAble, IBreakAble, I
 
 public interface IBlock {
 	public add_rebound_variable(decl IVariableDeclaration) #Void
-	public get_rebound_variables() Array|Dict
-	public set_body_with_statements(statements Array|Dict) #Void
-	public set_belong_block(block BaseDeclaration|IBlock|Null)
+	public get_rebound_variables() List|Dict
+	public set_body_with_statements(statements List|Dict) #Void
+	public set_belong_block(block (BaseDeclaration|IBlock)?)
 	public get_label() String?
 	public mark_as_transfered()
 	public has_transfered() Bool
 	public has_symbol(name String) Bool
 	public get_symbol(name String) Symbol?
 	public set_symbol(name String, symbol Symbol)
-	public get_symbols() Array|Dict
-	public get_belong_block() BaseDeclaration|IBlock|Null
+	public get_symbols() List|Dict
+	public get_belong_block() (BaseDeclaration|IBlock)?
 }
 
 public trait IBlockTrait {
 	public label String?
 	public body #List<IStatement>|BaseExpression
-	public symbols Array|Dict#Dict<Mixed>
-	public belong_block BaseDeclaration|IBlock|Null
+	public symbols List|Dict#Dict<Mixed>
+	public belong_block (BaseDeclaration|IBlock)?
 	public is_transfered Bool
-	public set_body_with_statements(statements Array|Dict) #Void
+	public set_body_with_statements(statements List|Dict) #Void
 	public get_label() String?
 	public add_rebound_variable(decl IVariableDeclaration) #Void
-	public get_rebound_variables() Array|Dict
+	public get_rebound_variables() List|Dict
 	public mark_as_transfered()
 	public has_transfered() Bool
 	public has_symbol(name String) Bool
 	public get_symbol(name String) Symbol?
 	public set_symbol(name String, symbol Symbol)
-	public get_symbols() Array|Dict
-	public set_belong_block(block BaseDeclaration|IBlock|Null)
-	public get_belong_block() BaseDeclaration|IBlock|Null
-	public reset_rebound_types() Array|Dict
+	public get_symbols() List|Dict
+	public set_belong_block(block (BaseDeclaration|IBlock)?)
+	public get_belong_block() (BaseDeclaration|IBlock)?
+	public reset_rebound_types() List|Dict
 }
 
 public interface IElseAble {
@@ -679,7 +673,7 @@ public interface IElseBlock {
 
 public trait ElseTrait {
 	public else IElseBlock?
-	public get_else_branches() #Array
+	public get_else_branches() #List
 	public set_else_block(__else IElseBlock)
 }
 
@@ -707,32 +701,32 @@ public class MatchBlock: BaseExpression, IBlock {
 	use IBlockTrait
 	public const KIND #Text
 	public subject BaseExpression
-	public arms Array|Dict#List<MatchArm>
+	public arms List|Dict#List<MatchArm>
 	public value_type BaseType?
 	public construct(subject BaseExpression) #Void
-	public set_arms(arms Array|Dict) #Void
+	public set_arms(arms List|Dict) #Void
 }
 
 public class MatchArm: BaseExpression {
 	public const KIND #Text
-	public patterns Array|Dict#List<BaseExpression>
+	public patterns List|Dict#List<BaseExpression>
 	public return BaseExpression
-	public construct(patterns Array|Dict) #Void
+	public construct(patterns List|Dict) #Void
 }
 
 public class SwitchBlock: BaseControlBlock, IElseAble, IExceptAble, IBreakAble {
 	use ElseTrait, ExceptTrait
 	public const KIND #Text
 	public subject BaseExpression
-	public branches Array|Dict#List<SwitchBranch>
+	public branches List|Dict#List<SwitchBranch>
 	public construct(subject BaseExpression) #Void
-	public set_branches(branches Array|Dict) #Void
+	public set_branches(branches List|Dict) #Void
 }
 
 public class SwitchBranch: BaseControlBlock {
 	public const KIND #Text
-	public patterns Array|Dict#List<BaseExpression>
-	public construct(patterns Array|Dict) #Void
+	public patterns List|Dict#List<BaseExpression>
+	public construct(patterns List|Dict) #Void
 }
 
 public interface IExceptAble {
@@ -761,7 +755,7 @@ public class FinallyBlock: BaseControlBlock {
 }
 
 public trait ExceptTrait {
-	public catchings Array|Dict#List<CatchBlock>
+	public catchings List|Dict#List<CatchBlock>
 	public finally FinallyBlock?
 	public has_exceptional() #Bool
 	public add_catching_block(block CatchBlock)
@@ -826,10 +820,10 @@ public trait BaseDeclarationTrait {
 	public origin_name String?
 	public is_extern Bool
 	public is_unit_level Bool
-	public uses Array|Dict#List<UseDeclaration>
-	public attributes Array|Dict#List<MetaAttribute>
-	public unknow_identifiers Array|Dict#List<PlainIdentifier|TypeReference>
-	public belong_block BaseDeclaration|IBlock|Null
+	public uses List|Dict#List<UseDeclaration>
+	public attributes List|Dict#List<MetaAttribute>
+	public unknow_identifiers List|Dict#List<PlainIdentifier|TypeReference>
+	public belong_block (BaseDeclaration|IBlock)?
 	public program Program?
 	public get_name() String?
 	public set_depends_to_unit_level() #Void
@@ -864,12 +858,12 @@ public class ClassFeature {
 }
 
 public class ClassKindredDeclaration: RootDeclaration {
-	public extends Array|Dict#List<ClassKindredIdentifier>
-	public implements Array|Dict#List<ClassKindredIdentifier>
-	public usings Array|Dict#List<TraitsUsingStatement>
-	public members Array|Dict#List<IClassMemberDeclaration>
-	public symbols Array|Dict#Dict<Mixed>
-	public belong_block BaseDeclaration|IBlock|Null
+	public extends List|Dict#List<ClassKindredIdentifier>
+	public implements List|Dict#List<ClassKindredIdentifier>
+	public usings List|Dict#List<TraitsUsingStatement>
+	public members List|Dict#List<IClassMemberDeclaration>
+	public symbols List|Dict#Dict<Mixed>
+	public belong_block (BaseDeclaration|IBlock)?
 	public typing_identifier TypeReference?
 	public this_class_symbol Symbol?
 	public this_object_symbol Symbol?
@@ -880,13 +874,13 @@ public class ClassKindredDeclaration: RootDeclaration {
 	public unite_feature_flags(flags Int) #Void
 	public set_feature(feature ClassFeature) #Void
 	public has_feature(feature ClassFeature) #Int
-	public set_extends(identifiers Array|Dict) #Void
-	public set_implements(identifiers Array|Dict) #Void
+	public set_extends(identifiers List|Dict) #Void
+	public set_implements(identifiers List|Dict) #Void
 	public append_trait_using(using TraitsUsingStatement) #Void
 	public append_member_symbol(symbol Symbol) #Bool
 	public static get_property_symbol_key(name String) String
 	public is_same_or_based_with_symbol(symbol Symbol) #Bool
-	public find_based_with_symbol(symbol Symbol) #PlainIdentifier|TypeReference|Null
+	public find_based_with_symbol(symbol Symbol) #(PlainIdentifier|TypeReference)?
 }
 
 public class ClassDeclaration: ClassKindredDeclaration, ICallableDeclaration {
@@ -894,7 +888,7 @@ public class ClassDeclaration: ClassKindredDeclaration, ICallableDeclaration {
 	public is_abstract Bool
 	public is_readonly Bool
 	public is_final Bool
-	public find_based_with_symbol(symbol Symbol) #PlainIdentifier|TypeReference|Null
+	public find_based_with_symbol(symbol Symbol) #(PlainIdentifier|TypeReference)?
 }
 
 public class BuiltinTypeClassDeclaration: ClassDeclaration {
@@ -936,7 +930,7 @@ public class PropertyDeclaration: BaseClassMemberDeclaration, IVariableDeclarati
 	public is_readonly Bool
 	public has_hooks Bool
 	public hook_get BaseExpression?
-	public hook_set String|BaseExpression|Null
+	public hook_set (String|BaseExpression)?
 	public promoted_property_set_modifier String?
 	public set_visibility String?
 	public get_visibility String?
@@ -970,17 +964,17 @@ public class EnumCaseDeclaration: BaseClassMemberDeclaration, IValuableDeclarati
 }
 
 public interface IFunctionDeclaration: IBlock, ICallableDeclaration {
-	public set_parameters(parameters Array|Dict)
+	public set_parameters(parameters List|Dict)
 	public set_declared_type(type BaseType?)
 }
 
 public trait FunctionTrait {
 	use IBlockTrait
-	public callbacks Array|Dict#List<CallbackArgument>
-	public parameters Array|Dict#List<ParameterDeclaration>
+	public callbacks List|Dict#List<CallbackArgument>
+	public parameters List|Dict#List<ParameterDeclaration>
 	public is_mutating Bool
 	public set_body_with_expression(expression BaseExpression) #Void
-	public set_parameters(parameters Array|Dict)
+	public set_parameters(parameters List|Dict)
 	public set_declared_type(type BaseType?)
 }
 
@@ -994,28 +988,28 @@ public class FunctionDeclaration: RootDeclaration, IFunctionDeclaration {
 public class MemberMappingDeclaration: MethodDeclaration {
 	public const KIND #Text
 	public is_property Bool
-	public arguments_map Array|Dict#List<Int>
+	public arguments_map List|Dict#List<Int>
 }
 
 public class MetaAttribute: Node {
 	public identifier ClassKindredIdentifier
-	public arguments Array|Dict
+	public arguments List|Dict
 	public group Int
-	public construct(identifier ClassKindredIdentifier, arguments Array|Dict, group Int) #Void
+	public construct(identifier ClassKindredIdentifier, arguments List|Dict, group Int) #Void
 }
 
 public class NamespaceDeclaration: RootDeclaration {
 	public const KIND #Text
-	public namespaces Array|Dict#Dict<NamespaceDeclaration>
-	public symbols Array|Dict#Dict<Symbol>
+	public namespaces List|Dict#Dict<NamespaceDeclaration>
+	public symbols List|Dict#Dict<Symbol>
 	public construct(name String) #Void
 }
 
 public class TraitsUsingStatement: BaseClassMemberDeclaration {
 	public const KIND #Text
-	public items Array|Dict
-	public options Array|Dict
-	public construct(items Array|Dict, options Array|Dict|Null = []) #Void
+	public items List|Dict
+	public options List|Dict
+	public construct(items List|Dict, options (List|Dict)? = []) #Void
 }
 
 public class UseDeclaration: RootDeclaration {
@@ -1089,15 +1083,15 @@ public class KeyAccessing: BracketAccessing, IAssignable {
 public class AnonymousFunction: BaseExpression, IDeclaration, IFunctionDeclaration, IUnknownIdentifierContainer {
 	use BaseDeclarationTrait, FunctionTrait
 	public const KIND #Text
-	public using_params Array|Dict#List<ParameterDeclaration>
+	public using_params List|Dict#List<ParameterDeclaration>
 	public is_static Bool
-	public construct(return_type BaseType? = null, parameters Array|Dict|Null = null) #Void
+	public construct(return_type BaseType? = null, parameters (List|Dict)? = null) #Void
 }
 
 public trait MemberContainerTrait {
-	public items Array|Dict
+	public items List|Dict
 	public is_vertical_layout Bool
-	public construct(items Array|Dict = []) #Void
+	public construct(items List|Dict = []) #Void
 }
 
 public interface IArrayLikeExpression {
@@ -1133,15 +1127,15 @@ public class BaseExpression: Node {
 
 public class BaseCallExpression: BaseExpression {
 	public callee BaseExpression
-	public arguments Array|Dict#List<BaseExpression>
-	public named_arguments Array|Dict#List<NamedArgument>
-	public construct(callee BaseExpression, arguments Array|Dict, named_arguments Array|Dict = []) #Void
+	public arguments List|Dict#List<BaseExpression>
+	public named_arguments List|Dict#List<NamedArgument>
+	public construct(callee BaseExpression, arguments List|Dict, named_arguments List|Dict = []) #Void
 }
 
 public class InstancingExpression: BaseCallExpression {
 	public const KIND #Text
 	public anonymous_class ClassDeclaration?
-	public construct(callee BaseExpression, arguments Array|Dict, named_arguments Array|Dict = []) #Void
+	public construct(callee BaseExpression, arguments List|Dict, named_arguments List|Dict = []) #Void
 }
 
 public class PipeCallExpression: BaseCallExpression {
@@ -1150,7 +1144,7 @@ public class PipeCallExpression: BaseCallExpression {
 
 public class CallExpression: BaseCallExpression {
 	public const KIND #Text
-	public callbacks Array|Dict#List<CallbackArgument>
+	public callbacks List|Dict#List<CallbackArgument>
 	public set_callbacks(callbacks CallbackArgument) #Void
 }
 
@@ -1186,8 +1180,8 @@ public class IncludeExpression: BaseExpression {
 }
 
 public class InterpolatedString: BaseExpression {
-	public items Array|Dict
-	public construct(items Array|Dict) #Void
+	public items List|Dict
+	public construct(items List|Dict) #Void
 }
 
 public class HereDocString: InterpolatedString {
@@ -1351,16 +1345,16 @@ public class RegularExpression: BaseExpression {
 public class RelayExpression: BaseExpression {
 	public const KIND #Text
 	public argument BaseExpression
-	public callees Array|Dict
+	public callees List|Dict
 	public construct(argument BaseExpression, callees BaseExpression) #Void
 }
 
 public class Ton: BaseExpression {
 	public const KIND #Text
 	public name String?
-	public attributes Array|Dict
-	public elements Array|Dict|Null
-	public construct(name String?, attributes Array|Dict = [], elements Array|Dict|Null = null) #Void
+	public attributes List|Dict
+	public elements (List|Dict)?
+	public construct(name String?, attributes List|Dict = [], elements (List|Dict)? = null) #Void
 }
 
 public class XTagElement: BaseExpression {
@@ -1370,9 +1364,9 @@ public class XTagElement: BaseExpression {
 public class XTag: XTagElement {
 	public const KIND #Text
 	public name String
-	public fixed_attributes Array|Dict
+	public fixed_attributes List|Dict
 	public dynamic_attributes BaseExpression?
-	public children Array|Dict|Null
+	public children (List|Dict)?
 	public is_self_closing_tag Bool
 	public inner_br Bool
 	public closing_indents String?
@@ -1423,13 +1417,13 @@ public interface IStatement {
 }
 
 public class BaseStatement: Node, IStatement {
-	public belong_block BaseDeclaration|IBlock|Null
+	public belong_block (BaseDeclaration|IBlock)?
 }
 
 public class ConstStatement: BaseStatement {
 	public const KIND #Text
-	public members Array|Dict#List<ConstantDeclaration>
-	public construct(members Array|Dict) #Void
+	public members List|Dict#List<ConstantDeclaration>
+	public construct(members List|Dict) #Void
 }
 
 public interface IBreakAble {
@@ -1485,9 +1479,9 @@ public class ExitStatement: ControlStatement {
 
 public class EchoStatement: BaseStatement {
 	public const KIND #Text
-	public arguments Array|Dict#List<BaseExpression>
+	public arguments List|Dict#List<BaseExpression>
 	public end_newline Bool
-	public construct(arguments Array|Dict) #Void
+	public construct(arguments List|Dict) #Void
 }
 
 public class NamespaceStatement: BaseStatement {
@@ -1512,16 +1506,16 @@ public class UnsetStatement: BaseStatement {
 public class UseStatement: BaseStatement {
 	public const KIND #Text
 	public ns NamespaceIdentifier
-	public targets Array|Dict
-	public attributes Array|Dict
-	public construct(ns NamespaceIdentifier, targets Array|Dict = [], attributes Array|Dict = []) #Void
+	public targets List|Dict
+	public attributes List|Dict
+	public construct(ns NamespaceIdentifier, targets List|Dict = [], attributes List|Dict = []) #Void
 	public append_target(target UseDeclaration) #Void
 }
 
 public class VarStatement: BaseStatement {
 	public const KIND #Text
-	public members Array|Dict#List<VariableDeclaration>
-	public construct(members Array|Dict) #Void
+	public members List|Dict#List<VariableDeclaration>
+	public construct(members List|Dict) #Void
 }
 
 public class BaseCoder {
@@ -1546,11 +1540,11 @@ public class BaseCoder {
 	protected temp_name_index #UInt
 	public render_node(node Node) String?
 	public render_program(program Program) #Mixed
-	protected join_code(items Array|Dict) #Mixed
-	protected render_program_statements(program Program) #Array
-	protected render_uses(statements Array|Dict) #Mixed
+	protected join_code(items List|Dict) #Mixed
+	protected render_program_statements(program Program) #List
+	protected render_uses(statements List|Dict) #Mixed
 	protected generate_classkindred_header(node ClassKindredDeclaration, kind String) #String
-	protected get_declaration_modifier(node BaseDeclaration, default_modifier String? = null) #Text|String
+	protected get_declaration_modifier(node BaseDeclaration, default_modifier String? = null) #String
 	protected get_declaration_name(node BaseDeclaration) #String
 	protected generate_class_bases(node ClassKindredDeclaration) #String
 	protected generate_function_header(node IFunctionDeclaration) #String
@@ -1559,7 +1553,7 @@ public class BaseCoder {
 	protected generate_class_constant_header(node ClassConstantDeclaration) #Mixed
 	protected generate_constant_header(node IConstantDeclaration) #Mixed
 	protected render_type_expr_for_decl(node BaseDeclaration) #String?
-	protected render_parameters(nodes Array|Dict) #Mixed
+	protected render_parameters(nodes List|Dict) #Mixed
 	public render_member_mapping_declaration(node MemberMappingDeclaration) #String
 	protected render_member_mapping_body_expression(node MemberMappingDeclaration) String
 	public render_method_declaration(node MethodDeclaration) #String
@@ -1583,19 +1577,20 @@ public class BaseCoder {
 	public render_assignment_operation(node AssignmentOperation) #String
 	public render_parentheses(node Parentheses) #String
 	public render_string_interpolation(node StringInterpolation) #String?
-	public render_xtag(node XTag) #Any|String
+	public render_xtag(node XTag) #Any
 	public render_xtag_text(node XTagText) #String
-	protected render_xtag_components(items Array|Dict) #Any|String
-	protected merge_xtag_components(items inout Array|Dict, new_items Array|Dict|Null) #Void
-	protected get_children_components(children Array|Dict) #Array
-	protected append_xtag_attribute_components(items inout Array|Dict, node XTag) #Void
+	protected render_xtag_components(items List|Dict) #Any
+	protected merge_xtag_components(items inout List|Dict, new_items (List|Dict)?) #Void
+	protected get_children_components(children List|Dict) #List
+	protected append_xtag_attribute_components(items inout List|Dict, node XTag) #Void
 	public render_constant_identifier(node ConstantIdentifier) #String
 	public render_variable_identifier(node VariableIdentifier) #String
 	public render_plain_identifier(node PlainIdentifier) String
 	public render_type_identifier(node BaseType) #Mixed
 	protected render_invalidable_sentinel(sentinel LiteralExpression) String
 	protected render_excludable_sentinel(sentinel LiteralExpression) String
-	public render_union_type(node UnionType) #String
+	public render_union_type(node UnionType) #String?
+	protected render_nullable_union_type(node UnionType) String?
 	protected should_skip_union_member_for_render(node UnionType, member BaseType) Bool
 	protected add_short_nullable_sign(expr String) #String
 	protected can_use_short_nullable(node UnionType) #Bool
@@ -1607,7 +1602,7 @@ public class BaseCoder {
 	public render_class_new(node BaseExpression) #String
 	public render_call_expression(node CallExpression) #String
 	public render_first_class_callable_expression(node FirstClassCallableExpression) #String
-	protected render_arguments(nodes Array|Dict) #Mixed
+	protected render_arguments(nodes List|Dict) #Mixed
 	public render_line_comment(node LineComment) #String
 	public render_key_accessing(node KeyAccessing) #String
 	public render_literal_default_mark(node LiteralDefaultMark) #Text
@@ -1622,16 +1617,16 @@ public class BaseCoder {
 	public render_escaped_interpolated_string(node EscapedInterpolatedString) #Mixed
 	public render_array_expression(node ArrayExpression) #String
 	public render_destructuring(node Destructuring) #String
-	public render_dict_expression(node DictExpression) #Text|String
-	protected render_dict_members(subnodes Array|Dict, is_vertical_layout Bool) #String
+	public render_dict_expression(node DictExpression) #String
+	protected render_dict_members(subnodes List|Dict, is_vertical_layout Bool) #Mixed
 	public render_dict_member(node DictMember) #String
 	public render_object_member(node ObjectMember) #String
 	protected render_key_for_object_member(node ObjectMember) #String
-	protected join_member_items(items Array|Dict, is_vertical_layout Bool) #String
+	protected join_member_items(items List|Dict, is_vertical_layout Bool) #Mixed
 	protected wrap_dict(body String) #String
 	protected wrap_object(body String) #String
 	public render_object_expression(node ObjectExpression) #String
-	protected render_object_members(subnodes Array|Dict, is_vertical_layout Bool) #String
+	protected render_object_members(subnodes List|Dict, is_vertical_layout Bool) #Mixed
 	public render_as_operation(node AsOperation) #String
 	public render_cast_operation(node CastOperation) String
 	public render_is_operation(node IsOperation) #String
@@ -1642,7 +1637,7 @@ public class BaseCoder {
 	public render_ternary_expression(node TernaryExpression) #Mixed
 	public render_regular_expression(node RegularExpression) #String
 	public render_use_statement(node UseStatement) #String
-	protected generate_use_targets(targets Array|Dict) #Mixed
+	protected generate_use_targets(targets List|Dict) #Mixed
 	public render_forin_block(node ForInBlock) #Mixed
 	public render_forto_block(node ForToBlock) #String
 	public render_while_block(node WhileBlock) #String
@@ -1665,8 +1660,8 @@ public class BaseCoder {
 	public render_normal_statement(statement NormalStatement) #String
 	public render_function_body(node IFunctionDeclaration) String
 	public render_control_structure_body(node IBlock) #String
-	protected wrap_block_code(items Array|Dict) #String
-	protected render_block_nodes(nodes Array|Dict) #Array
+	protected wrap_block_code(items List|Dict) #String
+	protected render_block_nodes(nodes List|Dict) #List
 	public render_yield_expression(node YieldExpression) #String
 	protected indents(contents String, number #UInt = 1) #String
 	protected begin_tag() #Text
@@ -1690,14 +1685,14 @@ public class PHPCoder: BaseCoder {
 	public const BUILTIN_TYPE_MAP #Dict<Text>
 	public const IS_TEST_MAP #Dict<Text>
 	public const EXTRA_RESERVEDS #List<Text>
-	public const METHOD_NAMES_MAP #Array
+	public const METHOD_NAMES_MAP #List
 	public const PROGRAM_HEADER #String
-	protected uses #Array
-	protected render_program_statements(program Program) #Array
-	protected process_use_statments(decls Array|Dict) #Void
+	protected uses #List
+	protected render_program_statements(program Program) #List
+	protected process_use_statments(decls List|Dict) #Void
 	protected collect_use_statements(decl BaseDeclaration) #Void
-	protected render_heading_statements(program Program) #Array
-	protected generate_use_targets(targets Array|Dict) #Mixed
+	protected render_heading_statements(program Program) #List
+	protected generate_use_targets(targets List|Dict) #Mixed
 	protected generate_classkindred_header(node ClassKindredDeclaration, kind String) #String
 	protected generate_class_bases(node ClassKindredDeclaration) #String
 	protected generate_function_header(node IFunctionDeclaration, is_abstract Bool = false) #String
@@ -1709,7 +1704,7 @@ public class PHPCoder: BaseCoder {
 	public render_method_declaration(node MethodDeclaration) #String?
 	public render_function_declaration(node FunctionDeclaration) #String?
 	public render_anonymous_function(node AnonymousFunction) #String
-	protected render_anonymous_using_parameters(using_params Array|Dict) #Mixed
+	protected render_anonymous_using_parameters(using_params List|Dict) #Mixed
 	public render_function_body(node IFunctionDeclaration) String
 	protected render_function_parameters(node Node) #Mixed
 	public render_parameter_declaration(node ParameterDeclaration) #String
@@ -1719,16 +1714,16 @@ public class PHPCoder: BaseCoder {
 	public render_interface_declaration(node InterfaceDeclaration) #Mixed
 	public render_intertrait_declaration(node IntertraitDeclaration) #String
 	public static get_intertrait_trait_name(name String) #String
-	protected render_interface_members(node InterfaceDeclaration) #Array
+	protected render_interface_members(node InterfaceDeclaration) #List
 	protected render_interface_method(node MethodDeclaration) #String
-	protected render_trait_members_for_intertrait(node InterfaceDeclaration) #Array
+	protected render_trait_members_for_intertrait(node InterfaceDeclaration) #List
 	public render_switch_block(node SwitchBlock) #Mixed
 	public render_match_block(node MatchBlock) #String
 	public render_match_arm(node MatchArm) #String
 	public render_default_pattern(node DefaultPattern) #Text
 	protected render_else_for_switch_block(node IElseBlock) #String
 	protected render_switch_branch(node SwitchBranch) #Mixed
-	protected render_switch_branch_body(nodes Array|Dict) #String
+	protected render_switch_branch_body(nodes List|Dict) #String
 	public render_forin_block(node ForInBlock) #Mixed
 	public render_forto_block(node ForToBlock) #Mixed
 	protected generate_temp_variable_name() #String
@@ -1737,10 +1732,10 @@ public class PHPCoder: BaseCoder {
 	public render_try_block(node TryBlock) #Mixed
 	public render_assignment_operation(node AssignmentOperation) #Mixed
 	public render_xtag(node XTag) #Mixed
-	protected render_xtag_components(items Array|Dict) #Mixed
+	protected render_xtag_components(items List|Dict) #Mixed
 	public render_xtag_attr_interpolation(node XTagAttrInterpolation) #String
 	public render_xtag_child_interpolation(node XTagChildInterpolation) #String
-	protected build_xtag_attribute_components(node XTag) #Array|Dict
+	protected build_xtag_attribute_components(node XTag) #List
 	public render_regular_expression(node RegularExpression) #String
 	protected get_normalized_method_name(name String) #Mixed
 	public render_accessing_identifier(node AccessingIdentifier) #Any
@@ -1751,7 +1746,7 @@ public class PHPCoder: BaseCoder {
 	public render_first_class_callable_expression(node FirstClassCallableExpression) #String
 	public render_pipecall_expression(node PipeCallExpression) #Any
 	public render_basecall_expression(node BaseCallExpression) #Any
-	protected render_arguments(nodes Array|Dict) #Mixed
+	protected render_arguments(nodes List|Dict) #Mixed
 	public render_callback_argument(node CallbackArgument) #String?
 	public render_named_argument(node NamedArgument) #String
 	public render_constant_identifier(node ConstantIdentifier) #String
@@ -1760,7 +1755,8 @@ public class PHPCoder: BaseCoder {
 	public render_plain_identifier(node PlainIdentifier) String
 	public render_native_identifier(node NativeIdentifier) #String
 	public render_type_expr(node BaseType) #String?
-	public render_type_identifier(node BaseType) #String?|Text
+	public render_type_identifier(node BaseType) #String?
+	public render_union_type(node UnionType) #Mixed
 	protected render_invalidable_type_identifier(node InvalidableType) String
 	protected add_short_nullable_sign(expr String) #String
 	public render_classkindred_identifier(node ClassKindredIdentifier|TypeReference) #String
@@ -1781,7 +1777,7 @@ public class PHPCoder: BaseCoder {
 	public render_string_interpolation(node StringInterpolation) #String
 	protected render_key_for_object_member(node ObjectMember) #String
 	protected wrap_object(body String) #String
-	public render_as_operation(node AsOperation, add_parentheses Bool = false) #String
+	public render_as_operation(node AsOperation, add_parentheses Bool = false) #String?
 	public render_cast_operation(node CastOperation, add_parentheses Bool = false) String
 	public render_is_operation(node IsOperation) #String
 	public render_prefix_operation(node BaseExpression) #String
@@ -1795,16 +1791,16 @@ public class PHPCoder: BaseCoder {
 }
 
 public class PHPLoaderCoder: PHPCoder {
-	public render_loader_program(header_program Program, normal_programs Array|Dict, loaders Array|Dict) #Mixed
-	protected render_base_statements(program Program, loaders Array|Dict) #Array
-	public render_autoloads_code(autoloads Array|Dict) #String
+	public render_loader_program(header_program Program, normal_programs List|Dict, loaders List|Dict) #Mixed
+	protected render_base_statements(program Program, loaders List|Dict) #List
+	public render_autoloads_code(autoloads List|Dict) #String
 }
 
 public class TeaHeaderCoder: BaseCoder {
 	public const PROGRAM_HEADER #String
 	protected process_use_statments(program Program) #Void
 	protected dig_using_statements(program Program, decl BaseDeclaration) #Void
-	protected render_program_statements(program Program) #Array
+	protected render_program_statements(program Program) #List
 	public render_class_constant_declaration(node ClassConstantDeclaration) #String?
 	public render_constant_declaration(node IConstantDeclaration) #String?
 	public render_property_declaration(node PropertyDeclaration) #String?
@@ -1832,20 +1828,13 @@ public class ASTChecker {
 	public preprocess_declarations(program Program) #Void
 	public check_program(program Program) #Void
 	public check_all_usings(program Program) #Void
-	protected check_use_target(node UseDeclaration) #Void
-	protected check_function_declaration(node FunctionDeclaration) #Void
 	protected check_method_declaration(node MethodDeclaration) #Void
-	protected check_overrided_member(node IClassMemberDeclaration, __super IClassMemberDeclaration, is_interface Bool = false) #Void
-	protected reduce_types_with_else_block(node IElseAble, previous_type BaseType?) BaseType?
 	protected infer_else_block(node IElseBlock) BaseType?
 	protected infer_plain_identifier(node PlainIdentifier) BaseType
-	protected find_type_symbol_and_check_declaration(identifier BaseType) #Mixed
-	protected link_source_declaration_for_use(use UseDeclaration, unit Unit) #Void
-	protected get_uses_unit_declaration(ns NamespaceIdentifier) Unit?
 	public new_syntax_error(message String, node Node) #Exception
-	public consume_check_warnings() Array|Dict
+	public consume_check_warnings() List|Dict
 	public static get_declaration_name(decl BaseDeclaration) #String
-	public static get_type_name(type BaseType) #String
+	public static get_type_name(type BaseType) #Mixed
 	public static get_type_reference_name(identifier BaseType) #Mixed
 }
 
@@ -1859,7 +1848,7 @@ public class ASTFactory {
 	public set_namespace(ns NamespaceIdentifier) #Void
 	public set_unit_option(key String, value String) #Void
 	public exists_use_unit(ns NamespaceIdentifier) #Bool
-	public create_use_statement(ns NamespaceIdentifier, targets Array|Dict, attributes Array|Dict = []) #UseStatement
+	public create_use_statement(ns NamespaceIdentifier, targets List|Dict, attributes List|Dict = []) #UseStatement
 	public append_use_target(ns NamespaceIdentifier, target_name String? = null, source_name String? = null, import_kind String? = null) #UseDeclaration
 	public create_break_statement(argument BaseExpression? = null) #BreakStatement
 	public create_continue_statement(argument BaseExpression? = null) #ContinueStatement
@@ -1875,15 +1864,15 @@ public class ASTFactory {
 	public create_identifier(name String) #BaseExpression
 	public create_plain_identifier(name String) #PlainIdentifier
 	public create_builtin_identifier(token String) BaseExpression
-	public create_namespace_identifier(names Array|Dict) #NamespaceIdentifier
+	public create_namespace_identifier(names List|Dict) #NamespaceIdentifier
 	public create_yield_expression(argument BaseExpression, is_from Bool = false) #YieldExpression
 	public create_throw_expression(argument BaseExpression) #ThrowExpression
 	public remove_defer_check(identifier PlainIdentifier) #Void
 	public create_prefix_operation(expr BaseExpression, operator Operator) #PrefixOperation
 	public create_postfix_operation(expr BaseExpression, operator Operator) #PostfixOperation
-	public create_binary_operation(left BaseExpression, right BaseExpression, operator Operator) #IsOperation
+	public create_binary_operation(left BaseExpression, right BaseExpression, operator Operator) #BinaryOperation
 	public create_assignment(assigned_to BaseExpression, value BaseExpression, operator Operator) #AssignmentOperation
-	public create_destructuring(items Array|Dict) #Destructuring
+	public create_destructuring(items List|Dict) #Destructuring
 	public create_program(file String, parser BaseParser) #Program
 	public create_virtual_constant(name String, type BaseType? = null, value BaseExpression? = null) #List<ConstantDeclaration|Symbol>
 	public create_virtual_function(name String, program Program? = null) #List<FunctionDeclaration|Symbol>
@@ -1898,8 +1887,8 @@ public class ASTFactory {
 	public create_interface_declaration(name String, modifier String, ns NamespaceIdentifier? = null) #InterfaceDeclaration
 	public create_intertrait_declaration(name String, modifier String, ns NamespaceIdentifier? = null) #IntertraitDeclaration
 	public create_trait_declaration(name String, modifier String, ns NamespaceIdentifier? = null) #TraitDeclaration
-	public create_traits_using_statement(items Array|Dict, options Array|Dict = []) #TraitsUsingStatement
-	public set_scope_parameters(parameters Array|Dict) #Void
+	public create_traits_using_statement(items List|Dict, options List|Dict = []) #TraitsUsingStatement
+	public set_scope_parameters(parameters List|Dict) #Void
 	public create_member_mapping_declaration(name String) #MemberMappingDeclaration
 	public create_method_declaration(modifier String?, name String) #MethodDeclaration
 	public create_function_declaration(modifier String?, name String, ns NamespaceIdentifier? = null) #FunctionDeclaration
@@ -1917,12 +1906,12 @@ public class ASTFactory {
 	public create_catch_block(var_name String?, type BaseType? = null) #CatchBlock
 	public create_finally_block() #FinallyBlock
 	public create_match_block(subject BaseExpression) #MatchBlock
-	public create_match_arm(patterns Array|Dict) #MatchArm
+	public create_match_arm(patterns List|Dict) #MatchArm
 	public create_switch_block(subject BaseExpression) #SwitchBlock
-	public create_switch_branch(patterns Array|Dict) #SwitchBranch
+	public create_switch_branch(patterns List|Dict) #SwitchBranch
 	public count_target_block_layers_with_label(label String, block_interface String) #List<UInt>
 	public count_switch_layers_contains_in_block(block_interface String) #UInt
-	public create_for_block(args1 Array|Dict, args2 Array|Dict, args3 Array|Dict) #ForBlock
+	public create_for_block(args1 List|Dict, args2 List|Dict, args3 List|Dict) #ForBlock
 	public create_foreach_block(iterable BaseExpression, key BaseExpression?, val BaseExpression) #ForEachBlock
 	public create_variable_declaration_for_identifier(identifier PlainIdentifier) #Void
 	public create_forin_block(key ParameterDeclaration?, val ParameterDeclaration, iterable BaseExpression) #ForInBlock
@@ -2108,7 +2097,7 @@ public class TypeFactory {
 	public static _object
 	public static _bytes
 	public static _string
-	public static _plain
+	public static _text
 	public static _float
 	public static _int
 	public static _uint
@@ -2129,7 +2118,7 @@ public class TypeFactory {
 	public static _iview_symbol
 	public static _iterator_symbol
 	public static init() #Void
-	public static find_iterator_identifier(type BaseType) #BaseType?
+	public static find_iterator_identifier(type BaseType) #(PlainIdentifier|TypeReference|BaseType)?
 	public static set_symbols(unit Unit) #Void
 	public static get_base_exception_type() #TypeReference
 	public static get_for_casting_token_id(id Int) #Mixed
@@ -2137,13 +2126,13 @@ public class TypeFactory {
 	public static get_type(name String) #Mixed
 	public static clone_type(name String) #Mixed
 	public static create_array_type(generic_type BaseType) #ArrayType
-	public static create_dict_type(generic_type BaseType, known_member_types Array|Dict = []) #DictType
-	public static create_callable_type(return_type BaseType, parameters Array|Dict) #CallableType
+	public static create_dict_type(generic_type BaseType, known_member_types List|Dict = []) #DictType
+	public static create_callable_type(return_type BaseType, parameters List|Dict) #CallableType
 	public static create_meta_type(generic_type BaseType) #MetaType
 	public static create_invalidable_type(valid_type BaseType, sentinel LiteralExpression) BaseType
 	public static create_excludable_type(base_type BaseType, sentinel LiteralExpression) ExcludableType
-	public static create_union_type(items Array|Dict) BaseType
-	public static create_intersection_type(items Array|Dict) #IntersectionType
+	public static create_union_type(items List|Dict) BaseType
+	public static create_intersection_type(items List|Dict) #IntersectionType
 }
 
 public class ASTHelper {
@@ -2151,26 +2140,27 @@ public class ASTHelper {
 	public const NOTED_TYPE_SOURCE_HEADER #Text
 	public const NOTED_TYPE_SOURCE_PHPDOC #Text
 	public static reset_semantic_state()
+	public static reset_check_state()
 	public static get_expressed_type(expr BaseExpression) BaseType?
 	public static set_expressed_type(expr BaseExpression, type BaseType?)
 	public static get_identifier_symbol(identifier Identifiable) Symbol?
 	public static set_identifier_symbol(identifier Identifiable, symbol Symbol?)
 	public static get_object_expression_symbol(expr ObjectExpression) Symbol?
 	public static set_object_expression_symbol(expr ObjectExpression, symbol Symbol?)
-	public static get_scope_symbols(scope Unit|Program|NamespaceDeclaration|ClassKindredDeclaration|IBlock) Array|Dict#Dict<Symbol>
+	public static get_scope_symbols(scope Unit|Program|NamespaceDeclaration|ClassKindredDeclaration|IBlock) List|Dict#Dict<Symbol>
 	public static get_scope_symbol(scope Unit|Program|NamespaceDeclaration|ClassKindredDeclaration|IBlock, name String) Symbol?
 	public static set_scope_symbol(scope Unit|Program|NamespaceDeclaration|ClassKindredDeclaration|IBlock, name String, symbol Symbol)
 	public static unset_scope_symbol(scope Unit|Program|NamespaceDeclaration|ClassKindredDeclaration|IBlock, name String)
-	public static get_callee_declaration(expr BaseCallExpression) #BaseDeclaration|BaseType|AnonymousFunction|Null
+	public static get_callee_declaration(expr BaseCallExpression) #(BaseDeclaration|BaseType|AnonymousFunction)?
 	public static set_callee_declaration(expr BaseCallExpression, decl)
-	public static get_normalized_arguments(expr BaseCallExpression) Array|Dict|Null
-	public static set_normalized_arguments(expr BaseCallExpression, arguments Array|Dict|Null)
-	public static get_trait_members(decl ClassKindredDeclaration) Array|Dict
-	public static set_trait_members(decl ClassKindredDeclaration, members Array|Dict)
-	public static get_aggregated_members(decl ClassKindredDeclaration) Array|Dict
-	public static set_aggregated_members(decl ClassKindredDeclaration, members Array|Dict)
-	public static get_use_source_declaration(decl UseDeclaration) Unit|BaseDeclaration|Null
-	public static set_use_source_declaration(decl UseDeclaration, source Unit|BaseDeclaration|Null)
+	public static get_normalized_arguments(expr BaseCallExpression) (List|Dict)?
+	public static set_normalized_arguments(expr BaseCallExpression, arguments (List|Dict)?)
+	public static get_trait_members(decl ClassKindredDeclaration) List|Dict
+	public static set_trait_members(decl ClassKindredDeclaration, members List|Dict)
+	public static get_aggregated_members(decl ClassKindredDeclaration) List|Dict
+	public static set_aggregated_members(decl ClassKindredDeclaration, members List|Dict)
+	public static get_use_source_declaration(decl UseDeclaration) (Unit|BaseDeclaration)?
+	public static set_use_source_declaration(decl UseDeclaration, source (Unit|BaseDeclaration)?)
 	public static get_namespace_based_unit(ns NamespaceIdentifier) Unit?
 	public static set_namespace_based_unit(ns NamespaceIdentifier, unit Unit?)
 	public static get_namespace_last_name(ns NamespaceIdentifier) String?
@@ -2185,10 +2175,10 @@ public class ASTHelper {
 	public static set_noted_type_source(decl BaseDeclaration|AnonymousFunction|CallableType, source String?)
 	public static is_noted_type_nullable_inherited(decl BaseDeclaration|AnonymousFunction|CallableType) Bool
 	public static set_noted_type_nullable_inherited(decl BaseDeclaration|AnonymousFunction|CallableType, nullable_inherited Bool)
-	public static get_php_true_assertions(decl IFunctionDeclaration) Array|Dict
-	public static set_php_true_assertions(decl IFunctionDeclaration, assertions Array|Dict)
-	public static get_php_true_property_non_null_assertions(decl IFunctionDeclaration) Array|Dict
-	public static set_php_true_property_non_null_assertions(decl IFunctionDeclaration, properties Array|Dict)
+	public static get_php_true_assertions(decl IFunctionDeclaration) List|Dict
+	public static set_php_true_assertions(decl IFunctionDeclaration, assertions List|Dict)
+	public static get_php_true_property_non_null_assertions(decl IFunctionDeclaration) List|Dict
+	public static set_php_true_property_non_null_assertions(decl IFunctionDeclaration, properties List|Dict)
 	public static is_pure_bracket_accessing_expr(expr BaseExpression) #Bool
 	public static is_assignable_expr(expr BaseExpression) #Bool
 	public static is_mutable_expr(expr BaseExpression) #Bool
@@ -2197,28 +2187,355 @@ public class ASTHelper {
 	public static set_depends_to_unit_level(decl BaseDeclaration)
 }
 
+public class AnonymousFunctionResolver {
+	public construct(context CheckerContext, name_resolver NameResolver, function_body_resolver FunctionBodyResolver, infer_plain_identifier Callable, infer_expression Callable) #Void
+	public infer_anonymous_function(node AnonymousFunction) BaseType
+	public infer_callback_argument(node CallbackArgument) BaseType
+}
+
+public class AssignmentResolver {
+	public construct(context CheckerContext, infer_expression Callable, infer_accessing_identifier Callable, key_access_resolver KeyAccessResolver, type_compatibility_reporter TypeCompatibilityReporter, container_literal_resolver ContainerLiteralResolver) #Void
+	public infer_assignment_operation(node AssignmentOperation) BaseType
+	public rebind_type_for_variable(decl IVariableDeclaration, type BaseType, value BaseExpression? = null)
+	public infer_destructuring(expr Destructuring) BaseType
+}
+
+public class BlockStatementResolver {
+	public construct(context CheckerContext, simple_statement_resolver SimpleStatementResolver, goto_resolver GotoResolver, flow_narrowing_resolver FlowNarrowingResolver, loop_block_resolver LoopBlockResolver, iteration_resolver IterationResolver, exception_block_resolver ExceptionBlockResolver, switch_match_resolver SwitchMatchResolver, infer_expression Callable, reduce_types Callable) #Void
+	public infer_else_block(node IElseBlock) BaseType?
+	public infer_single_expression_block(block IBlock) BaseType
+	public infer_block(block IBlock) BaseType?
+	public infer_statement(node IStatement) BaseType?
+}
+
+public class CallResolver {
+	public construct(context CheckerContext, infer_expression Callable, instancing_resolver InstancingResolver, callable_declaration_resolver CallableDeclarationResolver, type_compatibility_reporter TypeCompatibilityReporter, assignment_resolver AssignmentResolver, member_resolver MemberResolver, symbol_declaration_resolver SymbolDeclarationResolver, classkindred_lookup_resolver ClassKindredLookupResolver, value_trust_resolver ValueTrustResolver) #Void
+	public infer_basecall_expression(node BaseCallExpression) BaseType
+	public check_call_arguments(node BaseCallExpression, callee_decl ICallableDeclaration)
+	public require_callee_declaration(node BaseExpression) IDeclaration
+}
+
+public class CallableDeclarationResolver {
+	public construct(context CheckerContext, function_body_resolver FunctionBodyResolver, class_body_resolver ClassBodyResolver, anonymous_function_resolver AnonymousFunctionResolver) #Void
+	public check_callable_declaration(node ICallableDeclaration)
+	public should_check_callable_declaration(node ICallableDeclaration) Bool
+	public check_function_declaration(node FunctionDeclaration)
+}
+
+public class CheckerContext {
+	public static reset_check_state()
+	public construct(is_weakly_checking Bool, unit Unit, builtin_unit Unit? = null) #Void
+	public is_weakly_checking() Bool
+	public get_factory() ASTFactory?
+	public get_unit() Unit
+	public get_builtin_unit() Unit?
+	public set_program(program Program)
+	public get_program() Program
+	public set_block(block IBlock?)
+	public get_block() IBlock?
+	public set_function(function IFunctionDeclaration?)
+	public get_function() IFunctionDeclaration?
+	public snapshot_variable_bindings(block IBlock) List|Dict
+	public restore_variable_bindings(bindings List|Dict)
+	public is_checked(node Object) Bool
+	public mark_checked(node Object)
+	public is_checking(node Object) Bool
+	public mark_checking(node Object)
+	public is_classkindred_ready(node ClassKindredDeclaration) Bool
+	public mark_classkindred_ready(node ClassKindredDeclaration)
+	public allows_none_coalescing_key_access() Bool
+	public set_none_coalescing_key_access(allow Bool)
+	public allows_php_soft_key_access() Bool
+	public set_php_soft_key_access(allow Bool)
+	public new_syntax_error(message String, node Node) Exception
+	public add_syntax_warning(message String, node Node)
+	public consume_check_warnings() List|Dict
+}
+
+public class CheckerCallbacks {
+	public construct(preprocess_classkindred_declaration Callable, check_classkindred_declaration Callable, infer_expression Callable, get_and_check_hinted_type Callable, assert_compile_time_value_for Callable, assert_type_compatible Callable, get_unknown_php_value_type Callable, check_function_declaration Callable, reduce_types Callable, infer_else_block Callable, infer_block Callable, get_type_assertion Callable, get_empty_condition_target Callable, infer_plain_identifier Callable, infer_accessing_identifier Callable, get_type_assertion_for Callable, set_type_assertion_for Callable) #Void
+	public preprocess_classkindred_declaration(decl ClassKindredDeclaration)
+	public check_classkindred_declaration(decl ClassKindredDeclaration)
+	public infer_expression(expr BaseExpression) BaseType
+	public get_and_check_hinted_type(node IDeclaration|AnonymousFunction|CallableType) BaseType?
+	public assert_compile_time_value_for(node IDeclaration)
+	public assert_type_compatible(left BaseType, right BaseType, value_node Node)
+	public get_unknown_php_value_type() BaseType
+	public check_function_declaration(decl FunctionDeclaration)
+	public reduce_types(types List|Dict, block IBlock? = null) BaseType?
+	public infer_else_block(block IElseBlock) BaseType?
+	public infer_block(block IBlock) BaseType?
+	public get_type_assertion(expr BaseExpression) List|Dict
+	public get_empty_condition_target(expr BaseExpression) List|Dict
+	public infer_plain_identifier(identifier PlainIdentifier) BaseType
+	public infer_accessing_identifier(identifier AccessingIdentifier, ignore_none Bool = false) BaseType
+	public get_type_assertion_for(expr BaseExpression) IsOperation?
+	public set_type_assertion_for(expr BaseExpression, assertion IsOperation?)
+}
+
+public class CheckerServices {
+	public checker_context CheckerContext
+	public name_resolver NameResolver
+	public virtual_symbol_factory VirtualSymbolFactory
+	public classkindred_lookup_resolver ClassKindredLookupResolver
+	public declaration_linker DeclarationLinker
+	public value_trust_resolver ValueTrustResolver
+	public use_resolver UseResolver
+	public declaration_checker DeclarationChecker
+	public declaration_check_trigger DeclarationCheckTrigger
+	public symbol_declaration_resolver SymbolDeclarationResolver
+	public override_resolver OverrideResolver
+	public class_preprocessor ClassPreprocessor
+	public container_literal_resolver ContainerLiteralResolver
+	public markup_literal_resolver MarkupLiteralResolver
+	public type_compatibility_reporter TypeCompatibilityReporter
+	public compile_time_value_checker CompileTimeValueChecker
+	public type_reference_checker TypeReferenceChecker
+	public simple_statement_resolver SimpleStatementResolver
+	public goto_resolver GotoResolver
+	public else_block_type_reducer ElseBlockTypeReducer
+	public iteration_resolver IterationResolver
+	public flow_narrowing_resolver FlowNarrowingResolver
+	public switch_match_resolver SwitchMatchResolver
+	public loop_block_resolver LoopBlockResolver
+	public exception_block_resolver ExceptionBlockResolver
+	public block_statement_resolver BlockStatementResolver
+	public function_body_resolver FunctionBodyResolver
+	public anonymous_function_resolver AnonymousFunctionResolver
+	public class_body_resolver ClassBodyResolver
+	public object_expression_resolver ObjectExpressionResolver
+	public key_access_resolver KeyAccessResolver
+	public expression_leaf_resolver ExpressionLeafResolver
+	public assignment_resolver AssignmentResolver
+	public callable_declaration_resolver CallableDeclarationResolver
+	public member_resolver MemberResolver
+	public instancing_resolver InstancingResolver
+	public call_resolver CallResolver
+	public type_assertion_resolver TypeAssertionResolver
+	public operation_resolver OperationResolver
+}
+
+public class CheckerServiceGraph {
+	public static build(is_weakly_checking Bool, unit Unit, builtin_unit Unit?, callbacks CheckerCallbacks) CheckerServices
+}
+
+public class ClassBodyResolver {
+	public construct(context CheckerContext, class_preprocessor ClassPreprocessor, declaration_checker DeclarationChecker, function_body_resolver FunctionBodyResolver, type_reference_checker TypeReferenceChecker, type_compatibility_reporter TypeCompatibilityReporter, name_resolver NameResolver, infer_expression Callable, infer_plain_identifier Callable) #Void
+	public check_class_member_declaration(node IClassMemberDeclaration)
+	public check_method_declaration(node MethodDeclaration)
+	public preprocess_classkindred_declaration(node ClassKindredDeclaration)
+	public check_classkindred_declaration(node ClassKindredDeclaration)
+}
+
+public class ClassKindredLookupResolver {
+	public construct(context CheckerContext, name_resolver NameResolver, virtual_symbol_factory VirtualSymbolFactory, preprocess_classkindred_declaration Callable, check_classkindred_declaration Callable) #Void
+	public get_actual_class_declaration_for_metatype_expr(identifier Identifiable) ClassKindredDeclaration
+	public get_class_declaration_for_type(type BaseType, expr BaseExpression) ClassKindredDeclaration
+	public get_unchecked_classkindred_declaration(identifier PlainIdentifier|TypeReference) ClassKindredDeclaration
+	public get_checked_classkindred_declaration(identifier PlainIdentifier|TypeReference, required Bool = false) ClassKindredDeclaration
+	public filter_classkindred_declaration(decl BaseDeclaration, type BaseType, expr BaseExpression|TypeReference) ClassKindredDeclaration
+}
+
+public class ClassPreprocessor {
+	public construct(context CheckerContext, classkindred_lookup_resolver ClassKindredLookupResolver, override_resolver OverrideResolver) #Void
+	public preprocess_classkindred_declaration(node ClassKindredDeclaration)
+}
+
+public class CompileTimeValueChecker {
+	public construct(context CheckerContext, name_resolver NameResolver, infer_expression Callable) #Void
+	public assert_compile_time_value_for(node IValuableDeclaration)
+	public is_const_expr(node BaseExpression) Bool
+}
+
 public class CompilerErrorReporter {
-	public static create_exception_issue(unit Unit, program Program, stage String, e Exception) Array|Dict
-	public static create_warning_issues(unit Unit, program Program, stage String, warnings Array|Dict) Array|Dict
-	public static format_check_issues(issues Array|Dict, title String) String
+	public static create_exception_issue(unit Unit, program Program, stage String, e Exception) List|Dict
+	public static create_warning_issues(unit Unit, program Program, stage String, warnings List|Dict) List|Dict
+	public static format_check_issues(issues List|Dict, title String) String
+}
+
+public class ContainerLiteralResolver {
+	public construct(context CheckerContext, infer_expression Callable, reduce_types Callable) #Void
+	public infer_array_expression(node ArrayExpression) BaseType
+	public infer_dict_expression(node DictExpression) BaseType
+	public get_literal_dict_key(key BaseExpression) String?
+	public infer_dict_member(item DictMember) BaseType
+}
+
+public class DeclarationCheckTrigger {
+	public construct(context CheckerContext, use_resolver UseResolver, declaration_checker DeclarationChecker) #Void
+	public check_declaration(decl BaseDeclaration, skip_current_function_owner Bool = false)
+	public check_declaration_for_symbol(symbol Symbol)
+	public check_parameters_for_callable_declaration(decl ICallableDeclaration)
+}
+
+public class DeclarationChecker {
+	public construct(context CheckerContext, infer_expression Callable, get_and_check_hinted_type Callable, assert_compile_time_value_for Callable, assert_type_compatible Callable, get_unknown_php_value_type Callable, check_function_declaration Callable, check_classkindred_declaration Callable) #Void
+	public check_declaration(decl BaseDeclaration)
+	public check_constant_declaration(node IConstantDeclaration)
+	public check_variable_declaration(node IVariableDeclaration)
+	public check_parameters_for_callable_declaration(node ICallableDeclaration)
+	public check_property_declaration(node PropertyDeclaration)
+	public check_enum_case_declaration(node EnumCaseDeclaration)
+	public check_class_constant_declaration(node ClassConstantDeclaration)
+}
+
+public class DeclarationLinker {
+	public construct(context CheckerContext, name_resolver NameResolver, virtual_symbol_factory VirtualSymbolFactory) #Void
+	public link_declarations(program Program)
 }
 
 public class Dumper {
 	public const INDENT #Text
-	public const QUOTE_ENCODES #Dict<Text|String>
-	public construct(ignore_list Array|Dict = [], max_dump_depth Int = 5) #Void
-	public stringify(data, indent #UInt = 1, expansion_depth #UInt = 1, max_chars_inline #UInt = MAX_CHARS_INLINE) #Text
-	public stringify_array(data Array|Dict, indent_num #UInt = 1, expansion_depth #UInt = 1, max_chars_inline #UInt = 120) #Text|String
+	public const QUOTE_ENCODES #Dict<String>
+	public construct(ignore_list List|Dict = [], max_dump_depth Int = 5) #Void
+	public stringify(data, indent #UInt = 1, expansion_depth #UInt = 1, max_chars_inline #UInt = MAX_CHARS_INLINE) #Any
+	public stringify_array(data List|Dict, indent_num #UInt = 1, expansion_depth #UInt = 1, max_chars_inline #UInt = 120) #String
 	public stringify_object(object Object, indent_num #UInt = 1, expansion_depth #UInt = 1, max_chars_inline #UInt = MAX_CHARS_INLINE) #String
 	public stringify_as_object(name String, object, indent_num #UInt = 1, expansion_depth #UInt = 1, max_chars_inline #UInt = MAX_CHARS_INLINE) #String
-	public quote_key(str String?) #Text|String
+	public quote_key(str String?) #String
 	public quote_string(str String?) #String
+}
+
+public class ElseBlockTypeReducer {
+	public construct(infer_else_block Callable, reduce_types Callable) #Void
+	public reduce_types_with_else_block(node IElseAble, previous_type BaseType?) BaseType?
+}
+
+public class EvaTeaCommonIRLowerer {
+	public lower_file(source_path String) List|Dict
+}
+
+public class ExceptionBlockResolver {
+	public construct(infer_block Callable, declaration_checker DeclarationChecker, reduce_types Callable) #Void
+	public infer_try_block(node TryBlock) BaseType?
+	public reduce_types_with_except_block(node IExceptAble, previous_type BaseType?) BaseType?
+	public infer_catch_block(node CatchBlock) BaseType?
+}
+
+public class ExpressionLeafResolver {
+	public construct(context CheckerContext, infer_expression Callable, key_access_resolver KeyAccessResolver) #Void
+	public infer_yield_expression(node YieldExpression) BaseType
+	public infer_throw_expression(node ThrowExpression) BaseType
+	public infer_include_expression(node IncludeExpression) BaseType?
+	public infer_first_class_callable_expression(node FirstClassCallableExpression) BaseType
 }
 
 public class FileHelper {
 	public static normalize_path(path String) #String
 	public static mkdir(dir String) #Void
 	public static get_iterator(dir_path String, pattern String? = null, flags Int = 0) \Iterator
+}
+
+public class FlowNarrowingResolver {
+	public construct(context CheckerContext, infer_expression Callable, infer_block Callable, else_block_type_reducer ElseBlockTypeReducer, get_type_assertion Callable, get_empty_condition_target Callable) #Void
+	public infer_if_block(node IfBlock) BaseType?
+	public infer_base_if_block(node BaseIfBlock) BaseType?
+	public can_assert_nullable_identifiable(argument Identifiable) Bool
+	public get_assertion_original_type(decl IVariableDeclaration) BaseType
+	public get_asserted_branch_type(asserting_type BaseType) BaseType
+	public get_type_without_assertion(left_type BaseType, asserting_type BaseType) BaseType?
+	public apply_condition_assertions(expr BaseExpression, truthy Bool, bindings inout List|Dict)
+	public restore_condition_assertions(bindings List|Dict)
+}
+
+public class FunctionBodyResolver {
+	public construct(context CheckerContext, declaration_checker DeclarationChecker, type_reference_checker TypeReferenceChecker, goto_resolver GotoResolver, type_compatibility_reporter TypeCompatibilityReporter, block_statement_resolver BlockStatementResolver) #Void
+	public check_function_kindred(node IFunctionDeclaration)
+	public infer_function_body(node IFunctionDeclaration, hinted BaseType?) BaseType?
+}
+
+public class GotoResolver {
+	public construct(context CheckerContext) #Void
+	public infer_with_collected_labels(block IBlock, infer_block Callable) BaseType?
+	public collect_goto_labels(block IBlock) List|Dict#Dict<LabelStatement>
+	public check_goto_statement(node GotoStatement)
+}
+
+public class InstancingResolver {
+	public construct(context CheckerContext, member_resolver MemberResolver) #Void
+	public infer_instancing_expr(callee BaseExpression, decl BaseDeclaration) BaseType
+	public get_construct_declaration_for_class(class ClassDeclaration, call BaseCallExpression) #BaseDeclaration?
+}
+
+public class IterationResolver {
+	public construct(context CheckerContext, infer_expression Callable, infer_block Callable, else_block_type_reducer ElseBlockTypeReducer, expect_infered_type Callable) #Void
+	public infer_foreach_block(node ForEachBlock) BaseType?
+	public infer_forin_block(node ForInBlock) BaseType?
+	public infer_forto_block(node ForToBlock) BaseType?
+}
+
+public class KeyAccessResolver {
+	public construct(context CheckerContext, infer_expression Callable, reduce_types Callable, symbol_declaration_resolver SymbolDeclarationResolver, use_resolver UseResolver, class_body_resolver ClassBodyResolver, container_literal_resolver ContainerLiteralResolver) #Void
+	public infer_square_accessing(node SquareAccessing) BaseType
+	public infer_key_accessing(node KeyAccessing) BaseType
+	public is_string_key_accessible_union(type UnionType) Bool
+}
+
+public class LanguageMetadataRegistry {
+	public const ATTRIBUTE_TYPE_ASSERTION #Text
+	public const ATTRIBUTE_TRUSTED #Text
+	public const ATTRIBUTE_BUILTIN_FEATURE #Text
+	public const ATTRIBUTE_HTML_SAFE #Text
+	public const INTRINSIC_ISSET #Text
+	public const INTRINSIC_EMPTY #Text
+	public static get_php_predicate_asserted_type(callee_name String?) BaseType?
+	public static is_attribute_named(attribute MetaAttribute, name String) Bool
+}
+
+public class LoopBlockResolver {
+	public construct(infer_expression Callable, infer_block Callable, else_block_type_reducer ElseBlockTypeReducer) #Void
+	public infer_for_block(node ForBlock) BaseType?
+	public infer_while_block(node WhileBlock) BaseType?
+	public infer_dowhile_block(node DoWhileBlock) BaseType?
+	public infer_loop_block(node LoopBlock) BaseType?
+}
+
+public class MarkupLiteralResolver {
+	public construct(context CheckerContext, infer_expression Callable) #Void
+	public infer_plain_interpolated_string(node PlainInterpolatedString) BaseType
+	public infer_escaped_interpolated_string(node EscapedInterpolatedString) BaseType
+	public infer_xtag(node XTag) BaseType
+}
+
+public class MemberResolver {
+	public construct(context CheckerContext, infer_expression Callable, type_reference_checker TypeReferenceChecker, callable_declaration_resolver CallableDeclarationResolver, class_body_resolver ClassBodyResolver, name_resolver NameResolver, symbol_declaration_resolver SymbolDeclarationResolver, classkindred_lookup_resolver ClassKindredLookupResolver, value_trust_resolver ValueTrustResolver) #Void
+	public infer_accessing_identifier(node AccessingIdentifier, ignore_none Bool = false) BaseType
+	public require_accessing_identifier_declaration(basing_type BaseType, node AccessingIdentifier) IDeclaration
+	public require_class_member_symbol(class_decl ClassKindredDeclaration, node AccessingIdentifier, allow_weak_virtual_member Bool = true) Symbol
+	public find_member_symbol_in_class_declaration(classkindred ClassKindredDeclaration, name String) Symbol?
+}
+
+public class NameResolver {
+	public construct(context CheckerContext) #Void
+	public get_symbol_for_symbolic_node(node Identifiable|BaseType) Symbol?
+	public set_symbol_for_symbolic_node(node Identifiable|BaseType, symbol Symbol?)
+	public find_symbol_for_type(type BaseType) Symbol?
+	public find_symbol_for_plain_identifier(identifier PlainIdentifier|TypeReference) Symbol?
+	public find_symbol_by_current_namespace_prefix(ns NamespaceIdentifier, name String) Symbol?
+	public find_symbol_by_php_use_alias_prefix(ns NamespaceIdentifier, name String) Symbol?
+	public find_symbol_in_current_namespace(identifier PlainIdentifier|TypeReference) Symbol?
+	public check_namespace(ns NamespaceIdentifier)
+	public get_symbol_in_unit(unit Unit, name String) Symbol?
+	public get_unit_by_uri(uri String) Unit?
+	public find_symbol_in_namespace(ns NamespaceIdentifier, name String, unit Unit) Symbol?
+	public find_namespace_declaration_in_unit(unit Unit, ns NamespaceIdentifier) NamespaceDeclaration?
+}
+
+public class ObjectExpressionResolver {
+	public construct(class_body_resolver ClassBodyResolver) #Void
+	public infer_object_expression(node ObjectExpression) BaseType
+}
+
+public class OperationResolver {
+	public construct(context CheckerContext, infer_expression Callable, infer_accessing_identifier Callable, reduce_types Callable, get_type_assertion_for Callable, set_type_assertion_for Callable, type_reference_checker TypeReferenceChecker, type_compatibility_reporter TypeCompatibilityReporter, flow_narrowing_resolver FlowNarrowingResolver, member_resolver MemberResolver, type_assertion_resolver TypeAssertionResolver) #Void
+	public infer_binary_operation(node BinaryOperation) BaseType
+	public infer_as_operation(node AsOperation) BaseType
+	public infer_cast_operation(node CastOperation) BaseType
+	public infer_is_operation(node IsOperation) BaseType
+	public infer_prefix_operation(node PrefixOperation) BaseType
+	public infer_postfix_operation(node PostfixOperation) BaseType
+	public infer_none_coalescing_expression(node NoneCoalescingOperation) BaseType
+	public infer_ternary_expression(node TernaryExpression) BaseType
 }
 
 public class ValueTrust {
@@ -2235,21 +2552,27 @@ public class OutputSafety {
 	public const HTML_TEXT #Text
 	public const HTML_ATTRIBUTE #Text
 	public static reset_semantic_state()
+	public static reset_check_state()
 	public static get_value_trust(expr BaseExpression) String
 	public static set_value_trust(expr BaseExpression, trust String?)
 	public static can_skip_html_escape(expr BaseExpression, sink String) Bool
 }
 
+public class OverrideResolver {
+	public construct(context CheckerContext) #Void
+	public check_overrided_member(node IClassMemberDeclaration, __super IClassMemberDeclaration, is_interface Bool = false)
+}
+
 public class PHPLoaderMaker {
 	public const GENERATES_TAG #Text
-	public static generate_loader_file(path String, autoloads Array|Dict, namespace String? = null) #Void
-	public static render_autoloads_code(autoloads Array|Dict, unit_path String) #String
+	public static generate_loader_file(path String, autoloads List|Dict, namespace String? = null) #Void
+	public static render_autoloads_code(autoloads List|Dict, unit_path String) #String
 	protected static init_loader_file(loader_file String, namespace String?, warring String) #Void
-	protected static stringify_autoloads(autoloads Array|Dict) #String
+	protected static stringify_autoloads(autoloads List|Dict) #String
 }
 
 public class PHPUnitScanner {
-	public scan(path String) #Array
+	public scan(path String) #List
 	public scan_sub_directories(path String) #Void
 	public scan_files(path String) #Void
 }
@@ -2259,21 +2582,44 @@ public class PHPWeakPolicy {
 }
 
 public class ParserHelper {
-	public static is_type_token(token Array|Dict|String|Null) Bool
-	public static is_visibility_token(token Array|Dict|String|Null) Bool
-	public static is_whitespace(token Array|Dict|String|Null) Bool
-	public static is_comment(token Array|Dict|String|Null) Bool
-	public static get_token_string(token Array|Dict|String|Null) String?
-	public static get_token_type(token Array|Dict|String|Null) Int|String|Null
-	public static is_token_type(token Array|Dict|String|Null, type Int) Bool
-	public static is_token_string(token Array|Dict|String|Null, string String) Bool
-	public static normalize_token(token Array|Dict|String|Null) String?
+	public static is_type_token(token (List|Dict|String)?) Bool
+	public static is_visibility_token(token (List|Dict|String)?) Bool
+	public static is_whitespace(token (List|Dict|String)?) Bool
+	public static is_comment(token (List|Dict|String)?) Bool
+	public static get_token_string(token (List|Dict|String)?) String?
+	public static get_token_type(token (List|Dict|String)?) (Int|String)?
+	public static is_token_type(token (List|Dict|String)?, type Int) Bool
+	public static is_token_string(token (List|Dict|String)?, string String) Bool
+	public static normalize_token(token (List|Dict|String)?) String?
 	public static is_keyword(token_str String, keyword String) Bool
 }
 
 public class SemanticContext {
 	public static reset()
 	public static reset_check_state()
+}
+
+public class SimpleStatementResolver {
+	public construct(context CheckerContext, type_compatibility_reporter TypeCompatibilityReporter, type_reference_checker TypeReferenceChecker, infer_expression Callable, declaration_checker DeclarationChecker) #Void
+	public check_throw_statement(node ThrowStatement)
+	public infer_return_statement(node ReturnStatement) BaseType?
+	public check_exit_statement(node ExitStatement)
+	public check_unset_statement(node UnsetStatement)
+	public check_var_statement(node VarStatement)
+	public check_echo_statement(node EchoStatement)
+	public expect_infered_type(node BaseExpression, types List|Dict) BaseType
+}
+
+public class SwitchMatchResolver {
+	public construct(context CheckerContext, infer_expression Callable, infer_block Callable, reduce_types Callable, else_block_type_reducer ElseBlockTypeReducer) #Void
+	public infer_switch_block(node SwitchBlock) BaseType?
+	public infer_match_block(node MatchBlock) BaseType?
+}
+
+public class SymbolDeclarationResolver {
+	public construct(context CheckerContext, name_resolver NameResolver, use_resolver UseResolver, virtual_symbol_factory VirtualSymbolFactory, declaration_check_trigger DeclarationCheckTrigger) #Void
+	public find_type_symbol_and_check_declaration(identifier BaseType) Symbol?
+	public get_actual_declaration_for_identifier(identifier Identifiable|TypeReference) BaseDeclaration
 }
 
 public class TeaHelper {
@@ -2304,8 +2650,25 @@ public class TeaInitializer {
 	public set_unit_uri(uri String) #Void
 }
 
+public class TypeAssertionResolver {
+	public construct(context CheckerContext, get_stored_assertion Callable, flow_narrowing_resolver FlowNarrowingResolver, infer_accessing_identifier Callable) #Void
+	public resolve_condition_assertion(expr BaseExpression) List|Dict
+	public resolve_empty_condition_target(expr BaseExpression) List|Dict
+	public resolve_call_assertion(expr BaseCallExpression) IsOperation?
+	public get_plain_callee_name(callee BaseExpression) String?
+}
+
+public class TypeCompatibilityReporter {
+	public construct(context CheckerContext, symbol_declaration_resolver SymbolDeclarationResolver) #Void
+	public assert_type_compatible(left BaseType, right BaseType, value_node Node, kind String = 'assign')
+	public is_type_compatible(left BaseType, right BaseType, value_node Node, kind String) Bool
+	public should_report_type_mismatch(expected BaseType, actual BaseType, value_node Node, kind String = 'assign') Bool
+	public warn_phpdoc_only_type_mismatch(decl BaseDeclaration?, expected BaseType, actual BaseType, value_node Node, kind String) Bool
+}
+
 public class TypeHelper {
 	public static reset_semantic_state()
+	public static reset_check_state()
 	public static set_bound_value(decl IVariableDeclaration, value BaseExpression?)
 	public static get_bound_value(decl IVariableDeclaration) BaseExpression?
 	public static get_raw_bound_type(decl BaseDeclaration) BaseType?
@@ -2314,20 +2677,20 @@ public class TypeHelper {
 	public static get_type_symbol(type BaseType) Symbol?
 	public static set_type_symbol(type BaseType, symbol Symbol?)
 	public static unwrap_excludable_type(type BaseType) BaseType
-	public static is_simple_xtag_safe_value_type(type BaseType) #Any|Bool
+	public static is_simple_xtag_safe_value_type(type BaseType) #Any
 	public static is_xtag_child_type(type BaseType) Bool
-	public static is_dict_key_type(type BaseType) #Any|Bool
-	public static is_case_testable_type(type BaseType) #Any|Bool
+	public static is_dict_key_type(type BaseType) #Any
+	public static is_case_testable_type(type BaseType) #Any
 	public static is_switch_compatible(matchig BaseType, case BaseType) #Bool
 	public static is_covariant_for(type_in_child BaseType, type_in_super BaseType) #Bool
 	public static is_classkindred_same_or_based_with_symbol(decl ClassKindredDeclaration, symbol Symbol) Bool
 	public static is_object_accepting_type(target BaseType) Bool
 	public static is_dict_like_type(type BaseType) Bool
 	public static is_xview_accepting_type(type XViewType, target BaseType) Bool
-	public static is_plain_same_or_based_type(type PlainType, target BaseType) Bool
+	public static is_text_same_or_based_type(type TextType, target BaseType) Bool
 	public static is_uint_same_or_based_type(type UIntType, target BaseType) Bool
 	public static is_iterable_same_or_based_type(type IterableType, target BaseType) Bool
-	public static find_classkindred_based_with_symbol(decl ClassKindredDeclaration, symbol Symbol) PlainIdentifier|TypeReference|Null
+	public static find_classkindred_based_with_symbol(decl ClassKindredDeclaration, symbol Symbol) (PlainIdentifier|TypeReference)?
 	public static is_same_type(left BaseType, right BaseType) Bool
 	public static is_same_union_type(type UnionType, target BaseType) Bool
 	public static is_same_or_based_type(left BaseType, right BaseType) Bool
@@ -2342,6 +2705,7 @@ public class TypeHelper {
 	public static is_single_generic_accepting_type(type SingleGenericType, target BaseType) Bool
 	public static is_callable_parameter_compatible(protocol_param_type BaseType, implement_param_type BaseType) #Bool
 	public static is_callable_accepting_type(type CallableType, target BaseType) Bool
+	public static get_callable_declaration_from_type(type BaseType) ICallableDeclaration?
 	public static is_value_compatible(expected_type BaseType, actual_type BaseType) Bool
 	public static is_argument_compatible(expected_type BaseType, actual_type BaseType) Bool
 	public static is_assignment_compatible(expected_type BaseType, actual_type BaseType) Bool
@@ -2350,11 +2714,11 @@ public class TypeHelper {
 	public static should_report_php_weak_type_mismatch(expected BaseType, actual BaseType, value_node Node, kind String) Bool
 	public static get_php_builtin_predicate_asserted_type_fallback(callee_name String?) BaseType?
 	public static infer_php_array_union_operation(left_type BaseType, right_type BaseType) BaseType?
-	public static is_number_type(type BaseType) #Any|Bool
-	public static is_scalar_type(type BaseType) #Any|Bool
-	public static is_pure_type(type BaseType) #Any|Bool
-	public static is_string_concatable_type(type BaseType) #Any|Bool
-	public static is_nullable_type(type BaseType) #Any|Bool
+	public static is_number_type(type BaseType) #Any
+	public static is_scalar_type(type BaseType) #Any
+	public static is_pure_type(type BaseType) #Any
+	public static is_string_concatable_type(type BaseType) #Any
+	public static is_nullable_type(type BaseType) #Any
 	public static to_nullable(type BaseType) BaseType
 	public static to_non_nullable(type BaseType) #Any
 	public static is_invalidable_type(type BaseType) Bool
@@ -2364,10 +2728,37 @@ public class TypeHelper {
 	public static get_invalidable_sentinel_type(type InvalidableType) BaseType
 }
 
+public class TypeReferenceChecker {
+	public construct(context CheckerContext, name_resolver NameResolver, symbol_declaration_resolver SymbolDeclarationResolver, declaration_check_trigger DeclarationCheckTrigger) #Void
+	public check_type(type BaseType, node #(IDeclaration|BaseExpression)? = null)
+	public check_callable_type(node CallableType)
+	public get_and_check_hinted_type(node IDeclaration|AnonymousFunction|CallableType) BaseType?
+}
+
 public class UsageTracer {
 	protected static tracing
 	public static start() #Void
 	public static end() #Any
+}
+
+public class UseResolver {
+	public construct(context CheckerContext, name_resolver NameResolver, virtual_symbol_factory VirtualSymbolFactory) #Void
+	public resolve_use_target(use UseDeclaration)
+	public resolve_use_symbol_declaration(symbol Symbol, identifier (Identifiable|TypeReference)? = null) BaseDeclaration?
+	public resolve_uses_unit(ns NamespaceIdentifier) Unit?
+}
+
+public class ValueTrustResolver {
+	public construct(context CheckerContext, name_resolver NameResolver) #Void
+	public mark_call_value_trust(node BaseCallExpression, decl IDeclaration)
+	public mark_member_value_trust(node AccessingIdentifier, decl IDeclaration)
+}
+
+public class VirtualSymbolFactory {
+	public construct(context CheckerContext) #Void
+	public create_virtual_symbol(identifier PlainIdentifier|TypeReference) Symbol
+	public create_virtual_class_declaration(name String) ClassKindredDeclaration
+	public create_trait_host_super_symbol(is_static Bool) Symbol
 }
 
 public class BaseParser {
@@ -2381,10 +2772,10 @@ public class BaseParser {
 	protected program Program
 	public pos Int
 	protected pos_before_skiped_comments Int
-	protected line2pos Array|Dict#List<Int>
-	protected tokens #Array|Dict
+	protected line2pos List|Dict#List<Int>
+	protected tokens #List|Dict
 	protected tokens_count Int
-	protected parse_errors Array|Dict
+	protected parse_errors List|Dict
 	protected max_errors Int
 	protected factory ASTFactory
 	public construct(factory ASTFactory, file String, source String? = null) #Void
@@ -2412,74 +2803,74 @@ public class BaseParser {
 	public new_parse_error(message String, trace_start Int = 0) Exception
 	public new_unexpected_error() Exception
 	public throw_all_errors()
-	public get_parse_errors() Array|Dict
+	public get_parse_errors() List|Dict
 	public clear_parse_errors()
 	public has_parse_errors() Bool
-	protected print_token(token Array|Dict|String|Null = null) #Void
+	protected print_token(token (List|Dict|String)? = null) #Void
 	public get_error_place_with_pos(pos Int) #String
 	public attach_position(node Node) #Void
 	protected get_to_line_end(from Int? = null) String
-	protected get_current_token_string() Array|Dict|String|Null
+	protected get_current_token_string() (List|Dict|String)?
 	protected get_line_number(pos Int) Int
 	protected get_previous_code_inline(pos Int) String
 }
 
 public class Destructuring: BaseExpression, IAssignable {
 	public const KIND #Text
-	public items Array|Dict#List<BaseExpression>
-	public construct(items Array|Dict) #Void
+	public items List|Dict#List<BaseExpression>
+	public construct(items List|Dict) #Void
 }
 
 public class HeaderParser: TeaParser {
 	public const SOURCE_DIALECT #Text
 	public is_parsing_header Bool
-	protected read_root_statement(leading_br Bool = false, doc DocComment? = null, attributes Array|Dict = []) #Any
+	protected read_root_statement(leading_br Bool = false, doc DocComment? = null, attributes List|Dict = []) #Any
 	protected read_header_declaration_with_modifier(modifier String) #ConstantDeclaration
 	protected read_dot_name_components(first_name String) #List<String>
 	protected read_class_constant_declaration(name String, modifier String?) #ClassConstantDeclaration
 	protected read_method_declaration(name String, modifier String?, __static Bool) #MethodDeclaration
-	protected read_extern_declaration() #ClassDeclaration|InterfaceDeclaration|TraitDeclaration|FunctionDeclaration|BuiltinTypeClassDeclaration|ConstantDeclaration|SuperVariableDeclaration|Null
+	protected read_extern_declaration() #(ClassDeclaration|InterfaceDeclaration|TraitDeclaration|FunctionDeclaration|BuiltinTypeClassDeclaration|ConstantDeclaration|SuperVariableDeclaration)?
 	protected read_header_declaration_names() #List
-	protected read_use_statement(attributes Array|Dict = []) #Void
+	protected read_use_statement(attributes List|Dict = []) #Void
 }
 
 public class PHPParser: BaseParser {
 	public const SOURCE_DIALECT #Text
 	public const NS_SEPARATOR #Text
 	public const BUILTIN_IDENTIFIER_MAP #Dict<Text>
-	protected const METHOD_MAP #Array
+	protected const METHOD_MAP #List
 	public read_program() Program
 	protected tokenize(source String) #Void
-	protected read_inner_statement(attributes Array|Dict = [], doc String? = null) IStatement?
-	protected read_meta_attributes(items Array|Dict) #Array|Dict
+	protected read_inner_statement(attributes List|Dict = [], doc String? = null) IStatement?
+	protected read_meta_attributes(items List|Dict) #List|Dict
 	protected read_echo_statement() #EchoStatement
 	protected read_print_statement() #EchoStatement
-	protected scan_patterns() #Array
+	protected scan_patterns() #List
 	protected read_expression(prev_op Operator? = null) BaseExpression
 	protected scan_expression(prev_op Operator? = null) BaseExpression?
 	protected read_instancing_expression() #InstancingExpression
 	protected read_anonymous_class_instancing() InstancingExpression
-	protected read_anonymous_class_declaration_body(arguments Array|Dict) ClassDeclaration
-	protected read_implements_list() Array|Dict
-	protected scan_instancing_arguments() #Array|Dict
-	protected scan_arguments() Array|Dict
-	protected scan_arguments_with_names() Array|Dict
-	protected read_arguments() #Array|Dict
-	protected read_include_expression_with_token(token Array|Dict) #IncludeExpression
-	protected scan_identifiable_expression_with_token(token String|Array|Dict, is_instancing Bool = false) BaseExpression?
+	protected read_anonymous_class_declaration_body(arguments List|Dict) ClassDeclaration
+	protected read_implements_list() List|Dict
+	protected scan_instancing_arguments() #List|Dict
+	protected scan_arguments() List|Dict
+	protected scan_arguments_with_names() List|Dict
+	protected read_arguments() #List|Dict
+	protected read_include_expression_with_token(token List|Dict) #IncludeExpression
+	protected scan_identifiable_expression_with_token(token String|List|Dict, is_instancing Bool = false) BaseExpression?
 	protected read_interpolated_string(ending String|Int) #HereDocString|EscapedInterpolatedString
 	protected read_expression_combination(expr BaseExpression, prev_op Operator? = null) #Any
 	protected read_object_member_accessing(basing BaseExpression, nullsafe Bool = false) #BaseExpression
 	protected read_static_member_accessing(basing BaseExpression) #AccessingIdentifier
-	protected read_key_accessing(basing BaseExpression) #SquareAccessing
+	protected read_key_accessing(basing BaseExpression) #KeyAccessing|SquareAccessing
 	protected read_call_expression(handler BaseExpression) #FirstClassCallableExpression|CallExpression
 	protected scan_combinated_operator(prev_op Operator? = null) #Mixed
-	protected read_operation_for(expr BaseExpression, operator Operator) #IsOperation|PostfixOperation|AssignmentOperation|TernaryExpression
+	protected read_operation_for(expr BaseExpression, operator Operator) #BinaryOperation|PostfixOperation|AssignmentOperation|TernaryExpression
 	protected expect_statement_end() #Mixed
 	protected skip_block_begin() #Bool
 	protected expect_block_begin() #Mixed
 	protected expect_block_end() #Mixed
-	protected get_current_token_string() Array|Dict|String|Null
+	protected get_current_token_string() (List|Dict|String)?
 	protected get_to_line_end(from Int? = null) String
 	protected get_line_number(pos Int) Int
 	protected get_previous_code_inline(pos Int? = null) String
@@ -2497,17 +2888,17 @@ public class TeaParser: BaseParser {
 	public const NS_SEPARATOR #Text
 	public const EXPR_STOPPING_SIGNS #List<Text>
 	protected const METHOD_MAP #Dict<Text>
-	protected root_statements Array|Dict#RootDeclaration|List<IStatement>
+	protected root_statements List|Dict#RootDeclaration|List<IStatement>
 	protected is_in_tea_declaration Bool
 	public read_program() Program
-	protected read_root_statement(leading_br Bool = false, doc DocComment? = null, attributes Array|Dict = []) #Any
-	protected read_leading_meta_attributes(attributes Array|Dict) Array|Dict
-	protected read_meta_attributes(items Array|Dict) Array|Dict
+	protected read_root_statement(leading_br Bool = false, doc DocComment? = null, attributes List|Dict = []) #Any
+	protected read_leading_meta_attributes(attributes List|Dict) List|Dict
+	protected read_meta_attributes(items List|Dict) List|Dict
 	protected read_inner_statement(leading_br Bool = false, doc DocComment? = null) IStatement?
 	protected read_normal_statement_with_token(token String) IStatement?
 	protected assert_not_reserved_word(token) #Void
-	protected read_root_declaration_with_modifier(modifier String) #ClassDeclaration
-	protected check_and_read_normal_root_declaration(name String, modifier String) #ClassDeclaration
+	protected read_root_declaration_with_modifier(modifier String) #Any
+	protected check_and_read_normal_root_declaration(name String, modifier String) #Any
 	protected read_type_declaration_with(name String, modifier String) #BuiltinTypeClassDeclaration
 	protected read_function_declaration_with(name String, modifier String? = null, ns NamespaceIdentifier? = null) #FunctionDeclaration
 	protected read_constant_declaration_without_value(name String, modifier String? = null, ns NamespaceIdentifier? = null) #ConstantDeclaration
@@ -2526,8 +2917,8 @@ public class TeaParser: BaseParser {
 	protected read_try_block() #TryBlock
 	protected scan_catching_block_for(main_block IExceptAble) #Void
 	protected read_switch_block(label String? = null) #SwitchBlock
-	protected read_switch_branches() #Array
-	protected read_for_block(label String? = null) #ForToBlock
+	protected read_switch_branches() #List
+	protected read_for_block(label String? = null) #ForInBlock|ForToBlock
 	protected read_while_block(label String? = null) #WhileBlock
 	protected scan_expression_inline() #BaseExpression?
 	protected read_expression(prev_operator Operator? = null) BaseExpression
@@ -2535,45 +2926,45 @@ public class TeaParser: BaseParser {
 	protected scan_argument() #BaseExpression?
 	protected read_expression_with_token(token String, prev_operator Operator? = null) BaseExpression?
 	protected read_literal_string() #EscapedLiteralString
-	protected read_parentheses_expression(is_in_parentheses Bool = false) #AnonymousFunction?|Parentheses
+	protected read_parentheses_expression(is_in_parentheses Bool = false) #(AnonymousFunction|Parentheses)?
 	protected read_lambda_for_parentheses(readed_identifier PlainIdentifier) #AnonymousFunction
-	protected read_rest_lambda_parameters(parameter ParameterDeclaration? = null) #Array
-	protected read_number_with(token String, base_type String) #LiteralFloat
+	protected read_rest_lambda_parameters(parameter ParameterDeclaration? = null) #List
+	protected read_number_with(token String, base_type String) #LiteralInteger
 	protected read_scientific_notation_number_with(prefix String) #LiteralFloat
 	protected scan_regular_expression() #RegularExpression?
 	protected read_ternary_expression_with(test BaseExpression) #TernaryExpression
-	protected read_bracket_expression() #SquareAccessing|DictExpression?
+	protected read_bracket_expression() #(ArrayExpression|SquareAccessing|DictExpression)?
 	protected read_array_with_first_item(item BaseExpression) #ArrayExpression
 	protected read_dict_with_first_item(key BaseExpression) #DictExpression
-	protected read_lambda_combination(parameters Array|Dict, arrow_is_optional #Bool = false) #AnonymousFunction
+	protected read_lambda_combination(parameters List|Dict, arrow_is_optional #Bool = false) #AnonymousFunction
 	protected read_expression_combination(expr BaseExpression, prev_operator Operator? = null) #Any
 	protected read_dot_expression(basing BaseExpression, nullsafe Bool = false) #AccessingIdentifier
-	protected read_key_accessing(basing BaseExpression) #SquareAccessing
+	protected read_key_accessing(basing BaseExpression) #KeyAccessing|SquareAccessing
 	protected read_call_expression(handler BaseExpression) #CallExpression
 	protected read_callback_argument() #CallbackArgument
 	protected create_callback_argument(name String?, lambda) #CallbackArgument
 	protected read_operation_for(expr BaseExpression, prev_operator Operator? = null) #Any
 	protected skip_binary_operator_with_space(operator String) #Void
 	protected read_none_coalescing_with(left BaseExpression, operator Operator) #NoneCoalescingOperation
-	protected read_call_expression_arguments() #Array
-	protected read_inline_arguments() #Array
+	protected read_call_expression_arguments() #List
+	protected read_inline_arguments() #List
 	protected read_class_declaration_with(name String, modifier String?, ns NamespaceIdentifier? = null) #ClassDeclaration
 	protected read_interface_declaration(name String, modifier String?, ns NamespaceIdentifier? = null) #InterfaceDeclaration
 	protected read_intertrait_declaration(name String, modifier String?, ns NamespaceIdentifier? = null) #IntertraitDeclaration
 	protected read_trait_declaration(name String, modifier String?, ns NamespaceIdentifier? = null) #TraitDeclaration
 	protected read_rest_for_classkindred_declaration(decl ClassKindredDeclaration) #Void
-	protected read_class_extends() #Array?
+	protected read_class_extends() #List?
 	protected scan_class_type_ref() #TypeReference?
 	protected read_class_type_ref_with(name String, is_based_root_ns Bool = false) #TypeReference
 	protected read_type_hints_for_declaration(decl BaseDeclaration|AnonymousFunction) #Void
-	protected scan_type_expression() BaseType?
+	protected scan_type_expression(allow_compound_suffix Bool = true) BaseType?
 	protected read_dots_style_compound_type(generic_type BaseType) BaseType
 	protected read_bracket_style_compound_type(generic_type BaseType) BaseType
 	protected read_compile_time_value() #BaseExpression
 	protected read_class_constant_declaration(name String, modifier String?) #ClassConstantDeclaration
 	protected read_property_declaration(name String, modifier String?, __static Bool) #PropertyDeclaration
 	protected read_method_declaration(name String, modifier String?, __static Bool) #MethodDeclaration
-	protected read_parameters_with_parentheses() #Array
+	protected read_parameters_with_parentheses() #List
 	protected scan_parameter() ParameterDeclaration?
 	protected read_parameter_with_token(name String) #ParameterDeclaration
 	protected read_callable_protocol() BaseType
@@ -2583,16 +2974,16 @@ public trait TeaStringTrait {
 	protected read_plain_literal_string() #PlainLiteralString
 	protected read_escaped_literal_string() #EscapedLiteralString
 	protected read_quoted_string(quote_mark String) #Text
-	protected read_single_quoted_expression() #PlainLiteralString
-	protected read_double_quoted_expression() #PlainLiteralString
-	protected read_quoted_items(quote_mark String) Array|Dict
+	protected read_single_quoted_expression() #PlainInterpolatedString|PlainLiteralString
+	protected read_double_quoted_expression() #EscapedInterpolatedString|EscapedLiteralString|PlainLiteralString
+	protected read_quoted_items(quote_mark String) List|Dict
 	protected scan_normal_interpolation() BaseExpression?
-	protected static collect_and_reset_temp(items inout Array|Dict, string inout String, expression BaseExpression) #Void
+	protected static collect_and_reset_temp(items inout List|Dict, string inout String, expression BaseExpression) #Void
 }
 
 public trait TeaTokenTrait {
 	protected tokenize(source String) #Void
-	protected get_current_token_string() Array|Dict|String|Null
+	protected get_current_token_string() (List|Dict|String)?
 	protected get_line_number(pos Int) Int
 	protected skip_current_line() #Void
 	protected skip_comma() #Bool

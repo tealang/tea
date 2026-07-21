@@ -11,6 +11,14 @@ public is_uint(val) Bool {
 	return is_int(val) and val >= 0
 }
 
+public int_ensure(val) Int {
+	if not is_int(val) {
+		throw TypeError('Cannot use value as an Int value')
+	}
+
+	return val
+}
+
 public uint_ensure(num Int) {
 	if num < 0 {
 		throw ErrorException('Cannot use ${num} as a UInt value')
@@ -19,13 +27,37 @@ public uint_ensure(num Int) {
 	return num
 }
 
+public float_ensure(val) Float {
+	if not is_float(val) {
+		throw TypeError('Cannot use value as a Float value')
+	}
+
+	return val
+}
+
+public bool_ensure(val) Bool {
+	if not is_bool(val) {
+		throw TypeError('Cannot use value as a Bool value')
+	}
+
+	return val
+}
+
+public string_ensure(val) String {
+	if not is_string(val) {
+		throw TypeError('Cannot use value as a String value')
+	}
+
+	return val
+}
+
 #[HtmlSafe]
 public html_escape(str String?) String {
-	return str is None ? '' : htmlspecialchars(str)
+	return str is Null ? '' : htmlspecialchars(str)
 }
 
 public html_unescape(str String?) String {
-	return str is None ? '' : htmlspecialchars_decode(str)
+	return str is Null ? '' : htmlspecialchars_decode(str)
 }
 
 // public interface Sharable {
@@ -45,7 +77,7 @@ public type UnionType {
 public type Void {
 }
 
-public type None {
+public type Null {
 }
 
 public type Any {
@@ -92,7 +124,7 @@ public type String {
     ends_with(suffix String) => str_ends_with(this, suffix)
 }
 
-public type Plain: String {
+public type Text: String {
 }
 
 public type Int {
@@ -114,32 +146,32 @@ public type Float {
 public type Bool {
 }
 
-// public _last_index(array Array) UInt {
+// public _last_index(array List) UInt {
 // 	return count(array) - 1
 // }
 
-public _has(it Array|Dict, key String|Int|None) {
+public _has(it List|Dict, key String|Int|Null) {
 	return array_key_exists(key, it)
 }
 
-public _vals_contains(it Array|Dict, val, strict Bool = false) {
+public _vals_contains(it List|Dict, val, strict Bool = false) {
 	return in_array(val, it, strict)
 }
 
-public _array_find(it Array, val)  {
+public _array_find(it List, val)  {
 	return list_search(val, it, true)
 	// return key === false ? false : key
 }
 
-public _std_array_map(it Array, callback (item) Mixed) {
+public _std_array_map(it List, callback (item) Mixed) {
 	return array_map(callback, it)
 }
 
-public _std_join(it Array|Dict, separator String) {
+public _std_join(it List|Dict, separator String) {
 	return implode(separator, it)
 }
 
-public type Array {
+public type List {
 	length UInt => count(this)
 	// member mapping end UInt => _last_index(this)
 
@@ -175,13 +207,13 @@ public _dict_find(it Dict, val) {
 }
 
 public _dict_get(it Dict, key String|Int) {
-	return it[key] ?? none
+	return it[key] ?? null
 }
 
 public type Dict {
 	length => count(this)
 
-	has(key String|None) => _has(this, key)
+	has(key String|Null) => _has(this, key)
 	contains(val) => _vals_contains(this, val)
 	find(val) => _dict_find(this, val) // find the key with supported value
 
@@ -207,7 +239,7 @@ public _regex_test(regex Regex, subject String) Bool {
 public _regex_capture(regex Regex, subject String) List<String>? {
 	var result List<String>
 	count = preg_match(regex, subject, result)
-	return count === 0 ? none : result
+	return count === 0 ? null : result
 }
 
 public _regex_capture_all(regex Regex, subject String) List<List<String>>? {
@@ -232,14 +264,14 @@ public type Regex {
 }
 
 // use for processing XView
-public _build_attributes(items Dict, additions Dict? = none) String {
-	if additions is not None {
+public _build_attributes(items Dict, additions Dict? = null) String {
+	if additions is not Null {
 		items = items.replace(additions)
 	}
 
 	list = []
 	for key, val in items {
-		if val is None or val === false {
+		if val is Null or val === false {
 			continue
 		}
 

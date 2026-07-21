@@ -18,8 +18,11 @@ trait ITypeTrait
 			$result = $target->merge_with_single_type($this);
 		}
 		elseif ($this->is_same_with($target)
-			|| ($this instanceof StringType and $target instanceof PlainType)) {
+			|| ($this instanceof StringType and $target instanceof TextType)) {
 			$result = $this;
+		}
+		elseif ($this instanceof MixedType || $target instanceof MixedType) {
+			$result = TypeFactory::$_mixed;
 		}
 		else {
 			$result = new UnionType([$this, $target]);
@@ -42,8 +45,6 @@ abstract class BaseType extends Node
 	use ITypeTrait;
 
 	const KIND = 'type_identifier';
-
-	const ACCEPT_TYPES = [];
 
 	public string $name;
 
@@ -88,6 +89,9 @@ class TypeReference extends BaseType
 		}
 		elseif ($this->symbol !== null && $target->symbol !== null && TypeHelper::is_same_or_based_type($this, $target)) {
 			$result = $target;
+		}
+		elseif ($target instanceof MixedType) {
+			$result = TypeFactory::$_mixed;
 		}
 		else {
 			$result = new UnionType([$this, $target]);
@@ -278,7 +282,7 @@ class UnionType extends BaseType
 	}
 
 	public function merge_with_single_type(BaseType $target): BaseType {
-		if ($target instanceof AnyType) {
+		if ($target instanceof AnyType || $target instanceof MixedType) {
 			$type = TypeFactory::create_union_type(array_merge($this->members, [$target]));
 		}
 		elseif ($this->contains_single_type($target)) {
@@ -318,7 +322,10 @@ class UnionType extends BaseType
 	}
 
 	public function merge_with_union_type(UnionType $target): BaseType {
-		if ($this->contains_single_type(TypeFactory::$_any) || $target->contains_single_type(TypeFactory::$_any)) {
+		if ($this->contains_single_type(TypeFactory::$_any)
+			|| $this->contains_single_type(TypeFactory::$_mixed)
+			|| $target->contains_single_type(TypeFactory::$_any)
+			|| $target->contains_single_type(TypeFactory::$_mixed)) {
 			return TypeFactory::create_union_type(array_merge($this->members, $target->members));
 		}
 
@@ -487,37 +494,27 @@ interface IScalarType {}
 
 interface IPureType {}
 
-// class ScalarType extends BaseType implements IScalarType {
-// 	const ACCEPT_TYPES = [_STRING, _INT, _UINT, _BOOL, _XVIEW];
-// 	public string $name = _SCALAR;
-// }
-
 class BytesType extends BaseType implements IScalarType {
-	const ACCEPT_TYPES = [_STRING, _INT, _UINT, _XVIEW];
 	public string $name = _BYTES;
 }
 
 class StringType extends BaseType implements IScalarType {
-	const ACCEPT_TYPES = [_BYTES, _INT, _UINT, _TEXT_TYPE, _PLAIN, _XVIEW, _METATYPE];
 	public string $name = _STRING;
 }
 
-class PlainType extends StringType implements IPureType {
-	const ACCEPT_TYPES = [_INT, _UINT];
+class TextType extends StringType implements IPureType {
 	public string $name = _TEXT_TYPE;
 
 	public function is_same_or_based_with(BaseType $target) {
-		return TypeHelper::is_plain_same_or_based_type($this, $target);
+		return TypeHelper::is_text_same_or_based_type($this, $target);
 	}
 }
 
 class IntType extends BaseType implements IScalarType, IPureType {
-	const ACCEPT_TYPES = [_UINT];
 	public string $name = _INT;
 }
 
 class UIntType extends IntType {
-	const ACCEPT_TYPES = [];
 	public string $name = _UINT;
 
 	public function is_same_or_based_with(BaseType $target) {
@@ -526,7 +523,6 @@ class UIntType extends IntType {
 }
 
 class FloatType extends BaseType implements IScalarType, IPureType {
-	const ACCEPT_TYPES = [_INT, _UINT];
 	public string $name = _FLOAT;
 }
 

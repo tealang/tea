@@ -28,7 +28,7 @@ function test_string_array_access() {
 
 #internal
 function test_nested_array_access() {
-	$types = ["Int|Float", "String|Bool", "Array|Dict"];
+	$types = ["Int|Float", "String|Bool", "List|Dict"];
 	$i = 0;
 	while ($i < count($types)) {
 		$parts = _std_split($types[$i], "|");

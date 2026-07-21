@@ -6,7 +6,7 @@ public class BaseView: IView {
 	name String
 
 	protected props #Dict
-	protected subviews #Array
+	protected subviews #List
 
 	construct(props Dict? = none) #Void
 
@@ -20,18 +20,18 @@ public class BaseView: IView {
 }
 
 public interface PureInterface {
-	public const ABC #Plain
+	public const ABC #Text
 
-	set_css_class(names Plain) #Void
+	set_css_class(names Text) #Void
 }
 
 public intertrait IViewDemo: IView {
-	protected const ABC #Plain
+	protected const ABC #Text
 
-	name #Plain
-	css_class #Plain
+	name #Text
+	css_class #Text
 
-	set_css_class(names Plain) #IViewDemo
+	set_css_class(names Text) #IViewDemo
 
 	protected set_some(some String) #Void
 }

@@ -734,15 +734,29 @@ abstract class BaseCoder
 			$buffer = 'Null';
 		}
 		elseif ($node instanceof InvalidableType) {
-			if ($node->sentinel instanceof LiteralNone && $node->valid_type instanceof UnionType) {
-				$buffer = $this->render_node($node->valid_type) . '|Null';
+			$valid_type_node = $node->valid_type;
+			if ($valid_type_node instanceof UnionType) {
+				$valid_type_node = TypeFactory::create_union_type($valid_type_node->get_members());
+				if ($valid_type_node instanceof UnionType && $valid_type_node->count() === 1) {
+					$valid_type_node = $valid_type_node->get_members()[0];
+				}
 			}
-			else {
-				$buffer = $this->render_node($node->valid_type) . _QUESTION . $this->render_invalidable_sentinel($node->sentinel);
+
+			$valid_type = $this->render_node($valid_type_node);
+			if ($valid_type_node instanceof UnionType && strpos($valid_type, _TYPE_UNION) !== false) {
+				$valid_type = '(' . $valid_type . ')';
 			}
+
+			$buffer = $valid_type . _QUESTION . $this->render_invalidable_sentinel($node->sentinel);
 		}
 		elseif ($node instanceof ExcludableType) {
 			$buffer = $this->render_node($node->base_type) . _EXCLAMATION . $this->render_excludable_sentinel($node->sentinel);
+		}
+		elseif ($node instanceof MetaType && $node->generic_type !== null) {
+			$buffer = 'Type' . _GENERIC_OPEN . $this->render_node($node->generic_type) . _GENERIC_CLOSE;
+		}
+		elseif ($node instanceof ArrayType && $node->generic_type === null) {
+			$buffer = 'List';
 		}
 		elseif ($node instanceof IterableType and $node->generic_type) {
 			$gtype = $this->normalize_rendered_generic_type($node->generic_type);
@@ -822,6 +836,10 @@ abstract class BaseCoder
 
 	public function render_union_type(UnionType $node)
 	{
+		if ($nullable = $this->render_nullable_union_type($node)) {
+			return $nullable;
+		}
+
 		$short_nullable = $this->can_use_short_nullable($node);
 
 		$items = [];
@@ -843,6 +861,49 @@ abstract class BaseCoder
 		}
 
 		return $expr;
+	}
+
+	protected function render_nullable_union_type(UnionType $node): ?string
+	{
+		$has_null = false;
+		$members = [];
+		foreach ($node->get_members() as $member) {
+			if ($member instanceof NoneType) {
+				$has_null = true;
+				continue;
+			}
+
+			if ($member instanceof InvalidableType && $member->sentinel instanceof LiteralNone) {
+				$has_null = true;
+				$valid_members = $member->valid_type instanceof UnionType
+					? $member->valid_type->get_members()
+					: [$member->valid_type];
+				$members = array_merge($members, $valid_members);
+				continue;
+			}
+
+			$members[] = $member;
+		}
+
+		if (!$has_null || $members === []) {
+			return null;
+		}
+
+		$type = TypeFactory::create_union_type($members);
+		if ($type instanceof UnionType && $type->count() === 1) {
+			$type = $type->get_members()[0];
+		}
+
+		if ($type instanceof AnyType || $type instanceof MixedType) {
+			return $this->render_node($type);
+		}
+
+		$expr = $this->render_node($type);
+		if ($type instanceof UnionType && strpos($expr, _TYPE_UNION) !== false) {
+			$expr = '(' . $expr . ')';
+		}
+
+		return $expr . _QUESTION;
 	}
 
 	protected function should_skip_union_member_for_render(UnionType $node, BaseType $member): bool
@@ -869,7 +930,8 @@ abstract class BaseCoder
 
 	protected function can_use_short_nullable(UnionType $node)
 	{
-		return count($node->members) === 2 and $node->members[1] instanceof NoneType;
+		return count($node->members) === 2
+			&& ($node->members[0] instanceof NoneType || $node->members[1] instanceof NoneType);
 	}
 
 	protected function render_callable_type(CallableType $node)
@@ -878,10 +940,18 @@ abstract class BaseCoder
 			return $node->name;
 		}
 
-		$parameters = $this->render_parameters($node->parameters);
+		$parameter_types = array_map(
+			fn(ParameterDeclaration $parameter) => $this->render_node($parameter->declared_type ?? TypeFactory::$_any),
+			$node->parameters
+		);
+		$parameters = match (count($parameter_types)) {
+			0 => '()',
+			1 => $parameter_types[0],
+			default => '(' . implode(', ', $parameter_types) . ')',
+		};
 		$type = $this->render_node($node->declared_type);
 
-		return sprintf('(%s) %s', $parameters, $type);
+		return sprintf('Func<%s, %s>', $parameters, $type);
 	}
 
 	public function render_type_reference(TypeReference $node)

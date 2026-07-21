@@ -14,6 +14,11 @@ class TypeHelper
 
 	public static function reset_semantic_state(): void
 	{
+		self::reset_check_state();
+	}
+
+	public static function reset_check_state(): void
+	{
 		self::$bound_values = [];
 		self::$bound_types = null;
 	}
@@ -115,7 +120,7 @@ class TypeHelper
 	{
 		$is = false;
 		if ($type instanceof AnyType
-			or self::is_scalar_type($type) && self::is_plain_scalar_xtag_type($type)
+			or self::is_scalar_type($type) && self::is_text_scalar_xtag_type($type)
 			or self::is_xview_or_none_type($type)) {
 			$is = true;
 		}
@@ -140,7 +145,7 @@ class TypeHelper
 		return $is;
 	}
 
-	private static function is_plain_scalar_xtag_type(BaseType $type): bool
+	private static function is_text_scalar_xtag_type(BaseType $type): bool
 	{
 		return self::get_type_symbol($type) === null || self::get_classkindred_declaration($type) !== null;
 	}
@@ -191,7 +196,7 @@ class TypeHelper
 		if ($type instanceof StringType || $type instanceof IntType || $type instanceof NoneType) {
 			$is = true;
 		}
-		elseif ($type instanceof PlainType) {
+		elseif ($type instanceof TextType) {
 			// Enum types are case-testable
 			$is = true;
 		}
@@ -213,13 +218,28 @@ class TypeHelper
 	public static function is_switch_compatible(BaseType $matchig, BaseType $case)
 	{
 		return self::is_accepting_type($matchig, $case)
-			or ($matchig instanceof PlainType and $case instanceof StringType);
+			or ($matchig instanceof TextType and $case instanceof StringType);
 	}
 
 	public static function is_covariant_for(BaseType $type_in_child, BaseType $type_in_super)
 	{
 		return self::is_same_or_based_type($type_in_child, $type_in_super)
+			|| self::is_xview_covariant_for_string($type_in_child, $type_in_super)
 			|| self::is_accepting_type($type_in_super, $type_in_child);
+	}
+
+	private static function is_xview_covariant_for_string(BaseType $type_in_child, BaseType $type_in_super): bool
+	{
+		if ($type_in_super instanceof InvalidableType && $type_in_super->sentinel instanceof LiteralNone) {
+			if ($type_in_child instanceof InvalidableType && $type_in_child->sentinel instanceof LiteralNone) {
+				return self::is_xview_covariant_for_string($type_in_child->valid_type, $type_in_super->valid_type);
+			}
+
+			return self::is_xview_covariant_for_string($type_in_child, $type_in_super->valid_type);
+		}
+
+		return $type_in_super instanceof StringType
+			&& ($type_in_child instanceof XViewType || self::is_xview_implementation_type($type_in_child));
 	}
 
 	public static function is_classkindred_same_or_based_with_symbol(ClassKindredDeclaration $decl, Symbol $symbol): bool
@@ -246,7 +266,7 @@ class TypeHelper
 			|| self::is_xview_implementation_type($target);
 	}
 
-	public static function is_plain_same_or_based_type(PlainType $type, BaseType $target): bool
+	public static function is_text_same_or_based_type(TextType $type, BaseType $target): bool
 	{
 		$target_symbol = self::get_type_symbol($target);
 		return self::get_type_symbol($type) === $target_symbol
@@ -448,8 +468,8 @@ class TypeHelper
 			return self::is_union_same_or_based_type($left, $right);
 		}
 
-		if ($left instanceof PlainType) {
-			return self::is_plain_same_or_based_type($left, $right);
+		if ($left instanceof TextType) {
+			return self::is_text_same_or_based_type($left, $right);
 		}
 
 		if ($left instanceof UIntType) {
@@ -664,7 +684,38 @@ class TypeHelper
 	public static function is_default_accepting_single_type(BaseType $type, BaseType $target): bool
 	{
 		return self::is_same_type($target, $type)
-			|| in_array($target->name, $type::ACCEPT_TYPES, true);
+			|| self::is_builtin_widening_type($type, $target);
+	}
+
+	private static function is_builtin_widening_type(BaseType $type, BaseType $target): bool
+	{
+		if ($type instanceof BytesType) {
+			return $target instanceof StringType
+				|| $target instanceof IntType
+				|| $target instanceof XViewType;
+		}
+
+		if ($type instanceof TextType) {
+			return $target instanceof IntType;
+		}
+
+		if ($type instanceof StringType) {
+			return $target instanceof BytesType
+				|| $target instanceof IntType
+				|| $target instanceof TextType
+				|| $target instanceof XViewType
+				|| $target instanceof MetaType;
+		}
+
+		if ($type instanceof IntType && !$type instanceof UIntType) {
+			return $target instanceof UIntType;
+		}
+
+		if ($type instanceof FloatType) {
+			return $target instanceof IntType;
+		}
+
+		return false;
 	}
 
 	public static function is_single_generic_accepting_type(SingleGenericType $type, BaseType $target): bool
@@ -750,6 +801,34 @@ class TypeHelper
 		}
 
 		return true;
+	}
+
+	public static function get_callable_declaration_from_type(BaseType $type): ?ICallableDeclaration
+	{
+		$type = self::unwrap_excludable_type($type);
+		if ($type instanceof ICallableDeclaration) {
+			return $type;
+		}
+
+		if (!$type instanceof UnionType) {
+			return null;
+		}
+
+		$callable = null;
+		foreach ($type->get_members() as $member) {
+			if ($member instanceof NoneType) {
+				continue;
+			}
+
+			if ($member instanceof ICallableDeclaration) {
+				$callable ??= $member;
+				continue;
+			}
+
+			return null;
+		}
+
+		return $callable;
 	}
 
 	public static function is_value_compatible(BaseType $expected_type, BaseType $actual_type): bool
@@ -917,6 +996,12 @@ class TypeHelper
 			return false;
 		}
 
+		if ($super_param_type instanceof SingleGenericType || $current_param_type instanceof SingleGenericType) {
+			return $super_param_type instanceof SingleGenericType
+				&& $current_param_type instanceof SingleGenericType
+				&& self::is_single_generic_accepting_type($current_param_type, $super_param_type);
+		}
+
 		if (self::is_same_type($super_param_type, $current_param_type)) {
 			return true;
 		}
@@ -943,14 +1028,7 @@ class TypeHelper
 
 	public static function get_php_builtin_predicate_asserted_type_fallback(?string $callee_name): ?BaseType
 	{
-		return match ($callee_name) {
-			'is_array' => TypeFactory::$_generalized_array,
-			'is_bool' => TypeFactory::$_bool,
-			'is_float' => TypeFactory::$_float,
-			'is_int' => TypeFactory::$_int,
-			'is_string' => TypeFactory::$_string,
-			default => null,
-		};
+		return LanguageMetadataRegistry::get_php_predicate_asserted_type($callee_name);
 	}
 
 	public static function infer_php_array_union_operation(BaseType $left_type, BaseType $right_type): ?BaseType
@@ -990,7 +1068,7 @@ class TypeHelper
 		}
 
 		if ($expected instanceof IntType || $expected instanceof UIntType || $expected instanceof FloatType) {
-			if ($actual instanceof StringType || $actual instanceof PlainType) {
+			if ($actual instanceof StringType || $actual instanceof TextType) {
 				return $value_node instanceof LiteralString && !is_numeric($value_node->value);
 			}
 
@@ -998,7 +1076,7 @@ class TypeHelper
 		}
 
 		if ($expected instanceof BoolType) {
-			return $actual instanceof StringType || $actual instanceof PlainType || $actual instanceof IntType
+			return $actual instanceof StringType || $actual instanceof TextType || $actual instanceof IntType
 				|| $actual instanceof UIntType || $actual instanceof FloatType;
 		}
 

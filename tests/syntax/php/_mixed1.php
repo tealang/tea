@@ -18,7 +18,7 @@ class PHPClassInMixed1 {
 
 	/**
 	 * comments
-	 * @var Plain
+	 * @var Text
 	 */
 	private string $caller;
 

@@ -20,6 +20,9 @@ class SemanticContext
 	public static function reset_check_state(): void
 	{
 		ASTChecker::reset_check_state();
+		ASTHelper::reset_check_state();
+		TypeHelper::reset_check_state();
+		OutputSafety::reset_check_state();
 	}
 }
 

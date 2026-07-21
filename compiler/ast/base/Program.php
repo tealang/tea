@@ -15,6 +15,7 @@ class Program extends BaseDeclaration
 	const SOURCE_DIALECT_TEA = 'tea';
 	const SOURCE_DIALECT_PHP = 'php';
 	const SOURCE_DIALECT_HEADER = 'header';
+	const SOURCE_DIALECT_GENERATED_HEADER = 'generated-header';
 
 	/**
 	 * @var BaseParser
@@ -72,6 +73,12 @@ class Program extends BaseDeclaration
 		$this->unit = $unit;
 		$this->file = $file;
 		$this->name = $this->generate_name();
+	}
+
+	public static function is_header_source_dialect(string $dialect): bool
+	{
+		return $dialect === self::SOURCE_DIALECT_HEADER
+			|| $dialect === self::SOURCE_DIALECT_GENERATED_HEADER;
 	}
 
 	public function append_declaration(BaseDeclaration $decl)

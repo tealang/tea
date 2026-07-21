@@ -129,18 +129,18 @@ internal Test5 {
 	a_10 = [:]
 	a_11 = ["f_1": 123, "f_2": "string"]
 	a_20 Int
-	a_21 Int? = none
+	a_21 Int? = null
 	a_22 Int = 123
 	a_30 String
-	a_31 String? = none
+	a_31 String? = null
 	a_32 String = "hi"
 	a_40 Bool
 	a_41 Bool = true
 	a_42 Bool = false
-	a_50 Array
-	a_51 Array = []
-	a_52 Array = [1, 2, "str"]
-	a_53 Array = [1, 2, [4, 5, 6]]
+	a_50 List
+	a_51 List = []
+	a_52 List = [1, 2, "str"]
+	a_53 List = [1, 2, [4, 5, 6]]
 
 
 	// static attribute
@@ -151,11 +151,11 @@ internal Test5 {
 	static sa_30 String
 	static sa_32 String = "hi"
 	static sa_41 Bool = true
-	static sa_51 Array = []
-	static sa_53 Array = [1, 2, [4, 5, 6]]
+	static sa_51 List = []
+	static sa_53 List = [1, 2, [4, 5, 6]]
 
 	static sm3() {
-		// none
+		// no-op
 	}
 
 	static sm_30(arg) String {
@@ -180,15 +180,15 @@ internal Test5 {
 		return true
 	}
 
-	static sm_360(arg_1 Dict, arg_2 = "str") Array {
+	static sm_360(arg_1 Dict, arg_2 = "str") List {
 		return []
 	}
 
-	static sm_361(arg_1 Dict, arg_2 = "str") Array {
+	static sm_361(arg_1 Dict, arg_2 = "str") List {
 		return [1, 2, 3]
 	}
 
-	static sm_362(arg_1 Array, arg_2 = "str") Array {
+	static sm_362(arg_1 List, arg_2 = "str") List {
 		return arg_1
 	}
 
@@ -200,12 +200,12 @@ internal Test5 {
 		return arg_1
 	}
 
-	static sm_372(arg_1 Array, arg_2 = "str") Dict {
+	static sm_372(arg_1 List, arg_2 = "str") Dict {
 		return ["a": 123]
 	}
 
 	m3() {
-		// none
+		// no-op
 	}
 
 	m_30(arg) String {
@@ -230,19 +230,19 @@ internal Test5 {
 		return true
 	}
 
-	m_360(arg_1 Dict, arg_2 = "str") Array {
+	m_360(arg_1 Dict, arg_2 = "str") List {
 		return []
 	}
 
-	m_361(arg_1 Dict, arg_2 = "str") Array {
+	m_361(arg_1 Dict, arg_2 = "str") List {
 		return [1, 2, 3]
 	}
 
-	m_362(arg_1 Array, arg_2 = "str") Array {
+	m_362(arg_1 List, arg_2 = "str") List {
 		return arg_1
 	}
 
-	m_363(arg_1 Array, arg_2 = "str") Array {
+	m_363(arg_1 List, arg_2 = "str") List {
 		return this.a_53
 	}
 
@@ -254,12 +254,11 @@ internal Test5 {
 		return arg_1
 	}
 
-	m_372(arg_1 Array, arg_2 = "str") Dict {
+	m_372(arg_1 List, arg_2 = "str") Dict {
 		return ["a": 123]
 	}
 
-	m_373(arg_1 Array, arg_2 = "str") Dict {
+	m_373(arg_1 List, arg_2 = "str") Dict {
 		return this.a_10
 	}
 }
-

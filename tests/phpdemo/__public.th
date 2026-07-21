@@ -2,11 +2,11 @@
 
 namespace tests\phpdemo
 
-public const PHP_CONST_DEMO #Plain
+public const PHP_CONST_DEMO #Text
 
 public class PHPClassDemo: Interface1 {
 	public get_class_name(caller String = 'anonymous') String
-	public static get_target_class_methods(class String) Array|Dict
+	public static get_target_class_methods(class String) List|Dict
 }
 
 public interface BaseInterface {
@@ -15,7 +15,7 @@ public interface BaseInterface {
 
 public interface Interface1: BaseInterface {
 	public const LINE #UInt
-	public static get_target_class_methods(class String) Array|Dict
+	public static get_target_class_methods(class String) List|Dict
 }
 
 public func php_function_demo(message String) Int

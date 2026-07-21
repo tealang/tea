@@ -25,6 +25,13 @@ class ASTHelper
 
 	public static function reset_semantic_state(): void
 	{
+		self::reset_check_state();
+		self::$php_true_assertions = null;
+		self::$php_true_property_non_null_assertions = null;
+	}
+
+	public static function reset_check_state(): void
+	{
 		self::$expression_types = null;
 		self::$callee_declarations = null;
 		self::$normalized_arguments = null;
@@ -32,8 +39,6 @@ class ASTHelper
 		self::$aggregated_members = null;
 		self::$use_source_declarations = null;
 		self::$namespace_based_units = null;
-		self::$php_true_assertions = null;
-		self::$php_true_property_non_null_assertions = null;
 	}
 
 	public static function get_expressed_type(BaseExpression $expr): ?BaseType

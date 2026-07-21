@@ -794,7 +794,6 @@ class TeaParser extends BaseParser
 		$branches = $this->read_switch_branches();
 		$block->set_branches($branches);
 
-		$this->scan_else_block_for($block);
 		// $this->scan_catching_block_for($block);
 
 		return $block;
@@ -805,7 +804,8 @@ class TeaParser extends BaseParser
 		$this->expect_block_begin();
 
 		$branches = [];
-		while ($arguments = $this->read_case_arguments()) {
+		$has_default = false;
+		while (($arguments = $this->read_switch_branch_arguments($has_default)) !== null) {
 			$this->expect_token_ignore_space(_COLON);
 			$case_branch = $this->factory->create_switch_branch($arguments);
 
@@ -816,7 +816,8 @@ class TeaParser extends BaseParser
 				$this->skip_comments();
 
 				// end current case
-				if ($this->get_token_ignore_empty() === _CASE) {
+				$next_token = $this->get_token_ignore_empty();
+				if ($next_token === _CASE || $next_token === _ELSE) {
 					break;
 				}
 			}
@@ -828,6 +829,28 @@ class TeaParser extends BaseParser
 		$this->expect_block_end();
 
 		return $branches;
+	}
+
+	private function read_switch_branch_arguments(bool &$has_default): ?array
+	{
+		$this->skip_comments();
+		$token = $this->get_token_ignore_empty();
+		if ($token === _ELSE) {
+			if ($has_default) {
+				throw $this->new_parse_error('Duplicate switch else branch');
+			}
+
+			$this->scan_token_ignore_empty();
+			$has_default = true;
+			return [null];
+		}
+
+		$arguments = $this->read_case_arguments();
+		if ($arguments !== null && $has_default) {
+			throw $this->new_parse_error('Switch case cannot appear after else');
+		}
+
+		return $arguments;
 	}
 
 	private function read_case_arguments()
@@ -1667,7 +1690,14 @@ class TeaParser extends BaseParser
  		}
 		elseif ($token === _DOUBLE_COLON) { //  the pipe call operation
 			$this->scan_token_ignore_empty(); // skip the operator
-			$expr = $this->read_pipe_call($expr);
+			$cast_type = $this->scan_postfix_cast_type();
+			if ($cast_type !== null) {
+				$expr = new CastOperation($expr, $cast_type);
+				$expr->pos = $this->pos;
+			}
+			else {
+				$expr = $this->read_pipe_call($expr);
+			}
  		}
 		elseif ($token === _LINE_COMMENT_MARK) {
 			$current_pos = $this->pos;
@@ -1690,6 +1720,47 @@ class TeaParser extends BaseParser
 		}
 
 		return $this->read_expression_combination($expr, $prev_operator);
+	}
+
+	private function scan_postfix_cast_type(): ?BaseType
+	{
+		if ($this->get_token_ignore_empty() === _PAREN_OPEN) {
+			throw $this->new_parse_error('Invalid postfix cast type');
+		}
+
+		$type_pos = $this->pos;
+		$name = $this->get_token_ignore_empty($type_pos);
+		if (!is_string($name)) {
+			return null;
+		}
+
+		$type = $this->get_postfix_cast_type_by_name($name);
+		$next_pos = $type_pos;
+		$next_token = $this->get_token_ignore_empty($next_pos);
+		if ($type !== null && $next_token === _GENERIC_OPEN) {
+			throw $this->new_parse_error('Invalid postfix cast type');
+		}
+		if ($type === null || $next_token === _PAREN_OPEN) {
+			return null;
+		}
+
+		$this->pos = $type_pos;
+		return $type;
+	}
+
+	private function get_postfix_cast_type_by_name(string $name): ?BaseType
+	{
+		return match ($name) {
+			_STRING => TypeFactory::$_string,
+			_INT => TypeFactory::$_int,
+			_UINT => TypeFactory::$_uint,
+			_FLOAT => TypeFactory::$_float,
+			_BOOL => TypeFactory::$_bool,
+			'List' => TypeFactory::$_array,
+			_DICT => TypeFactory::$_dict,
+			_OBJECT => TypeFactory::$_object,
+			default => null,
+		};
 	}
 
 	protected function read_dot_expression(BaseExpression $basing, bool $nullsafe = false)
@@ -1884,7 +1955,13 @@ class TeaParser extends BaseParser
 			}
 		}
 		else {
-			$as_type = $this->read_simple_type_identifier();
+			$as_type = $this->scan_type_expression(false);
+			if ($as_type === null) {
+				throw $this->new_unexpected_error();
+			}
+		}
+		if ($as_type->name === _UINT) {
+			throw $this->new_parse_error("Expression mark-as '#UInt' is not supported; use '::UInt' for runtime UInt conversion");
 		}
 
 		$expression = new AsOperation($expression, $as_type);
@@ -2190,20 +2267,22 @@ class TeaParser extends BaseParser
 		}
 	}
 
-	protected function scan_type_expression(): ?BaseType
+	protected function scan_type_expression(bool $allow_compound_suffix = true): ?BaseType
 	{
 		// the callable type
 		$token = $this->get_token_ignore_space();
-		if ($token === _PAREN_OPEN) { // the Callable protocol
-			$type = $this->read_callable_protocol();
+		if ($token === _PAREN_OPEN) {
+			$type = $this->is_parenthesized_type_expression_next()
+				? $this->read_parenthesized_type_expression()
+				: $this->read_callable_protocol();
 			return $type;
 		}
 
-		$type = $this->scan_type_identifier();
+		$type = $this->scan_type_identifier($allow_compound_suffix);
 		if ($type !== null) {
 			// union with members
 			while ($this->skip_token_ignore_space(_TYPE_UNION)) {
-				$member_type = $this->scan_type_identifier();
+				$member_type = $this->scan_type_identifier($allow_compound_suffix);
 				if ($member_type === null) {
 					throw $this->new_parse_error("Expected member type identifier");
 				}
@@ -2217,11 +2296,70 @@ class TeaParser extends BaseParser
 		return $type;
 	}
 
-	private function scan_type_identifier(): ?BaseType
+	private function is_parenthesized_type_expression_next(): bool
+	{
+		$pos = $this->pos;
+		$token = $this->get_token_ignore_space($pos);
+		if ($token !== _PAREN_OPEN) {
+			return false;
+		}
+
+		$depth = 1;
+		$has_top_level_union = false;
+		while ($pos < $this->tokens_count) {
+			$token = $this->get_token_ignore_space($pos);
+			if ($token === null || $token === LF) {
+				return false;
+			}
+
+			if ($token === _PAREN_OPEN) {
+				$depth++;
+			}
+			elseif ($token === _PAREN_CLOSE) {
+				$depth--;
+				if ($depth === 0) {
+					break;
+				}
+			}
+			elseif ($token === _TYPE_UNION && $depth === 1) {
+				$has_top_level_union = true;
+			}
+		}
+
+		$next = $this->get_token_ignore_space($pos);
+		return $has_top_level_union || $next === _QUESTION || $next === _EXCLAMATION;
+	}
+
+	private function read_parenthesized_type_expression(): BaseType
+	{
+		$this->expect_token_ignore_space(_PAREN_OPEN);
+
+		$type = $this->scan_type_expression();
+		if ($type === null) {
+			throw $this->new_unexpected_error();
+		}
+
+		$this->expect_token_ignore_space(_PAREN_CLOSE);
+		$this->scan_nullable_for($type);
+		return $type;
+	}
+
+	private function scan_type_identifier(bool $allow_compound_suffix = true): ?BaseType
 	{
 		$token = $this->get_token_ignore_space();
 
-		if ($type = TypeFactory::get_type($token)) {
+		if ($token === _ARRAY) {
+			throw $this->new_parse_error("Use 'List' instead of legacy 'Array'");
+		}
+		elseif ($token === _DOT_SIGN_METATYPE) {
+			$this->scan_token_ignore_space(); // skip Type
+			$type = $this->read_generic_style_builtin_type(TypeFactory::$_meta, $token);
+		}
+		elseif ($token === 'Func') {
+			$this->scan_token_ignore_space(); // skip Func
+			$type = $this->read_func_callable_type();
+		}
+		elseif ($type = TypeFactory::get_type($token)) {
 			$this->scan_token_ignore_space(); // skip
 			$type = $this->read_generic_style_builtin_type($type, $token);
 		}
@@ -2238,18 +2376,77 @@ class TeaParser extends BaseParser
 
 		$this->scan_nullable_for($type);
 
-		// try read Dict/Array
+		if (!$allow_compound_suffix) {
+			return $type;
+		}
+
+		// Try bracket-style and Dict/Type suffix compound types.
 		$next = $this->get_token();
 		if ($next === _BRACKET_OPEN) {
 			// the String[][:] style compound type
 			$type = $this->read_bracket_style_compound_type($type);
 		}
 		elseif ($next === _DOT || $next === _QUESTION_DOT) {
-			// Legacy suffix container syntax, kept only as compatibility input.
 			$type = $this->read_dots_style_compound_type($type);
 		}
 
 		return $type;
+	}
+
+	private function read_func_callable_type(): BaseType
+	{
+		$this->expect_token_ignore_space(_GENERIC_OPEN);
+
+		$parameters = $this->read_func_callable_parameters();
+		$this->expect_token_ignore_space(_COMMA);
+
+		$return_type = $this->scan_type_expression();
+		if ($return_type === null) {
+			throw $this->new_parse_error('Expected return type for Func');
+		}
+
+		$this->expect_generic_close_token();
+
+		$type = TypeFactory::create_callable_type($return_type, $parameters);
+		$type->pos = $this->pos;
+		return $type;
+	}
+
+	private function read_func_callable_parameters(): array
+	{
+		if (!$this->skip_token_ignore_space(_PAREN_OPEN)) {
+			$type = $this->scan_type_expression();
+			if ($type === null) {
+				throw $this->new_parse_error('Expected parameter type for Func');
+			}
+
+			return [$this->create_callable_type_parameter($type, 0)];
+		}
+
+		$parameters = [];
+		if ($this->skip_token_ignore_space(_PAREN_CLOSE)) {
+			return $parameters;
+		}
+
+		do {
+			$type = $this->scan_type_expression();
+			if ($type === null) {
+				throw $this->new_parse_error('Expected parameter type for Func');
+			}
+
+			$parameters[] = $this->create_callable_type_parameter($type, count($parameters));
+		}
+		while ($this->skip_token_ignore_space(_COMMA));
+
+		$this->expect_token_ignore_space(_PAREN_CLOSE);
+		return $parameters;
+	}
+
+	private function create_callable_type_parameter(BaseType $type, int $index): ParameterDeclaration
+	{
+		$parameter = new ParameterDeclaration('arg' . $index, $type);
+		$parameter->pos = $this->pos;
+		return $parameter;
 	}
 
 	private function read_generic_style_builtin_type(BaseType $type, string $name): BaseType
@@ -2270,8 +2467,9 @@ class TeaParser extends BaseParser
 		$this->expect_generic_close_token();
 
 		return match ($name) {
-			_ARRAY, 'List' => TypeFactory::create_array_type($generic_type),
+			'List' => TypeFactory::create_array_type($generic_type),
 			_DICT => TypeFactory::create_dict_type($generic_type),
+			_DOT_SIGN_METATYPE => TypeFactory::create_meta_type($generic_type),
 			default => throw $this->new_parse_error("Type '$name' does not support generic parameters"),
 		};
 	}
@@ -2291,6 +2489,10 @@ class TeaParser extends BaseParser
 	{
 		$token = $this->get_token_ignore_space();
 
+		if ($token === _ARRAY) {
+			throw $this->new_parse_error("Use 'List' instead of legacy 'Array'");
+		}
+
 		if ($type = TypeFactory::get_type($token)) {
 			$this->scan_token_ignore_space(); // skip
 		}
@@ -2308,7 +2510,6 @@ class TeaParser extends BaseParser
 	private function scan_nullable_for(BaseType &$type)
 	{
 		$token = $this->get_token();
-		// String?.Array is handled by the legacy suffix compatibility path.
 		if ($token === _QUESTION) {
 			$this->scan_token(); // skip ?
 			$sentinel = $this->scan_invalidable_sentinel();
@@ -2392,9 +2593,6 @@ class TeaParser extends BaseParser
 			}
 
 			switch ($kind) {
-				case _DOT_SIGN_ARRAY:
-					$type = TypeFactory::create_array_type($type);
-					break;
 				case _DOT_SIGN_DICT:
 					$type = TypeFactory::create_dict_type($type);
 					break;

@@ -36,6 +36,7 @@ switch ($num) {
 		else {
 			// no any
 		}
+		break;
 }
 // ---------
 

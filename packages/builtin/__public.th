@@ -45,7 +45,7 @@ extern func is_int(val) Bool
 #[TypeAssertion(val is String)]
 extern func is_string(val) Bool
 
-#[TypeAssertion(val is Array|Dict)]
+#[TypeAssertion(val is List|Dict)]
 extern func is_array(val) Bool
 
 extern func is_numeric(val) Bool
@@ -58,7 +58,7 @@ extern func var_dump(expr0 Mixed, expr1 Mixed = #default, expr2 Mixed = #default
 
 extern func call_user_func(callable Callable, param1 Mixed = #default, param2 Mixed = #default, param3 Mixed = #default) Mixed
 
-extern func compact(var_name0 String|Array, var_name1 String|Array = #default, var_name2 String|Array = #default, var_name3 String|Array = #default) Dict
+extern func compact(var_name0 String|List, var_name1 String|List = #default, var_name2 String|List = #default, var_name3 String|List = #default) Dict
 
 extern func get_class(object Object = #default) String
 
@@ -68,7 +68,7 @@ extern func print_r(expr, is_return Bool = #default) #Void
 
 extern func header(info String, replace #Bool = true, http_response_code Int = #default) #Void
 
-extern func ini_set(option String, value String|Int|Float|Bool|Null) String|Bool
+extern func ini_set(option String, value (String|Int|Float|Bool)?) String|Bool
 
 extern func time() Int
 
@@ -159,7 +159,7 @@ extern class PhpToken {
 	public is(kind Mixed) Bool
 	public isIgnorable() Bool
 	public __toString() String
-	public static tokenize(code String, flags Int = 0) Array
+	public static tokenize(code String, flags Int = 0) List
 }
 
 extern class DOMDocument {
@@ -184,7 +184,7 @@ extern interface Throwable: Stringable {
 	public getCode() Int
 	public getFile() String
 	public getLine() Int
-	public getTrace() Array
+	public getTrace() List
 	public getTraceAsString() String
 }
 
@@ -274,9 +274,9 @@ extern func mb_substr(it String, start Int, length Int = #default) String
 
 extern func mb_strwidth(it String, encoding String = #default) UInt
 
-extern func mb_strpos(it String, search String, offset Int = 0) UInt|Bool
+extern func mb_strpos(it String, search String, offset Int = 0) UInt?false
 
-extern func mb_strrpos(it String, search String, offset Int = 0) UInt|Bool
+extern func mb_strrpos(it String, search String, offset Int = 0) UInt?false
 
 extern func mb_strtoupper(it String) String
 
@@ -292,9 +292,9 @@ extern func str_starts_with(it String, prefix String) Bool
 
 extern func str_ends_with(it String, suffix String) Bool
 
-extern func strpos(it, search, offset Int = 0) UInt|Bool
+extern func strpos(it, search, offset Int = 0) UInt?false
 
-extern func strrpos(it, search, offset Int = 0) UInt|Bool
+extern func strrpos(it, search, offset Int = 0) UInt?false
 
 extern func strtoupper(it) String
 
@@ -304,7 +304,7 @@ extern func strtr(it String, from_chars_or_pairs String|Dict, to_chars String? =
 
 extern func str_replace(search, replacement, it String) String
 
-extern func implode(glue String|Array|Dict, pieces #Mixed = #default) String
+extern func implode(glue String|List|Dict, pieces #Mixed = #default) String
 
 extern func explode(delimiter String, it String) List<String>
 
@@ -318,57 +318,57 @@ extern func count(array) UInt
 
 extern func in_array(needle, haystack, strict Bool = false) Bool
 
-extern func array_reverse(array) Array
+extern func array_reverse(array) List
 
-extern func array_map(callback (item Mixed) Mixed, items0 Array, items1 Array? = #default) Array
+extern func array_map(callback Func<Mixed, Mixed>, items0 List, items1 List? = #default) List
 
-extern func array_filter(items Array, callback (item Mixed) Mixed = #default, mode Int = #default) Array
+extern func array_filter(items List, callback Func<Mixed, Mixed> = #default, mode Int = #default) List
 
-extern func array_reduce(items Array, callback (carry Mixed, item Mixed) Mixed, initial Mixed = #default) Mixed
+extern func array_reduce(items List, callback Func<(Mixed, Mixed), Mixed>, initial Mixed = #default) Mixed
 
-extern func array_diff(arr1 Array|Dict, arr2 Array|Dict, arr3 Array|Dict = #default) Dict
+extern func array_diff(arr1 List|Dict, arr2 List|Dict, arr3 List|Dict = #default) Dict
 
-extern func array_intersect(arr1 Array|Dict, arr2 Array|Dict, arr3 Array|Dict = #default) Dict
+extern func array_intersect(arr1 List|Dict, arr2 List|Dict, arr3 List|Dict = #default) Dict
 
-extern func array_merge(a Array|Dict, b Array|Dict, c Array|Dict = #default) Array|Dict
+extern func array_merge(a List|Dict, b List|Dict, c List|Dict = #default) List|Dict
 
-extern func array_sum(it Array|Dict) UInt|Int|Float
+extern func array_sum(it List|Dict) UInt|Int|Float
 
-extern func current(it Array|Dict) Mixed
+extern func current(it List|Dict) Mixed
 
-extern func array_slice(it Array, offset Int, length UInt? = null) Array
+extern func array_slice(it List, offset Int, length UInt? = null) List
 
-extern func array_unshift(it Array, item Mixed) UInt
+extern func array_unshift(it List, item Mixed) UInt
 
-extern func array_shift(it Array) Mixed
+extern func array_shift(it List) Mixed
 
-extern func array_push(it Array, item Mixed) UInt
+extern func array_push(it List, item Mixed) UInt
 
-extern func array_pop(it Array) Mixed
+extern func array_pop(it List) Mixed
 
-extern func array_fill(start_index Int, count Int, value Mixed) Array
+extern func array_fill(start_index Int, count Int, value Mixed) List
 
-extern func array_unique(it Array) Array
+extern func array_unique(it List) List
 
-extern func sort(it inout Array) Bool
+extern func sort(it inout List) Bool
 
-extern func array_search as list_search(search, it, strict #Bool = false) UInt|Bool
+extern func array_search as list_search(search, it, strict #Bool = false) UInt?false
 
-extern func array_search as dict_search(search, it, strict #Bool = false) String|Int|Bool
+extern func array_search as dict_search(search, it, strict #Bool = false) (String|Int)?false
 
 extern func array_key_exists(key, arr) Bool
 
-extern func array_combine(keys Array, values Array) Dict|Bool
+extern func array_combine(keys List, values List) Dict?false
 
-extern func array_flip(it Array|Dict) Dict
+extern func array_flip(it List|Dict) Dict
 
-extern func array_key_first(it Array|Dict) String|Int|Null
+extern func array_key_first(it List|Dict) (String|Int)?
 
 extern func array_keys(it) List<String>
 
-extern func array_values(it) Array
+extern func array_values(it) List
 
-extern func array_column(recordset Array|Dict, column_key String?, index_key String? = #default) Array
+extern func array_column(recordset List|Dict, column_key String?, index_key String? = #default) List
 
 extern func array_replace as dict_replace(it Dict, replacement Dict) Dict
 
@@ -381,9 +381,9 @@ extern func htmlspecialchars(string String, flags Int = #default, encoding Strin
 
 extern func htmlspecialchars_decode(string String, flags Int = #default) String
 
-extern func preg_match(regex Regex, subject String, matches inout Array? = #default, flags Int = #default, offset Int = #default) Bool
+extern func preg_match(regex Regex, subject String, matches inout List? = #default, flags Int = #default, offset Int = #default) Bool
 
-extern func preg_match_all(regex Regex, subject String, matches inout Array? = #default, flags Int = #default, offset Int = #default) Bool
+extern func preg_match_all(regex Regex, subject String, matches inout List? = #default, flags Int = #default, offset Int = #default) Bool
 
 extern func preg_split(regex Regex, subject String, limit Int = #default, flags Int = #default) List<String>
 
@@ -403,23 +403,31 @@ extern class PDO {
 	inTransaction() Bool
 
 	errorCode() String
-	errorInfo() Array
+	errorInfo() List
 }
 
 extern class PDOStatement {
 	fetch(mode Int = #default) Dict<String>
 	fetchAll(mode Int = #default, column_or_class_or_func Int|String|Callable = #default) List<Dict<String>>
 	fetchColumn(column UInt = 0) Mixed
-	fetchObject(class MetaType = #default, constructorArgs Array = #default) Object|Bool
+	fetchObject(class MetaType = #default, constructorArgs List = #default) Object|Bool
 }
 
 extern class PDOException: RuntimeException {
-	public errorInfo Array?
+	public errorInfo List?
 }
 
 public func is_uint(val) Bool
 
+public func int_ensure(val) Int
+
 public func uint_ensure(num Int) #Int
+
+public func float_ensure(val) Float
+
+public func bool_ensure(val) Bool
+
+public func string_ensure(val) String
 
 #[HtmlSafe]
 public func html_escape(str String?) String
@@ -457,9 +465,9 @@ public func _std_replace(it String, search, replacement) #String
 public type Bytes {
 	length #UInt => strlen(this)
 
-	find(str String, offset Int = #default) #UInt|Bool => strpos(this, str, offset)
+	find(str String, offset Int = #default) #UInt?false => strpos(this, str, offset)
 
-	find_last(str String, offset Int = #default) #UInt|Bool => strrpos(this, str, offset)
+	find_last(str String, offset Int = #default) #UInt?false => strrpos(this, str, offset)
 
 	copy(start Int, length UInt = #default) #String => substr(this, start, length)
 }
@@ -467,9 +475,9 @@ public type Bytes {
 public type String {
 	length #UInt => mb_strlen(this)
 
-	find(str String, offset Int = #default) #UInt|Bool => mb_strpos(this, str, offset)
+	find(str String, offset Int = #default) #UInt?false => mb_strpos(this, str, offset)
 
-	find_last(str String, offset Int = #default) #UInt|Bool => mb_strrpos(this, str, offset)
+	find_last(str String, offset Int = #default) #UInt?false => mb_strrpos(this, str, offset)
 
 	copy(start Int, length UInt = #default) #String => mb_substr(this, start, length)
 
@@ -494,7 +502,7 @@ public type String {
 	ends_with(suffix String) #Bool => str_ends_with(this, suffix)
 }
 
-public type Plain: String {
+public type Text: String {
 	// no any
 }
 
@@ -520,30 +528,30 @@ public type Bool {
 	// no any
 }
 
-public func _has(it Array|Dict, key String|Int|Null) #Bool
+public func _has(it List|Dict, key (String|Int)?) #Bool
 
-public func _vals_contains(it Array|Dict, val, strict Bool = false) #Bool
+public func _vals_contains(it List|Dict, val, strict Bool = false) #Bool
 
-public func _array_find(it Array, val) #UInt|Bool
+public func _array_find(it List, val) #UInt?false
 
-public func _std_array_map(it Array, callback (item) Mixed) #Array
+public func _std_array_map(it List, callback Func<Any, Mixed>) #List
 
-public func _std_join(it Array|Dict, separator String) #String
+public func _std_join(it List|Dict, separator String) #String
 
-public type Array {
+public type List {
 	length UInt => count(this)
 
 	has(key Int) #Bool => _has(this, key)
 
 	contains(val) #Bool => _vals_contains(this, val)
 
-	find(val) #UInt|Bool => _array_find(this, val)
+	find(val) #UInt?false => _array_find(this, val)
 
 	join(separator String = LF) #String => _std_join(this, separator)
 
-	copy(start Int, length UInt = #default) #Array => array_slice(this, start, length)
+	copy(start Int, length UInt = #default) #List => array_slice(this, start, length)
 
-	reversed() #Array => array_reverse(this)
+	reversed() #List => array_reverse(this)
 
 	unshift(item) #UInt => array_unshift(this, item)
 
@@ -553,14 +561,14 @@ public type Array {
 
 	pop() #Mixed => array_pop(this)
 
-	map(callback (item) Mixed) #Array => _std_array_map(this, callback)
+	map(callback Func<Any, Mixed>) #List => _std_array_map(this, callback)
 
-	filter(callback (item) Mixed) #Array => array_filter(this, callback)
+	filter(callback Func<Any, Mixed>) #List => array_filter(this, callback)
 
-	reduce(callback (carry, item) Mixed, initial Mixed = #default) #Mixed => array_reduce(this, callback, initial)
+	reduce(callback Func<(Any, Any), Mixed>, initial Mixed = #default) #Mixed => array_reduce(this, callback, initial)
 }
 
-public func _dict_find(it Dict, val) #String|Int|Bool
+public func _dict_find(it Dict, val) #(String|Int)?false
 
 public func _dict_get(it Dict, key String|Int) #Mixed
 
@@ -571,7 +579,7 @@ public type Dict {
 
 	contains(val) #Bool => _vals_contains(this, val)
 
-	find(val) #String|Int|Bool => _dict_find(this, val)
+	find(val) #(String|Int)?false => _dict_find(this, val)
 
 	join(separator String = LF) #String => _std_join(this, separator)
 
@@ -579,7 +587,7 @@ public type Dict {
 
 	keys() #List<String> => array_keys(this)
 
-	values() #Array => array_values(this)
+	values() #List => array_values(this)
 
 	replace(replacement Dict) #Dict => dict_replace(this, replacement)
 }

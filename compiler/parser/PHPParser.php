@@ -40,7 +40,6 @@ class PHPParser extends BaseParser
 		'mixed' => _MIXED,
 		'string' => _STRING,
 		'text' => _TEXT_TYPE,
-		'plain' => _PLAIN,
 		'int' => _INT,
 		'integer' => _INT,
 		'float' => _FLOAT,
@@ -50,6 +49,7 @@ class PHPParser extends BaseParser
 		'true' => _BOOL,
 		'false' => _BOOL,
 		'array' => _GENERAL_ARRAY,
+		'list' => 'List',
 		'dict' => _DICT,  // using in noted
 		'iterable' => _ITERABLE,
 		'callable' => _CALLABLE,
@@ -60,7 +60,6 @@ class PHPParser extends BaseParser
 
 	private const TEA_EXTENSION_TYPE_NAMES = [
 		'text' => true,
-		'plain' => true,
 		'dict' => true,
 	];
 
@@ -3606,7 +3605,7 @@ class PHPParser extends BaseParser
 
 	private static function is_looks_like_type_expression(?string $token)
 	{
-		return preg_match('/^[A-Z][a-zA-Z0-9_]*(\.[A-Z][a-zA-Z0-9_]*)*$/', $token);
+		return preg_match('/^[A-Z][a-zA-Z0-9_\\\\]*(\.[A-Z][a-zA-Z0-9_\\\\]*)*(<[^*\/]+>)?$/', $token);
 	}
 
 	private function create_type_identifier(string $name, bool $nullable = false, bool $allow_tea_extension_types = true)

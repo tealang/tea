@@ -30,7 +30,7 @@ class TypeFactory
 	// static $_scalar;
 	public static $_bytes;
 	public static $_string;
-	public static $_plain;
+	public static $_text;
 	public static $_float;
 	public static $_int;
 	public static $_uint;
@@ -86,8 +86,7 @@ class TypeFactory
 		// self::$_scalar = self::create_type(ScalarType::class);
 		self::$_bytes = self::create_type(BytesType::class);
 		self::$_string = self::create_type(StringType::class);
-		self::$_plain = self::create_type(PlainType::class);
-		self::$_type_map[_PLAIN] = self::$_plain;
+		self::$_text = self::create_type(TextType::class);
 		self::$_float = self::create_type(FloatType::class);
 		self::$_int = self::create_type(IntType::class);
 		self::$_uint = self::create_type(UIntType::class);
@@ -95,6 +94,7 @@ class TypeFactory
 
 		self::$_iterable = self::create_type(IterableType::class);
 		self::$_array = self::create_type(ArrayType::class);
+		unset(self::$_type_map[_ARRAY]);
 		self::$_type_map['List'] = self::$_array;
 		self::$_dict = self::create_type(DictType::class);
 		self::$_generalized_array = self::create_union_type([self::$_array, self::$_dict]);
@@ -113,7 +113,7 @@ class TypeFactory
 		self::$_generator = self::$_iterator;
 
 		self::$_int_types = [self::$_uint, self::$_int];
-		self::$_int_and_string_types = [self::$_uint, self::$_int, self::$_string, self::$_plain];
+		self::$_int_and_string_types = [self::$_uint, self::$_int, self::$_string, self::$_text];
 
 		self::$_casting_map = [
 			T_STRING_CAST => self::$_string,
@@ -239,6 +239,13 @@ class TypeFactory
 
 	public static function create_invalidable_type(BaseType $valid_type, LiteralExpression $sentinel): BaseType
 	{
+		if ($valid_type instanceof UnionType) {
+			$members = $valid_type->get_members();
+			$valid_type = count($members) === 1
+				? $members[0]
+				: self::create_union_type($members);
+		}
+
 		if ($sentinel instanceof LiteralNone
 			&& ($valid_type instanceof AnyType || $valid_type instanceof MixedType)) {
 			return self::$_mixed;
@@ -267,12 +274,16 @@ class TypeFactory
 		$has_mixed = false;
 		$has_any = false;
 		$has_null = false;
+		$has_string = false;
 		foreach ($single_items as $member) {
 			if ($member instanceof MixedType) {
 				$has_mixed = true;
 			}
 			elseif ($member instanceof AnyType) {
 				$has_any = true;
+			}
+			elseif ($member instanceof StringType && !$member instanceof TextType) {
+				$has_string = true;
 			}
 			elseif ($member instanceof NoneType) {
 				$has_null = true;
@@ -292,6 +303,21 @@ class TypeFactory
 			return $has_null
 				? self::$_mixed
 				: self::$_any;
+		}
+
+		if ($has_string) {
+			$filtered_items = [];
+			foreach ($single_items as $member) {
+				if (!$member instanceof TextType) {
+					$filtered_items[] = $member;
+				}
+			}
+
+			if (count($filtered_items) === 1 && count($single_items) !== 1) {
+				return $filtered_items[0];
+			}
+
+			$single_items = $filtered_items;
 		}
 
 		$type = new UnionType($single_items);

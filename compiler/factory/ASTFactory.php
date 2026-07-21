@@ -102,7 +102,7 @@ class ASTFactory
 	{
 		// add to module uses
 		$this->unit->use_units[$ns->uri] = $ns;
-		if ($this->has_attribute($attributes, 'Trusted')) {
+		if ($this->has_attribute($attributes, LanguageMetadataRegistry::ATTRIBUTE_TRUSTED)) {
 			$this->unit->trusted_use_units[$ns->uri] = true;
 		}
 
@@ -512,6 +512,10 @@ class ASTFactory
 		$program = new Program($file, $this->unit);
 		$program->parser = $parser;
 		$program->source_dialect = $parser::SOURCE_DIALECT;
+		if (Program::is_header_source_dialect($program->source_dialect)
+			&& basename($file) === PUBLIC_HEADER_FILE_NAME) {
+			$program->source_dialect = Program::SOURCE_DIALECT_GENERATED_HEADER;
+		}
 
 		// check name is in used
 		if (isset($this->unit->programs[$program->name])) {
@@ -1130,6 +1134,10 @@ class ASTFactory
 		$symbols = $this->dig_intersected_symbols_for_block($node);
 		$parent_block = $this->get_belong_block_of($node);
 		if ($parent_block instanceof IBlock) {
+			if ($node instanceof IfBlock && $this->is_parsing_php_source()) {
+				$symbols = $this->promote_if_branch_symbols($node, $symbols, $parent_block);
+			}
+
 			$this->add_symbols_to_block($parent_block, $symbols);
 		}
 	}
@@ -1176,6 +1184,54 @@ class ASTFactory
 		}
 
 		return $symbols;
+	}
+
+	private function is_parsing_php_source(): bool
+	{
+		return $this->program?->source_dialect === Program::SOURCE_DIALECT_PHP;
+	}
+
+	private function promote_if_branch_symbols(IfBlock $block, array $symbols, IBlock $parent_block): array
+	{
+		foreach ($symbols as $name => $symbol) {
+			$declaration = $symbol->declaration;
+			if (!$declaration instanceof VariableDeclaration || $parent_block->has_symbol($name)) {
+				continue;
+			}
+
+			$decl = new VariableDeclaration($name);
+			$decl->is_virtual = true;
+			$decl->block = $parent_block;
+
+			$outer_symbol = new Symbol($decl);
+			$symbols[$name] = $outer_symbol;
+
+			$this->alias_if_branch_symbol($block, $name, $decl);
+		}
+
+		return $symbols;
+	}
+
+	private function alias_if_branch_symbol(IfBlock $block, string $name, VariableDeclaration $decl): void
+	{
+		$this->alias_block_symbol($block, $name, $decl);
+		foreach ($block->get_else_branches() as $branch) {
+			$this->alias_block_symbol($branch, $name, $decl);
+		}
+	}
+
+	private function alias_block_symbol(BaseControlBlock $block, string $name, VariableDeclaration $decl): void
+	{
+		$symbol = $block->get_symbol($name);
+		if ($symbol !== null && $symbol->declaration instanceof VariableDeclaration) {
+			$symbol->declaration = $decl;
+		}
+
+		foreach ($block->body as $statement) {
+			if ($statement instanceof IfBlock) {
+				$this->alias_if_branch_symbol($statement, $name, $decl);
+			}
+		}
 	}
 
 	private function add_symbols_to_block(IBlock $block, array $symbols)
@@ -1416,6 +1472,8 @@ class ASTFactory
 
 	private function create_program_symbol(BaseDeclaration $decl)
 	{
+		$decl->program = $this->program;
+
 		$symbol = $this->new_top_symbol($decl);
 		$this->add_program_symbol($symbol);
 

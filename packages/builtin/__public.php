@@ -7,12 +7,44 @@ function is_uint($val): bool {
 	return is_int($val) && $val >= 0;
 }
 
+function int_ensure($val): int {
+	if (!is_int($val)) {
+		throw new \TypeError('Cannot use value as an Int value');
+	}
+
+	return $val;
+}
+
 function uint_ensure(int $num) {
 	if ($num < 0) {
 		throw new \ErrorException('Cannot use ' . $num . ' as a UInt value');
 	}
 
 	return $num;
+}
+
+function float_ensure($val): float {
+	if (!is_float($val)) {
+		throw new \TypeError('Cannot use value as a Float value');
+	}
+
+	return $val;
+}
+
+function bool_ensure($val): bool {
+	if (!is_bool($val)) {
+		throw new \TypeError('Cannot use value as a Bool value');
+	}
+
+	return $val;
+}
+
+function string_ensure($val): string {
+	if (!is_string($val)) {
+		throw new \TypeError('Cannot use value as a String value');
+	}
+
+	return $val;
 }
 
 function html_escape(?string $str): string {
@@ -86,7 +118,7 @@ function _build_attributes(array $items, ?array $additions = null): string {
 			continue;
 		}
 
-		$list[] = $val === true ? $key : $key . '="' . htmlspecialchars((string)$val) . '"';
+		$list[] = $val === true ? $key : $key . '="' . htmlspecialchars($val) . '"';
 	}
 
 	return implode(' ', $list);

@@ -11,8 +11,6 @@ class HeaderParser extends TeaParser
 {
 	public const SOURCE_DIALECT = Program::SOURCE_DIALECT_HEADER;
 
-	private const BUILTIN_FEATURE_ATTRIBUTE = 'BuiltinFeature';
-
 	private const BUILTIN_FEATURE_FLAGS = [
 		'Iterator' => ClassFeature::ITERATOR->value,
 		'ArrayAccess' => ClassFeature::ARRAY_ACCESS->value,
@@ -93,7 +91,7 @@ class HeaderParser extends TeaParser
 	private function apply_builtin_feature_attributes(ClassKindredDeclaration $node, array $attributes): void
 	{
 		foreach ($attributes as $attribute) {
-			if ($attribute->identifier->name !== self::BUILTIN_FEATURE_ATTRIBUTE) {
+			if (!LanguageMetadataRegistry::is_attribute_named($attribute, LanguageMetadataRegistry::ATTRIBUTE_BUILTIN_FEATURE)) {
 				continue;
 			}
 
@@ -144,7 +142,7 @@ class HeaderParser extends TeaParser
 
 	private function read_type_assertion_from_attribute(MetaAttribute $attribute): ?array
 	{
-		if ($attribute->identifier->name !== 'TypeAssertion') {
+		if (!LanguageMetadataRegistry::is_attribute_named($attribute, LanguageMetadataRegistry::ATTRIBUTE_TYPE_ASSERTION)) {
 			return null;
 		}
 

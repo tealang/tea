@@ -10,7 +10,6 @@ namespace Tea;
 class TeaHeaderCoder extends BaseCoder
 {
 	const PROGRAM_HEADER = "// the public declarations\n";
-	private const HTML_SAFE_ATTRIBUTE = 'HtmlSafe';
 
 	protected function process_use_statments(Program $program)
 	{
@@ -171,8 +170,8 @@ class TeaHeaderCoder extends BaseCoder
 	private function render_html_safe_attribute(IFunctionDeclaration $node): string
 	{
 		foreach ($node->attributes as $attribute) {
-			if ($attribute->identifier->name === self::HTML_SAFE_ATTRIBUTE) {
-				return '#[HtmlSafe]' . "\n";
+			if (LanguageMetadataRegistry::is_attribute_named($attribute, LanguageMetadataRegistry::ATTRIBUTE_HTML_SAFE)) {
+				return '#[' . LanguageMetadataRegistry::ATTRIBUTE_HTML_SAFE . ']' . "\n";
 			}
 		}
 
@@ -193,7 +192,7 @@ class TeaHeaderCoder extends BaseCoder
 				continue;
 			}
 
-			$items[] = '#[TypeAssertion(' . $parameter->name . ' is ' . $this->render_node($type) . ')]';
+			$items[] = '#[' . LanguageMetadataRegistry::ATTRIBUTE_TYPE_ASSERTION . '(' . $parameter->name . ' is ' . $this->render_node($type) . ')]';
 		}
 
 		if (!$items) {
@@ -245,7 +244,7 @@ class TeaHeaderCoder extends BaseCoder
 	{
 		$items = [];
 		foreach ($node->attributes as $attribute) {
-			if ($attribute->identifier->name !== 'BuiltinFeature') {
+			if (!LanguageMetadataRegistry::is_attribute_named($attribute, LanguageMetadataRegistry::ATTRIBUTE_BUILTIN_FEATURE)) {
 				continue;
 			}
 
@@ -258,7 +257,7 @@ class TeaHeaderCoder extends BaseCoder
 			}
 
 			if ($feature_names) {
-				$items[] = '#[BuiltinFeature(' . join(', ', $feature_names) . ')]';
+				$items[] = '#[' . LanguageMetadataRegistry::ATTRIBUTE_BUILTIN_FEATURE . '(' . join(', ', $feature_names) . ')]';
 			}
 		}
 

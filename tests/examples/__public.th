@@ -40,7 +40,7 @@ extern class PDO {
 	quote(string String, parameter_type Int = #default) String
 	lastInsertId(name String = #default) String
 	errorCode() String
-	errorInfo() Array
+	errorInfo() List
 }
 
 public class SQLitePDO: PDO {
@@ -48,7 +48,7 @@ public class SQLitePDO: PDO {
 }
 
 public class ListView: IBaseView {
-	get_subviews() #Array
+	get_subviews() #List
 
 	render() XView
 }

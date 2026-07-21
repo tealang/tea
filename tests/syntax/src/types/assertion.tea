@@ -8,7 +8,7 @@ internal Class1 {
 
 var obj Class1?
 
-if obj is None {
+if obj is Null {
 	obj = Class1()
 }
 
@@ -44,7 +44,7 @@ for key, value in dict {
 	elseif value is String {
 		result = value .+ 2		// 12
 	}
-	elseif value is Array {
+	elseif value is List {
 		result = value .+ [2]		// [1, 2]
 	}
 	else {
@@ -54,4 +54,3 @@ for key, value in dict {
 	echo "Operation value for key '${key}' is: "
 	var_dump(result)
 }
-

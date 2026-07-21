@@ -31,7 +31,7 @@ DemoList('demo-list', 'title', ['1'], () => {
 	return Cell()
 })
 
-DemoList('demo-list', 'Demo List', ['A', 'B', 'C'], none, (message String) => {
+DemoList('demo-list', 'Demo List', ['A', 'B', 'C'], null, (message String) => {
 	echo message
 })
 
@@ -55,9 +55,9 @@ public DemoList: BaseView {
 	title String
 	items List<String>
 
-	cells Array = []
+	cells List = []
 
-	construct(name String, title = '', items List<String> = [], each (() Cell)? = none, error ((message) Void)? = none) {
+	construct(name String, title = '', items List<String> = [], each (() Cell)? = null, error ((message) Void)? = null) {
 		this.items = items
 
 		if each {
@@ -86,7 +86,7 @@ public DemoList: BaseView {
 		var js_code = 'if (a < 1 || a >= 5) {}'
 
 		return <view id={this.name}>
-			{this.title == "abc" ? <h1>{this.title .+ 123}</h1> : none}
+			{this.title == "abc" ? <h1>{this.title .+ 123}</h1> : null}
 			<i></i>
 			<cells>
 				{cells}

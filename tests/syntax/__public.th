@@ -10,7 +10,7 @@ public const MY_CONST #Dict<Text>
 public const C1 #UInt
 public const C2 #Text
 
-extern func range(start Int, end Int, step #UInt = 1) Array
+extern func range(start Int, end Int, step #UInt = 1) List
 
 public trait Trait1 {
 	protected prop_in_trait1 #Text
@@ -23,7 +23,7 @@ public class PHPClassInMixed1 {
 	public union_val Int|String|Bool
 	public object Object?
 	public some \Exception
-	public construct(caller String, items Array|Dict, some Bool? = null) #Void
+	public construct(caller String, items List|Dict, some Bool? = null) #Void
 	public get_message() String
 }
 
@@ -71,9 +71,9 @@ public class DemoList: BaseView {
 	title String
 	items List<String>
 
-	cells Array
+	cells List
 
-	construct(name String, title #Text = '', items List<String> = [], each () Cell? = null, error (message) Void? = null) #Void
+	construct(name String, title #Text = '', items List<String> = [], each Func<(), Cell>? = null, error Func<Any, Void>? = null) #Void
 
 	render() String
 }

@@ -44,7 +44,6 @@ class PHPCoder extends BaseCoder
 		_NONE => 'null',
 		_STRING => 'string',
 		_TEXT_TYPE => 'string',
-		_PLAIN => 'string',
 		_INT => 'int',
 		_UINT => 'int',
 		_FLOAT => 'float',
@@ -63,7 +62,6 @@ class PHPCoder extends BaseCoder
 	const IS_TEST_MAP = [
 		_STRING => 'is_string',
 		_TEXT_TYPE => 'is_string',
-		_PLAIN => 'is_string',
 		_INT => 'is_int',
 		_UINT => 'is_uint',
 		_FLOAT => 'is_float',
@@ -1553,7 +1551,7 @@ class PHPCoder extends BaseCoder
 		$items = [];
 		foreach ($nodes as $arg) {
 			if ($arg) {
-				$item = $this->render_node($arg);
+				$item = $this->render_argument($arg);
 			}
 			else {
 				$item = static::VAL_NONE;
@@ -1564,6 +1562,15 @@ class PHPCoder extends BaseCoder
 
 		$code = join(', ', $items);
 		return $code;
+	}
+
+	private function render_argument(BaseExpression $arg): string
+	{
+		if ($arg instanceof Parentheses && $arg->expression instanceof CastOperation) {
+			return $this->render_cast_operation($arg->expression);
+		}
+
+		return $this->render_node($arg);
 	}
 
 	public function render_callback_argument(CallbackArgument $node)
@@ -1658,6 +1665,21 @@ class PHPCoder extends BaseCoder
 		}
 
 		return static::BUILTIN_TYPE_MAP[$node->name] ?? $node->name;
+	}
+
+	public function render_union_type(UnionType $node)
+	{
+		$items = [];
+		foreach ($node->get_members() as $member) {
+			if ($this->should_skip_union_member_for_render($node, $member)) {
+				continue;
+			}
+
+			$item = $this->render_node($member);
+			$item === '' || in_array($item, $items) or ($items[] = $item);
+		}
+
+		return join(_TYPE_UNION, $items);
 	}
 
 	protected function render_invalidable_type_identifier(InvalidableType $node): string
@@ -1783,13 +1805,33 @@ class PHPCoder extends BaseCoder
 	private function render_basing_expression(BaseExpression $expr)
 	{
 		if ($expr instanceof AsOperation) {
-			$code = $this->render_as_operation($expr, true);
+			$code = $this->render_as_operation_for_basing($expr);
+		}
+		elseif ($expr instanceof CastOperation) {
+			$code = $this->render_cast_operation($expr, true);
 		}
 		else {
 			$code = $this->render_node($expr);
 		}
 
 		return $code;
+	}
+
+	private function render_as_operation_for_basing(AsOperation $expr)
+	{
+		$left = $this->unwrap_mark_as_expression($expr);
+
+		$code = $this->render_node($left);
+		return $this->is_direct_basing_expression($left) ? $code : "($code)";
+	}
+
+	private function is_direct_basing_expression(BaseExpression $expr)
+	{
+		return $expr instanceof PlainIdentifier
+			|| $expr instanceof AccessingIdentifier
+			|| $expr instanceof KeyAccessing
+			|| $expr instanceof SquareAccessing
+			|| $expr instanceof CallExpression;
 	}
 
 	public function render_square_accessing(SquareAccessing $node)
@@ -2005,32 +2047,12 @@ class PHPCoder extends BaseCoder
 
 	public function render_as_operation(AsOperation $node, bool $add_parentheses = false)
 	{
-		$tea_type_name = $node->right->name;
-		if (in_array($tea_type_name, static::CASTABLE_TYPES, true)
-			and $this->is_need_casting($node)) {
-			$native_type_name = static::BUILTIN_TYPE_MAP[$tea_type_name];
-			$left = $this->render_subexpression($node->left, $node->operator);
-			if ($tea_type_name === _UINT) {
-				$code = "uint_ensure((int)$left)";
-			}
-			elseif ($add_parentheses) {
-				$code = "(($native_type_name)$left)";
-			}
-			else {
-				$code = "($native_type_name)$left";
-			}
-		}
-		else {
-			$code = $this->render_node($node->left); // not to do anything for non-castable
-		}
+		$left = $this->unwrap_mark_as_expression($node->left);
+		$code = $this->render_node($left);
 
-		return $code;
-	}
-
-	private function is_need_casting(AsOperation $node)
-	{
-		return !($node->right instanceof IterableType
-			and ASTHelper::get_expressed_type($node->left) instanceof IterableType);
+		return $add_parentheses
+			? "($code)"
+			: $code;
 	}
 
 	public function render_cast_operation(CastOperation $node, bool $add_parentheses = false): string
@@ -2153,6 +2175,10 @@ class PHPCoder extends BaseCoder
 
 	private function is_need_parentheses_for_operation_item(BaseExpression $expr, Operator $prev_operator, bool $right_side = false)
 	{
+		if ($expr instanceof AsOperation) {
+			$expr = $this->unwrap_mark_as_expression($expr);
+		}
+
 		if ($expr instanceof BaseOperation) {
 			$curr_operator = $expr->operator;
 			if ($expr instanceof IsOperation) {
@@ -2180,12 +2206,42 @@ class PHPCoder extends BaseCoder
 	protected function render_subexpression(BaseExpression $expr, Operator $operator)
 	{
 		$code = $this->render_node($expr);
-		if ($expr instanceof MultiOperation
-			&& $expr->operator->php_prec >= $operator->php_prec) {
+		$target = $expr instanceof AsOperation ? $this->unwrap_mark_as_expression($expr) : $expr;
+		if ($target instanceof MultiOperation
+			&& $target->operator->php_prec >= $operator->php_prec) {
 			$code = '(' . $code . ')';
 		}
 
 		return $code;
+	}
+
+	private function unwrap_mark_as_expression(BaseExpression $expr): BaseExpression
+	{
+		while ($expr instanceof AsOperation || $expr instanceof Parentheses) {
+			$expr = $expr instanceof AsOperation ? $expr->left : $expr->expression;
+		}
+
+		return $expr;
+	}
+
+	private function unwrap_none_coalescing_isset_test_expression(BaseExpression $expr): BaseExpression
+	{
+		while ($expr instanceof Parentheses) {
+			$expr = $expr->expression;
+		}
+
+		return $expr instanceof CastOperation
+			? $expr->left
+			: $expr;
+	}
+
+	private function unwrap_parenthesized_cast_operation(BaseExpression $expr): ?CastOperation
+	{
+		while ($expr instanceof Parentheses) {
+			$expr = $expr->expression;
+		}
+
+		return $expr instanceof CastOperation ? $expr : null;
 	}
 
 	private function render_casted_access_for_none_coalescing(BinaryOperation $node): ?array
@@ -2281,19 +2337,19 @@ class PHPCoder extends BaseCoder
 			}
 			else {
 				$left_code = $this->render_node($left_expr);
-				$test = $this->render_node($left_expr->left);
+				$test = $this->render_node($this->unwrap_none_coalescing_isset_test_expression($left_expr->left));
 			}
 
 			$code = sprintf("isset(%s) ? %s : %s", $test, $left_code, $right_code);
 		}
-		elseif ($left_expr instanceof CastOperation) {
-			$cached_access = $this->render_casted_access_for_none_coalescing($left_expr);
+		elseif ($cast_expr = $this->unwrap_parenthesized_cast_operation($left_expr)) {
+			$cached_access = $this->render_casted_access_for_none_coalescing($cast_expr);
 			if ($cached_access) {
 				[$test, $left_code] = $cached_access;
 			}
 			else {
-				$left_code = $this->render_node($left_expr);
-				$test = $this->render_node($left_expr->left);
+				$left_code = $this->render_node($cast_expr);
+				$test = $this->render_node($cast_expr->left);
 			}
 
 			$code = sprintf("isset(%s) ? %s : %s", $test, $left_code, $right_code);
